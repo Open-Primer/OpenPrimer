@@ -1991,6 +1991,19 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   </div>
 
                 </div> {/* Closes <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
+
+                {/* PRODUCTION STABILITY WARNING ALERT */}
+                <div className="bg-rose-500/5 border border-rose-500/10 rounded-2xl p-4 flex items-start gap-3 mt-6">
+                  <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase text-rose-400 tracking-wider">
+                      {tr("Production Stability Warning")}
+                    </p>
+                    <p className="text-[9px] text-slate-400 leading-relaxed font-medium">
+                      {tr("Modifying a widget's technical interface or parameters risks breaking all courses in production that render this widget. Always ensure strict backwards compatibility by keeping old props optional and supplying default fallback values in the component's code.")}
+                    </p>
+                  </div>
+                </div>
               </div> {/* Closes <div className="flex-grow overflow-y-auto..."> */}
 
               {/* Edit Modal Footer Buttons */}

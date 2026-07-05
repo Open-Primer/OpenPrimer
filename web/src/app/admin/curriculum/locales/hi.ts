@@ -647,4 +647,6 @@ export const locale: Record<string, string> = {
   "Alpha": "अल्फा",
   "Beta": "बीटा",
   "Gamma": "गामा",
+  "Production Stability Warning": "चेतावनी: उत्पादन स्थिरता",
+  "Modifying a widget's technical interface or parameters risks breaking all courses in production that render this widget. Always ensure strict backwards compatibility by keeping old props optional and supplying default fallback values in the component's code.": "विजेट के तकनीकी इंटरफ़ेस या मापदंडों को संशोधित करने से उत्पादन (production) में उन सभी पाठ्यक्रमों के टूटने का जोखिम होता है जो इस विजेट को रेंडर करते हैं। हमेशा नई संपत्तियों (props) को वैकल्पिक रखकर और घटक के कोड में सुरक्षित डिफ़ॉल्ट मान प्रदान करके सख्त बैकवर्ड कम्पैटिबिलिटी सुनिश्चित करें।"
 };

@@ -126,6 +126,36 @@ export function getDescriptiveLevelForPrompt(level: string): string {
   }
 }
 
+export function getWordCountLimitForLevel(level: string): { min: number; max: number } {
+  if (!level) return { min: 3000, max: 5000 };
+  const clean = level.trim();
+  switch (clean) {
+    case 'foundation_1':
+    case 'foundation_2':
+      return { min: 800, max: 1500 };
+    case 'secondary_1':
+      return { min: 1200, max: 2000 };
+    case 'secondary_2':
+    case 'preuni_1':
+    case 'preuni_2':
+    case 'preuni_3':
+      return { min: 1800, max: 3000 };
+    case 'L1':
+      return { min: 2500, max: 4000 };
+    case 'L2':
+    case 'L3':
+    case 'intermediate':
+    case 'advanced':
+      return { min: 3500, max: 5500 };
+    case 'M1':
+    case 'M2':
+    case 'expert':
+      return { min: 5500, max: 8000 };
+    default:
+      return { min: 3000, max: 5000 };
+  }
+}
+
 export function generateStatsMarkdown(stats: any): string {
   return `# 📊 Generation Statistics: ${stats.lessonTitle}
 
@@ -496,14 +526,60 @@ const lessonWidgetsSchema = {
             type: "object",
             properties: {
               id: { type: "string" },
-              componentType: { type: "string", enum: ["BrilliantIdea"] },
+              componentType: { type: "string", enum: ["Image"] },
               sectionAnchor: { type: "string" },
               props: {
                 type: "object",
                 properties: {
-                  content: { type: "string", description: "An intuitive analogy or brilliant pedagogical explanation (100-180 words)." }
+                  description: { type: "string", description: "The detailed search/generation description for the image (at least 2-3 sentences of visual instructions). DO NOT generate sequential figure numbers." },
+                  alt: { type: "string", description: "Short description for accessibility." },
+                  caption: { type: "string", description: "A detailed, italicized caption explaining academic relevance. DO NOT generate sequential figure numbers." },
+                  title: { type: "string", description: "Short title of the image." },
+                  searchQuery: { type: "string", description: "Highly canonical 1 to 3 search words (e.g. 'Claudio Monteverdi', 'Larynx humain', 'Doppler acoustique') to ensure precise database matches." }
                 },
-                required: ["content"]
+                required: ["description", "alt", "caption", "searchQuery"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["Audio"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  title: { type: "string", description: "Short descriptive title for the audio narration." },
+                  url: { type: "string", description: "Optional pre-resolved or empty audio URL." },
+                  duration: { type: "string", description: "Estimated duration, e.g. '1:30' or '2:45'." },
+                  unresolved: { type: "boolean", description: "Whether the resource is unresolved/needs backend matching. Defaults to true." },
+                  alt: { type: "string", description: "Short accessibility text." },
+                  description: { type: "string", description: "Detailed description of the audio track's content, narration, or pronunciation details." }
+                },
+                required: ["title"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["Video"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  title: { type: "string", description: "Title of the video documentary or lecture segment." },
+                  url: { type: "string", description: "Optional video URL (e.g. YouTube/Vimeo)." },
+                  id: { type: "string", description: "Optional video platform ID." },
+                  provider: { type: "string", enum: ["youtube", "vimeo", "direct"] },
+                  duration: { type: "string", description: "Estimated duration, e.g. '3:15'." },
+                  unresolved: { type: "boolean", description: "Whether the resource is unresolved/needs backend matching. Defaults to true." }
+                },
+                required: ["title"]
               }
             },
             required: ["id", "componentType", "sectionAnchor", "props"]
@@ -524,27 +600,6 @@ const lessonWidgetsSchema = {
                   explanation: { type: "string", description: "Orthographic and phonetic pronunciation guidance." }
                 },
                 required: ["word", "ipa", "lang", "definition", "explanation"]
-              }
-            },
-            required: ["id", "componentType", "sectionAnchor", "props"]
-          },
-          {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              componentType: { type: "string", enum: ["Media"] },
-              sectionAnchor: { type: "string" },
-              props: {
-                type: "object",
-                properties: {
-                  type: { type: "string", enum: ["image", "audio", "video"] },
-                  description: { type: "string", description: "The detailed search/generation description for the media." },
-                  alt: { type: "string", description: "Short description for accessibility." },
-                  caption: { type: "string", description: "A detailed, italicized caption explaining academic relevance." },
-                  title: { type: "string", description: "Short title." },
-                  searchQuery: { type: "string", description: "Highly canonical 1 to 3 search words (e.g. 'Claudio Monteverdi', 'Larynx humain', 'Doppler acoustique') to ensure precise database matches." }
-                },
-                required: ["type", "description", "alt", "caption", "searchQuery"]
               }
             },
             required: ["id", "componentType", "sectionAnchor", "props"]
@@ -1158,7 +1213,7 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
           comp.props.url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
           comp.props.provider = "YouTube";
         }
-      } else if (comp.componentType === "AudioPlayer" || comp.componentType === "Audio") {
+      } else if (comp.componentType === "Audio") {
         if (!comp.props.title) comp.props.title = "Audio explicatif";
         if (!comp.props.url) {
           comp.props.url = "https://upload.wikimedia.org/wikipedia/commons/c/c8/Example.ogg";
@@ -1166,8 +1221,7 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
       } else if (comp.componentType === "OralEvaluation" || comp.componentType === "EvaluationOrale") {
         if (!comp.props.prompt) comp.props.prompt = "Expliquez le concept clé de cette leçon de vive voix.";
         if (!comp.props.gradingSystem) comp.props.gradingSystem = "0/20";
-      } else if (comp.componentType === "Media") {
-        if (!comp.props.type) comp.props.type = "image";
+      } else if (comp.componentType === "Image") {
         if (!comp.props.description) {
           let fallbackDesc = "";
           if (comp.sectionAnchor) {
@@ -1199,8 +1253,6 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
       } else if (comp.componentType === "Epistemology") {
         if (!comp.props.title) comp.props.title = "Critical Perspective";
         if (!comp.props.content) comp.props.content = "Epistemological discussion.";
-      } else if (comp.componentType === "BrilliantIdea") {
-        if (!comp.props.content) comp.props.content = "Brilliant pedagogical idea explanation.";
       } else if (comp.componentType === "MatchingEvaluation" || comp.componentType === "AssociationCorrespondance") {
         comp.componentType = "MatchingEvaluation";
         if (!comp.props.pairs) comp.props.pairs = "Concept A|Definition A || Concept B|Definition B";
@@ -1229,8 +1281,8 @@ export function validateAndFixWidgets(widgets: any, discipline?: string, lang: s
       if (!comp || !comp.componentType) return false;
       
       const alwaysAllowed = [
-        "Quiz", "FillInBlanks", "SolvedExercise", "UnsolvedExercise", "Mermaid", "Video", "Audio", "AudioPlayer",
-        "Biography", "Media", "Citation", "Epistemology", "BrilliantIdea", "MatchingEvaluation", "AssociationCorrespondance",
+        "Quiz", "FillInBlanks", "SolvedExercise", "UnsolvedExercise", "Mermaid", "Video", "Audio",
+        "Biography", "Image", "Citation", "Epistemology", "MatchingEvaluation", "AssociationCorrespondance",
         "ReorderEvaluation", "ReordonnerItems"
       ];
       if (alwaysAllowed.includes(comp.componentType)) {
@@ -1501,6 +1553,34 @@ export function extractAndInjectCitations(content: string, references: string[])
 export function stitchLessonContent(narrativeMdx: string, widgets: any, isTerminalEvaluation: boolean = false): string {
   let content = narrativeMdx.trim();
 
+  // Compile Category A (direct markdown/prose enclosers) inline *before* suffix normalization
+  const categoryAMap: { [key: string]: string } = {
+    didyouknow: "DidYouKnow",
+    lesaviezvous: "LeSaviezVous",
+    historicalanecdote: "HistoricalAnecdote",
+    anecdotehistorique: "AnecdoteHistorique",
+    pointofview: "PointOfView",
+    pointdevue: "PointDeVue",
+    criticalthinking: "CriticalThinking",
+    espritcritique: "EspritCritique",
+    scientificmethod: "ScientificMethod",
+    methodescientifique: "MethodeScientifique",
+    scientificdebate: "ScientificDebate",
+    debatscientifique: "DebatScientifique",
+    openquestion: "OpenQuestion",
+    historicalfact: "HistoricalFact",
+    faithistorique: "FaitHistorique",
+    historicalevent: "HistoricalEvent",
+    evenementhistorique: "EvenementHistorique",
+    brilliantidea: "BrilliantIdea",
+    ideebrillante: "IdeeBrillante"
+  };
+
+  content = content.replace(/\[\[\s*WIDGET\s*:\s*(DidYouKnow|LeSaviezVous|HistoricalAnecdote|AnecdoteHistorique|PointOfView|PointDeVue|CriticalThinking|EspritCritique|ScientificMethod|MethodeScientifique|ScientificDebate|DebatScientifique|OpenQuestion|HistoricalFact|FaitHistorique|HistoricalEvent|EvenementHistorique|BrilliantIdea|IdeeBrillante)\s*:\s*([^:\s\]]+)\s*:\s*([\s\S]*?)\s*\]\]/gi, (match, type, id, payload) => {
+    const canonicalType = categoryAMap[type.toLowerCase()] || type;
+    return `<${canonicalType}>\n${payload.trim()}\n</${canonicalType}>`;
+  });
+
   // Normalize suffix-augmented anchors [[WIDGET:Type:ID:Topic]] and [[WIDGET:Type:ID]] to [[WIDGET:ID]]
   content = content.replace(/\[\[\s*WIDGET\s*:\s*([^:\s\]]+)\s*:\s*([^:\s\]]+)(?:\s*:\s*(.*?))?\s*\]\]+/gi, (match, type, id) => {
     return `[[WIDGET:${id}]]`;
@@ -1721,7 +1801,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const vDur = props.duration ? ` duration="${props.duration.replace(/"/g, '&quot;')}"` : '';
       const vUnres = props.unresolved !== undefined ? ` unresolved={${props.unresolved}}` : '';
       compStr = `<Video title="${vTitle}"${vIdAttr}${vProvider}${vUrl}${vDur}${vUnres} />`;
-    } else if (comp.componentType === "AudioPlayer" || comp.componentType === "Audio") {
+    } else if (comp.componentType === "Audio") {
       const aTitle = (props.title || '').replace(/"/g, '&quot;');
       const aUrl = (props.url || '').replace(/"/g, '&quot;');
       const aDur = props.duration ? ` duration="${props.duration.replace(/"/g, '&quot;')}"` : '';
@@ -1729,7 +1809,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const aUnres = props.unresolved !== undefined ? ` unresolved={${props.unresolved}}` : '';
       const aAlt = props.alt ? ` alt="${props.alt.replace(/"/g, '&quot;')}"` : '';
       const aDesc = props.description ? ` description="${props.description.replace(/"/g, '&quot;')}"` : '';
-      compStr = `<AudioPlayer title="${aTitle}" url="${aUrl}"${aDur}${aAi}${aUnres}${aAlt}${aDesc} />`;
+      compStr = `<Audio title="${aTitle}" url="${aUrl}"${aDur}${aAi}${aUnres}${aAlt}${aDesc} />`;
     } else if (comp.componentType === "OralEvaluation" || comp.componentType === "EvaluationOrale") {
       const oPrompt = (props.prompt || '').replace(/"/g, '&quot;');
       const oSubject = props.subject ? ` subject="${props.subject.replace(/"/g, '&quot;')}"` : '';
@@ -1747,13 +1827,16 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const bDesc = (props.description || '').replace(/"/g, '&quot;');
       const bWiki = props.wikipediaUrl ? ` wikipediaUrl="${props.wikipediaUrl.replace(/"/g, '&quot;')}"` : '';
       compStr = `<Biography name="${bName}"${bDates} description="${bDesc}"${bWiki} />`;
-    } else if (comp.componentType === "Media") {
-      const mType = (props.type || 'image').replace(/"/g, '&quot;');
+    } else if (comp.componentType === "Image") {
       const mDesc = (props.description || '').replace(/"/g, '&quot;');
       const mAlt = props.alt ? ` alt="${props.alt.replace(/"/g, '&quot;')}"` : '';
       const mCap = props.caption ? ` caption="${props.caption.replace(/"/g, '&quot;')}"` : '';
       const mTitle = props.title ? ` title="${props.title.replace(/"/g, '&quot;')}"` : '';
-      compStr = `<CustomFigure type="${mType}" description="${mDesc}"${mAlt}${mCap}${mTitle} />`;
+      const mSrc = props.src ? ` src="${props.src.replace(/"/g, '&quot;')}"` : '';
+      const mFallbackUrl = props.fallbackUrl ? ` fallbackUrl="${props.fallbackUrl.replace(/"/g, '&quot;')}"` : '';
+      const mUnresolved = props.unresolved !== undefined ? ` unresolved={${props.unresolved}}` : '';
+      const mIsIllustration = props.isIllustration !== undefined ? ` isIllustration={${props.isIllustration}}` : '';
+      compStr = `<Image description="${mDesc}"${mAlt}${mCap}${mTitle}${mSrc}${mFallbackUrl}${mUnresolved}${mIsIllustration} />`;
     } else if (comp.componentType === "Citation") {
       const cQuote = (props.quote || '').replace(/"/g, '&quot;');
       const cAuthor = (props.author || '').replace(/"/g, '&quot;');
@@ -1766,9 +1849,6 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const eTitle = (props.title || 'Critical Perspective').replace(/"/g, '&quot;');
       const eContent = props.content || '';
       compStr = `<Epistemology title="${eTitle}">\n${eContent}\n</Epistemology>`;
-    } else if (comp.componentType === "BrilliantIdea") {
-      const iContent = props.content || '';
-      compStr = `<BrilliantIdea>\n${iContent}\n</BrilliantIdea>`;
     } else if (comp.componentType === "MatchingEvaluation" || comp.componentType === "AssociationCorrespondance") {
       const titleAttr = props.title ? ` title="${props.title.replace(/"/g, '&quot;')}"` : '';
       const pairsAttr = (props.pairs || '').replace(/"/g, '&quot;');
@@ -2916,20 +2996,20 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
             pronunciationMandate = `
 =============================================================================
 🚨 MANDATORY PRONUNCIATION WIDGET REQUIREMENT 🚨
-Since this lesson belongs to a Language or Linguistics course, you MUST insert the following custom JSX tag:
-<SandboxPrononciation />
+Since this lesson belongs to a Language or Linguistics course, you MUST insert the following bracketed widget:
+[[WIDGET:SandboxPrononciation:psb_id:word_to_pronounce]]
 at least once (and ideally multiple times) directly in the pronunciation, phonetic, or practice sections of your narrative text.
-Do NOT use bracketed syntax for this specific tag. Exclusively write it as raw JSX: <SandboxPrononciation />.
+Do NOT use raw HTML/JSX tags. Exclusively write it as a bracketed anchor: [[WIDGET:SandboxPrononciation:psb_id:word_to_pronounce]].
 =============================================================================
 `;
           } else {
             pronunciationMandate = `
 =============================================================================
 🚨 MANDATORY PRONUNCIATION WIDGET REQUIREMENT 🚨
-Since this lesson belongs to a Language or Linguistics course, you MUST insert the following custom JSX tag:
-<PronunciationSandbox />
+Since this lesson belongs to a Language or Linguistics course, you MUST insert the following bracketed widget:
+[[WIDGET:PronunciationSandbox:psb_id:word_to_pronounce]]
 at least once (and ideally multiple times) directly in the pronunciation, phonetic, or practice sections of your narrative text.
-Do NOT use bracketed syntax for this specific tag. Exclusively write it as raw JSX: <PronunciationSandbox />.
+Do NOT use raw HTML/JSX tags. Exclusively write it as a bracketed anchor: [[WIDGET:PronunciationSandbox:psb_id:word_to_pronounce]].
 =============================================================================
 `;
           }
@@ -2939,19 +3019,34 @@ Do NOT use bracketed syntax for this specific tag. Exclusively write it as raw J
           ? usedMediaRegistry.map(m => `- Type: ${m.type}, Description: "${m.description}"${m.caption ? `, Caption: "${m.caption}"` : ''}`).join('\n')
           : 'None yet. This is the first lesson or no media has been used yet.';
 
+        const { min: minWords, max: maxWords } = getWordCountLimitForLevel(levelInput);
+
         let narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the specified lesson.
 
-${pronunciationMandate}
+⚠️ MANDATORY WORD-COUNT & LENGTH DIRECTION (STRICT LEVEL-BASED ALIGNMENT):
+- The current academic level is: "${getDescriptiveLevelForPrompt(levelInput)}" (raw key: "${levelInput}").
+- You MUST write a highly comprehensive and publication-ready academic lesson matching this level's target length:
+  * For primary / low levels (foundation_1, foundation_2): 800 to 1500 words. Keep it narrative, engaging, and age-appropriate.
+  * For secondary levels (secondary_1, secondary_2, preuni): 1200 to 3000 words. Keep it clear, explanatory, and structured.
+  * For higher education / university levels (L1, L2, L3, intermediate, advanced): 3500 to 5500 words. Provide extreme academic rigor, detailed historical and technical contextualization, deep conceptual analyses, and extensive comparative and mathematical/empirical sections where appropriate.
+  * For graduate levels (M1, M2, expert): 5500 to 8000 words. Provide exhaustive master-class level coverage.
+- YOUR EXACT TARGET WORD COUNT FOR THIS SPECIFIC LESSON IS: **at least ${minWords} and up to ${maxWords} words** of rich, well-developed narrative paragraphs.
+- Shorter lessons WILL fail critical verification, causing immediate rejection. Be extremely detailed, thorough, and analytical.
+- To successfully achieve this target word count with high academic value:
+  * Do NOT use fluff, empty transitions, or repetitive sentences.
+  * Expand on historical/epistemological context, detail all physical or social mechanisms, trace the timeline of key discoveries, and analyze the implications of theoretical models.
+  * Write extensive, highly descriptive body text before and after each bracketed [[WIDGET:...]] anchor. Every section must have multiple long, well-developed paragraphs.
+  * Break down major concepts into sub-concepts, provide detailed case studies, or walk through real-world/applied scenarios in full.
 
 =============================================================================
 ⚠️ CRITICAL MARKUP & XML/JSX COMPLIANCE RULES (MDX SAFETY MANDATE) ⚠️
 To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
 
-1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE JSX TAGS:
-   - Do NOT write raw JSX tags for interactive widgets (such as <DataChart>, <BasicMathExplorer>, <CodeSandbox>, <Mermaid>, <InteractiveDiagram>, <Quiz>, or <FillInBlanks>) in your prose.
-   - You must exclusively use bracketed anchors: [[WIDGET:id]]. Writing raw interactive tags will crash the compiler and reject your lesson.
-   - The ONLY custom tags allowed inline in your prose are hover-cards: <RealPerson>, <FictionalCharacter>, <Location>, <EventLink>, <Artwork>, <ConceptLink>, <TheoremLink>, <InstitutionLink>, <SpeciesLink>, <ChemicalLink>, and <CelestialLink>. Note: <SandboxPrononciation /> (for French lessons) and <PronunciationSandbox /> (for English lessons) are explicitly allowed and highly recommended to be written as raw JSX in pronunciation/phonetic sections of Language and Linguistics courses.
+1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS:
+   - Do NOT write raw JSX or HTML tags of any kind for custom components or widgets (such as <DidYouKnow>, <HistoricalAnecdote>, <Quiz>, <FillInBlanks>, <Image>, <Audio>, <Video>, etc. or their closing tags </DidYouKnow>, etc.) in your prose.
+   - You must exclusively use bracketed anchors: [[WIDGET:Type:ID:Topic]] or [[WIDGET:Type:ID:Prose]]. Writing raw tags will crash the compiler and reject your lesson.
+   - The ONLY custom tags allowed inline in your prose are hover-cards: <RealPerson>, <FictionalCharacter>, <Location>, <EventLink>, <Artwork>, <ConceptLink>, <TheoremLink>, <InstitutionLink>, <SpeciesLink>, <ChemicalLink>, and <CelestialLink>. Note: Do NOT write <SandboxPrononciation /> or <PronunciationSandbox /> as raw tags anymore; they must also use bracketed anchors.
 
 2. NO RAW HTML FOR LISTS:
    - Do NOT use raw HTML tags (<ul>, <ol>, <li>) to build bulleted or numbered lists.
@@ -2964,10 +3059,10 @@ To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
 
 4. NO STRAY import/export STATEMENTS:
    - Never write "import " or "export " at the beginning of a line in normal text.
-   - If you must show code blocks containing imports/exports, wrap them in standard markdown code blocks (e.g. \`\`\`\`javascript ... \`\`\`).
+   - If you must show code blocks containing imports/exports, wrap them in standard markdown code blocks (e.g. \`\`\`\`javascript ... \`\`\`\`).
 
 5. NO WIDGET ANCHORS INSIDE LISTS OR TABLES:
-   - Never place any [[WIDGET:...]] bracketed anchors (such as Citation, Media, Biography, Epistemology, etc.) inside bullet points, list items, or tables. Placing anchors inside lists disrupts the formatting and crashes the MDX stitcher.
+   - Never place any [[WIDGET:...]] bracketed anchors inside bullet points, list items, or tables. Placing anchors inside lists disrupts the formatting and crashes the MDX stitcher.
    - Always place every widget anchor on its own separate, clean line, surrounded by a blank line before and after.
 =============================================================================
 
@@ -3039,44 +3134,55 @@ Instead, you must decide where these elements belong and insert standard or cust
 - \`[[WIDGET:goingFurther]]\`: Place inside the \`## Conclusion\` section, at the very end (after whatsNext).
 - \`[[WIDGET:finalEvaluation]]\`: Place after the Conclusion section, as the ultimate validation quiz or essay.
 
-#### B. Custom/Narrative Widget Anchors (Represented as [[WIDGET:Type:ID:Topic]]):
-1. **Controlled Digressions (Epistemology Widget)**:
-   - Include at least one historical controversy or limit-of-concept discussion.
-   - Do NOT write raw \`<Epistemology>\` JSX tags. Exclusively represent this as an anchor:
-     \`[[WIDGET:Epistemology:epistemology_id:Brief description of the controversy or critical perspective topic]]\`
-     Example: \`[[WIDGET:Epistemology:value_paradox:The diamond-water paradox of value and early classical utility controversies]]\`
-2. **Contextual Mini-Biographies (Biography Widget)**:
-   - Include at least one biographical sidebar.
-   - Do NOT write raw markdown callouts (\`> [!INFO] **Mini-Biography: ...**\`) or Wikipedia links. Exclusively represent this as an anchor:
-     \`[[WIDGET:Biography:biography_id:RealPerson Name, dates, and main academic contributions/role]]\`
-     Example: \`[[WIDGET:Biography:adam_smith:Adam Smith (1723-1790), Scottish philosopher and pioneer of political economy]]\`
-3. **Author Quotes with Citations (Citation Widget)**:
-   - Weave at least one high-impact, authentic quotation from a notable expert/scientist.
-   - Do NOT write raw blockquotes or text quote blocks. You must exclusively represent it as an anchor:
-     \`[[WIDGET:Citation:citation_id:Author Name, original publication details, and the core topic or text hint of the quote]]\`
-     Example: \`[[WIDGET:Citation:smith_quote:Adam Smith, Quote from Wealth of Nations (1776) about the invisible hand and self-interest of the butcher and baker]]\`
-     Agent 3B (Architect) will expand this anchor into the full quote, translation, and commentary.
-4. **Factual Images & Multimedia (Media Widget)**:
-   - Include 5 to 6 factual/sourced images/figures and 1 to 2 audio/video resources for Licence level.
-   - Do NOT use standard Markdown image syntax (\`![Alt]()\`), raw URLs, or raw \`<CustomFigure>\` JSX tags.
-   - You MUST represent all media (images, audio, and video) using the unified Media widget anchor:
-     \`[[WIDGET:Media:media_id:detailed topic description of the image/audio/video, including specific names and visual representations]]\`
-     Examples:
-     - For images: \`[[WIDGET:Media:image_smith_portrait:image:Portrait of Adam Smith, John Kay 1790 painting]]\`
-     - For audio: \`[[WIDGET:Media:audio_pronunciation:audio:Pronunciation of laissez-faire in French]]\`
-     - For video: \`[[WIDGET:Media:video_economics:video:Video documentary segment on Adam Smith's division of labor]]\`
-   - Strict prohibition: Do NOT use images for mathematical curves or plots. Use custom interactive anchors instead.
-   - **CRITICAL DUPLICATION CONSTRAINT**: The following media descriptions/captions have already been used in this course. You MUST NOT repeat them or use similar representations. Ensure every figure is completely unique:
-\${usedMediaListStr}
-5. **Brilliant Ideas (BrilliantIdea Widget)**:
-   - You may include pedagogical analogies, intuitive mental models, or brilliant ideas.
-   - Do NOT write raw \`<BrilliantIdea>\` JSX tags. Exclusively represent this as an anchor:
-     \`[[WIDGET:BrilliantIdea:idea_id:Brief description of the pedagogical analogy/concept box]]\`
-     Example: \`[[WIDGET:BrilliantIdea:self_interest:Analogy of how self-interest regulates daily transactions like buying bread]]\`
+#### B. Custom/Narrative Widget Anchors (Represented as [[WIDGET:Type:ID:Payload]]):
+
+To keep the narrative text safe from Next-MDX compilation errors, you MUST NEVER write raw HTML or JSX tags (like <DidYouKnow>, <HistoricalAnecdote>, etc.). Instead, represent all custom components using bracketed anchors: \`[[WIDGET:Type:ID:Payload]]\`.
+These are split into two categories:
+
+1. **Category A: Prose Box Widgets (Direct Narrative Enclosures)**
+For decorative narrative boxes. The ID should be short and unique, and the Payload is the exact natural text of the block. Do NOT write raw JSX tags for these.
+- **DidYouKnow / LeSaviezVous**: Useful for surprising scientific/historical trivia.
+  Example: \`[[WIDGET:DidYouKnow:dyk_gravity:La gravitation n'est pas une force au sens newtonien en relativité générale, mais une courbure de l'espace-temps produite par la masse.]]\`
+- **HistoricalAnecdote / AnecdoteHistorique**: Humanizing historical accounts.
+  Example: \`[[WIDGET:HistoricalAnecdote:anec_galileo:Le récit de l'expérience légendaire de Galilée du haut de la tour de Pise pour démontrer l'universalité de la chute libre.]]\`
+- **PointOfView / PointDeVue**: Alternative perspectives or philosophical standpoints.
+  Example: \`[[WIDGET:PointOfView:pov_copernicus:Le point de vue héliocentrique face au géocentrisme ptolémaïque soutenu par les autorités théologiques de l'époque.]]\`
+- **CriticalThinking / EspritCritique**: Prompts/questions that invite students to think critically.
+  Example: \`[[WIDGET:CriticalThinking:crit_einstein:Comment concevoir que le temps s'écoule plus lentement pour un observateur en mouvement rapide sans contredire notre intuition quotidienne ?]]\`
+- **ScientificMethod / MethodeScientifique**: Demonstrating hypothesis testing.
+  Example: \`[[WIDGET:ScientificMethod:meth_lavoisier:La méthode rigoureuse de Lavoisier utilisant la balance pour prouver la conservation de la masse lors de la combustion.]]\`
+- **ScientificDebate / DebatScientifique**: Unresolved controversies or competing theories.
+  Example: \`[[WIDGET:ScientificDebate:deb_quantum:Le débat Bohr-Einstein à l'institut Solvay concernant le déterminisme et l'interprétation de la mécanique quantique.]]\`
+- **OpenQuestion**: An open discussion question.
+  Example: \`[[WIDGET:OpenQuestion:oq_darkmatter:Quelle est la véritable nature de la matière noire, qui représente pourtant plus de 85% de la matière totale de l'univers ?]]\`
+- **HistoricalFact / FaitHistorique**: Rigorous, verified historical fact.
+  Example: \`[[WIDGET:HistoricalFact:fact_bastille:La prise de la Bastille le 14 juillet 1789 marque un tournant symbolique majeur dans le déclenchement de la Révolution française.]]\`
+- **HistoricalEvent / EvenementHistorique**: A specific landmark event.
+  Example: \`[[WIDGET:HistoricalEvent:event_moon:Le premier pas de l'homme sur la Lune par Neil Armstrong le 21 juillet 1969 dans le cadre de la mission Apollo 11.]]\`
+- **BrilliantIdea / IdeeBrillante**: Pedagogical analogies or intuitive conceptual models.
+  Example: \`[[WIDGET:BrilliantIdea:idea_trampoline:Visualiser l'espace-temps comme une toile de trampoline déformée par une boule de bowling représentant le Soleil.]]\`
+
+2. **Category B: Structured Dynamic Widgets (Metadata Payloads)**
+These widgets require detailed configurations or external API resolving. The Payload contains only reference topic details, not the full prose. Agent 3B will design their JSON schemas.
+- **Biography**: Sidebar about historical experts.
+  Example: \`[[WIDGET:Biography:bio_newton:Isaac Newton (1643-1727), mathématicien et physicien anglais ayant formulé la loi de la gravitation universelle.]]\`
+- **Citation**: Authentic high-impact quotes with translations.
+  Example: \`[[WIDGET:Citation:quote_newton:Isaac Newton, Lettre à Robert Hooke (1675) sur le fait d'être monté sur des épaules de géants pour voir plus loin.]]\`
+- **Epistemology**: Detailed critical controversies.
+  Example: \`[[WIDGET:Epistemology:epi_calculus:La controverse de paternité du calcul infinitésimal entre Newton et Leibniz et ses implications épistémologiques.]]\`
+- **Image**: Factual images/diagrams.
+  Example: \`[[WIDGET:Image:img_prisme:image:Un prisme en verre décomposant un faisceau de lumière blanche en spectre de couleurs de l'arc-en-ciel.]]\`
+- **Audio**: Narrative audio/voice-overs or pronunciations.
+  Example: \`[[WIDGET:Audio:aud_larynx:audio:Une démonstration audio montrant la vibration des cordes vocales et le fonctionnement du larynx humain.]]\`
+- **Video**: Video documentary segments.
+  Example: \`[[WIDGET:Video:vid_relativity:video:Un documentaire de la NASA expliquant les principes fondamentaux de la relativité restreinte.]]\`
+- **SandboxPrononciation / PronunciationSandbox**: Pronunciation sandbox for linguistics.
+  Example (French course): \`[[WIDGET:SandboxPrononciation:pron_laissez:laissez-faire]]\`
+  Example (English course): \`[[WIDGET:PronunciationSandbox:pron_hello:hello]]\`
 
 6. **In-text Bibliography Citations (CRITICAL)**:
    - Ground the lesson in these specific, canonical course-level references:
-\${referencesMetadata}
+${referencesMetadata}
    - When making claims or citing definitions, you must cite these references inline using the strict format: [refN] (where N is the 1-based number of the reference, e.g. [ref1], [ref2]).
    - Do NOT use other citation formats (like superscript HTML links, raw URLs, or bracketed numbers like [1]).
    - Only cite references that are relevant to this lesson, but make sure to cite at least 1 or 2 canonical references from the list.
@@ -3146,7 +3252,7 @@ This synthesis MUST (400–600 words):
         // ───────────────────────────────────────────────────────────────
         let narrativeApproved = false;
         let narrativeIteration = 0;
-        const maxNarrativeIterations = 3;
+        const maxNarrativeIterations = 5;
 
         while (!narrativeApproved && narrativeIteration < maxNarrativeIterations) {
           narrativeIteration++;
@@ -3178,7 +3284,7 @@ You must audit the narrative text against the following 7 critical checkpoints:
    - **STRICT REJECTION**: You MUST reject (\`approved: false\`) if the text contains any comments, skeletons, or placeholder phrases like "write section here," "[À compléter]," "Lorem Ipsum," or undeveloped paragraphs. The narrative must be 100% complete and publication-ready.
 2. **Academic Density & Length**:
    - For higher education levels (L1-M2), verify that the lesson is detailed, rigorous, and exhaustive. It must cover at least 4 to 5 core conceptual sections under distinct \`## \` headings.
-   - Target word count: **3,000 to 5,000 words** of rich, well-formed narrative paragraphs. Reject if the writer produced a brief, simplistic, or highly summarized text.
+   - Target word count: **${minWords} to ${maxWords} words** of rich, well-formed narrative paragraphs. Reject if the writer produced a brief, simplistic, or highly summarized text.
 3. **Widget Placement & Anchors**:
    - Verify that the standard structural widget anchors are placed exactly once and at correct positions:
      - \`[[WIDGET:prerequisites]]\` (at the very beginning)
@@ -3189,7 +3295,7 @@ You must audit the narrative text against the following 7 critical checkpoints:
      - \`[[WIDGET:goingFurther]]\` (inside ## Conclusion, at the very end, after whatsNext)
      - \`[[WIDGET:finalEvaluation]]\` (after conclusion, as ultimate validation)
    - Verify that there are **at least 1 to 2** custom interactive/narrative anchors (\`[[WIDGET:Type:ID:Topic]]\` or \`[[WIDGET:Type:ID]]\`) placed within conceptual body sections, and each is surrounded by high-quality explanatory paragraphs.
-   - **STRICT PROHIBITION ON RAW CUSTOM JSX**: Verify that the narrative contains NO raw JSX tags representing interactive components (such as \`<DataChart>\`, \`<Quiz>\`, \`<CodeSandbox>\`, \`<Mermaid>\`, \`<CustomFigure>\`, \`<Epistemology>\`, \`<Biography>\`, \`<BrilliantIdea>\`, or \`<Citation>\`). They must exclusively use suffix-augmented bracketed anchors. Note: \`<SandboxPrononciation />\` and \`<PronunciationSandbox />\` are explicitly allowed as raw JSX in pronunciation/phonetic sections of Language and Linguistics courses.
+   - **STRICT PROHIBITION ON RAW CUSTOM JSX**: Verify that the narrative contains NO raw JSX tags representing interactive components (such as \`<DataChart>\`, \`<Quiz>\`, \`<CodeSandbox>\`, \`<Mermaid>\`, \`<CustomFigure>\`, \`<Epistemology>\`, \`<Biography>\`, \`<BrilliantIdea>\`, or \`<Citation>\`). They must exclusively use suffix-augmented bracketed anchors. Absolutely NO raw interactive/custom JSX tags are allowed in the narrative (this includes pronunciation sandboxes like \`<SandboxPrononciation />\` or \`<PronunciationSandbox />\`).
 4. **Author Quotes & Citation Anchors**:
    - Verify that quotes and citations are represented using suffix-augmented anchors:
      \`[[WIDGET:Citation:citation_id:Topic/Hint]]\`
@@ -3263,6 +3369,21 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
               lessonStats.narrativeGlobalRewrites++;
               const narrativeRefinerPrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 The narrative critic (Agent 4A) has rejected your previously generated academic narrative text with a GLOBAL critique requiring a full rewrite.
+
+⚠️ MANDATORY WORD-COUNT & LENGTH DIRECTION (STRICT LEVEL-BASED ALIGNMENT):
+- The current academic level is: "${getDescriptiveLevelForPrompt(levelInput)}" (raw key: "${levelInput}").
+- You MUST write a highly comprehensive and publication-ready academic lesson matching this level's target length:
+  * For primary / low levels (foundation_1, foundation_2): 800 to 1500 words. Keep it narrative, engaging, and age-appropriate.
+  * For secondary levels (secondary_1, secondary_2, preuni): 1200 to 3000 words. Keep it clear, explanatory, and structured.
+  * For higher education / university levels (L1, L2, L3, intermediate, advanced): 3500 to 5500 words. Provide extreme academic rigor, detailed historical and technical contextualization, deep conceptual analyses, and extensive comparative and mathematical/empirical sections where appropriate.
+  * For graduate levels (M1, M2, expert): 5500 to 8000 words. Provide exhaustive master-class level coverage.
+- YOUR EXACT TARGET WORD COUNT FOR THIS SPECIFIC LESSON IS: **at least ${minWords} and up to ${maxWords} words** of rich, well-developed narrative paragraphs.
+- Shorter lessons WILL fail critical verification, causing immediate rejection. Be extremely detailed, thorough, and analytical.
+- To successfully achieve this target word count with high academic value:
+  * Do NOT use fluff, empty transitions, or repetitive sentences.
+  * Expand on historical/epistemological context, detail all physical or social mechanisms, trace the timeline of key discoveries, and analyze the implications of theoretical models.
+  * Write extensive, highly descriptive body text before and after each bracketed [[WIDGET:...]] anchor. Every section must have multiple long, well-developed paragraphs.
+  * Break down major concepts into sub-concepts, provide detailed case studies, or walk through real-world/applied scenarios in full.
 
 ${pronunciationMandate}
 
@@ -3571,20 +3692,31 @@ ${referencesMetadata}
    - Ensure the citations in the narrative and their order in this array align perfectly.
    - Book/article titles must be in standard quotes (or French guillemets « ... »), not asterisks.
    - Exclude this references array only for primary school levels.
-9. **\`interactiveComponents\`**:
-   - An array of all custom interactive components. Every custom widget anchor placed in the narrative draft (e.g. \`[[WIDGET:Type:ID:Topic]]\` or \`[[WIDGET:ID]]\`) MUST have a corresponding object here.
-   - For anchors like \`[[WIDGET:Type:ID:Topic]]\`, map:
+ 9. **\`interactiveComponents\`**:
+   - An array of all custom Category B interactive components (such as Image, Audio, Video, Biography, Citation, Epistemology, Quiz, FillInBlanks, PronunciationSandbox, etc.).
+   - CRITICAL: You MUST completely IGNORE all Category A prose box anchors (DidYouKnow, LeSaviezVous, HistoricalAnecdote, AnecdoteHistorique, PointOfView, PointDeVue, CriticalThinking, EspritCritique, ScientificMethod, MethodeScientifique, ScientificDebate, DebatScientifique, OpenQuestion, HistoricalFact, FaitHistorique, HistoricalEvent, EvenementHistorique, BrilliantIdea, IdeeBrillante). Do NOT create any items for Category A anchors in this array, as they are compiled directly as inline Markdown boxes.
+   - For Category B anchors like \`[[WIDGET:Type:ID:Topic]]\`, map:
      - \`id\` -> the \`ID\` part of the anchor.
-     - \`componentType\` -> the \`Type\` part of the anchor (which will be one of: "Media", "Citation", "Biography", "Epistemology", "BrilliantIdea", or custom widgets).
+     - \`componentType\` -> the \`Type\` part of the anchor (which will be one of: "Image", "Audio", "Video", "Citation", "Biography", "Epistemology", or custom widgets).
      - \`sectionAnchor\` -> the heading title of the parent section.
      - \`props\` -> an object containing the resolved content details populated from the \`Topic\` hint:
-       - **Media**:
+       - **Image**:
           - \`searchQuery\`: Highly canonical and extremely concise 1 to 3 search words or keywords (e.g., "Claudio Monteverdi", "Larynx humain", "Doppler acoustique") extracted directly from the detailed description to ensure precise database matches on Wikidata, Wikimedia Commons, and other repositories. Do NOT repeat or use long, complex descriptions or captions here.
-         - \`type\`: "image", "audio", or "video".
-         - \`description\`: The detailed search/generation description for the media. MUST be populated using the original detailed \`Topic\` description hint from the \`[[WIDGET:Media:ID:Topic]]\` anchor. STRICTLY PROHIBITED: Do NOT copy-paste the chapter's section anchor, heading, or parent section title here.
+         - \`description\`: The detailed search/generation description for the image. MUST be populated using the original detailed \`Topic\` description hint from the \`[[WIDGET:Image:ID:Topic]]\` anchor. STRICTLY PROHIBITED: Do NOT copy-paste the chapter's section anchor, heading, or parent section title here.
          - \`alt\`: Short description for accessibility. MUST describe the actual subject specified in the \`Topic\` hint. Do NOT use the parent section title here.
          - \`caption\`: A detailed, italicized caption explaining the figure's academic relevance (strictly avoid manual sequential numbering, relative indexes, or prefixes like "Figure 1:", "Expérience 1 :", "Illustration .2", or "Figure 1.2:"). MUST be a meaningful description of the specific subject from the \`Topic\` hint. Do NOT use the parent section title here.
-         - \`title\`: Short title (used for audio/video).
+         - \`title\`: Short title (optional).
+       - **Audio**:
+         - \`title\`: Short descriptive title for the audio track.
+         - \`duration\`: Estimated duration (e.g., "1:30" or "2:45").
+         - \`description\`: Detailed description of the audio track's content, narration, or pronunciation details.
+         - \`alt\`: Short description for accessibility.
+       - **Video**:
+         - \`title\`: Title of the video.
+         - \`url\`: Optional video URL (e.g., YouTube/Vimeo).
+         - \`id\`: Optional video platform ID.
+         - \`provider\`: "youtube", "vimeo", or "direct".
+         - \`duration\`: e.g., "3:15".
        - **Citation**:
          - \`quote\`: The text of the quote in the target language.
          - \`author\`: The author name.
@@ -3600,8 +3732,6 @@ ${referencesMetadata}
        - **Epistemology**:
          - \`title\`: Controversy title.
          - \`content\`: Deeply academic prose discussion (150-250 words) detailing the controversy.
-       - **BrilliantIdea**:
-         - \`content\`: An intuitive analogy or brilliant pedagogical explanation (100-180 words).
    - **Quiz Pool Size and Display Limit (CRITICAL - NO GUESSING)**:
      - For any \`Quiz\` component in this array, you MUST generate EXACTLY ${sectionQuizPoolCount} questions in its \`props.questions\` array.
      - You MUST specify \`props.limit\`: ${sectionQuizDisplayLimit} in its \`props\` object.
@@ -3632,7 +3762,7 @@ ${referencesMetadata}
       let parsedWidgets: any = null;
       let widgetsApproved = false;
       let widgetsIteration = 0;
-      const maxWidgetsIterations = 3;
+      const maxWidgetsIterations = 5;
 
       const widgetsJsonStr = await callAIEngine(widgetsPrompt, dynamicSchema, 0.1);
       lessonStats.widgetsAttempts++;
@@ -3764,14 +3894,15 @@ You must audit the widgets JSON against the following 6 critical checkpoints:
    - **STRICT REJECTION**: You MUST verify that every custom widget anchor in the narrative draft (e.g. \`[[WIDGET:Type:ID:Topic]]\` or \`[[WIDGET:ID]]\`) has a corresponding object in the \`interactiveComponents\` array.
    - Map:
      - \`id\` -> matches the \`ID\` part of the anchor.
-     - \`componentType\` -> matches the \`Type\` part of the anchor (e.g., "Media", "Biography", "Citation", "Epistemology", "BrilliantIdea", or custom widgets).
+     - \`componentType\` -> matches the \`Type\` part of the anchor (e.g., "Image", "Audio", "Video", "Biography", "Citation", "Epistemology", or custom widgets).
      - \`sectionAnchor\` -> matches the section heading title in the narrative draft where the anchor is placed.
    - **STRICT PROPERTIES AUDIT**: Verify that \`props\` contains the fully resolved fields based on the component type:
-     - **Media**: Must have \`type\` ("image", "audio", or "video"), \`description\`, \`alt\`, \`caption\` (detailed italicized explanation of the figure's relevance), and \`searchQuery\` (highly canonical 1 to 3 search words or keywords like "Claudio Monteverdi", "Larynx humain", etc. extracted directly from the detailed description). Do NOT allow blank or placeholder descriptions, captions, or searchQuery, and STRICTLY REJECT if description, alt, caption, or searchQuery are lazy copy-pastes of the chapter's heading or parent section title.
+     - **Image**: Must have \`description\`, \`alt\`, \`caption\` (detailed italicized explanation of the figure's relevance), and \`searchQuery\` (highly canonical 1 to 3 search words or keywords like "Claudio Monteverdi", "Larynx humain", etc. extracted directly from the detailed description). Do NOT allow blank or placeholder descriptions, captions, or searchQuery, and STRICTLY REJECT if description, alt, caption, or searchQuery are lazy copy-pastes of the chapter's heading or parent section title.
+     - **Audio**: Must have \`title\` and optional \`description\` (narration details, pronunciation guide).
+     - **Video**: Must have \`title\` and optionally \`url\` or \`id\` if specified.
      - **Citation**: Must have \`quote\`, \`author\`, \`source\`, \`year\`, and \`commentary\` (an academic paragraph explaining the quote's importance). Reject if commentary is generic or blank.
      - **Biography**: Must have \`name\`, \`dates\`, \`description\` (8-12 lines of biography detailing main contributions), and \`wikipediaUrl\` (working direct link to English Wikipedia page).
      - **Epistemology**: Must have \`title\` and \`content\` (detailed discussion of controversy/debate, 150-250 words).
-     - **BrilliantIdea**: Must have \`content\` (analogy or intuitive explanation, 100-180 words).
    - Reject if any extra/undeclared anchors exist, or if any placed anchors are missing from the JSON, or if any of the properties above contain default placeholder texts.
 
 
@@ -4406,7 +4537,7 @@ ${isolatedContent}`;
             let critique = '';
             let currentTranslation = translatedMdx;
             let critiqueIteration = 0;
-            const maxCritiqueIterations = 3;
+            const maxCritiqueIterations = 5;
 
             while (!approved && critiqueIteration < maxCritiqueIterations && currentTranslation) {
               critiqueIteration++;
@@ -5121,7 +5252,7 @@ INSTRUCTIONS:
     let critique = '';
     let currentMdx = revisedMdx;
     let critiqueIteration = 0;
-    const maxCritiqueIterations = 3;
+    const maxCritiqueIterations = 5;
 
     while (!approved && critiqueIteration < maxCritiqueIterations && currentMdx) {
       critiqueIteration++;
@@ -6281,7 +6412,7 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
         if (title) {
           const altUrl = await findAlternativeAudioWithFallback(title, targetLang);
           if (altUrl) {
-            const newTag = `<AudioPlayer url="${altUrl}" title="${title}" duration="${duration}" />`;
+            const newTag = `<Audio url="${altUrl}" title="${title}" duration="${duration}" />`;
             updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
             alternativeFound = true;
             console.log(`[EXTERNAL RESOURCE VALIDATOR] Replaced dead audio with alternative: ${newTag}`);
@@ -6767,7 +6898,7 @@ function sanitizeMdxFallback(mdx: string): string {
     
     // Additional registered elements
     'Alert', 'CustomFigure', 'Objectives', 'Objective', 'Knowledge', 'Skills', 'Attitudes',
-    'References', 'AudioPlayer', 'Explanation', 'Solution', 'KeyConcept', 'Instruction', 'Shape',
+    'References', 'Explanation', 'Solution', 'KeyConcept', 'Instruction', 'Shape',
     'MetaNote', 'SelfAssessment', 'FictionalCharacter', 'Place', 'EvenementHistorique',
     'ExternalSandbox', 'GestaltInteractive', 'GestaltLab', 'DataChart', 'StructureViewer3D',
     'DynamicSimulation', 'GoingFurther', 'GoingFurtherItem', 'FunctionManipulator',
@@ -6778,7 +6909,7 @@ function sanitizeMdxFallback(mdx: string): string {
     'SummativeEvaluation', 'EvaluationSection', 'Assignment', 'Deadline', 'Submission',
     'Evaluation', 'FinalProject', 'FinalWork', 'Format', 'Instructions', 'FinalQuiz',
     'QuizQuestion', 'Answer', 'Description', 'Title', 'FormativeQuiz', 'Callout',
-    'CalloutContainer', 'Image', 'Media', 'Biography', 'Citation',
+    'CalloutContainer', 'Image', 'Biography', 'Citation',
     
     // Common standard HTML elements that could be output or generated
     'p', 'span', 'div', 'a', 'img', 'br', 'hr', 'ul', 'ol', 'li', 'strong', 'em', 'code', 'pre',
@@ -6807,10 +6938,10 @@ function sanitizeMdxFallback(mdx: string): string {
 
 export function extractCustomFigures(mdx: string): Array<{ type: string; description: string; title?: string; caption?: string; searchQuery?: string }> {
   const figures: Array<{ type: string; description: string; title?: string; caption?: string; searchQuery?: string }> = [];
-  const regex = /<CustomFigure\s+([^>]*)\/>/g;
+  const regex = /<(CustomFigure|Image)\s+([^>]*)\/>/g;
   let match;
   while ((match = regex.exec(mdx)) !== null) {
-    const attrsStr = match[1];
+    const attrsStr = match[2];
     const typeMatch = attrsStr.match(/type=(["'])([\s\S]*?)\1/i);
     const descMatch = attrsStr.match(/description=(["'])([\s\S]*?)\1/i);
     const titleMatch = attrsStr.match(/title=(["'])([\s\S]*?)\1/i);

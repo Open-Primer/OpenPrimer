@@ -18,6 +18,8 @@ import { dbService } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 
 
+export const dynamic = 'force-dynamic';
+
 export default async function CoursePage({ params }: { params: { slug: string[] } }) {
   let lang = 'en';
   let userId: string | undefined = undefined;

@@ -76,3 +76,5 @@ For tasks outputting strict schemas, JSON arrays, key-value mappings, and progra
 ### C. Language-Specific and Regional Alignment (Translation & Localization)
 Translation and localization tasks must maintain absolute structure, mapping exact MDX components and attributes, while translating only the natural text.
 - **Temperature**: `0.1`
+
+

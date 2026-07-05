@@ -646,4 +646,7 @@ export const locale: Record<string, string> = {
   "Alpha": "Alpha",
   "Beta": "Bêta",
   "Gamma": "Gamma",
+  "Production Stability Warning": "Attention : Stabilité de la production",
+  "Modifying a widget's technical interface or parameters risks breaking all courses in production that render this widget. Always ensure strict backwards compatibility by keeping old props optional and supplying default fallback values in the component's code.": "Toute modification des paramètres ou de l'interface technique d'un widget risque d'altérer ou de corrompre l'affichage des anciens cours déjà en production. Veillez à toujours maintenir une compatibilité ascendante stricte en rendant les nouvelles propriétés optionnelles et en fournissant des valeurs par défaut robustes dans le code du composant."
 };
+

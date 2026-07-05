@@ -468,7 +468,7 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
       const { data: dbLessons } = await supabase
         .from('lessons')
         .select('lesson_slug, title')
-        .eq('course_slug', courseSlug)
+        .ilike('course_slug', courseSlug)
         .eq('lang', lang.toLowerCase())
         .order('order', { ascending: true });
       
@@ -511,7 +511,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
           supabaseAdmin
             .from('lessons')
             .update({ content: newDbContent })
-            .eq('course_slug', courseSlug)
+            .ilike('course_slug', courseSlug)
             .eq('lesson_slug', lessonSlug)
             .eq('lang', lang.toLowerCase())
             .then(({ error }: any) => {
@@ -542,7 +542,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
       const { data: fallbackLesson } = await supabase
         .from('lessons')
         .select('*')
-        .eq('course_slug', courseSlug)
+        .ilike('course_slug', courseSlug)
         .eq('lesson_slug', lessonSlug)
         .limit(1)
         .single();
@@ -561,7 +561,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
           supabaseAdmin
             .from('lessons')
             .update({ content: newDbContent })
-            .eq('course_slug', courseSlug)
+            .ilike('course_slug', courseSlug)
             .eq('lesson_slug', lessonSlug)
             .eq('lang', fallbackLesson.lang)
             .then(({ error }: any) => {
@@ -605,7 +605,7 @@ export async function getFirstAvailableLanguage(slug: string[]): Promise<string 
       const { data: dbLessons } = await supabase
         .from('lessons')
         .select('lang')
-        .eq('course_slug', courseSlug)
+        .ilike('course_slug', courseSlug)
         .eq('lesson_slug', lessonSlug)
         .limit(1);
       if (dbLessons && dbLessons.length > 0 && dbLessons[0].lang) {
@@ -616,7 +616,7 @@ export async function getFirstAvailableLanguage(slug: string[]): Promise<string 
       const { data: anyLessons } = await supabase
         .from('lessons')
         .select('lang')
-        .eq('course_slug', courseSlug)
+        .ilike('course_slug', courseSlug)
         .limit(1);
       if (anyLessons && anyLessons.length > 0 && anyLessons[0].lang) {
         console.log(`[getFirstAvailableLanguage] Found lang '${anyLessons[0].lang}' in DB for course ${courseSlug}`);
@@ -1699,7 +1699,7 @@ function healQuestionTags(mdx: string): string {
     
     let imageFigure = '';
     if (attrs.imageSrc) {
-      imageFigure = `<CustomFigure src="${attrs.imageSrc}" alt="Question Image" />\n`;
+      imageFigure = `<Image src="${attrs.imageSrc}" alt="Question Image" />\n`;
     }
     
     let optionTags = '';
@@ -1798,7 +1798,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
     'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'iframe',
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
     'Summary', 'EssayEvaluation', 'Glossary', 'HistoricalPerson', 'HistoricalEvent', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique',
-    'Epistemology', 'Video', 'Audio', 'AudioPlayer', 'PronunciationSandbox', 'SandboxPrononciation', 'Mermaid', 'ComparisonSlider',
+    'Epistemology', 'Video', 'Audio', 'PronunciationSandbox', 'SandboxPrononciation', 'Mermaid', 'ComparisonSlider',
     'FunctionPlotter', 'CodeSandbox', 'SelfEval', 'SolvedProblem', 'Objectives',
     'Knowledge', 'Skills', 'Attitudes', 'SummativeEvaluation', 'EvaluationSection',
     'Assignment', 'Deadline', 'Submission', 'Evaluation', 'FinalProject', 'FinalWork',
@@ -1807,7 +1807,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
     'CriticalThinking', 'EspritCritique', 'DidYouKnow', 'LeSaviezVous', 'HistoricalAnecdote',
     'AnecdoteHistorique', 'HistoricalFact', 'FaitHistorique', 'ScientificMethod', 'MethodeScientifique', 'WhatsNext', 'EtApres',
     'PointOfView', 'PointDeVue', 'Geometry2D', 'Geometrie2D', 'GoingFurther', 'GoingFurtherItem',
-    'IdeeBrillante', 'BrilliantIdea', 'Media', 'Biography',
+    'IdeeBrillante', 'BrilliantIdea', 'Biography',
     'FunctionManipulator', 'EquationManipulator',
     // Interactive/sandbox/widget components — must NOT have their JSX expression attributes escaped
     'DataChart', 'InteractiveImage', 'InteractiveDiagram', 'InteractiveMap',
@@ -2436,7 +2436,7 @@ function normalizeCustomTagsCasing(mdx: string): string {
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',
     'Summary', 'EssayEvaluation', 'Glossary', 'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'EvenementHistorique',
     'WebsiteLink', 'ProjectLink', 'SiteWeb',
-    'Epistemology', 'Video', 'Audio', 'AudioPlayer', 'PronunciationSandbox', 'SandboxPrononciation', 'Mermaid', 'ComparisonSlider',
+    'Epistemology', 'Video', 'Audio', 'PronunciationSandbox', 'SandboxPrononciation', 'Mermaid', 'ComparisonSlider',
     'FunctionPlotter', 'CodeSandbox', 'SelfEval', 'SolvedProblem', 'Objectives',
     'Knowledge', 'Skills', 'Attitudes', 'SummativeEvaluation', 'EvaluationSection',
     'Assignment', 'Deadline', 'Submission', 'Evaluation', 'FinalProject', 'FinalWork',
@@ -2455,7 +2455,7 @@ function normalizeCustomTagsCasing(mdx: string): string {
     'MoleculeViewer', 'PhysicsSimulation', 'CodeEditor', 'NumberLine',
     'Alert', 'AlertBox', 'Admonition', 'Tip', 'Warning', 'Note', 'Important', 'Caution',
     'ArtworkZoom', 'TimelineSlider', 'InteractiveQuote', 'Citation', 'QuoteBlock', 'AnnotatedImage',
-    'Media', 'Biography'
+    'Biography'
   ];
 
   let processed = mdx;
@@ -3370,7 +3370,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   // Clean biography alerts to eliminate redundancies and strip overlapping hover overlays on the subject
   processed = cleanBiographyAlerts(processed);
   
-  // Group images, captions, and fallback links into a single <CustomFigure> component
+  // Group images, captions, and fallback links into a single <Image> component
   const figureAboveRegex = /\*\s*(Figure\s*[\d\w]*\s*[:\-\u2013\u2014].*?)\s*\*\s*\r?\n\s*!\[(.*?)\]\(((?:https?:\/\/|\/\/)?.*?)\)(?:\s*\r?\n\s*\[(Accéder directement.*?|Access the resource.*?|Access directly.*?)\]\(((?:https?:\/\/|\/\/).*?)\))?/gi;
   processed = processed.replace(figureAboveRegex, (match, caption, alt, imgUrl, fallbackText, fallbackUrl) => {
     const cleanAlt = (alt || '').replace(/"/g, '&quot;');
@@ -3378,7 +3378,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     cleanCaption = cleanCaption.replace(/<[^>]+>/g, '');
     cleanCaption = cleanCaption.replace(/"/g, '&quot;');
     const cleanFallbackText = (fallbackText || '').replace(/"/g, '&quot;');
-    return `<CustomFigure src="${imgUrl}" alt="${cleanAlt}" caption="${cleanCaption}" fallbackText="${cleanFallbackText}" fallbackUrl="${fallbackUrl || ''}" />`;
+    return `<Image src="${imgUrl}" alt="${cleanAlt}" caption="${cleanCaption}" fallbackText="${cleanFallbackText}" fallbackUrl="${fallbackUrl || ''}" />`;
   });
 
   const figureRegex = /!\[(.*?)\]\(((?:https?:\/\/|\/\/)?.*?)\)\s*\r?\n\s*\*\s*(Figure\s*[\d\w]*\s*[:\-\u2013].*?)\s*\*(?:\s*\r?\n\s*\[(Accéder directement.*?|Access the resource.*?|Access directly.*?)\]\(((?:https?:\/\/|\/\/).*?)\))?/gi;
@@ -3389,7 +3389,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     cleanCaption = cleanCaption.replace(/<[^>]+>/g, '');
     cleanCaption = cleanCaption.replace(/"/g, '&quot;');
     const cleanFallbackText = (fallbackText || '').replace(/"/g, '&quot;');
-    return `<CustomFigure src="${imgUrl}" alt="${cleanAlt}" caption="${cleanCaption}" fallbackText="${cleanFallbackText}" fallbackUrl="${fallbackUrl || ''}" />`;
+    return `<Image src="${imgUrl}" alt="${cleanAlt}" caption="${cleanCaption}" fallbackText="${cleanFallbackText}" fallbackUrl="${fallbackUrl || ''}" />`;
   });
   
   // Strip any raw [Spacer] brackets

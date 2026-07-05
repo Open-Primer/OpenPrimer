@@ -1271,10 +1271,10 @@ export function renumberFigures(mdx: string, lang: string = 'en'): string {
   const prefix = getFigurePrefix(lang);
   let figureCount = 1;
   
-  // Find all <CustomFigure ... /> components
-  const customFigureRegex = /<CustomFigure\s+([^>]*?)\/>/g;
+  // Find all <CustomFigure ... /> or <Image ... /> components
+  const customFigureRegex = /<(CustomFigure|Image)\s+([^>]*?)\/>/g;
   
-  return mdx.replace(customFigureRegex, (match, attrsStr) => {
+  return mdx.replace(customFigureRegex, (match, tagName, attrsStr) => {
     if (/\bunresolved(?:={true})?\b/.test(attrsStr)) {
       return match;
     }
@@ -1287,7 +1287,7 @@ export function renumberFigures(mdx: string, lang: string = 'en'): string {
       const newCaption = `${prefix} ${figureCount}`;
       figureCount++;
       const updatedAttrs = attrsStr.trim() + ` caption="${newCaption}"`;
-      return `<CustomFigure ${updatedAttrs}/>`;
+      return `<Image ${updatedAttrs}/>`;
     }
     
     const fullCaption = captionMatch[2];
@@ -1303,7 +1303,7 @@ export function renumberFigures(mdx: string, lang: string = 'en'): string {
     figureCount++;
     
     const updatedAttrs = attrsStr.replace(/caption=(["'])([\s\S]*?)\1/, `caption=$1${newCaption}$1`);
-    return `<CustomFigure ${updatedAttrs}/>`;
+    return `<Image ${updatedAttrs}/>`;
   });
 }
 
@@ -1349,7 +1349,7 @@ export function rebuildCustomFigure(attrs: Record<string, string>): string {
     const val = attrs.isIllustration === 'true' || attrs.isIllustration === '{true}' ? 'true' : attrs.isIllustration;
     parts.push(`isIllustration={${val}}`);
   }
-  return `<CustomFigure ${parts.join(' ')} />`;
+  return `<Image ${parts.join(' ')} />`;
 }
 
 /**
@@ -1640,12 +1640,12 @@ export async function resolveAndPersistMedia(
     }
   }
 
-  // Process JSX Figures: <CustomFigure src="..." /> or <CustomFigure type="..." />
-  const figRegex = /<CustomFigure\s+([^>]*?)\/>/g;
+  // Process JSX Figures: <CustomFigure src="..." /> or <Image src="..." /> or <CustomFigure type="..." />
+  const figRegex = /<(CustomFigure|Image)\s+([^>]*?)\/>/g;
   let figMatch;
   while ((figMatch = figRegex.exec(mdxContent)) !== null) {
     const fullTag = figMatch[0];
-    const attrsStr = figMatch[1];
+    const attrsStr = figMatch[2];
 
     const getAttr = (name: string) => {
       const curlyMatch = attrsStr.match(new RegExp(`${name}\\s*=\\s*\\{\\s*["']?([^"'}]*)["']?\\s*\\}`, 'i'));
@@ -1728,7 +1728,7 @@ export async function resolveAndPersistMedia(
           const finalText = description.replace(/"/g, '&quot;');
           updatedContent = updatedContent.replace(
             fullTag,
-            `<AudioPlayer url="${publicUrl}" title="${finalTitle}" text="${finalText}" />`
+            `<Audio url="${publicUrl}" title="${finalTitle}" text="${finalText}" />`
           );
           continue;
         }
@@ -1738,7 +1738,7 @@ export async function resolveAndPersistMedia(
       console.log(`[MEDIA-RESOLVER] Audio CustomFigure resolving failed. Setting unresolved={true}.`);
       updatedContent = updatedContent.replace(
         fullTag,
-        `<AudioPlayer title="${(title || queryName).replace(/"/g, '&quot;')}" unresolved={true} />`
+        `<Audio title="${(title || queryName).replace(/"/g, '&quot;')}" unresolved={true} />`
       );
       continue;
     }
@@ -2338,7 +2338,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
           } else {
             updatedAttrs += ` url="${publicUrl}"`;
           }
-          updatedContent = updatedContent.replace(fullTag, `<${tagName} ${updatedAttrs}/>`);
+          updatedContent = updatedContent.replace(fullTag, `<Audio ${updatedAttrs}/>`);
           console.log(`[RESTITUTION-REPAIR] Successfully repaired audio to: ${publicUrl}`);
         }
       }
@@ -2409,12 +2409,12 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
     }
   }
 
-  // 4. Validate & Repair CustomFigures
-  const figRegex = /<CustomFigure\s+([^>]*?)\/>/g;
+  // 4. Validate & Repair CustomFigures / Images
+  const figRegex = /<(CustomFigure|Image)\s+([^>]*?)\/>/g;
   let figMatch;
   const figuresToProcess: { fullTag: string; attrsStr: string }[] = [];
   while ((figMatch = figRegex.exec(mdxContent)) !== null) {
-    figuresToProcess.push({ fullTag: figMatch[0], attrsStr: figMatch[1] });
+    figuresToProcess.push({ fullTag: figMatch[0], attrsStr: figMatch[2] });
   }
 
   for (const { fullTag, attrsStr } of figuresToProcess) {

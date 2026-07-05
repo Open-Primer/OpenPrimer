@@ -1039,6 +1039,40 @@ Guidelines:
 - If the visual texts use a localization helper like \`t("Key String")\`, ensure they are wrapped appropriately.
 - Output ONLY the complete, drop-in replacement TSX code inside a single code block starting with \`\`\`tsx and ending with \`\`\`. Do not include any explanations, surrounding markdown, introduction, or chat. Output just the code.
 
+Production Stability & Backward Compatibility (ABCD Guidelines) - CRITICAL:
+To prevent breaking existing published lessons/pages that use static JSX tags of this widget (e.g., <WidgetId prop1={...} />), you MUST strictly adhere to the following rules:
+- **A. Additive-Only Prop Modifications**:
+  * NEVER delete, rename, or change the type of existing properties/parameters in the widget's React component props interface.
+  * All newly introduced properties/parameters MUST be marked as optional in TypeScript (using '?', e.g., 'theme?: string').
+- **B. Defensive Initialization**:
+  * Every prop inside the React component destructuring signature MUST be assigned a safe, robust default fallback value.
+  * Example:
+    \`\`\`tsx
+    export const FunctionPlotter = ({
+      fn = 'x^2',
+      domain = [-10, 10],
+      gridVisible = true // Safe default fallback value
+    }: FunctionPlotterProps) => { ... }
+    \`\`\`
+  * This guarantees that older pages rendered without the newly added prop do not throw runtime exceptions.
+- **C. Deprecation & Aliasing**:
+  * If a property is obsolete or is being replaced by a newer prop name, keep the old prop in the interface for backward compatibility, and safely alias/resolve it inside the component code.
+  * Example:
+    \`\`\`tsx
+    const activeRange = xRange || domain || [-10, 10];
+    \`\`\`
+- **D. Compliancy Header Comment**:
+  * ALWAYS write a short, clean header comment block at the absolute top of the generated \`.tsx\` file (before imports) to state compliance with the ABCD Production Stability Guidelines.
+  * Example:
+    \`\`\`tsx
+    /*
+     * @compliance ABCD Production Stability Guidelines
+     * - A: Additive-only props (backward compatible).
+     * - B: Defensive defaults assigned during destructuring.
+     * - C: Deprecations aliased appropriately.
+     */
+    \`\`\`
+
 Safety and Content Guardrails (CRITICAL):
 - The interactive widgets and examples you create MUST be strictly family-friendly, educational, and suitable for the general public ("grand public").
 - Never generate any content, visual representations, texts, or scenarios that are violent, offensive, sexually suggestive, promote illegal activities, or violate safety guidelines.

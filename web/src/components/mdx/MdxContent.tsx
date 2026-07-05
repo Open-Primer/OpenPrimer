@@ -2374,6 +2374,9 @@ const components = {
   Alert,
   Biography,
   CustomFigure,
+  Visual: CustomFigure,
+  VisualMedia: CustomFigure,
+  Image: CustomFigure,
   Quiz,
   Question,
   Option,
@@ -2600,7 +2603,7 @@ const components = {
   // Callouts & Media aliases
   Callout,
   CalloutContainer,
-  Image: ImageAlias,
+
 
   // Fallback safety components to prevent runtime crashes on unmapped tags
   Feedback: () => null,

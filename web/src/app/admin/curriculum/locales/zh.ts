@@ -642,4 +642,6 @@ export const locale: Record<string, string> = {
   "Alpha": "阿尔法",
   "Beta": "贝塔",
   "Gamma": "伽马",
+  "Production Stability Warning": "警告：生产环境稳定性",
+  "Modifying a widget's technical interface or parameters risks breaking all courses in production that render this widget. Always ensure strict backwards compatibility by keeping old props optional and supplying default fallback values in the component's code.": "修改组件的技术接口或参数可能会导致生产环境中所有渲染该组件的课程崩溃。请始终确保严格的向后兼容性：保持新属性为可选，并在组件代码中提供稳健的默认回退值。"
 };
