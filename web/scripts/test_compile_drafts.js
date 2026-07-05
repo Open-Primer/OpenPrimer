@@ -59,7 +59,7 @@ function extractMdxContent(filePath) {
   // Check if it's JSON-wrapped
   if (rawContent.includes('```json')) {
     const jsonStart = rawContent.indexOf('```json') + 7;
-    const jsonEnd = rawContent.indexOf('```', jsonStart);
+    const jsonEnd = rawContent.lastIndexOf('```');
     const jsonStr = rawContent.substring(jsonStart, jsonEnd).trim();
     try {
       const parsed = JSON.parse(jsonStr);

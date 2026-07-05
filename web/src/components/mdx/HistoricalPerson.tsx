@@ -634,7 +634,7 @@ export const EntityLink = ({
     queryName,
     activeLang,
     queryOriginalLang,
-    !!(unresolved || !queryName || !activeLang),
+    !!(!queryName || !activeLang),
     resolvedType
   );
 
@@ -648,10 +648,6 @@ export const EntityLink = ({
 
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
-
-  if (unresolved) {
-    return <>{children}</>;
-  }
 
   const showOverlay = !!name;
   if (!showOverlay) {

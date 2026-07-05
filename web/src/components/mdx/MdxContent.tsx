@@ -734,7 +734,15 @@ const ZoomableImage = ({
   );
 };
 
-const renderCaptionWithLinks = (captionText: string, fallbackUrl?: string) => {
+const unescapeQuotes = (text: string): string => {
+  if (!text) return '';
+  return text
+    .replace(/\\"/g, '"')
+    .replace(/&quot;/g, '"');
+};
+
+const renderCaptionWithLinks = (captionTextRaw: string, fallbackUrl?: string) => {
+  const captionText = unescapeQuotes(captionTextRaw);
   const parts = captionText.split(/(\bSource\s*[:：]\s*)/i);
   if (parts.length < 3) {
     return <span className="select-text">{captionText}</span>;
@@ -762,7 +770,7 @@ const renderCaptionWithLinks = (captionText: string, fallbackUrl?: string) => {
           href={linkUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 no-underline hover:underline font-normal transition-colors cursor-pointer"
+          className="text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300 underline font-normal transition-colors cursor-pointer"
         >
           {linkText}
         </a>
@@ -804,7 +812,7 @@ const renderCaptionWithLinks = (captionText: string, fallbackUrl?: string) => {
           href={url} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 no-underline hover:underline font-normal transition-colors cursor-pointer"
+          className="text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300 underline font-normal transition-colors cursor-pointer"
         >
           {sourceName}
         </a>
@@ -815,7 +823,9 @@ const renderCaptionWithLinks = (captionText: string, fallbackUrl?: string) => {
   );
 };
 
-const CustomFigure = ({ src, alt, caption, fallbackText, fallbackUrl, unresolved, isIllustration }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string; unresolved?: boolean; isIllustration?: boolean }) => {
+const CustomFigure = ({ src, alt: rawAlt, caption: rawCaption, fallbackText, fallbackUrl, unresolved, isIllustration }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string; unresolved?: boolean; isIllustration?: boolean }) => {
+  const alt = unescapeQuotes(rawAlt);
+  const caption = unescapeQuotes(rawCaption);
   const [failed, setFailed] = React.useState(false);
   const { markDegraded, registerFigure, unregisterFigure, registeredFigures } = useMdxStatus();
   const { language } = useLanguage();

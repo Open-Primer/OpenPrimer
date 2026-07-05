@@ -60,6 +60,15 @@ export const DynamicTableChart = ({ children, alt, description, caption }: Dynam
 
   const hasData = parsedData.rows.length > 0;
 
+  const hasChartableData = React.useMemo(() => {
+    return parsedData.rows.some(r => r.values.some(v => v !== 0));
+  }, [parsedData]);
+
+  const titleText = React.useMemo(() => {
+    if (!hasChartableData) return "Tableau Comparatif";
+    return viewMode === 'table' ? "Tableau Comparatif & Graphique" : "Graphique";
+  }, [hasChartableData, viewMode]);
+
   const renderSVGChart = () => {
     const data = parsedData.rows;
     const maxVal = Math.max(...data.map(r => r.values[0] || 0), 1);
@@ -143,11 +152,11 @@ export const DynamicTableChart = ({ children, alt, description, caption }: Dynam
         <div className="flex items-center gap-2">
           <Table className="w-4 h-4 text-indigo-400" />
           <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-350">
-            Tableau Comparatif & Graphique
+            {titleText}
           </span>
         </div>
 
-        {hasData && (
+        {hasChartableData && (
           <div className="flex items-center gap-2 bg-slate-200/50 dark:bg-slate-950/60 border border-slate-300/50 dark:border-slate-800/80 px-2.5 py-1 rounded-xl">
             <button
               onClick={() => setViewMode(viewMode === 'table' ? 'chart' : 'table')}

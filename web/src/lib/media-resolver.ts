@@ -645,22 +645,62 @@ export function getWikimediaPageUrl(url: string): string | null {
   return null;
 }
 
+export function getConciseQuery(description: string, alt: string, caption: string): string {
+  const cleanAlt = (alt || '').trim().replace(/_/g, ' ');
+  if (cleanAlt && cleanAlt.length > 3 && cleanAlt.length < 100 && !/placeholder|img|image|figure/i.test(cleanAlt)) {
+    return cleanAlt;
+  }
+
+  const cleanCaption = (caption || '')
+    .trim()
+    .replace(/_/g, ' ')
+    .replace(/^(?:Figure|Abbildung|Figura|图|الشكل|चित्र|خاکہ)\s*\d*\s*[:\-\u2013\u2014]?\s*/i, '')
+    .split(/\s*[-—–]\s*Source\s*:/i)[0]
+    .split(/\s*Source\s*:/i)[0]
+    .trim();
+
+  if (cleanCaption && cleanCaption.length > 3 && cleanCaption.length < 120) {
+    return cleanCaption;
+  }
+
+  const desc = (description || '').trim().replace(/_/g, ' ');
+  if (desc) {
+    const sentences = desc.split(/[.;!?]/);
+    const firstSentence = (sentences[0] || '').trim();
+    if (firstSentence && firstSentence.length > 3 && firstSentence.length < 100) {
+      return firstSentence;
+    }
+    if (firstSentence && firstSentence.length >= 100) {
+      const truncated = firstSentence.slice(0, 80);
+      const lastSpace = truncated.lastIndexOf(' ');
+      if (lastSpace > 30) {
+        return truncated.slice(0, lastSpace).trim();
+      }
+      return truncated.trim();
+    }
+  }
+
+  return (cleanAlt || cleanCaption || desc || '').trim();
+}
+
 export async function resolveImageFromSources(
   title: string,
   lang: string = 'en',
-  discipline?: string
+  discipline?: string,
+  validationPrompt?: string
 ): Promise<{ url: string; sourceLabel: string; sourceUrl?: string } | null> {
   const query = title.trim().replace(/_/g, ' ');
+  const validationDesc = validationPrompt ? validationPrompt : query;
 
   // 1. Wikidata P18 — canonical, most reliable for named entities
   const wdImage = await fetchWikidataImage(query);
   if (wdImage) {
-    const isValid = await validateImageWithGemini(wdImage, query);
+    const isValid = await validateImageWithGemini(wdImage, validationDesc);
     if (isValid) {
       return { 
-        url: wdImage, 
-        sourceLabel: 'Wikimedia Commons',
-        sourceUrl: getWikimediaPageUrl(wdImage) || undefined
+         url: wdImage, 
+         sourceLabel: 'Wikimedia Commons',
+         sourceUrl: getWikimediaPageUrl(wdImage) || undefined
       };
     } else {
       console.log(`[MEDIA-RESOLVER] Wikidata P18 image rejected by Gemini for query "${query}". Trying fallback...`);
@@ -670,12 +710,12 @@ export async function resolveImageFromSources(
   // 2. Wikipedia/Wikimedia Commons search
   const wikiImage = await fetchWikipediaImage(query, lang);
   if (wikiImage) {
-    const isValid = await validateImageWithGemini(wikiImage, query);
+    const isValid = await validateImageWithGemini(wikiImage, validationDesc);
     if (isValid) {
       return { 
-        url: wikiImage, 
-        sourceLabel: 'Wikimedia Commons',
-        sourceUrl: getWikimediaPageUrl(wikiImage) || undefined
+         url: wikiImage, 
+         sourceLabel: 'Wikimedia Commons',
+         sourceUrl: getWikimediaPageUrl(wikiImage) || undefined
       };
     } else {
       console.log(`[MEDIA-RESOLVER] Wikipedia page image rejected by Gemini for query "${query}". Trying fallback...`);
@@ -688,7 +728,7 @@ export async function resolveImageFromSources(
   if (isHistoryOrLit) {
     const gallicaImage = await fetchGallicaImage(query);
     if (gallicaImage) {
-      const isValid = await validateImageWithGemini(gallicaImage, query);
+      const isValid = await validateImageWithGemini(gallicaImage, validationDesc);
       if (isValid) {
         return { 
           url: gallicaImage, 
@@ -707,7 +747,7 @@ export async function resolveImageFromSources(
   if (isScience) {
     const nasaImage = await fetchNASAImage(query);
     if (nasaImage) {
-      const isValid = await validateImageWithGemini(nasaImage, query);
+      const isValid = await validateImageWithGemini(nasaImage, validationDesc);
       if (isValid) {
         return { url: nasaImage, sourceLabel: 'NASA Images (Public Domain)' };
       } else {
@@ -721,7 +761,7 @@ export async function resolveImageFromSources(
   if (isArtHistory) {
     const metImage = await fetchMetMuseumImage(query);
     if (metImage) {
-      const isValid = await validateImageWithGemini(metImage, query);
+      const isValid = await validateImageWithGemini(metImage, validationDesc);
       if (isValid) {
         return { url: metImage, sourceLabel: 'The Metropolitan Museum of Art (CC0)' };
       } else {
@@ -733,7 +773,7 @@ export async function resolveImageFromSources(
   // 6. Archive.org Fallback for Images
   const archiveImage = await fetchArchiveOrgMedia(query, 'image');
   if (archiveImage?.url) {
-    const isValid = await validateImageWithGemini(archiveImage.url, query);
+    const isValid = await validateImageWithGemini(archiveImage.url, validationDesc);
     if (isValid) {
       return {
         url: archiveImage.url,
@@ -748,7 +788,7 @@ export async function resolveImageFromSources(
   // 7. Smithsonian — broad fallback for natural history, science, culture
   const smithsonianImage = await fetchSmithsonianImage(query);
   if (smithsonianImage) {
-    const isValid = await validateImageWithGemini(smithsonianImage, query);
+    const isValid = await validateImageWithGemini(smithsonianImage, validationDesc);
     if (isValid) {
       return { url: smithsonianImage, sourceLabel: 'Smithsonian Open Access (CC0)' };
     } else {
@@ -760,7 +800,7 @@ export async function resolveImageFromSources(
   if (!isScience) {
     const nasaFallback = await fetchNASAImage(query);
     if (nasaFallback) {
-      const isValid = await validateImageWithGemini(nasaFallback, query);
+      const isValid = await validateImageWithGemini(nasaFallback, validationDesc);
       if (isValid) {
         return { url: nasaFallback, sourceLabel: 'NASA Images (Public Domain)' };
       } else {
@@ -1655,9 +1695,10 @@ export async function resolveAndPersistMedia(
       let resolvedSuccess = false;
 
       const currentAttrs = parseAttributesRobustly(attrsStr);
-      const queryName = (description || altText || caption || '').trim().replace(/_/g, ' ');
+      const detailedDesc = (description || altText || caption || '').trim();
+      const queryName = getConciseQuery(description, altText, caption);
       if (queryName) {
-        const resolved = await resolveImageFromSources(queryName, targetLang, discipline);
+        const resolved = await resolveImageFromSources(queryName, targetLang, discipline, detailedDesc);
         const wikiImage = resolved ? resolved.url : null;
         if (resolved && wikiImage) {
           console.log(`[MEDIA-RESOLVER] Found real Wikipedia image for Figure "${queryName}": ${wikiImage}`);

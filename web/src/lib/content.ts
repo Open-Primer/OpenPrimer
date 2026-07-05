@@ -3584,12 +3584,11 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       glossaryContent = glossaryContent.slice(0, actIndex);
     }
     
-    // Robust replacement of <Glossary> tags supporting self-closing, attributes in any order, and single/double quotes
     glossaryContent = glossaryContent.replace(/<Glossary\b([^>]*?)(?:>([\s\S]*?)<\/Glossary>|\/>)/gi, (match, attrs, content) => {
-      const termMatch = attrs.match(/term=["']([^"']+)["']/i);
-      const defMatch = attrs.match(/definition=["']([\s\S]*?)["']/i);
-      const term = termMatch ? termMatch[1] : '';
-      const def = defMatch ? defMatch[1] : '';
+      const termMatch = attrs.match(/term=(["'])([\s\S]*?)\1/i);
+      const defMatch = attrs.match(/definition=(["'])([\s\S]*?)\1/i);
+      const term = termMatch ? termMatch[2] : '';
+      const def = defMatch ? defMatch[2] : '';
       const displayName = (content || term || '').trim();
       const cleanedDef = cleanGlossaryDefinition(def);
       return `\n- **${displayName}** : ${cleanedDef}\n`;
@@ -3631,11 +3630,11 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     while ((inlineMatch = inlineEntityRegex.exec(preGlossary)) !== null) {
       const attrs = inlineMatch[2];
       const innerText = inlineMatch[3].trim();
-      const descMatch = attrs.match(/description=["']([\s\S]*?)["']/i);
+      const descMatch = attrs.match(/description=(["'])([\s\S]*?)\1/i);
       if (descMatch && innerText) {
         // Normalize term name: capitalize first letter
         const term = innerText.charAt(0).toUpperCase() + innerText.slice(1);
-        let definition = cleanGlossaryDefinition(descMatch[1]);
+        let definition = cleanGlossaryDefinition(descMatch[2]);
 
         // Format Wikipedia links in the definition
         definition = definition.replace(/\[?\[?(Wikip[eé]dia)\]?\]?\((https?:\/\/[^\s)]+)\)\]?/gi, (m, label, url) => {
@@ -3704,17 +3703,17 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   const citationRegex = /<(Citation|InteractiveQuote|QuoteBlock)\b([^>]*?)(?:>([\s\S]*?)<\/\1>|\/>)/gi;
   
   processed = processed.replace(citationRegex, (match, tagName, attrs, children) => {
-    const authorMatch = attrs.match(/author=["']([^"']+)["']/i) || attrs.match(/auteur=["']([^"']+)["']/i);
-    const sourceMatch = attrs.match(/source=["']([^"']+)["']/i);
-    const yearMatch = attrs.match(/year=["']([^"']+)["']/i) || attrs.match(/annee=["']([^"']+)["']/i);
-    const originalMatch = attrs.match(/original=["']([^"']+)["']/i);
-    const quoteAttrMatch = attrs.match(/quote=["']([^"']+)["']/i) || attrs.match(/text=["']([^"']+)["']/i);
+    const authorMatch = attrs.match(/author=(["'])([\s\S]*?)\1/i) || attrs.match(/auteur=(["'])([\s\S]*?)\1/i);
+    const sourceMatch = attrs.match(/source=(["'])([\s\S]*?)\1/i);
+    const yearMatch = attrs.match(/year=(["'])([\s\S]*?)\1/i) || attrs.match(/annee=(["'])([\s\S]*?)\1/i);
+    const originalMatch = attrs.match(/original=(["'])([\s\S]*?)\1/i);
+    const quoteAttrMatch = attrs.match(/quote=(["'])([\s\S]*?)\1/i) || attrs.match(/text=(["'])([\s\S]*?)\1/i);
     
-    const author = authorMatch ? authorMatch[1].trim() : '';
-    const source = sourceMatch ? sourceMatch[1].trim() : '';
-    const year = yearMatch ? yearMatch[1].trim() : '';
-    const original = originalMatch ? originalMatch[1].trim() : '';
-    const quote = (quoteAttrMatch ? quoteAttrMatch[1] : children || '').trim();
+    const author = authorMatch ? authorMatch[2].trim() : '';
+    const source = sourceMatch ? sourceMatch[2].trim() : '';
+    const year = yearMatch ? yearMatch[2].trim() : '';
+    const original = originalMatch ? originalMatch[2].trim() : '';
+    const quote = (quoteAttrMatch ? quoteAttrMatch[2] : children || '').trim();
     
     // Check if we already have this work cited to consolidate refNum
     let existingRef = citationBlocks.find(cb => 
