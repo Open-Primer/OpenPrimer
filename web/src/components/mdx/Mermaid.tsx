@@ -446,6 +446,16 @@ const CustomTimeline = ({ chartText }: { chartText: string }) => {
   );
 };
 
+const generateDeterministicId = (text: string): string => {
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return `mermaid-${Math.abs(hash)}`;
+};
+
 export const Mermaid = ({ chart, children }: MermaidProps) => {
   const { language } = useLanguage();
   const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
@@ -462,7 +472,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [theme, setTheme] = useState<'paper' | 'focus' | 'dark'>('dark');
-  const containerId = useRef(`mermaid-${Math.floor(Math.random() * 1000000)}`);
+  const containerId = useRef(generateDeterministicId(chartText));
   const elementRef = useRef<HTMLDivElement>(null);
 
   const [isFullscreen, setIsFullscreen] = useState(false);

@@ -1958,16 +1958,38 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
   // Remove any existing finalEvaluation anchors
   content = content.replace(/\[\[\s*WIDGET\s*:\s*finalEvaluation\s*\]\]/gi, '');
 
-  const evalRegex = /^(#{2,3}\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/mi;
-  const evalMatch = content.match(evalRegex);
-  
-  const evalHeadings: Record<string, string> = {
+  const contentLowerTmp = content.toLowerCase();
+  let langKey = 'en';
+  if (contentLowerTmp.includes('présentation') || contentLowerTmp.includes('introduction') || contentLowerTmp.includes('références') || contentLowerTmp.includes('glossaire') || contentLowerTmp.includes('conclusion') || contentLowerTmp.includes('synthèse')) {
+    langKey = 'fr';
+  } else if (contentLowerTmp.includes('referencias') || contentLowerTmp.includes('glosario') || contentLowerTmp.includes('conclusión')) {
+    langKey = 'es';
+  } else if (contentLowerTmp.includes('referenzen') || contentLowerTmp.includes('glossar') || contentLowerTmp.includes('fazit')) {
+    langKey = 'de';
+  } else if (contentLowerTmp.includes('参考文献') || contentLowerTmp.includes('词汇表') || contentLowerTmp.includes('结论')) {
+    langKey = 'zh';
+  }
+
+  const finalEvalHeadings: Record<string, string> = {
     fr: '## Évaluation Finale',
     en: '## Final Evaluation',
     es: '## Evaluación Final',
     de: '## Abschlussbewertung',
     zh: '## 最终评估'
   };
+
+  const selfEvalHeadings: Record<string, string> = {
+    fr: '## Auto-évaluation',
+    en: '## Self-Evaluation',
+    es: '## Autoevaluación',
+    de: '## Selbstbewertung',
+    zh: '## 自我评估'
+  };
+
+  const evalHeading = isTerminalEvaluation ? finalEvalHeadings[langKey] : selfEvalHeadings[langKey];
+
+  const evalRegex = /^(#{2,3}\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/mi;
+  const evalMatch = content.match(evalRegex);
 
   if (evalMatch) {
     const headerText = evalMatch[0];
@@ -1984,23 +2006,12 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     }
     
     const prose = content.substring(headerIdx + headerText.length, sectionEnd).trim();
-    const rebuiltSection = `${headerText}\n\n${prose ? prose + '\n\n' : ''}${finalEvalStr}`;
+    const rebuiltSection = `${evalHeading}\n\n${prose ? prose + '\n\n' : ''}${finalEvalStr}`;
     content = content.substring(0, headerIdx) + rebuiltSection + content.substring(sectionEnd);
   } else {
-    const contentLowerTmp = content.toLowerCase();
-    let langKey = 'en';
-    if (contentLowerTmp.includes('présentation') || contentLowerTmp.includes('introduction') || contentLowerTmp.includes('références') || contentLowerTmp.includes('glossaire') || contentLowerTmp.includes('conclusion') || contentLowerTmp.includes('synthèse')) {
-      langKey = 'fr';
-    } else if (contentLowerTmp.includes('referencias') || contentLowerTmp.includes('glosario') || contentLowerTmp.includes('conclusión')) {
-      langKey = 'es';
-    } else if (contentLowerTmp.includes('referenzen') || contentLowerTmp.includes('glossar') || contentLowerTmp.includes('fazit')) {
-      langKey = 'de';
-    } else if (contentLowerTmp.includes('参考文献') || contentLowerTmp.includes('词汇表') || contentLowerTmp.includes('结论')) {
-      langKey = 'zh';
-    }
-    const evalHeading = evalHeadings[langKey];
     content = content.trim() + `\n\n${evalHeading}\n\n${finalEvalStr}`;
   }
+
   // Strip markdown links ([text](url)) from glossary definitions to remove visible [Wikipedia] brackets
   const cleanGlossaryDef = (def: string): string => (def || '')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')  // [text](url) -> text
@@ -2069,6 +2080,85 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
 
   // Clean up generic/empty developer placeholders at the end of lessons
   content = content.replace(/<FunctionPlotter\s+fn=["']x\^2["']\s*\/?>/gi, '');
+
+  // Nested function to sequentially renumber figures and diagrams in order of appearance
+  function renumberFiguresAndCaptions(text: string, lang: string): string {
+    let counter = 1;
+    const tagRegex = /<(Image|CustomFigure|Mermaid)\b([\s\S]*?)\/?>/gi;
+    
+    return text.replace(tagRegex, (tagMatch, tagName, attrsStr) => {
+      const captionRegex = /\bcaption=(?:"([^"]*)"|'([^']*)'|\{([\s\S]*?)\})/i;
+      const captionMatch = attrsStr.match(captionRegex);
+      
+      let captionText = '';
+      let matchedDelimiter = '"';
+      
+      if (captionMatch) {
+        captionText = captionMatch[1] || captionMatch[2] || captionMatch[3] || '';
+        if (captionMatch[2] !== undefined) matchedDelimiter = "'";
+        if (captionMatch[3] !== undefined) matchedDelimiter = '{';
+      }
+      
+      // If caption is empty/missing, look for description
+      if (!captionText.trim()) {
+        const descRegex = /\bdescription=(?:"([^"]*)"|'([^']*)'|\{([\s\S]*?)\})/i;
+        const descMatch = attrsStr.match(descRegex);
+        if (descMatch) {
+          captionText = descMatch[1] || descMatch[2] || descMatch[3] || '';
+        }
+      }
+      
+      let cleanCaption = captionText.trim();
+      const prefixRegex = /^(?:figure|fig|illustration|abbildung|abb|image|custom\s*figure)\s*(?:\d+(?:\.\d+)*|[a-z])?\s*(?:[:：\-–—]\s*)*/i;
+      cleanCaption = cleanCaption.replace(prefixRegex, '').trim();
+      
+      let prefix = `Figure ${counter} : `;
+      if (lang === 'en') {
+        prefix = `Figure ${counter}: `;
+      } else if (lang === 'de') {
+        prefix = `Abbildung ${counter}: `;
+      } else if (lang === 'es') {
+        prefix = `Figura ${counter}: `;
+      } else if (lang === 'zh') {
+        prefix = `图 ${counter}: `;
+      }
+      
+      const newCaptionText = `${prefix}${cleanCaption}`;
+      counter++;
+      
+      let newAttrsStr = attrsStr;
+      if (captionMatch) {
+        const fullAttrMatch = captionMatch[0];
+        let newAttrStr = '';
+        if (matchedDelimiter === '{') {
+          newAttrStr = `caption={\`${newCaptionText.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`}`;
+        } else {
+          newAttrStr = `caption=${matchedDelimiter}${newCaptionText.replace(new RegExp(matchedDelimiter, 'g'), '\\' + matchedDelimiter)}${matchedDelimiter}`;
+        }
+        newAttrsStr = attrsStr.replace(fullAttrMatch, newAttrStr);
+      } else {
+        newAttrsStr = ` caption="${newCaptionText}"` + attrsStr;
+      }
+      
+      return `<${tagName}${newAttrsStr}/>`;
+    });
+  }
+
+  // Renumber figures sequentially
+  content = renumberFiguresAndCaptions(content, langKey);
+
+  // Clean up any trailing unbalanced closing brackets ']' at the end of lines
+  content = content.split('\n').map(line => {
+    let cleanLine = line;
+    const openCount = (cleanLine.match(/\[/g) || []).length;
+    const closeCount = (cleanLine.match(/\]/g) || []).length;
+    if (closeCount > openCount) {
+      while (cleanLine.trim().endsWith(']') && (cleanLine.match(/\]/g) || []).length > (cleanLine.match(/\[/g) || []).length) {
+        cleanLine = cleanLine.trim().slice(0, -1);
+      }
+    }
+    return cleanLine;
+  }).join('\n');
 
   content = content.replace(/```mdx/g, '').replace(/```/g, '').trim();
 
@@ -3064,6 +3154,17 @@ To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
 5. NO WIDGET ANCHORS INSIDE LISTS OR TABLES:
    - Never place any [[WIDGET:...]] bracketed anchors inside bullet points, list items, or tables. Placing anchors inside lists disrupts the formatting and crashes the MDX stitcher.
    - Always place every widget anchor on its own separate, clean line, surrounded by a blank line before and after.
+
+6. ABSOLUTE PROHIBITION ON RAW INTERACTIVE, QUESTION, OR EVALUATION TAGS:
+   - You MUST NEVER write raw tags like <Question>, <Option>, <Quiz>, <EssayEvaluation>, <OralEvaluation>, <DidYouKnow>, <HistoricalAnecdote>, etc. in your prose under any circumstances. All interactive questions, quizzes, or evaluations are handled entirely via the standard block anchors like [[WIDGET:finalEvaluation]] or [[WIDGET:diagnosticQuiz]]. Writing these raw tags will crash the compiler and reject your lesson.
+
+7. NO MANUAL FIGURE NUMBERING OR LABELS:
+   - Do NOT write prefix numbers like "Figure 1:", "Figure A:", "Image 1 -" or relative links like "comme le montre la figure ci-dessus" or "voir Figure 2" inside the captions or descriptions of images/figures.
+   - The stitching layer programmatically and sequentially numbers all figures/images in order of their appearance across the entire lesson and automatically prefixes them with the beautifully formatted, localized label (e.g. "Figure 1 : ").
+   - All captions or descriptions you write MUST contain only clean, natural, academic prose describing the visual asset itself (e.g. "Une représentation tridimensionnelle de la molécule de méthane...").
+
+8. COMPREHENSIVE CONCLUSION PROSE:
+   - The "## Conclusion" section must NEVER be empty or consist solely of widget anchors. You MUST write at least two comprehensive, well-developed academic paragraphs in the "## Conclusion" section to synthesize the lesson's main takeaways and transition to the next phase.
 =============================================================================
 
 ---
@@ -3278,7 +3379,7 @@ ${cleanedNarrative}
 ---
 
 ### CORE CHECKPOINTS
-You must audit the narrative text against the following 7 critical checkpoints:
+You must audit the narrative text against the following 11 critical checkpoints:
 
 1. **Zero-Placeholder Constraint**:
    - **STRICT REJECTION**: You MUST reject (\`approved: false\`) if the text contains any comments, skeletons, or placeholder phrases like "write section here," "[À compléter]," "Lorem Ipsum," or undeveloped paragraphs. The narrative must be 100% complete and publication-ready.
@@ -3311,8 +3412,6 @@ You must audit the narrative text against the following 7 critical checkpoints:
    - **STRICT REJECTION FOR WRAPPED VERBS**: Strictly check and REJECT if any active verbs, action verbs, or Revised Bloom's Taxonomy verbs (such as *analyser*, *comprendre*, *créer*, *identifier*, *expliquer*, etc., or their English equivalents) are wrapped inside any hover-card tags. Verify that only proper names, nouns, and true entities are wrapped.
    - Ensure these custom tags are NOT placed inside JSX attributes (like component property values) where they are syntactically invalid.
    - Check for and reject any nested or duplicated Hover-Cards.
-
-
 7. **Media Anchors & Assets**:
    - Verify that the lesson contains at least 5 to 6 image anchors and 1 to 2 audio/video anchors represented as:
      \`[[WIDGET:Media:media_id:Topic/Hint]]\`
@@ -3322,6 +3421,12 @@ You must audit the narrative text against the following 7 critical checkpoints:
      - Verify that the narrative contains **at least 1 to 2 rich Markdown comparison tables** (using standard \`| Column 1 | Column 2 |\` format) to summarize complex conceptual comparisons, multi-variable data, or historical timelines.
      - Verify that the narrative contains **at least 1 to 2 Mermaid diagrams** (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model processes, system architectures, decision flows, or conceptual hierarchies.
      - Reject if these rich visual/structural elements are missing from a university-level narrative.
+9. **No Raw Interactive, Question, or Evaluation Tags**:
+   - **STRICT REJECTION**: You MUST reject if there are raw interactive, question, or evaluation tags like `<Question>`, `<Option>`, `<Quiz>`, `<EssayEvaluation>`, `<OralEvaluation>`, etc. in the narrative text. All evaluations must be referred to via standard block anchors like [[WIDGET:finalEvaluation]].
+10. **Strict Figure Prefix & Numbering Exclusion**:
+   - **STRICT REJECTION**: Verify that any captions or descriptions of visual/image/diagram assets (Image, CustomFigure, Mermaid, etc.) contain absolutely NO prefix numbers like 'Figure 1:', 'Figure A:', 'Image 1 -' or relative links like 'comme le montre la figure ci-dessus' or 'voir Figure 2'. All sequential figure numbering is handled programmatically at stitching time.
+11. **Comprehensive Conclusion Prose**:
+   - **STRICT REJECTION**: Verify that the "## Conclusion" section contains at least two comprehensive, well-developed academic prose paragraphs. Reject if the section is empty or has only widget anchors or list items.
 
 ---
 
@@ -3378,20 +3483,15 @@ The narrative critic (Agent 4A) has rejected your previously generated academic 
   * For higher education / university levels (L1, L2, L3, intermediate, advanced): 3500 to 5500 words. Provide extreme academic rigor, detailed historical and technical contextualization, deep conceptual analyses, and extensive comparative and mathematical/empirical sections where appropriate.
   * For graduate levels (M1, M2, expert): 5500 to 8000 words. Provide exhaustive master-class level coverage.
 - YOUR EXACT TARGET WORD COUNT FOR THIS SPECIFIC LESSON IS: **at least ${minWords} and up to ${maxWords} words** of rich, well-developed narrative paragraphs.
-- Shorter lessons WILL fail critical verification, causing immediate rejection. Be extremely detailed, thorough, and analytical.
-- To successfully achieve this target word count with high academic value:
-  * Do NOT use fluff, empty transitions, or repetitive sentences.
-  * Expand on historical/epistemological context, detail all physical or social mechanisms, trace the timeline of key discoveries, and analyze the implications of theoretical models.
-  * Write extensive, highly descriptive body text before and after each bracketed [[WIDGET:...]] anchor. Every section must have multiple long, well-developed paragraphs.
-  * Break down major concepts into sub-concepts, provide detailed case studies, or walk through real-world/applied scenarios in full.
-
-${pronunciationMandate}
 
 [CRITICAL] CRITICAL REMINDER: You MUST maintain absolute XML/JSX markup compliance to prevent parser crashes:
 - Do NOT use raw JSX tags for interactive widgets (<DataChart>, <BasicMathExplorer>, <Quiz>, etc.). Use bracketed anchors: [[WIDGET:id]].
 - Do NOT use raw HTML tags (<ul>, <ol>, <li>) for lists; use standard Markdown instead.
-- Do NOT use literal curly braces { } in plain text; escape them as \`{x}\` or wrap math in LaTeX $ \\{...\\} $ or $ \\{...\\} $.
+- Do NOT use literal curly braces { } in plain text; escape them as \`{x}\` or wrap math in LaTeX $ \{...\} $ or $$ \{...\} $$.
 - Never write "import " or "export " at the start of a line in plain prose.
+- You MUST NEVER write raw tags like <Question>, <Option>, <Quiz>, <EssayEvaluation>, <OralEvaluation>, <DidYouKnow>, <HistoricalAnecdote>, etc. in your prose.
+- Do NOT write any manual figure numbers/prefixes (like "Figure 1:", "Abbildung 2:") or relative links (like "comme le montre la figure ci-dessus") in captions or descriptions.
+- The "## Conclusion" section must contain at least two comprehensive, well-developed academic paragraphs.
 
 [CRITICAL] RICH MARKDOWN TABLES AND MERMAID DIAGRAMS (MANDATORY FOR UNIVERSITY LEVELS):
 - If the academic level is University/Higher Education (L1, L2, L3, M1, M2):
@@ -3451,6 +3551,9 @@ We need to repair specific sections of the lesson narrative "${item.title}" that
 - Do NOT use raw JSX tags for interactive widgets. Use bracketed anchors: [[WIDGET:id]].
 - Do NOT use raw HTML tags; use standard Markdown instead.
 - Do NOT use literal curly braces { } in plain text.
+- You MUST NEVER write raw tags like <Question>, <Option>, <Quiz>, <EssayEvaluation>, <OralEvaluation>, <DidYouKnow>, <HistoricalAnecdote>, etc. in your prose.
+- Do NOT write any manual figure numbers/prefixes (like "Figure 1:", "Abbildung 2:") or relative links (like "comme le montre la figure ci-dessus") in captions or descriptions.
+- The "## Conclusion" section must contain at least two comprehensive, well-developed academic paragraphs.
 
 [CRITICAL] RICH MARKDOWN TABLES AND MERMAID DIAGRAMS (MANDATORY FOR UNIVERSITY LEVELS):
 - If the academic level is University/Higher Education (L1, L2, L3, M1, M2):
@@ -3704,7 +3807,7 @@ ${referencesMetadata}
           - \`searchQuery\`: Highly canonical and extremely concise 1 to 3 search words or keywords (e.g., "Claudio Monteverdi", "Larynx humain", "Doppler acoustique") extracted directly from the detailed description to ensure precise database matches on Wikidata, Wikimedia Commons, and other repositories. Do NOT repeat or use long, complex descriptions or captions here.
          - \`description\`: The detailed search/generation description for the image. MUST be populated using the original detailed \`Topic\` description hint from the \`[[WIDGET:Image:ID:Topic]]\` anchor. STRICTLY PROHIBITED: Do NOT copy-paste the chapter's section anchor, heading, or parent section title here.
          - \`alt\`: Short description for accessibility. MUST describe the actual subject specified in the \`Topic\` hint. Do NOT use the parent section title here.
-         - \`caption\`: A detailed, italicized caption explaining the figure's academic relevance (strictly avoid manual sequential numbering, relative indexes, or prefixes like "Figure 1:", "Expérience 1 :", "Illustration .2", or "Figure 1.2:"). MUST be a meaningful description of the specific subject from the \`Topic\` hint. Do NOT use the parent section title here.
+         - \`caption\`: A detailed, italicized caption explaining the figure's academic relevance. **STRICT PROHIBITION**: You MUST NEVER write any manual prefix numbers, figures indices (e.g. 'Figure 1:', 'Figure A:', 'Expérience 1:', 'Illustration .2', or 'Figure 1.2:') or relative spatial links (e.g., 'comme le montre la figure ci-dessus', 'voir Figure 2') in the caption or description. The stitching layer handles all sequential figure numbering and prefixes programmatically at assembly time. Captions must contain only clean, natural, academic prose describing the visual subject itself (e.g. 'Une représentation tridimensionnelle...'). Do NOT use the parent section title here.
          - \`title\`: Short title (optional).
        - **Audio**:
          - \`title\`: Short descriptive title for the audio track.
@@ -3734,7 +3837,7 @@ ${referencesMetadata}
          - \`content\`: Deeply academic prose discussion (150-250 words) detailing the controversy.
    - **Quiz Pool Size and Display Limit (CRITICAL - NO GUESSING)**:
      - For any \`Quiz\` component in this array, you MUST generate EXACTLY ${sectionQuizPoolCount} questions in its \`props.questions\` array.
-     - You MUST specify \`props.limit\`: ${sectionQuizDisplayLimit} in its \`props\` object.
+     - You MUST specify \`props.limit\`: ${sectionQuizDisplayLimit} in the \`props\` object.
      - This guarantees the pool is larger than the visible slice for retry randomisation.
 
 =============================================================================
@@ -3751,7 +3854,7 @@ ${referencesMetadata}
 
 ### 3. OUTPUT FORMAT
 - Return ONLY a valid JSON object matching the \`lessonWidgetsSchema\` schema.
-- Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
+- Do NOT wrap your JSON response in markdown code blocks (`` ` ``).
 - Ensure all string values are fully written in "${targetLang.toUpperCase()}".
 `;
 
@@ -3801,7 +3904,7 @@ ${err.message}
 ${currentWidgetsJsonStr}
 \`\`\`
 
-Return ONLY the corrected and valid JSON response. Do NOT include any explanations, markdown headers, or natural language notes. Do NOT wrap your response in markdown code blocks (\`\`\`).`;
+Return ONLY the corrected and valid JSON response. Do NOT include any explanations, markdown headers, or natural language notes. Do NOT wrap your response in markdown code blocks (`` ` ``).`;
 
             const repairedJsonStr = await callAIEngine(preflightRepairPrompt, dynamicSchema, 0.1);
             currentWidgetsJsonStr = repairedJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();

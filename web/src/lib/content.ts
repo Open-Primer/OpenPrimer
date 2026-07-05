@@ -524,7 +524,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         }
 
         const isSummative = !!(meta?.summative === true || meta?.summative === 'true' || manualMeta?.summative === 'true' || manualMeta?.summative === true);
-        const processedContent = preprocessMdx(repairedBody, lang, isSummative, lessonSlug);
+        const processedContent = preprocessMdx(repairedBody, lang, isSummative, lessonSlug, dbLesson.order);
         const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, lang);
         return {
           meta: {
@@ -574,7 +574,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         }
 
         const isSummative = !!(meta?.summative === true || meta?.summative === 'true' || manualMeta?.summative === 'true' || manualMeta?.summative === true);
-        const processedContent = preprocessMdx(repairedBody, fallbackLesson.lang || lang, isSummative, lessonSlug);
+        const processedContent = preprocessMdx(repairedBody, fallbackLesson.lang || lang, isSummative, lessonSlug, fallbackLesson.order);
         const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, fallbackLesson.lang || lang);
         return {
           meta: {
@@ -3183,9 +3183,41 @@ function deduplicateOriginalQuotes(mdx: string): string {
   return result.join('\n');
 }
 
-export function preprocessMdx(content: string, lang: string = 'en', isSummative: boolean = false, lessonSlug?: string): string {
+export function preprocessMdx(content: string, lang: string = 'en', isSummative: boolean = false, lessonSlug?: string, lessonOrder?: number): string {
   // Apply systematic healing first so high-fidelity content and components are injected automatically
   let processed = content;
+
+  // If first lesson of any course (where lessonOrder === 1 or lessonSlug is 'introduction'), omit PreviousLessonSummary entirely
+  if (lessonOrder === 1 || lessonSlug === 'introduction') {
+    processed = processed.replace(/<(PreviousLessonSummary|ResumeLeconPrecedente)\b[^>]*?\/?>([\s\S]*?<\/\1>)?/gi, '');
+  }
+
+  // If page is summative evaluation, purge all other contents (intro, prose, references, etc.) and only keep header + evaluation widget
+  if (isSummative) {
+    let frontmatter = '';
+    const fmMatch = processed.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?\n/);
+    if (fmMatch) {
+      frontmatter = `---\n${fmMatch[1]}\n---\n\n`;
+    }
+
+    const quizRegex = /<(Quiz|EssayEvaluation|SummativeEvaluation|EvaluationSommative|Evaluation)\b[^>]*?>([\s\S]*?)<\/\1>/gi;
+    const quizSelfClosingRegex = /<(Quiz|EssayEvaluation|SummativeEvaluation|EvaluationSommative|Evaluation)\b[^>]*?\/>/gi;
+    
+    const evalWidgets: string[] = [];
+    let m;
+    while ((m = quizRegex.exec(processed)) !== null) {
+      evalWidgets.push(m[0]);
+    }
+    // Reset regex state or run next
+    let mSelf;
+    while ((mSelf = quizSelfClosingRegex.exec(processed)) !== null) {
+      evalWidgets.push(mSelf[0]);
+    }
+
+    if (evalWidgets.length > 0) {
+      processed = frontmatter + evalWidgets.join('\n\n');
+    }
+  }
 
   // Clean up duplicate frontmatter boundaries if any
   processed = processed.replace(/^---\s*\r?\n+---\s*\r?\n/g, '---\n');
@@ -3793,7 +3825,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
     if (type === 'book' || type === 'livre') {
       scholarText = 'Google Books';
-      if (author) refText += `**${author}**, `;
+      if (author) refText += `${author}, `;
       refText += formattedTitle;
       
       const pubYearParts: string[] = [];
@@ -3841,7 +3873,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       }
     } else if (type === 'website' || type === 'site' || type === 'site web') {
       scholarText = isFr ? 'Site Web' : 'Website';
-      if (author) refText += `**${author}**, `;
+      if (author) refText += `${author}, `;
       refText += formattedTitle;
       if (year) refText += ` (${year})`;
       if (description) refText += `. ${description}`;
@@ -3850,7 +3882,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
         refText += ` [Consulter le <a href="${url}" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline font-bold">${urlLabel}</a>]`;
       }
     } else {
-      if (author) refText += `**${author}**, `;
+      if (author) refText += `${author}, `;
       refText += formattedTitle;
       if (year) refText += ` (${year})`;
       if (description) refText += `. ${description}`;
@@ -4071,7 +4103,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       let refText = cb.customRefText;
       if (!refText) {
         const currentLang = (lang || 'en').toLowerCase();
-        refText = `${cb.author ? `**${cb.author}**, ` : ''}${cb.source ? `*${cb.source}*` : ''}${cb.year ? ` (${cb.year})` : ''}.`;
+        refText = `${cb.author ? `${cb.author}, ` : ''}${cb.source ? `*${cb.source}*` : ''}${cb.year ? ` (${cb.year})` : ''}.`;
         if (cb.original) {
           if (currentLang === 'fr') {
             refText += ` [Version originale : ${cb.original}]`;
@@ -4191,6 +4223,9 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     // Inject isFinal={true} to Quiz and EssayEvaluation if not already present
     processed = processed.replace(/<(Quiz|EssayEvaluation)\b(?![^>]*\bisFinal\b)\s*([^>]*?)>/gi, '<$1 isFinal={true} $2>');
   }
+
+  // Strip out orphan single-line closing brackets
+  processed = processed.replace(/^\s*\]\s*$/gm, '');
 
   return processed;
 }

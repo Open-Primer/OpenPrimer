@@ -221,7 +221,7 @@ select {
   border-bottom: 1px solid #e7e2d1 !important;
 }
 .theme-paper .prose strong {
-  color: #1d4ed8 !important; /* Elegant dark blue */
+  color: #020617 !important; /* Elegant dark neutral */
   font-weight: 800 !important;
 }
 .theme-paper .prose blockquote {
@@ -1363,67 +1363,157 @@ body:not(.theme-paper):not(.theme-focus) footer {
   color: #f8fafc !important;
 }
 
+/* --- PAPER MODE OVERRIDES (Cream theme) --- */
+.theme-paper .pronunciation-sandbox-reset {
+  background: #f6f3e8 !important;
+  border-color: #e7e2d1 !important;
+  color: #2c2518 !important;
+}
+
 .theme-paper .pronunciation-sandbox-reset h2,
 .theme-paper .pronunciation-sandbox-reset h3 {
-  color: #ffffff !important;
+  color: #1e1b18 !important;
 }
 
 .theme-paper .pronunciation-sandbox-reset p {
-  color: #cbd5e1 !important;
+  color: #5c5446 !important;
 }
 
 .theme-paper .pronunciation-sandbox-reset .bg-slate-950\/40,
 .theme-paper .pronunciation-sandbox-reset .bg-slate-950\/20,
-.theme-paper .pronunciation-sandbox-reset .bg-slate-950\/60 {
-  background-color: rgba(2, 6, 23, 0.4) !important;
-  border-color: rgba(30, 41, 59, 0.6) !important;
-  color: #ffffff !important;
+.theme-paper .pronunciation-sandbox-reset .bg-slate-950\/60,
+.theme-paper .pronunciation-sandbox-reset .bg-white {
+  background-color: #faf8f5 !important;
+  border-color: #e7e2d1 !important;
+  color: #1e1b18 !important;
 }
 
 .theme-paper .pronunciation-sandbox-reset .bg-slate-900,
 .theme-paper .pronunciation-sandbox-reset .bg-slate-900\/50,
 .theme-paper .pronunciation-sandbox-reset .bg-slate-900\/60,
 .theme-paper .pronunciation-sandbox-reset .bg-slate-900\/80 {
-  background-color: rgba(15, 23, 42, 0.7) !important;
-  border-color: #1e293b !important;
-  color: #e2e8f0 !important;
+  background-color: #faf8f5 !important;
+  border-color: #e7e2d1 !important;
+  color: #2c2518 !important;
 }
 
 .theme-paper .pronunciation-sandbox-reset .bg-slate-800 {
-  background-color: #1e293b !important;
-  border-color: #334155 !important;
-  color: #64748b !important;
+  background-color: #eae5d8 !important;
+  border-color: #d8cfbe !important;
+  color: #7c7261 !important;
 }
 
-.theme-paper .pronunciation-sandbox-reset .text-slate-400 {
-  color: #94a3b8 !important;
-}
-
-.theme-paper .pronunciation-sandbox-reset .text-slate-500 {
-  color: #64748b !important;
-}
-
+.theme-paper .pronunciation-sandbox-reset .text-slate-400,
+.theme-paper .pronunciation-sandbox-reset .text-slate-500,
 .theme-paper .pronunciation-sandbox-reset .text-slate-300 {
-  color: #cbd5e1 !important;
+  color: #7c7261 !important;
 }
 
 .theme-paper .pronunciation-sandbox-reset .border-slate-800,
 .theme-paper .pronunciation-sandbox-reset .border-slate-850,
 .theme-paper .pronunciation-sandbox-reset .border-slate-850\/70,
 .theme-paper .pronunciation-sandbox-reset .border-slate-850\/60 {
-  border-color: #1e293b !important;
+  border-color: #e7e2d1 !important;
 }
 
 .theme-paper .pronunciation-sandbox-reset button:not(.bg-blue-600):not(.bg-red-600) {
-  background-color: #0f172a !important;
-  color: #e2e8f0 !important;
-  border-color: #1e293b !important;
+  background-color: #faf8f5 !important;
+  color: #2c2518 !important;
+  border-color: #e7e2d1 !important;
 }
 
 .theme-paper .pronunciation-sandbox-reset button:not(.bg-blue-600):not(.bg-red-600):hover {
-  background-color: #1e293b !important;
-  color: #ffffff !important;
-  border-color: #334155 !important;
+  background-color: #f1ede2 !important;
+  color: #1e1b18 !important;
+  border-color: #d8cfbe !important;
+}
+
+.theme-paper .pronunciation-sandbox-reset .blur-3xl {
+  display: none !important;
+}
+
+/* --- FOCUS MODE OVERRIDES (Pure black flat theme) --- */
+.theme-focus .pronunciation-sandbox-reset {
+  background: #000000 !important;
+  border-color: #262626 !important;
+  color: #a3a3a3 !important;
+  box-shadow: none !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset h2,
+.theme-focus .pronunciation-sandbox-reset h3 {
+  color: #e5e5e5 !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset p {
+  color: #a3a3a3 !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset .bg-slate-950\/40,
+.theme-focus .pronunciation-sandbox-reset .bg-slate-950\/20,
+.theme-focus .pronunciation-sandbox-reset .bg-slate-950\/60,
+.theme-focus .pronunciation-sandbox-reset .bg-white {
+  background-color: #000000 !important;
+  border-color: #262626 !important;
+  color: #e5e5e5 !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset .bg-slate-900,
+.theme-focus .pronunciation-sandbox-reset .bg-slate-900\/50,
+.theme-focus .pronunciation-sandbox-reset .bg-slate-900\/60,
+.theme-focus .pronunciation-sandbox-reset .bg-slate-900\/80 {
+  background-color: #000000 !important;
+  border-color: #262626 !important;
+  color: #a3a3a3 !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset .bg-slate-800 {
+  background-color: #000000 !important;
+  border-color: #262626 !important;
+  color: #737373 !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset .text-slate-400,
+.theme-focus .pronunciation-sandbox-reset .text-slate-500,
+.theme-focus .pronunciation-sandbox-reset .text-slate-300 {
+  color: #737373 !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset .border-slate-800,
+.theme-focus .pronunciation-sandbox-reset .border-slate-850,
+.theme-focus .pronunciation-sandbox-reset .border-slate-850\/70,
+.theme-focus .pronunciation-sandbox-reset .border-slate-850\/60 {
+  border-color: #262626 !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset button:not(.bg-blue-600):not(.bg-red-600) {
+  background-color: #000000 !important;
+  color: #a3a3a3 !important;
+  border-color: #262626 !important;
+  box-shadow: none !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset button:not(.bg-blue-600):not(.bg-red-600):hover {
+  background-color: #171717 !important;
+  color: #e5e5e5 !important;
+  border-color: #404040 !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset .bg-gradient-to-br,
+.theme-focus .pronunciation-sandbox-reset .bg-gradient-to-r {
+  background-image: none !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset .blur-3xl {
+  display: none !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset .animate-pulse {
+  animation: none !important;
+}
+
+.theme-focus .pronunciation-sandbox-reset .animate-ping {
+  display: none !important;
 }
 
 /* --- Neon Glow Visual Identity Classes --- */
@@ -1471,4 +1561,20 @@ body:not(.theme-paper):not(.theme-focus) footer {
 .custom-illustration a:hover,
 .custom-illustration p a:hover {
   color: #6366f1 !important; /* subtle indigo hover color */
+}
+
+/* Override figure source links in paper theme to be Slate-gray and unbolded */
+.theme-paper .custom-figure a,
+.theme-paper .custom-figure p a,
+.theme-paper .custom-illustration a,
+.theme-paper .custom-illustration p a {
+  color: #64748b !important; /* Slate-gray text */
+  font-weight: 400 !important;
+  text-decoration: underline !important;
+}
+.theme-paper .custom-figure a:hover,
+.theme-paper .custom-figure p a:hover,
+.theme-paper .custom-illustration a:hover,
+.theme-paper .custom-illustration p a:hover {
+  color: #475569 !important; /* darker Slate-gray on hover */
 }

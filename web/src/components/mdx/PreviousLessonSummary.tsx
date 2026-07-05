@@ -6,9 +6,36 @@ import { useLanguage } from '@/context/LanguageContext';
 
 interface PreviousLessonSummaryProps {
   previousLessonTitle: string;
-  keyTakeaways: string[];
+  keyTakeaways: any;
   cognitiveBridge: string;
 }
+
+const parseTakeaways = (takeaways: any): string[] => {
+  if (!takeaways) return [];
+  if (Array.isArray(takeaways)) return takeaways.map(String);
+  
+  if (typeof takeaways === 'string') {
+    const trimmed = takeaways.trim();
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.map(String);
+        }
+      } catch (e) {
+        // Fallback to splitting below
+      }
+    }
+    if (trimmed.includes('|||')) {
+      return trimmed.split('|||').map(s => s.trim()).filter(Boolean);
+    }
+    if (trimmed.includes('\n')) {
+      return trimmed.split(/\r?\n/).map(s => s.trim().replace(/^-\s*/, '')).filter(Boolean);
+    }
+    return [trimmed];
+  }
+  return [];
+};
 
 export const PreviousLessonSummary = ({
   previousLessonTitle,
@@ -17,6 +44,7 @@ export const PreviousLessonSummary = ({
 }: PreviousLessonSummaryProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { language } = useLanguage();
+  const parsedTakeaways = parseTakeaways(keyTakeaways);
 
   const labels: Record<string, { header: string; returnTo: string; transition: string }> = {
     fr: {
@@ -72,7 +100,7 @@ export const PreviousLessonSummary = ({
             {curLabel.returnTo} : {previousLessonTitle}
           </h4>
           <ul className="space-y-2 mb-4 text-[13px] text-slate-700 dark:text-slate-350 list-disc pl-4 leading-relaxed">
-            {keyTakeaways.map((item, i) => (
+            {parsedTakeaways.map((item, i) => (
               <li key={i}>{item}</li>
             ))}
           </ul>
