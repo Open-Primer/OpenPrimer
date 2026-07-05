@@ -79,7 +79,14 @@ export function saveDraftRevision(filename: string, content: string) {
       fs.mkdirSync(dir, { recursive: true });
     }
     fs.writeFileSync(path.join(dir, filename), content, 'utf8');
-    console.log(`[DRAFTS_REVISIONS] Successfully saved ${filename}`);
+
+    const dir2 = path.resolve(process.cwd(), 'draft_revision');
+    if (!fs.existsSync(dir2)) {
+      fs.mkdirSync(dir2, { recursive: true });
+    }
+    fs.writeFileSync(path.join(dir2, filename), content, 'utf8');
+
+    console.log(`[DRAFTS_REVISIONS] Successfully saved ${filename} to drafts_revisions and draft_revision`);
   } catch (err) {
     console.error(`[DRAFTS_REVISIONS] Error saving ${filename}:`, err);
   }
@@ -3422,7 +3429,7 @@ You must audit the narrative text against the following 11 critical checkpoints:
      - Verify that the narrative contains **at least 1 to 2 Mermaid diagrams** (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model processes, system architectures, decision flows, or conceptual hierarchies.
      - Reject if these rich visual/structural elements are missing from a university-level narrative.
 9. **No Raw Interactive, Question, or Evaluation Tags**:
-   - **STRICT REJECTION**: You MUST reject if there are raw interactive, question, or evaluation tags like `<Question>`, `<Option>`, `<Quiz>`, `<EssayEvaluation>`, `<OralEvaluation>`, etc. in the narrative text. All evaluations must be referred to via standard block anchors like [[WIDGET:finalEvaluation]].
+   - **STRICT REJECTION**: You MUST reject if there are raw interactive, question, or evaluation tags like \`<Question>\`, \`<Option>\`, \`<Quiz>\`, \`<EssayEvaluation>\`, \`<OralEvaluation>\`, etc. in the narrative text. All evaluations must be referred to via standard block anchors like [[WIDGET:finalEvaluation]].
 10. **Strict Figure Prefix & Numbering Exclusion**:
    - **STRICT REJECTION**: Verify that any captions or descriptions of visual/image/diagram assets (Image, CustomFigure, Mermaid, etc.) contain absolutely NO prefix numbers like 'Figure 1:', 'Figure A:', 'Image 1 -' or relative links like 'comme le montre la figure ci-dessus' or 'voir Figure 2'. All sequential figure numbering is handled programmatically at stitching time.
 11. **Comprehensive Conclusion Prose**:
