@@ -96,15 +96,26 @@ async function testCompile(name, content) {
 async function run() {
   const astroPath = path.join(__dirname, '../drafts_revisions/final_stage3_stitched_mythes-telescopes-eveil-cosmologie.mdx');
   const semPath = path.join(__dirname, '../drafts_revisions/final_stage3_stitched_racines-signification-formel-cognitif.mdx');
+  const operaPath = path.join(__dirname, '../drafts_revisions/final_stage3_stitched_opera-spectacle-total-scenographie-esthetique.mdx');
+  const livretPath = path.join(__dirname, '../drafts_revisions/final_stage3_stitched_livret-drame-narration-personnages.mdx');
   
   const astroMdx = extractMdxContent(astroPath);
   const semMdx = extractMdxContent(semPath);
+  const operaMdx = extractMdxContent(operaPath);
+  const livretMdx = extractMdxContent(livretPath);
   
   console.log("Testing Astro MDX compilation...");
   await testCompile("Astrophysique", astroMdx);
   
   console.log("\nTesting Semantique Cognitive MDX compilation...");
   await testCompile("Semantique Cognitive", semMdx);
+
+  console.log("\nTesting Opera Spectacle MDX compilation...");
+  await testCompile("Opera Spectacle", operaMdx);
+
+  console.log("\nTesting Livret Drame MDX compilation...");
+  await testCompile("Livret Drame", livretMdx);
 }
 
 run();
+
