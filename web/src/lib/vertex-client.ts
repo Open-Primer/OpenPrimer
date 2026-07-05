@@ -238,7 +238,130 @@ export async function initializeAccounts(forceReload = false): Promise<VertexAcc
   endpointStates = newStates;
   isInitialized = true;
 
+  // Trigger background self-optimization of quotas for each account
+  if (typeof window === 'undefined') {
+    accounts.forEach(account => {
+      optimizeAccountQuotasInBackground(account).catch(err => {
+        console.warn(`[VERTEX-QUOTAS] Background optimization failed for project ${account.projectId}:`, err);
+      });
+    });
+  }
+
   return accounts;
+}
+
+/**
+ * Automatically fetch real-world GCP limits and request upgrades if they fall below desired values.
+ * Grabs the GCP Cloud Quotas API, adjusts the rate-limiter, and registers automatic preference upgrades.
+ */
+export async function optimizeAccountQuotasInBackground(account: VertexAccount) {
+  if (typeof window !== 'undefined') return;
+
+  const projectId = account.projectId;
+  const token = await getAccessTokenForAccount(account);
+  if (!token) {
+    console.warn(`[VERTEX-QUOTAS] Could not acquire OAuth token to optimize quotas for project: ${projectId}`);
+    return;
+  }
+
+  // We optimize quotas for standard regional pools (us-central1, europe-west1)
+  const regionsToCheck = ['us-central1', 'europe-west1'];
+  const targetRpm = 120;
+
+  for (const region of regionsToCheck) {
+    try {
+      // 1. Fetch current quota info via Google Cloud Quotas API
+      const quotaUrl = `https://cloudquotas.googleapis.com/v1/projects/${projectId}/locations/global/services/aiplatform.googleapis.com/quotaInfos/generate_content_requests_per_minute_per_project_per_base_model_per_minute_per_region_per_base_model`;
+      
+      const res = await fetch(quotaUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        },
+        signal: AbortSignal.timeout(6000)
+      });
+
+      if (!res.ok) {
+        // Log API missing / permission issues cleanly to console logs without disrupting services
+        console.log(`[VERTEX-QUOTAS] Cloud Quotas API unavailable or permissions missing for project ${projectId} in ${region} (${res.status}). Using local fallback thresholds.`);
+        continue;
+      }
+
+      const quotaData = await res.json() as any;
+      let currentLimit = MAX_RPM_CEILING;
+
+      // Extract limit safely from API structure
+      if (quotaData.dimensionsInfos && Array.isArray(quotaData.dimensionsInfos)) {
+        const matchingDim = quotaData.dimensionsInfos.find((di: any) => {
+          const dims = di.dimensions || {};
+          return dims.region === region && (dims.base_model === 'gemini-2.5-flash' || !dims.base_model);
+        }) || quotaData.dimensionsInfos[0];
+
+        if (matchingDim && matchingDim.applicableConfigs) {
+          const config = matchingDim.applicableConfigs.defaultLimit || matchingDim.applicableConfigs.grantedLimit;
+          if (config) {
+            currentLimit = Number(config.value || config);
+          }
+        }
+      } else if (quotaData.containerThresholds && Array.isArray(quotaData.containerThresholds)) {
+        currentLimit = Number(quotaData.containerThresholds[0]?.value || MAX_RPM_CEILING);
+      }
+
+      console.log(`[VERTEX-QUOTAS] Project ${projectId} has current GCP quota of ${currentLimit} RPM for Gemini on ${region}`);
+
+      // 2. Dynamic Local Limit Adaptation
+      const matchingState = endpointStates.find(es => es.projectId === projectId && es.regionName === region);
+      if (matchingState) {
+        matchingState.rpmCapacity = currentLimit;
+        console.log(`[VERTEX-QUOTAS] Dynamically adjusted local rate limiter for ${projectId}::${region} to ${currentLimit} RPM`);
+      }
+
+      // 3. Automated Remote Quota Upgrade Request
+      if (currentLimit < targetRpm) {
+        console.log(`[VERTEX-QUOTAS] Requesting automated quota upgrade to ${targetRpm} RPM for project ${projectId} in ${region}...`);
+        
+        const preferenceId = `op_gemini_rpm_${region}_${projectId.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
+        const prefUrl = `https://cloudquotas.googleapis.com/v1/projects/${projectId}/locations/global/quotaPreferences?quotaPreferenceId=${preferenceId}`;
+
+        const body = {
+          quotaConfig: {
+            preferredValue: targetRpm.toString()
+          },
+          service: "aiplatform.googleapis.com",
+          quotaId: "generate_content_requests_per_minute_per_project_per_base_model_per_minute_per_region_per_base_model",
+          dimensions: {
+            region: region,
+            base_model: "gemini-2.5-flash"
+          },
+          justification: "Automated real-time scaling for OpenPrimer educational platform."
+        };
+
+        const postRes = await fetch(prefUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(6000)
+        });
+
+        if (postRes.ok) {
+          const postData = await postRes.json();
+          console.log(`[VERTEX-QUOTAS] Successfully submitted automatic quota preference for project ${projectId} in ${region} to raise limit to ${targetRpm} RPM. Status: ${postData.reconciling ? 'reconciling (pending)' : 'active (approved!)'}`);
+          
+          if (matchingState && !postData.reconciling) {
+            matchingState.rpmCapacity = targetRpm;
+          }
+        } else {
+          const postErr = await postRes.text();
+          console.warn(`[VERTEX-QUOTAS] Failed to auto-submit quota upgrade preference for project ${projectId} (${postRes.status}): ${postErr}`);
+        }
+      }
+    } catch (e: any) {
+      console.warn(`[VERTEX-QUOTAS] Graceful fallback. Failed to process automatic quota detection for project ${projectId} in region ${region}: ${e?.message}`);
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────

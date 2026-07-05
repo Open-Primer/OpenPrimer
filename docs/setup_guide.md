@@ -34,6 +34,28 @@ To support **Sign in with Google** across your applications:
 
 ---
 
+## 1.2. 🩺 Vertex AI Multi-Project Pool & Cloud Quotas API Setup
+
+To enable the Self-Optimizing Smart Load Balancer (automated quota query and remote upgrade requests), follow these steps on each Google Cloud Project:
+
+### Step 1: Enable the Cloud Quotas API
+1. In the GCP Console top search bar, type **"Cloud Quotas API"** (or go to **APIs & Services** > **Library** and search for `cloudquotas.googleapis.com`).
+2. Click on **Cloud Quotas API**.
+3. Click the blue **Enable** (or *Activer*) button.
+
+### Step 2: Grant Permissions to the Service Account
+The JSON Service Account credentials must have permission to fetch and request upgrades on quotas.
+1. In the left-hand navigation menu, select **IAM & Admin** > **IAM** (*IAM et administration > IAM*).
+2. Find the row corresponding to your Service Account (the email ending in `.iam.gserviceaccount.com`).
+3. Click the **Edit Pencil icon** ✏️ (*Modifier le principal*) on the right side of the row.
+4. Click **Add Another Role** (*Ajouter un autre rôle*).
+5. In the Role dropdown, search and select **Cloud Quotas Administrator** (*Administrateur Cloud Quotas* or `roles/cloudquotas.admin`).
+6. Click **Save** (*Enregistrer*).
+
+*Note: The application automatically handles fetching and updating the local limits dynamically. If these GCP APIs/Roles are missing, the client gracefully degrades and uses the local hardcoded fallback configurations.*
+
+---
+
 ## 2. ⚡ Supabase Setup & Authentication Setup
 
 1. Open your [Supabase Dashboard](https://supabase.com/).
