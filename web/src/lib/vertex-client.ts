@@ -271,7 +271,8 @@ export async function optimizeAccountQuotasInBackground(account: VertexAccount) 
   for (const region of regionsToCheck) {
     try {
       // 1. Fetch current quota info via Google Cloud Quotas API
-      const quotaUrl = `https://cloudquotas.googleapis.com/v1/projects/${projectId}/locations/global/services/aiplatform.googleapis.com/quotaInfos/generate_content_requests_per_minute_per_project_per_base_model_per_minute_per_region_per_base_model`;
+      const targetQuotaId = 'GenerateContentRequestsPerMinutePerProjectPerRegionPerBaseModel';
+      const quotaUrl = `https://cloudquotas.googleapis.com/v1/projects/${projectId}/locations/global/services/aiplatform.googleapis.com/quotaInfos/${targetQuotaId}`;
       
       const res = await fetch(quotaUrl, {
         headers: {
@@ -292,15 +293,36 @@ export async function optimizeAccountQuotasInBackground(account: VertexAccount) 
 
       // Extract limit safely from API structure
       if (quotaData.dimensionsInfos && Array.isArray(quotaData.dimensionsInfos)) {
-        const matchingDim = quotaData.dimensionsInfos.find((di: any) => {
+        // Find dimensions matching our target region
+        const regionalDims = quotaData.dimensionsInfos.filter((di: any) => {
           const dims = di.dimensions || {};
-          return dims.region === region && (dims.base_model === 'gemini-2.5-flash' || !dims.base_model);
-        }) || quotaData.dimensionsInfos[0];
+          return dims.region === region;
+        });
 
-        if (matchingDim && matchingDim.applicableConfigs) {
-          const config = matchingDim.applicableConfigs.defaultLimit || matchingDim.applicableConfigs.grantedLimit;
-          if (config) {
-            currentLimit = Number(config.value || config);
+        // 1. Try to find precise match for gemini-2.5-flash
+        let matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-2.5-flash');
+
+        // 2. Fallback to gemini-1.5-flash
+        if (!matchingDim) {
+          matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-1.5-flash');
+        }
+
+        // 3. Fallback to gemini-pro
+        if (!matchingDim) {
+          matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-pro');
+        }
+
+        // 4. Fallback to any regional dimension
+        if (!matchingDim && regionalDims.length > 0) {
+          matchingDim = regionalDims[0];
+        }
+
+        if (matchingDim) {
+          const val = matchingDim.details?.value || 
+                      matchingDim.applicableConfigs?.defaultLimit?.value || 
+                      matchingDim.applicableConfigs?.grantedLimit?.value;
+          if (val) {
+            currentLimit = Number(val);
           }
         }
       } else if (quotaData.containerThresholds && Array.isArray(quotaData.containerThresholds)) {
@@ -328,7 +350,7 @@ export async function optimizeAccountQuotasInBackground(account: VertexAccount) 
             preferredValue: targetRpm.toString()
           },
           service: "aiplatform.googleapis.com",
-          quotaId: "generate_content_requests_per_minute_per_project_per_base_model_per_minute_per_region_per_base_model",
+          quotaId: targetQuotaId,
           dimensions: {
             region: region,
             base_model: "gemini-2.5-flash"
@@ -355,7 +377,25 @@ export async function optimizeAccountQuotasInBackground(account: VertexAccount) 
           }
         } else {
           const postErr = await postRes.text();
-          console.warn(`[VERTEX-QUOTAS] Failed to auto-submit quota upgrade preference for project ${projectId} (${postRes.status}): ${postErr}`);
+          let isAlreadyExists = false;
+          try {
+            const errJson = JSON.parse(postErr);
+            const statusStr = (errJson.error?.status || '').toUpperCase();
+            const messageStr = (errJson.error?.message || '').toLowerCase();
+            if (statusStr === 'ALREADY_EXISTS' || messageStr.includes('already exist') || messageStr.includes('already exists')) {
+              isAlreadyExists = true;
+            }
+          } catch (_) {
+            if (postErr.toLowerCase().includes('already exist') || postErr.toLowerCase().includes('already exists')) {
+              isAlreadyExists = true;
+            }
+          }
+
+          if (isAlreadyExists) {
+            console.log(`[VERTEX-QUOTAS] Quota upgrade preference already submitted for project ${projectId} in ${region} (target: ${targetRpm} RPM).`);
+          } else {
+            console.warn(`[VERTEX-QUOTAS] Failed to auto-submit quota upgrade preference for project ${projectId} (${postRes.status}): ${postErr}`);
+          }
         }
       }
     } catch (e: any) {
