@@ -30,9 +30,20 @@ export const sanitizeFrontmatterYaml = (str: string): string => {
       return `${key}: "${escaped}"`;
     }
     
-    // If it is already quoted, leave it
-    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-      return line;
+    // If it is a double-quoted string, make sure any internal double quotes are escaped
+    if (val.startsWith('"') && val.endsWith('"')) {
+      let inner = val.slice(1, -1);
+      inner = inner.replace(/\\"/g, '"'); // avoid double-escaping
+      const escaped = inner.replace(/"/g, '\\"');
+      return `${key}: "${escaped}"`;
+    }
+
+    // If it is a single-quoted string, convert to double-quoted to guarantee safe escaping
+    if (val.startsWith("'") && val.endsWith("'")) {
+      let inner = val.slice(1, -1);
+      inner = inner.replace(/''/g, "'"); // unescape doubled single quotes
+      const escaped = inner.replace(/"/g, '\\"');
+      return `${key}: "${escaped}"`;
     }
     
     // If it's a number or boolean, leave it

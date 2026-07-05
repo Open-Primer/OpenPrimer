@@ -13,7 +13,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { ModelId, TASK_MODELS, MODEL_PRICING, TASK_TOKEN_ESTIMATES } from './ai-config';
 
 export const userCountryStorage = new AsyncLocalStorage<string>();
-
+export const customCredentialsStorage = new AsyncLocalStorage<string>();
 
 const PROJECT_ID = process.env.VERTEX_PROJECT_ID || 'openprimer-free';
 
@@ -32,37 +32,223 @@ const REGIONS_POOL = configuredRegionsStr
       'asia-northeast1' // Tokyo
     ];
 
-// ─────────────────────────────────────────────────────────────────
-// ADAPTIVE RATE LIMITER — Per-Region Token Bucket with RPM + TPM Support
-// ─────────────────────────────────────────────────────────────────
-// Monitors and regulates both Requests Per Minute (RPM) and
-// Tokens Per Minute (TPM) locally for each region to prevent hitting GCP 429s.
-// Adapts dynamically (congestion control) on a per-region basis when a 429 is encountered.
+// Plafonds maximums configurables ou valeurs par défaut conservatrices
+const MAX_RPM_CEILING = Number(process.env.VERTEX_MAX_RPM || 60);
+const MAX_TPM_CEILING = Number(process.env.VERTEX_MAX_TPM || 1000000);
 
-export interface RegionState {
-  name: string;
+export interface ServiceAccountCredentials {
+  type: string;
+  project_id: string;
+  private_key_id: string;
+  private_key: string;
+  client_email: string;
+  token_uri: string;
+}
+
+export interface VertexAccount {
+  projectId: string;
+  credentials: ServiceAccountCredentials;
+  cachedToken: string | null;
+  tokenExpiry: number;
+}
+
+export interface ProjectRegionState {
+  projectId: string;
+  regionName: string;
   rpmCapacity: number;
   tpmCapacity: number;
   requestHistory: { timestamp: number; tokens: number }[];
   last429Time: number;
 }
 
-// Plafonds maximums configurables ou valeurs par défaut conservatrices
-const MAX_RPM_CEILING = Number(process.env.VERTEX_MAX_RPM || 60);
-const MAX_TPM_CEILING = Number(process.env.VERTEX_MAX_TPM || 1000000);
+// ─────────────────────────────────────────────────────────────────
+// MULTI-PROJECT POOL INITIALIZATION & AUTO-DISCOVERY
+// ─────────────────────────────────────────────────────────────────
 
-const regionStates: RegionState[] = REGIONS_POOL.map(name => ({
-  name,
-  rpmCapacity: MAX_RPM_CEILING,
-  tpmCapacity: MAX_TPM_CEILING,
-  requestHistory: [],
-  last429Time: 0
-}));
+let accounts: VertexAccount[] = [];
+let endpointStates: ProjectRegionState[] = [];
+let isInitialized = false;
 
-function cleanRegionHistory(region: RegionState, now: number) {
+/**
+ * Initialize/discover GCP Service Accounts from local secrets folder and environment variables.
+ * Automatically de-duplicates by project_id.
+ */
+export async function initializeAccounts(forceReload = false): Promise<VertexAccount[]> {
+  if (isInitialized && !forceReload) {
+    return accounts;
+  }
+
+  const loadedAccounts: VertexAccount[] = [];
+  const registeredProjectIds = new Set<string>();
+
+  // 1. Check if there are request-scoped custom hot-swap credentials in the AsyncLocalStorage
+  const customCredsStr = customCredentialsStorage.getStore();
+  if (customCredsStr && customCredsStr.trim()) {
+    try {
+      const trimmed = customCredsStr.trim();
+      if (trimmed.startsWith('[')) {
+        const parsedList = JSON.parse(trimmed) as any[];
+        parsedList.forEach((parsed, index) => {
+          if (parsed.project_id && parsed.client_email && parsed.private_key) {
+            if (!registeredProjectIds.has(parsed.project_id)) {
+              loadedAccounts.push({
+                projectId: parsed.project_id,
+                credentials: parsed as ServiceAccountCredentials,
+                cachedToken: null,
+                tokenExpiry: 0
+              });
+              registeredProjectIds.add(parsed.project_id);
+            }
+          }
+        });
+      } else if (trimmed.startsWith('{')) {
+        const parsed = JSON.parse(trimmed);
+        if (parsed.project_id && parsed.client_email && parsed.private_key) {
+          if (!registeredProjectIds.has(parsed.project_id)) {
+            loadedAccounts.push({
+              projectId: parsed.project_id,
+              credentials: parsed as ServiceAccountCredentials,
+              cachedToken: null,
+              tokenExpiry: 0
+            });
+            registeredProjectIds.add(parsed.project_id);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[VERTEX-POOL] Failed to parse custom context credentials:', e);
+    }
+  }
+
+  // 2. Scan secrets directory for service account JSON files
+  if (typeof window === 'undefined') {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const secretsDir = path.resolve(process.cwd(), 'secrets');
+      if (fs.existsSync(secretsDir)) {
+        const files = fs.readdirSync(secretsDir);
+        for (const file of files) {
+          if (file.endsWith('.json') && !file.startsWith('github')) {
+            const filePath = path.join(secretsDir, file);
+            try {
+              const content = fs.readFileSync(filePath, 'utf8');
+              const parsed = JSON.parse(content);
+              if (parsed.project_id && parsed.client_email && parsed.private_key) {
+                if (!registeredProjectIds.has(parsed.project_id)) {
+                  loadedAccounts.push({
+                    projectId: parsed.project_id,
+                    credentials: parsed as ServiceAccountCredentials,
+                    cachedToken: null,
+                    tokenExpiry: 0
+                  });
+                  registeredProjectIds.add(parsed.project_id);
+                  console.log(`[VERTEX-POOL] Auto-discovered key: ${file} (Project: ${parsed.project_id})`);
+                }
+              }
+            } catch (e) {
+              // Ignore non-SA json files
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[VERTEX-POOL] Error scanning secrets directory:', err);
+    }
+  }
+
+  // 3. Fallback/Append from direct environment variables
+  const directSA = process.env.VERTEX_SERVICE_ACCOUNT_JSON;
+  if (directSA) {
+    try {
+      const parsed = JSON.parse(directSA);
+      if (parsed.project_id && !registeredProjectIds.has(parsed.project_id)) {
+        loadedAccounts.push({
+          projectId: parsed.project_id,
+          credentials: parsed as ServiceAccountCredentials,
+          cachedToken: null,
+          tokenExpiry: 0
+        });
+        registeredProjectIds.add(parsed.project_id);
+        console.log(`[VERTEX-POOL] Loaded project from VERTEX_SERVICE_ACCOUNT_JSON env (Project: ${parsed.project_id})`);
+      }
+    } catch (e) {
+      console.warn('[VERTEX-POOL] Failed to parse VERTEX_SERVICE_ACCOUNT_JSON:', e);
+    }
+  }
+
+  const googleAppCredsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (googleAppCredsPath) {
+    try {
+      let parsedSA: ServiceAccountCredentials | null = null;
+      if (googleAppCredsPath.trim().startsWith('{') || googleAppCredsPath.trim().startsWith('[')) {
+        parsedSA = JSON.parse(googleAppCredsPath) as ServiceAccountCredentials;
+      } else if (typeof window === 'undefined') {
+        const fs = await import('fs');
+        if (fs.existsSync(googleAppCredsPath)) {
+          const raw = fs.readFileSync(googleAppCredsPath, 'utf8');
+          parsedSA = JSON.parse(raw) as ServiceAccountCredentials;
+        }
+      }
+      if (parsedSA && parsedSA.project_id && !registeredProjectIds.has(parsedSA.project_id)) {
+        loadedAccounts.push({
+          projectId: parsedSA.project_id,
+          credentials: parsedSA,
+          cachedToken: null,
+          tokenExpiry: 0
+        });
+        registeredProjectIds.add(parsedSA.project_id);
+        console.log(`[VERTEX-POOL] Loaded project from GOOGLE_APPLICATION_CREDENTIALS (Project: ${parsedSA.project_id})`);
+      }
+    } catch (e) {
+      console.warn('[VERTEX-POOL] Failed to parse GOOGLE_APPLICATION_CREDENTIALS:', e);
+    }
+  }
+
+  // If still no project but we have VERTEX_PROJECT_ID, create a pseudo-credentials or warning
+  accounts = loadedAccounts;
+
+  // Re-build ProjectRegionState endpointStates
+  // Keep previous states to preserve request history & cooldowns if reload is forced
+  const oldStatesMap = new Map<string, ProjectRegionState>();
+  endpointStates.forEach(es => {
+    oldStatesMap.set(`${es.projectId}::${es.regionName}`, es);
+  });
+
+  const newStates: ProjectRegionState[] = [];
+  accounts.forEach(account => {
+    REGIONS_POOL.forEach(regionName => {
+      const key = `${account.projectId}::${regionName}`;
+      const existing = oldStatesMap.get(key);
+      if (existing) {
+        newStates.push(existing);
+      } else {
+        newStates.push({
+          projectId: account.projectId,
+          regionName,
+          rpmCapacity: MAX_RPM_CEILING,
+          tpmCapacity: MAX_TPM_CEILING,
+          requestHistory: [],
+          last429Time: 0
+        });
+      }
+    });
+  });
+
+  endpointStates = newStates;
+  isInitialized = true;
+
+  return accounts;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ADAPTIVE RATE LIMITER — Per-Project-Per-Region Token Bucket
+// ─────────────────────────────────────────────────────────────────
+
+function cleanEndpointHistory(endpoint: ProjectRegionState, now: number) {
   const cutoff = now - 60000;
-  while (region.requestHistory.length > 0 && region.requestHistory[0].timestamp < cutoff) {
-    region.requestHistory.shift();
+  while (endpoint.requestHistory.length > 0 && endpoint.requestHistory[0].timestamp < cutoff) {
+    endpoint.requestHistory.shift();
   }
 }
 
@@ -90,21 +276,25 @@ const EU_COUNTRIES = new Set([
 ]);
 
 /**
- * Acquire regional slot before making a Vertex AI call.
- * Uses an adaptive smart load balancer (random choice among available healthy regions).
- * Blocks if all regions are temporarily busy, waiting for the soonest available slot.
- * Supports optional userCountry for Geo-IP based data residency routing.
+ * Acquire a healthy Project + Region endpoint before making an API call.
+ * Uses smart load balancing across all configured accounts and locations.
  */
-async function acquireRegionAndRateLimitSlot(estimatedTokens: number, userCountry?: string): Promise<RegionState> {
+async function acquireEndpointAndRateLimitSlot(estimatedTokens: number, userCountry?: string): Promise<{ account: VertexAccount; endpoint: ProjectRegionState }> {
   const COOLDOWN_MS = 15000; // 15s cooldown on 429 errors
+
+  await initializeAccounts();
+
+  if (accounts.length === 0) {
+    throw new Error('[VERTEX-POOL] No active service accounts configured.');
+  }
 
   while (true) {
     const now = Date.now();
-    const candidates: RegionState[] = [];
-    const waitTimes: { region: RegionState; waitMs: number }[] = [];
+    const candidates: { account: VertexAccount; endpoint: ProjectRegionState }[] = [];
+    const waitTimes: { endpoint: ProjectRegionState; waitMs: number }[] = [];
 
-    // Filter regions based on user's geographic location (Geo-IP)
-    let filteredRegions = regionStates;
+    // Filter endpoints based on Geo-IP
+    let filteredEndpoints = endpointStates;
     
     // Resolve user country through the triple fallback strategy
     const contextCountry = userCountryStorage.getStore();
@@ -116,7 +306,7 @@ async function acquireRegionAndRateLimitSlot(estimatedTokens: number, userCountr
         requestCountry = reqHeaders.get('x-vercel-ip-country') || reqHeaders.get('cf-ipcountry') || undefined;
       }
     } catch {
-      // Graceful fallback outside Next.js request context (e.g. CLI, async cron task runner)
+      // Graceful fallback outside Next.js request context
     }
     
     const resolvedCountry = userCountry || contextCountry || requestCountry;
@@ -124,78 +314,82 @@ async function acquireRegionAndRateLimitSlot(estimatedTokens: number, userCountr
     if (resolvedCountry) {
       const upperCountry = resolvedCountry.trim().toUpperCase();
       if (EU_COUNTRIES.has(upperCountry)) {
-        filteredRegions = regionStates.filter(r => r.name.startsWith('europe-'));
+        filteredEndpoints = endpointStates.filter(e => e.regionName.startsWith('europe-'));
       } else if (['US', 'CA', 'MX'].includes(upperCountry)) {
-        filteredRegions = regionStates.filter(r => r.name.startsWith('us-'));
+        filteredEndpoints = endpointStates.filter(e => e.regionName.startsWith('us-'));
       } else if (['CN', 'JP', 'KR', 'SG', 'HK', 'TW', 'IN'].includes(upperCountry)) {
-        filteredRegions = regionStates.filter(r => r.name.startsWith('asia-') || r.name.startsWith('australia-'));
+        filteredEndpoints = endpointStates.filter(e => e.regionName.startsWith('asia-') || e.regionName.startsWith('australia-'));
       }
       
-      // Fallback: if our filtered pool is empty (e.g. no europe- region in pool), fallback to full pool
-      if (filteredRegions.length === 0) {
-        filteredRegions = regionStates;
+      // Fallback: if our filtered pool is empty, fallback to full pool
+      if (filteredEndpoints.length === 0) {
+        filteredEndpoints = endpointStates;
       }
     }
 
-    for (const region of filteredRegions) {
-      cleanRegionHistory(region, now);
+    for (const endpoint of filteredEndpoints) {
+      cleanEndpointHistory(endpoint, now);
 
-      const isCoolingDown = (now - region.last429Time) < COOLDOWN_MS;
-      const currentRPM = region.requestHistory.length;
-      const currentTPM = region.requestHistory.reduce((sum, r) => sum + r.tokens, 0);
+      const isCoolingDown = (now - endpoint.last429Time) < COOLDOWN_MS;
+      const currentRPM = endpoint.requestHistory.length;
+      const currentTPM = endpoint.requestHistory.reduce((sum, r) => sum + r.tokens, 0);
 
-      const hasRPMCapacity = (currentRPM + 1) <= region.rpmCapacity;
-      const hasTPMCapacity = (currentTPM + estimatedTokens) <= region.tpmCapacity;
+      const hasRPMCapacity = (currentRPM + 1) <= endpoint.rpmCapacity;
+      const hasTPMCapacity = (currentTPM + estimatedTokens) <= endpoint.tpmCapacity;
+
+      // Find the corresponding account object
+      const account = accounts.find(a => a.projectId === endpoint.projectId);
+      if (!account) continue;
 
       if (!isCoolingDown && hasRPMCapacity && hasTPMCapacity) {
-        candidates.push(region);
+        candidates.push({ account, endpoint });
       } else {
-        // Calculate the wait time for this region to recover capacity
+        // Calculate the wait time for this endpoint to recover capacity
         let waitMs = 0;
         if (isCoolingDown) {
-          waitMs = Math.max(waitMs, region.last429Time + COOLDOWN_MS - now);
+          waitMs = Math.max(waitMs, endpoint.last429Time + COOLDOWN_MS - now);
         }
-        if (!hasRPMCapacity && region.requestHistory.length > 0) {
-          const oldest = region.requestHistory[0];
+        if (!hasRPMCapacity && endpoint.requestHistory.length > 0) {
+          const oldest = endpoint.requestHistory[0];
           waitMs = Math.max(waitMs, oldest.timestamp + 60000 - now);
         }
-        if (!hasTPMCapacity && region.requestHistory.length > 0) {
+        if (!hasTPMCapacity && endpoint.requestHistory.length > 0) {
           let cumulativeReleased = 0;
           let tpmWait = 1000;
-          for (const record of region.requestHistory) {
+          for (const record of endpoint.requestHistory) {
             cumulativeReleased += record.tokens;
-            if (currentTPM - cumulativeReleased + estimatedTokens <= region.tpmCapacity) {
+            if (currentTPM - cumulativeReleased + estimatedTokens <= endpoint.tpmCapacity) {
               tpmWait = record.timestamp + 60000 - now;
               break;
             }
           }
           waitMs = Math.max(waitMs, tpmWait);
         }
-        waitTimes.push({ region, waitMs });
+        waitTimes.push({ endpoint, waitMs });
       }
     }
 
     if (candidates.length > 0) {
       // Pick one AT RANDOM among available healthy candidates to avoid concurrency locksteps
       const selectedIndex = Math.floor(Math.random() * candidates.length);
-      const selectedRegion = candidates[selectedIndex];
+      const selected = candidates[selectedIndex];
 
       // Reserve slot
-      selectedRegion.requestHistory.push({
+      selected.endpoint.requestHistory.push({
         timestamp: Date.now(),
         tokens: estimatedTokens
       });
 
-      return selectedRegion;
+      return selected;
     }
 
-    // No regions are fully available, wait for the one that becomes available first
+    // No endpoints are fully available, wait for the one that becomes available first
     if (waitTimes.length > 0) {
       waitTimes.sort((a, b) => a.waitMs - b.waitMs);
       const bestWait = waitTimes[0];
       const waitMs = Math.max(1000, bestWait.waitMs); // Floor to at least 1s
 
-      console.log(`[RATE LIMITER] All Vertex regions busy. Throttling for ${Math.ceil(waitMs / 1000)}s (waiting for ${bestWait.region.name})...`);
+      console.log(`[RATE LIMITER] All Vertex endpoints busy. Throttling for ${Math.ceil(waitMs / 1000)}s (waiting for project: "${bestWait.endpoint.projectId}", region: "${bestWait.endpoint.regionName}")...`);
       await new Promise(resolve => setTimeout(resolve, waitMs));
     } else {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -203,96 +397,31 @@ async function acquireRegionAndRateLimitSlot(estimatedTokens: number, userCountr
   }
 }
 
-/**
- * Remove request reservation from regional history if the call fails.
- */
-function removeRequestFromRegion(region: RegionState) {
-  if (region.requestHistory.length > 0) {
-    region.requestHistory.pop();
+function removeRequestFromEndpoint(endpoint: ProjectRegionState) {
+  if (endpoint.requestHistory.length > 0) {
+    endpoint.requestHistory.pop();
   }
 }
 
-/**
- * Success handler: Updates estimate with actual token count and slowly
- * increases capacity ceilings for that specific region (AIMD - Additive Increase).
- */
-function handleSuccessfulRequest(region: RegionState, actualTokens: number) {
-  if (region.requestHistory.length > 0) {
-    region.requestHistory[region.requestHistory.length - 1].tokens = actualTokens;
+function handleSuccessfulEndpointRequest(endpoint: ProjectRegionState, actualTokens: number) {
+  if (endpoint.requestHistory.length > 0) {
+    endpoint.requestHistory[endpoint.requestHistory.length - 1].tokens = actualTokens;
   }
-  region.rpmCapacity = Math.min(MAX_RPM_CEILING, region.rpmCapacity + 1);
-  region.tpmCapacity = Math.min(MAX_TPM_CEILING, region.tpmCapacity + 10000);
+  endpoint.rpmCapacity = Math.min(MAX_RPM_CEILING, endpoint.rpmCapacity + 1);
+  endpoint.tpmCapacity = Math.min(MAX_TPM_CEILING, endpoint.tpmCapacity + 10000);
 }
 
-/**
- * 429 Rate Limit handler: Shrinks specific region capacity by 20% (AIMD - Multiplicative Decrease) and cools it down.
- */
-function handleRateLimitError(region: RegionState) {
-  region.last429Time = Date.now();
-  region.rpmCapacity = Math.min(MAX_RPM_CEILING, Math.max(1, Math.floor(region.rpmCapacity * 0.8)));
-  region.tpmCapacity = Math.min(MAX_TPM_CEILING, Math.max(10000, Math.floor(region.tpmCapacity * 0.8)));
-  console.warn(`[RATE LIMITER] ⚠️ 429 Resource Exhausted on region "${region.name}". Initiating 15s cooldown and adapting limits to: RPM ${region.rpmCapacity}, TPM ${region.tpmCapacity}`);
+function handleEndpointRateLimitError(endpoint: ProjectRegionState) {
+  endpoint.last429Time = Date.now();
+  endpoint.rpmCapacity = Math.min(MAX_RPM_CEILING, Math.max(1, Math.floor(endpoint.rpmCapacity * 0.8)));
+  endpoint.tpmCapacity = Math.min(MAX_TPM_CEILING, Math.max(10000, Math.floor(endpoint.tpmCapacity * 0.8)));
+  console.warn(`[RATE LIMITER] ⚠️ 429 Resource Exhausted on project "${endpoint.projectId}" in region "${endpoint.regionName}". Initiating 15s cooldown and adapting limits to: RPM ${endpoint.rpmCapacity}, TPM ${endpoint.tpmCapacity}`);
 }
 
-interface ServiceAccountCredentials {
-  type: string;
-  project_id: string;
-  private_key_id: string;
-  private_key: string;
-  client_email: string;
-  token_uri: string;
-}
+// ─────────────────────────────────────────────────────────────────
+// JWT & OAUTH2 GOOGLE AUTHENTICATION
+// ─────────────────────────────────────────────────────────────────
 
-let _cachedToken: string | null = null;
-let _tokenExpiry = 0;
-
-/**
- * Load service account credentials from the VERTEX_SERVICE_ACCOUNT_JSON env variable,
- * or fallback to the JSON file path specified in GOOGLE_APPLICATION_CREDENTIALS.
- */
-async function loadCredentials(): Promise<ServiceAccountCredentials | null> {
-  // 1. Try loading from direct JSON environment variable first
-  const directJson = process.env.VERTEX_SERVICE_ACCOUNT_JSON;
-  if (directJson && (directJson.trim().startsWith('{') || directJson.trim().startsWith('['))) {
-    try {
-      return JSON.parse(directJson) as ServiceAccountCredentials;
-    } catch (e) {
-      console.warn('[VERTEX] Failed to parse VERTEX_SERVICE_ACCOUNT_JSON:', e);
-    }
-  }
-
-  // 2. Fallback to GOOGLE_APPLICATION_CREDENTIALS env var
-  const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  if (!credPath) return null;
-
-  // Support GOOGLE_APPLICATION_CREDENTIALS directly containing the JSON string
-  if (credPath.trim().startsWith('{') || credPath.trim().startsWith('[')) {
-    try {
-      return JSON.parse(credPath) as ServiceAccountCredentials;
-    } catch (e) {
-      console.warn('[VERTEX] Failed to parse GOOGLE_APPLICATION_CREDENTIALS as JSON:', e);
-    }
-  }
-
-  // Otherwise, load from the file path
-  try {
-    const fs = await import('fs');
-    if (fs.existsSync(credPath)) {
-      const raw = fs.readFileSync(credPath, 'utf8');
-      return JSON.parse(raw) as ServiceAccountCredentials;
-    } else {
-      console.warn(`[VERTEX] GOOGLE_APPLICATION_CREDENTIALS file path does not exist: ${credPath}`);
-    }
-  } catch (e) {
-    console.warn('[VERTEX] Failed to load service account credentials from file path:', e);
-  }
-  return null;
-}
-
-/**
- * Create a signed JWT for Google OAuth2 service account authentication.
- * Uses Node.js built-in crypto — no external dependencies.
- */
 async function createJWT(creds: ServiceAccountCredentials): Promise<string> {
   const crypto = await import('crypto');
   
@@ -302,7 +431,7 @@ async function createJWT(creds: ServiceAccountCredentials): Promise<string> {
   const payload = Buffer.from(JSON.stringify({
     iss: creds.client_email,
     sub: creds.client_email,
-    aud: creds.token_uri,
+    aud: creds.token_uri || 'https://oauth2.googleapis.com/token',
     iat: now,
     exp: now + 3600,
     scope: 'https://www.googleapis.com/auth/cloud-platform'
@@ -317,23 +446,16 @@ async function createJWT(creds: ServiceAccountCredentials): Promise<string> {
 }
 
 /**
- * Obtain a short-lived OAuth2 access token from Google.
- * Cached for up to 50 minutes to avoid excessive token requests.
+ * Obtain a short-lived OAuth2 access token for a specific GCP Service Account.
  */
-async function getAccessToken(): Promise<string | null> {
-  if (_cachedToken && Date.now() < _tokenExpiry) {
-    return _cachedToken;
-  }
-
-  const creds = await loadCredentials();
-  if (!creds) {
-    console.warn('[VERTEX] No Vertex AI credentials configured — Vertex AI unavailable.');
-    return null;
+export async function getAccessTokenForAccount(account: VertexAccount): Promise<string | null> {
+  if (account.cachedToken && Date.now() < account.tokenExpiry) {
+    return account.cachedToken;
   }
 
   try {
-    const jwt = await createJWT(creds);
-    const res = await fetch(creds.token_uri, {
+    const jwt = await createJWT(account.credentials);
+    const res = await fetch(account.credentials.token_uri || 'https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -344,20 +466,24 @@ async function getAccessToken(): Promise<string | null> {
 
     if (!res.ok) {
       const err = await res.text();
-      console.error('[VERTEX] Token exchange failed:', err);
+      console.error(`[VERTEX-POOL] Token exchange failed for project "${account.projectId}":`, err);
       return null;
     }
 
     const data = await res.json();
-    _cachedToken = data.access_token;
-    _tokenExpiry = Date.now() + 50 * 60 * 1000; // Cache for 50 min
-    console.log('[VERTEX] ✅ OAuth2 token acquired successfully.');
-    return _cachedToken;
+    account.cachedToken = data.access_token;
+    account.tokenExpiry = Date.now() + 50 * 60 * 1000; // Cache for 50 minutes
+    console.log(`[VERTEX-POOL] ✅ OAuth2 token acquired successfully for project "${account.projectId}".`);
+    return account.cachedToken;
   } catch (e) {
-    console.error('[VERTEX] Exception during token acquisition:', e);
+    console.error(`[VERTEX-POOL] Exception during token acquisition for project "${account.projectId}":`, e);
     return null;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────
+// UNIFIED VERTEX AI CALL ROUTER
+// ─────────────────────────────────────────────────────────────────
 
 export interface VertexRequest {
   task: keyof typeof TASK_MODELS;
@@ -382,19 +508,22 @@ export interface VertexRequest {
 export async function callVertexAI(req: VertexRequest): Promise<Response | null> {
   const estimatedTokens = estimateRequestTokens(req);
 
-  const token = await getAccessToken();
-  if (!token) return null;
+  // Initialize and check pool
+  await initializeAccounts();
+  if (accounts.length === 0) {
+    console.warn('[VERTEX-POOL] Cannot make Vertex AI call: no service accounts configured.');
+    return null;
+  }
 
   const configuredModel = TASK_MODELS[req.task];
   
-  // Decide candidate models to try (from cheapest to fallback)
+  // Decide candidate models to try
   let modelsToTry: string[] = [configuredModel];
   if (configuredModel === 'gemini-2.5-pro') {
     modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-pro'];
   } else if (configuredModel === 'gemini-2.0-flash-lite') {
     modelsToTry = ['gemini-2.0-flash-lite', 'gemini-2.5-flash'];
   } else {
-    // Rely strictly on configuredModel (typically gemini-2.5-flash) and retries rather than falling back to pro
     modelsToTry = [configuredModel];
   }
 
@@ -416,17 +545,31 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
 
     const maxRetries = 10;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      // 1. Acquire slot for a healthy region
-      const region = await acquireRegionAndRateLimitSlot(estimatedTokens, req.userCountry);
-      const currentLocation = region.name;
-      const url = `https://${currentLocation}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${currentLocation}/publishers/google/models/${model}:${method}`;
+      let selected;
+      try {
+        selected = await acquireEndpointAndRateLimitSlot(estimatedTokens, req.userCountry);
+      } catch (e) {
+        console.error('[VERTEX-POOL] Failed to acquire endpoint:', e);
+        return null;
+      }
+      
+      const { account, endpoint } = selected;
+      const token = await getAccessTokenForAccount(account);
+      if (!token) {
+        removeRequestFromEndpoint(endpoint);
+        continue;
+      }
+
+      const currentLocation = endpoint.regionName;
+      const currentProjectId = account.projectId;
+      const url = `https://${currentLocation}-aiplatform.googleapis.com/v1/projects/${currentProjectId}/locations/${currentLocation}/publishers/google/models/${model}:${method}`;
 
       try {
-        console.log(`[VERTEX] Attempting call with model "${model}" in region "${currentLocation}" (attempt ${attempt}/${maxRetries})...`);
+        console.log(`[VERTEX-POOL] Attempting call with model "${model}" in region "${currentLocation}" using project "${currentProjectId}" (attempt ${attempt}/${maxRetries})...`);
         const startTime = Date.now();
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
-          console.warn(`[VERTEX] ⚠️ Request timed out in region "${currentLocation}" after 180s. Aborting...`);
+          console.warn(`[VERTEX-POOL] ⚠️ Request timed out on project "${currentProjectId}", region "${currentLocation}" after 180s. Aborting...`);
           controller.abort();
         }, 180000);
 
@@ -443,7 +586,7 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
         clearTimeout(timeoutId);
 
         if (response.ok) {
-          console.log(`[VERTEX] ✅ Call succeeded with model "${model}" in region "${currentLocation}".`);
+          console.log(`[VERTEX-POOL] ✅ Call succeeded with model "${model}" in region "${currentLocation}" using project "${currentProjectId}".`);
           
           const durationMs = Date.now() - startTime;
           const clonedResponse = response.clone();
@@ -458,16 +601,16 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
               const actualTokens = promptTokens + candidatesTokens;
               
               // Report actual token usage back to the Token-Bucket
-              handleSuccessfulRequest(region, actualTokens);
+              handleSuccessfulEndpointRequest(endpoint, actualTokens);
 
               const firstPart = req.contents?.[0]?.parts?.[0];
               const promptText = (firstPart && 'text' in firstPart) ? firstPart.text : '';
               await recordMetrics(req.task, model, durationMs, promptTokens, candidatesTokens, promptText);
             } catch (e) {
-              console.warn('[VERTEX] Failed to parse usage metadata from response clone:', e);
+              console.warn('[VERTEX-POOL] Failed to parse usage metadata from response clone:', e);
               // Fallback: estimate tokens if parsing failed
               const est = TASK_TOKEN_ESTIMATES[req.task] || { inputTokens: 1000, outputTokens: 500 };
-              handleSuccessfulRequest(region, est.inputTokens + est.outputTokens);
+              handleSuccessfulEndpointRequest(endpoint, est.inputTokens + est.outputTokens);
 
               const firstPart = req.contents?.[0]?.parts?.[0];
               const promptText = (firstPart && 'text' in firstPart) ? firstPart.text : '';
@@ -477,42 +620,41 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
 
           return response;
         } else if (response.status === 429) {
-          handleRateLimitError(region);
-          removeRequestFromRegion(region); // Free reservation
+          handleEndpointRateLimitError(endpoint);
+          removeRequestFromEndpoint(endpoint);
 
           const errText = await response.text();
-          lastError = `[VERTEX] Model "${model}" failed in region "${currentLocation}" (429 RESOURCE_EXHAUSTED). ${errText.slice(0, 300)}`;
+          lastError = `[VERTEX-POOL] Model "${model}" failed on project "${currentProjectId}" in region "${currentLocation}" (429 RESOURCE_EXHAUSTED). ${errText.slice(0, 300)}`;
           
           if (attempt < maxRetries) {
-            // Add a short randomized jitter before retrying on a different region
-            const jitterDelay = Math.floor(Math.random() * 2000); // 0-2 seconds jitter
+            const jitterDelay = Math.floor(Math.random() * 2000);
             console.warn(`${lastError}. Failing over immediately. Jitter delay: ${jitterDelay}ms...`);
             await new Promise(resolve => setTimeout(resolve, jitterDelay));
             continue;
           }
         } else {
-          removeRequestFromRegion(region); // Free reservation
+          removeRequestFromEndpoint(endpoint);
           const errText = await response.text();
-          lastError = `[VERTEX] Model "${model}" failed (${response.status}) in region "${currentLocation}": ${errText.slice(0, 300)}`;
+          lastError = `[VERTEX-POOL] Model "${model}" failed (${response.status}) on project "${currentProjectId}" in region "${currentLocation}": ${errText.slice(0, 300)}`;
           console.warn(lastError);
-          break; // Fatal error on this model, try next model candidate if any
+          break; // Try next model candidate
         }
       } catch (e) {
-        removeRequestFromRegion(region); // Free reservation
-        lastError = `[VERTEX] Model "${model}" exception in region "${currentLocation}": ${e}`;
+        removeRequestFromEndpoint(endpoint);
+        lastError = `[VERTEX-POOL] Model "${model}" exception on project "${currentProjectId}" in region "${currentLocation}": ${e}`;
         console.warn(lastError);
         if (attempt < maxRetries) {
           const jitterDelay = Math.floor(Math.random() * 2000);
-          console.warn(`[VERTEX] Retrying after exception. Jitter delay: ${jitterDelay}ms...`);
+          console.warn(`[VERTEX-POOL] Retrying after exception. Jitter delay: ${jitterDelay}ms...`);
           await new Promise(resolve => setTimeout(resolve, jitterDelay));
           continue;
         }
-        break; // Exception, try next model candidate if any
+        break; // Try next model candidate
       }
     }
   }
 
-  console.error(`[VERTEX] All model candidates failed. Last error: ${lastError}`);
+  console.error(`[VERTEX-POOL] All model candidates failed. Last error: ${lastError}`);
   return response;
 }
 
@@ -528,21 +670,17 @@ export async function recordMetrics(
   promptTextForClassifier: string = ''
 ) {
   try {
-    // 1. Calculate cost using MODEL_PRICING
     const pricing = MODEL_PRICING[model as ModelId];
     let cost = 0;
     if (pricing) {
       cost = (promptTokens / 1_000_000) * pricing.inputPer1M 
            + (candidatesTokens / 1_000_000) * pricing.outputPer1M;
     } else {
-      // Default fallback cost estimation if model not in pricing (e.g., fallback default)
       cost = (promptTokens / 1_000_000) * 0.075 + (candidatesTokens / 1_000_000) * 0.30;
     }
 
-    // 2. Map task to metric ID:
     let metricId = 'tutor';
     if (task === 'course_generation') {
-      // Classify whether it is Agent 4 review or Agent 1-3 creation
       if (promptTextForClassifier.includes('Verifier/Critic Agent') || promptTextForClassifier.includes('Agent 4')) {
         metricId = 'revision';
       } else {
@@ -567,5 +705,24 @@ export async function recordMetrics(
 
 /** Returns true if Vertex AI credentials are configured */
 export function isVertexConfigured(): boolean {
-  return !!(process.env.VERTEX_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_APPLICATION_CREDENTIALS);
+  if (process.env.VERTEX_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    return true;
+  }
+  // Check if any json file exists in the secrets folder
+  if (typeof window === 'undefined') {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const secretsDir = path.resolve(process.cwd(), 'secrets');
+      if (fs.existsSync(secretsDir)) {
+        const files = fs.readdirSync(secretsDir);
+        const hasSa = files.some((f: string) => f.endsWith('.json') && !f.startsWith('github'));
+        if (hasSa) return true;
+      }
+    } catch {
+      // Ignored
+    }
+  }
+  return false;
 }
+

@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import { supabase, supabaseAdmin } from '../../../lib/supabase';
 import { verifySession } from '@/lib/authHelper';
+import { 
+  initializeAccounts, 
+  customCredentialsStorage, 
+  getAccessTokenForAccount, 
+  isVertexConfigured 
+} from '@/lib/vertex-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,191 +103,176 @@ async function checkResend(customKey?: string): Promise<ServiceResult> {
   }
 }
 
-async function checkGemini(customKey?: string): Promise<ServiceResult> {
+async function checkVertexPool(customKey?: string): Promise<ServiceResult & { details?: any[] }> {
+  const checkedAt = new Date().toISOString();
+  const startOverall = Date.now();
+
+  const runProbe = async () => {
+    // Force reload accounts to parse the custom key or fresh secrets folder
+    const poolAccounts = await initializeAccounts(true);
+    
+    if (poolAccounts.length === 0) {
+      return null;
+    }
+
+    const probePromises = poolAccounts.map(async (account) => {
+      const start = Date.now();
+      const projectId = account.projectId;
+      const location = 'us-central1';
+
+      try {
+        const token = await getAccessTokenForAccount(account);
+        if (!token) {
+          return {
+            projectId,
+            status: 'unauthorized' as const,
+            latencyMs: Date.now() - start,
+            errorMessage: 'OAuth2 token exchange failed'
+          };
+        }
+
+        const probeUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-2.5-flash:generateContent`;
+        const res = await fetch(probeUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: 'say ok' }] }]
+          }),
+          signal: AbortSignal.timeout(6000)
+        });
+
+        const latencyMs = Date.now() - start;
+        if (res.ok) {
+          return {
+            projectId,
+            status: 'ok' as const,
+            latencyMs
+          };
+        } else {
+          const errText = await res.text();
+          return {
+            projectId,
+            status: 'degraded' as const,
+            latencyMs,
+            errorMessage: `Vertex AI API error (${res.status}): ${errText.slice(0, 200)}`
+          };
+        }
+      } catch (e: any) {
+        return {
+          projectId,
+          status: 'offline' as const,
+          latencyMs: Date.now() - start,
+          errorMessage: e?.message || 'Connection error'
+        };
+      }
+    });
+
+    const details = await Promise.all(probePromises);
+    
+    const okCount = details.filter(d => d.status === 'ok').length;
+    const totalCount = details.length;
+
+    let overallStatus: 'ok' | 'degraded' | 'offline' = 'offline';
+    let overallErrorMessage: string | undefined = undefined;
+
+    if (okCount === totalCount) {
+      overallStatus = 'ok';
+    } else if (okCount > 0) {
+      overallStatus = 'degraded';
+      overallErrorMessage = `${totalCount - okCount} of ${totalCount} projects in the pool are failing`;
+    } else {
+      overallStatus = 'offline';
+      overallErrorMessage = 'All projects in the pool are failing: ' + details.map(d => `[${d.projectId}]: ${d.errorMessage || 'unknown'}`).join('; ');
+    }
+
+    const validLatencies = details.map(d => d.latencyMs).filter(l => l !== null) as number[];
+    const avgLatency = validLatencies.length > 0 
+      ? Math.round(validLatencies.reduce((a, b) => a + b, 0) / validLatencies.length)
+      : Date.now() - startOverall;
+
+    return {
+      id: 'ai',
+      nameKey: 'health_ai',
+      url: `https://console.cloud.google.com/vertex-ai`,
+      status: overallStatus,
+      latencyMs: avgLatency,
+      checkedAt,
+      errorMessage: overallErrorMessage,
+      details
+    };
+  };
+
+  if (customKey) {
+    return await customCredentialsStorage.run(customKey, runProbe) || {
+      id: 'ai',
+      nameKey: 'health_ai',
+      url: `https://console.cloud.google.com/vertex-ai`,
+      status: 'offline',
+      latencyMs: null,
+      checkedAt,
+      errorMessage: 'Custom key failed to initialize'
+    };
+  } else {
+    return await runProbe() || {
+      id: 'ai',
+      nameKey: 'health_ai',
+      url: `https://console.cloud.google.com/vertex-ai`,
+      status: 'offline',
+      latencyMs: null,
+      checkedAt,
+      errorMessage: 'No accounts configured'
+    };
+  }
+}
+
+async function checkGemini(customKey?: string): Promise<ServiceResult & { details?: any[] }> {
   const checkedAt = new Date().toISOString();
   
-  // 1. Determine if we are using JSON credentials (Vertex AI)
-  let isJson = false;
-  let jsonString = '';
-  
-  if (customKey && (customKey.trim().startsWith('{') || customKey.trim().startsWith('['))) {
-    isJson = true;
-    jsonString = customKey;
-  } else if (!customKey && process.env.VERTEX_SERVICE_ACCOUNT_JSON) {
-    const directJson = process.env.VERTEX_SERVICE_ACCOUNT_JSON;
-    if (directJson.trim().startsWith('{') || directJson.trim().startsWith('[')) {
-      jsonString = directJson;
-      isJson = true;
-    }
-  } else if (!customKey && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    if (credPath.trim().startsWith('{') || credPath.trim().startsWith('[')) {
-      jsonString = credPath;
-      isJson = true;
-    } else {
-      try {
-        if (fs.existsSync(credPath)) {
-          jsonString = fs.readFileSync(credPath, 'utf8');
-          isJson = true;
-        }
-      } catch (e) {
-        console.warn('[HEALTH] Failed to read GOOGLE_APPLICATION_CREDENTIALS file:', e);
-      }
+  const isVertex = customKey 
+    ? (customKey.trim().startsWith('{') || customKey.trim().startsWith('['))
+    : isVertexConfigured();
+
+  if (isVertex) {
+    const poolResult = await checkVertexPool(customKey);
+    if (poolResult && poolResult.details && poolResult.details.length > 0) {
+      return poolResult;
     }
   }
 
   const start = Date.now();
-  
-  if (isJson) {
-    const url = 'https://us-central1-aiplatform.googleapis.com';
-    try {
-      const creds = JSON.parse(jsonString);
-      if (!creds.client_email || !creds.private_key || !creds.project_id) {
-        return {
-          id: 'ai',
-          nameKey: 'health_ai',
-          url,
-          status: 'unauthorized',
-          latencyMs: null,
-          checkedAt,
-          errorMessage: 'Invalid Service Account JSON: missing client_email, private_key, or project_id'
-        };
-      }
+  const key = customKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const url = 'https://generativelanguage.googleapis.com';
 
-      // Generate JWT for token exchange
-      const crypto = require('crypto');
-      const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
-      const now = Math.floor(Date.now() / 1000);
-      const payload = Buffer.from(JSON.stringify({
-        iss: creds.client_email,
-        sub: creds.client_email,
-        aud: creds.token_uri || 'https://oauth2.googleapis.com/token',
-        iat: now,
-        exp: now + 300,
-        scope: 'https://www.googleapis.com/auth/cloud-platform'
-      })).toString('base64url');
+  if (!key) {
+    return { id: 'ai', nameKey: 'health_ai', url, status: 'unauthorized', latencyMs: null, checkedAt, errorMessage: 'No AI key or credentials configured' };
+  }
 
-      const signingInput = `${header}.${payload}`;
-      const sign = crypto.createSign('RSA-SHA256');
-      sign.update(signingInput);
-      const signature = sign.sign(creds.private_key, 'base64url');
-      const jwt = `${signingInput}.${signature}`;
-
-      // Token Exchange
-      const tokenRes = await fetch(creds.token_uri || 'https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-          assertion: jwt
-        }),
-        signal: AbortSignal.timeout(5000)
-      });
-
-      if (!tokenRes.ok) {
-        const errText = await tokenRes.text();
-        return {
-          id: 'ai',
-          nameKey: 'health_ai',
-          url,
-          status: 'unauthorized',
-          latencyMs: Date.now() - start,
-          checkedAt,
-          errorMessage: `OAuth2 token exchange failed: ${errText.slice(0, 200)}`
-        };
-      }
-
-      const tokenData = await tokenRes.json();
-      const accessToken = tokenData.access_token;
-      if (!accessToken) {
-        return {
-          id: 'ai',
-          nameKey: 'health_ai',
-          url,
-          status: 'unauthorized',
-          latencyMs: Date.now() - start,
-          checkedAt,
-          errorMessage: 'OAuth2 token exchange returned empty access token'
-        };
-      }
-
-      // Active probe to Vertex AI
-      const projectId = creds.project_id;
-      const location = creds.location || 'us-central1';
-      const probeUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-2.5-flash:generateContent`;
-      
-      const apiRes = await fetch(probeUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: 'say ok' }] }]
-        }),
-        signal: AbortSignal.timeout(6000)
-      });
-
-      const latencyMs = Date.now() - start;
-      const consoleUrl = `https://console.cloud.google.com/vertex-ai?project=${projectId}`;
-      if (apiRes.ok) {
-        return { id: 'ai', nameKey: 'health_ai', url: consoleUrl, status: 'ok', latencyMs, checkedAt };
-      } else {
-        const errText = await apiRes.text();
-        return {
-          id: 'ai',
-          nameKey: 'health_ai',
-          url: consoleUrl,
-          status: 'degraded',
-          latencyMs,
-          checkedAt,
-          errorMessage: `Vertex AI API error (${apiRes.status}): ${errText.slice(0, 200)}`
-        };
-      }
-    } catch (e: any) {
-      return {
-        id: 'ai',
-        nameKey: 'health_ai',
-        url,
-        status: 'offline',
-        latencyMs: Date.now() - start,
-        checkedAt,
-        errorMessage: e?.message || 'Vertex AI connection error'
+  try {
+    const res = await fetch(`${url}/v1beta/models?key=${key}`, {
+      signal: AbortSignal.timeout(6000),
+      cache: 'no-store'
+    });
+    const latencyMs = Date.now() - start;
+    if (res.ok) {
+      return { id: 'ai', nameKey: 'health_ai', url, status: 'ok', latencyMs, checkedAt };
+    }
+    if (res.status === 401 || res.status === 403 || res.status === 400) {
+      return { 
+        id: 'ai', 
+        nameKey: 'health_ai', 
+        url, 
+        status: 'unauthorized', 
+        latencyMs, 
+        checkedAt, 
+        errorMessage: 'Invalid API Key / Restricted Access (401/403)' 
       };
     }
-  } else {
-    // 2. Fall back to Gemini API Key (Google AI Studio)
-    const key = customKey || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-    const url = 'https://generativelanguage.googleapis.com';
-
-    if (!key) {
-      return { id: 'ai', nameKey: 'health_ai', url, status: 'unauthorized', latencyMs: null, checkedAt, errorMessage: 'No AI key or credentials configured' };
-    }
-
-    try {
-      const res = await fetch(`${url}/v1beta/models?key=${key}`, {
-        signal: AbortSignal.timeout(6000),
-        cache: 'no-store'
-      });
-      const latencyMs = Date.now() - start;
-      if (res.ok) {
-        return { id: 'ai', nameKey: 'health_ai', url, status: 'ok', latencyMs, checkedAt };
-      }
-      if (res.status === 401 || res.status === 403 || res.status === 400) {
-        return { 
-          id: 'ai', 
-          nameKey: 'health_ai', 
-          url, 
-          status: 'unauthorized', 
-          latencyMs, 
-          checkedAt, 
-          errorMessage: 'Invalid API Key / Restricted Access (401/403)' 
-        };
-      }
-      return { id: 'ai', nameKey: 'health_ai', url, status: 'degraded', latencyMs, checkedAt, errorMessage: `HTTP ${res.status}` };
-    } catch (e: any) {
-      return { id: 'ai', nameKey: 'health_ai', url, status: 'offline', latencyMs: Date.now() - start, checkedAt, errorMessage: e?.message };
-    }
+    return { id: 'ai', nameKey: 'health_ai', url, status: 'degraded', latencyMs, checkedAt, errorMessage: `HTTP ${res.status}` };
+  } catch (e: any) {
+    return { id: 'ai', nameKey: 'health_ai', url, status: 'offline', latencyMs: Date.now() - start, checkedAt, errorMessage: e?.message };
   }
 }
 

@@ -1395,7 +1395,8 @@ function healSelfClosingComponents(mdx: string): string {
     'FunctionPlotter', 'FunctionManipulator', 'EquationManipulator',
     'Geometry2D', 'DataChart', 'StructureViewer3D', 'DynamicSimulation',
     'BasicMathExplorer', 'ChemicalStoichiometry', 'Video', 'Audio',
-    'FillInBlanks'
+    'FillInBlanks', 'Prerequisites', 'DiagnosticQuiz', 'SandboxPrononciation',
+    'PronunciationSandbox', 'CodeSandbox', 'WhatsNext'
   ];
   
   for (const comp of components) {

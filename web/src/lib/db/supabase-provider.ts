@@ -299,7 +299,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
       const { data, error } = await supabase
         .from('lessons')
         .select('*')
-        .eq('course_slug', courseSlug)
+        .ilike('course_slug', courseSlug)
         .eq('lesson_slug', lessonSlug)
         .eq('lang', lang.toLowerCase())
         .single();
@@ -316,7 +316,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
       const { data, error } = await supabase
         .from('lessons')
         .select('lesson_slug')
-        .eq('course_slug', courseSlug)
+        .ilike('course_slug', courseSlug)
         .eq('lang', lang.toLowerCase())
         .order('order', { ascending: true })
         .limit(1)
@@ -362,7 +362,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   getSyllabus: async (id: string) => {
     try {
-      const { data, error } = await supabase.from('courses').select('*').eq('slug', id).single();
+      const { data, error } = await supabase.from('courses').select('*').ilike('slug', id).single();
       if (error) throw error;
       if (data) {
         const c = data as any;

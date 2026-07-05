@@ -112,22 +112,64 @@ In the administrative portal (`/admin/health`), API key status checking is stric
 
 ---
 
-## 8. 📱 Mobile Application Building
+## 8. 📱 Mobile Application Building & App Store Deployments
 
-OpenPrimer provides an autonomous mobile client template inside the `/mobile` directory.
-1. Install dependencies inside `/mobile` folder:
+OpenPrimer provides a standalone hybrid mobile client designed as an optimized WebView in the `/mobile` directory.
+
+### Step 1: Install Dependencies
+Navigate to the `/mobile` directory and install the required dependencies:
+```bash
+npm install
+```
+
+### Step 2: Environment Configuration (`config.json`)
+Configure the target URL of your live OpenPrimer web application in the `/mobile/config.json` file:
+```json
+{
+  "BASE_URL": "https://openprimer.vercel.app"
+}
+```
+
+### Step 3: Launching in Development
+To run the mobile application locally on an emulator or physical device (via the Expo Go app or local native builds):
+```bash
+# Start the app on an Android emulator
+npm run android
+
+# Start the app on an iOS emulator
+npm run ios
+```
+
+### Step 4: Production Compilation (Google Play Store & Apple App Store)
+We use **EAS Build** (Expo Application Services) to securely compile your production applications directly in the cloud.
+
+1. **Install EAS CLI Globally:**
    ```bash
-   npm install
+   npm install -g eas-cli
    ```
-2. Configure your mobile runtime variables inside `/mobile/config.json`:
-   ```json
-   {
-     "API_ENDPOINT": "https://openprimer.app/api",
-     "SUPABASE_URL": "https://cayylzaasyqqpvuezufy.supabase.co"
-   }
+2. **Log in to your Expo account:**
+   ```bash
+   eas login
    ```
-3. To build and test the Android package (APK) or iOS bundle using standard React Native/Expo commands:
+3. **Configure EAS Environment:**
+   ```bash
+   eas build:configure
+   ```
+4. **Launch production Android build (.aab):**
    ```bash
    npm run build:android
+   ```
+5. **Launch production iOS build (.ipa):**
+   ```bash
    npm run build:ios
    ```
+
+For a comprehensive guide describing the configuration of the **Google Play Console**, **App Store Connect**, and distribution on the **Chrome Web Store** for the web version, please refer to our local [Compilation & Publication Guide](file:///c:/Silvere/Encours/Developpement/OpenPrimer/docs/BUILD_AND_PUBLISH_GUIDE.md).
+
+### Native Advanced Features Implemented
+
+*   **Android Back Button Handling:** Pressing the Android physical "Back" button navigates backward in the WebView's history instead of abruptly closing the application.
+*   **Background Synchronization:** When the student is online and views their curriculum page (`/profile/curriculum`), the website automatically and invisibly sends their active courses list to the mobile container over the native communication bridge.
+*   **Premium Offline Mode:** If there is no internet connection at startup or mid-navigation, the WebView gracefully yields to a beautiful native Slate-950 offline screen, displaying active courses retrieved from persistent local storage (`AsyncStorage`). The student can click a native "Retry" button to reload the WebView at any time.
+
+

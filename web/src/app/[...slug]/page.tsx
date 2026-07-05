@@ -109,7 +109,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
         const { count } = await supabase
           .from('lessons')
           .select('*', { count: 'exact', head: true })
-          .eq('course_slug', courseSlug)
+          .ilike('course_slug', courseSlug)
           .eq('lang', lang.toLowerCase());
         
         if (!count || count === 0) {
@@ -117,7 +117,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           const { data: otherLangs } = await supabase
             .from('lessons')
             .select('lang')
-            .eq('course_slug', courseSlug)
+            .ilike('course_slug', courseSlug)
             .limit(1);
           
           if (otherLangs && otherLangs.length > 0) {
@@ -166,7 +166,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           const { data: introLesson } = await supabase
             .from('lessons')
             .select('lesson_slug')
-            .eq('course_slug', courseSlug)
+            .ilike('course_slug', courseSlug)
             .eq('lesson_slug', 'introduction')
             .eq('lang', lang.toLowerCase())
             .maybeSingle();
@@ -175,7 +175,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
             const { data: firstLesson } = await supabase
               .from('lessons')
               .select('lesson_slug')
-              .eq('course_slug', courseSlug)
+              .ilike('course_slug', courseSlug)
               .eq('lang', lang.toLowerCase())
               .order('order', { ascending: true })
               .limit(1)

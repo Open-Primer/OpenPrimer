@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "openprimer-mobile",
+    "name": "OpenPrimer",
     "slug": "openprimer-mobile",
     "version": "1.0.0",
     "sdkVersion": "50.0.0",
@@ -8,8 +8,17 @@
       "ios",
       "android"
     ],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#020617"
+    },
     "android": {
-      "package": "com.anonymous.openprimermobile"
+      "package": "app.openprimer.mobile"
+    },
+    "ios": {
+      "bundleIdentifier": "app.openprimer.mobile"
     }
   }
 }

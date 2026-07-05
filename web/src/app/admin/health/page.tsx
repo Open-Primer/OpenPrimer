@@ -820,6 +820,8 @@ function ServiceCard({ svc, t, lang }: { svc: ServiceHealth; t: typeof HEALTH_ST
     : svc.status === 'degraded' || svc.status === 'unauthorized' ? 'border-amber-500/20'
     : 'border-slate-800';
 
+  const details = (svc as any).details as Array<{ projectId: string; status: 'ok' | 'degraded' | 'offline'; latencyMs: number | null; errorMessage?: string }> | undefined;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -856,6 +858,54 @@ function ServiceCard({ svc, t, lang }: { svc: ServiceHealth; t: typeof HEALTH_ST
         </div>
       </div>
 
+      {/* Vertex Multi-Project Pool Details */}
+      {svc.id === 'ai' && details && details.length > 0 && (
+        <div className="flex flex-col gap-3 p-4 bg-slate-950/40 rounded-2xl border border-slate-850/60">
+          <div className="flex items-center justify-between border-b border-slate-850 pb-2">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+              GCP Service Accounts Pool ({details.length})
+            </span>
+            <span className="text-[9px] font-bold text-slate-500 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-full">
+              Load Balancer Active
+            </span>
+          </div>
+          <div className="space-y-2.5 max-h-[180px] overflow-y-auto pr-1">
+            {details.map((account, idx) => (
+              <div 
+                key={idx} 
+                className="group p-3 bg-slate-950/60 border border-slate-900 hover:border-slate-800 hover:scale-[1.01] rounded-xl flex flex-col gap-1.5 transition-all duration-300"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 shadow-lg ${
+                      account.status === 'ok' ? 'bg-emerald-400 shadow-emerald-400/20' : 
+                      account.status === 'degraded' ? 'bg-amber-400 shadow-amber-400/20 animate-pulse' : 
+                      'bg-red-400 shadow-red-400/20'
+                    }`} />
+                    <span className="text-[11px] font-black font-mono text-slate-300 truncate" title={account.projectId}>
+                      {account.projectId}
+                    </span>
+                  </div>
+                  <span className={`text-[10px] font-bold font-mono ${
+                    account.latencyMs === null ? 'text-slate-600' :
+                    account.latencyMs < 500 ? 'text-emerald-400/90' : 
+                    account.latencyMs < 2000 ? 'text-amber-400/90' : 
+                    'text-red-400/90'
+                  }`}>
+                    {account.latencyMs !== null ? `${account.latencyMs} ms` : '—'}
+                  </span>
+                </div>
+                {account.errorMessage && (
+                  <p className="text-[10px] font-mono text-red-400/80 leading-snug border-t border-red-950/20 pt-1.5 pl-4">
+                    {account.errorMessage}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Endpoint */}
       <div className="flex items-center gap-2 p-3 bg-slate-950/40 rounded-xl border border-slate-850">
         <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex-shrink-0">{t.endpoint}</p>
@@ -871,7 +921,7 @@ function ServiceCard({ svc, t, lang }: { svc: ServiceHealth; t: typeof HEALTH_ST
       </div>
 
       {/* Error detail */}
-      {svc.errorMessage && (
+      {svc.errorMessage && !details && (
         <div className="px-4 py-3 bg-red-500/5 border border-red-500/10 rounded-xl">
           <p className="text-[9px] font-black text-red-500 uppercase tracking-widest mb-1">{t.error}</p>
           <p className="text-xs text-red-400 font-mono">{svc.errorMessage}</p>
@@ -1057,6 +1107,7 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Supabase Anon Public Key',
       lbl_resend: 'Resend API Key',
       lbl_gemini: 'Gemini API Key or Service Account JSON',
+      lbl_gemini_help: 'Paste a Gemini API key, a Service Account JSON object, or a JSON array of multiple Service Accounts to enable multi-project load-balancing.',
       lbl_smithsonian: 'Smithsonian API Key',
       lbl_unsplash: 'Unsplash Access Key',
       btn_apply: 'Apply Hot-Swap Keys',
@@ -1069,6 +1120,7 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Clé Publique Anon Supabase',
       lbl_resend: 'Clé API Resend',
       lbl_gemini: 'Clé API Gemini ou Compte de Service JSON',
+      lbl_gemini_help: 'Collez une clé API Gemini, un objet JSON de compte de service GCP, ou un tableau JSON de plusieurs comptes de service pour activer l\'équilibrage multi-projets.',
       lbl_smithsonian: 'Clé API Smithsonian',
       lbl_unsplash: "Clé d'Accès Unsplash",
       btn_apply: 'Appliquer les Clés',
@@ -1081,6 +1133,7 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Clave Pública Anon Supabase',
       lbl_resend: 'Clave API Resend',
       lbl_gemini: 'Clave API Gemini o Cuenta de Servicio JSON',
+      lbl_gemini_help: 'Pegue una clave API de Gemini, un objeto JSON de cuenta de servicio de GCP o una matriz JSON de varias cuentas de servicio para habilitar el equilibrio de carga multiproyecto.',
       lbl_smithsonian: 'Clave API Smithsonian',
       lbl_unsplash: 'Clave de Acceso Unsplash',
       btn_apply: 'Aplicar Cambios',
@@ -1093,6 +1146,7 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Supabase Anon Public Key',
       lbl_resend: 'Resend API-Schlüssel',
       lbl_gemini: 'Gemini API-Schlüssel oder Service-Account-JSON',
+      lbl_gemini_help: 'Fügen Sie einen Gemini-API-Schlüssel, ein Service-Account-JSON-Objekt oder ein JSON-Array mit mehreren Service-Accounts ein, um die Lastverteilung über plusieurs Projekte zu aktivieren.',
       lbl_smithsonian: 'Smithsonian API-Schlüssel',
       lbl_unsplash: 'Unsplash-Zugriffsschlüssel',
       btn_apply: 'Schlüssel anwenden',
@@ -1105,6 +1159,7 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Supabase Anon 公钥',
       lbl_resend: 'Resend 邮件 API 密钥',
       lbl_gemini: 'Gemini API 密钥或服务账号 JSON',
+      lbl_gemini_help: '粘贴 Gemini API 密钥、GCP 服务账号 JSON 对象或包含多个服务账号的 JSON 数组，以启用多项目负载均衡。',
       lbl_smithsonian: 'Smithsonian API 密钥',
       lbl_unsplash: 'Unsplash 访问密钥',
       btn_apply: '应用热插拔密钥',
@@ -1117,6 +1172,7 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Chave Pública Anon do Supabase',
       lbl_resend: 'Chave API Resend',
       lbl_gemini: 'Chave API Gemini ou JSON da Conta de Serviço',
+      lbl_gemini_help: 'Cole uma chave API Gemini, um objeto JSON de Conta de Serviço do GCP ou um array JSON de várias Contas de Serviço para ativar o equilíbrio de carga multiprojeto.',
       lbl_smithsonian: 'Chave API Smithsonian',
       lbl_unsplash: 'Chave de Acesso Unsplash',
       btn_apply: 'Aplicar Chaves Hot-Swap',
@@ -1129,6 +1185,7 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'المفتاح العام المجهول لـ Supabase',
       lbl_resend: 'مفتاح واجهة برمجة تطبيقات Resend',
       lbl_gemini: 'مفتاح واجهة Gemini أو ملف JSON لحساب الخدمة',
+      lbl_gemini_help: 'ألصق مفتاح واجهة Gemini، أو كائن JSON لحساب خدمة GCP，أو مصفوفة JSON لحسابات خدمة متعددة لتمكين موازنة الحمل متعددة المشاريع.',
       lbl_smithsonian: 'مفتاح واجهة Smithsonian',
       lbl_unsplash: 'مفتاح وصول Unsplash',
       btn_apply: 'تطبيق مفاتيح الاستبدال الساخن',
@@ -1141,6 +1198,7 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Supabase अनाम सार्वजनिक कुंजी',
       lbl_resend: 'Resend API कुंजी',
       lbl_gemini: 'Gemini API कुंजी या सेवा खाता JSON',
+      lbl_gemini_help: 'मल्टी-प्रोजेक्ट लोड बैलेंसिंग सक्षम करने के लिए जेमिनी एपीआई कुंजी, जीसीपी सेवा खाता जेएसओएन ऑब्जेक्ट, या कई सेवा खातों की जेएसओएन सरणी पेस्ट करें।',
       lbl_smithsonian: 'Smithsonian API कुंजी',
       lbl_unsplash: 'Unsplash एक्सेस कुंजी',
       btn_apply: 'हॉट-स्वैप कुंजियाँ लागू करें',
@@ -1153,6 +1211,7 @@ export default function ServerHealthPage() {
       lbl_sb_key: 'Supabase Anon پبلک کی',
       lbl_resend: 'Resend API کی',
       lbl_gemini: 'Gemini API کی یا سروس اکاؤنٹ JSON',
+      lbl_gemini_help: 'ملٹی پروجیکٹ لوڈ بیلنسنگ کو فعال کرنے کے لیے جیمنی API کلید، GCP سروس اکاؤنٹ JSON آبجیکٹ، یا متعدد سروس اکاؤنٹس کی JSON صف پیسٹ کریں۔',
       lbl_smithsonian: 'Smithsonian API کی',
       lbl_unsplash: 'Unsplash ایکسیس کی',
       btn_apply: 'ہاٹ-سوپ کیز لاگو کریں',
@@ -1437,6 +1496,7 @@ export default function ServerHealthPage() {
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentCfg.lbl_gemini}</label>
+              <p className="text-[10px] text-slate-500 leading-snug">{currentCfg.lbl_gemini_help}</p>
               <div className="relative">
                 <input
                   type={showGeminiKey ? "text" : "password"}

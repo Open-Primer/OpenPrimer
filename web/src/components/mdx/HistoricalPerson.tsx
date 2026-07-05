@@ -650,7 +650,7 @@ export const EntityLink = ({
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   if (unresolved) {
-    return null;
+    return <>{children}</>;
   }
 
   const showOverlay = !!name;
