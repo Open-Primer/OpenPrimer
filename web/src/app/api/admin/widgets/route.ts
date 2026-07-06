@@ -13,12 +13,14 @@ const execPromise = promisify(exec);
 
 async function checkAdminAuth(request: Request): Promise<boolean> {
   const isProd = process.env.NODE_ENV === 'production';
+  console.log('[SECURITY DEBUG] Entering checkAdminAuth. NodeEnv:', process.env.NODE_ENV);
 
   // 1. Check if we should allow sandbox access (for development/testing)
   try {
     if (!isProd) {
       const cookieStore = await cookies();
       const allowSandbox = cookieStore.get('op_allow_sandbox')?.value;
+      console.log('[SECURITY DEBUG] Cookie op_allow_sandbox:', allowSandbox);
       if (allowSandbox === 'true' || process.env.PLAYWRIGHT_TEST === 'true' || process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === 'true') {
         console.log('[SECURITY DEBUG] Sandbox/Test mode active. Bypassing admin authentication checks.');
         return true;
@@ -31,6 +33,7 @@ async function checkAdminAuth(request: Request): Promise<boolean> {
   // 2. Try Authorization header verifySession first
   try {
     const authUser = await verifySession(request);
+    console.log('[SECURITY DEBUG] verifySession returned user:', authUser ? { id: authUser.id, email: authUser.email } : 'null');
     if (authUser) {
       // If the authenticated user is the mock offline user, and we're not in production, allow it!
       if (authUser.id === 'mock-offline-user-id') {
@@ -40,7 +43,9 @@ async function checkAdminAuth(request: Request): Promise<boolean> {
         }
       }
       const { data: profile } = await dbService.getUserProfile(authUser.id);
+      console.log('[SECURITY DEBUG] getUserProfile result for verifySession user:', profile ? { id: profile?.id, role: profile?.role } : 'null');
       if (profile?.role === 'admin') {
+        console.log('[SECURITY DEBUG] Access GRANTED via verifySession for admin user:', authUser.email);
         return true;
       }
     }
@@ -52,9 +57,12 @@ async function checkAdminAuth(request: Request): Promise<boolean> {
   try {
     const cookieStore = await cookies();
     const userId = cookieStore.get('op_user_id')?.value;
+    console.log('[SECURITY DEBUG] Cookie op_user_id:', userId);
     if (userId) {
       const { data: profile } = await dbService.getUserProfile(userId);
+      console.log('[SECURITY DEBUG] getUserProfile result for cookie user:', profile ? { id: profile?.id, role: profile?.role } : 'null');
       if (profile?.role === 'admin') {
+        console.log('[SECURITY DEBUG] Access GRANTED via cookie op_user_id for admin user:', userId);
         return true;
       }
     }
@@ -68,6 +76,7 @@ async function checkAdminAuth(request: Request): Promise<boolean> {
     return true;
   }
 
+  console.warn('[SECURITY WARNING] Access DENIED in checkAdminAuth. No valid admin authorization found.');
   return false;
 }
 

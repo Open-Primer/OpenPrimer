@@ -1114,6 +1114,66 @@ function getDisciplineFallbackSentence(discipline?: string, lang: string = 'fr')
   return langSentences[normLang] || langSentences['en'] || { sentence: "The Earth revolves around the _____.", answer: "Sun" };
 }
 
+function detectLanguageLeakage(text: string, targetLang: string): boolean {
+  if (!text || typeof text !== 'string') return false;
+  const clean = text.toLowerCase().trim();
+  if (clean.length < 8) return false;
+
+  const normLang = (targetLang || 'fr').toLowerCase().split('-')[0];
+  if (normLang === 'en') return false;
+
+  const englishIndicators = [
+    /\bthe\s+(?:study|theory|concept|process|method|system|model|structure|function|example|role|importance|nature|effect|development|history|origin|application|analysis|definition|classification|principles|elements|components|features|characteristics)\b/i,
+    /\bis\s+a\b/i,
+    /\is\s+the\b/i,
+    /\brefers\s+to\b/i,
+    /\bdefined\s+as\b/i,
+    /\bcan\s+be\b/i,
+    /\bwhich\s+is\b/i,
+    /\bthere\s+are\b/i,
+    /\bwith\s+the\b/i,
+    /\bof\s+the\b/i,
+    /\band\s+the\b/i,
+    /\bfor\s+example\b/i,
+    /\bthis\s+means\b/i
+  ];
+
+  let matches = 0;
+  for (const regex of englishIndicators) {
+    if (regex.test(clean)) {
+      matches++;
+    }
+  }
+
+  if (matches >= 1) return true;
+
+  if (normLang === 'fr') {
+    const frenchIndicators = [
+      /\b(le|la|les|un|une|des|du|de|en|et|ou|est|sont|dans|pour|par|sur|avec|qui|que|ce|cette|ces|se|dans|pour)\b/i
+    ];
+    if (clean.length > 20 && !frenchIndicators[0].test(clean)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function translateText(text: string, targetLang: string): Promise<string> {
+  const prompt = `You are a precise translator. Translate the following text into ${targetLang.toUpperCase()}. Keep all technical/academic/literary terms accurate. Do NOT add any explanations, introductory text, or markdown formatting. Return ONLY the translated text.
+
+TEXT TO TRANSLATE:
+${text}`;
+  try {
+    const res = await callAIEngine(prompt, null, 0.1);
+    const cleanRes = res.replace(/```[a-z]*/g, '').replace(/```/g, '').trim();
+    return cleanRes;
+  } catch (err) {
+    console.error(`[TRANSLATE] Failed to translate:`, err);
+    return text;
+  }
+}
+
 export async function validateAndFixWidgets(widgets: any, discipline?: string, lang: string = 'fr'): Promise<any> {
   if (!widgets || typeof widgets !== 'object') {
     throw new Error("Widgets content is empty or malformed.");
@@ -1122,182 +1182,98 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
   // 1. Prerequisites validation
   if (!widgets.prerequisites || !Array.isArray(widgets.prerequisites.items)) {
     widgets.prerequisites = { items: [] };
+  } else {
+    widgets.prerequisites.items = widgets.prerequisites.items.filter((x: any) => x && String(x).trim().length > 0);
+    for (let i = 0; i < widgets.prerequisites.items.length; i++) {
+      if (detectLanguageLeakage(widgets.prerequisites.items[i], lang)) {
+        widgets.prerequisites.items[i] = await translateText(widgets.prerequisites.items[i], lang);
+      }
+    }
   }
 
   // 2. Diagnostic quiz validation
-  if (!widgets.diagnosticQuiz || typeof widgets.diagnosticQuiz !== 'object') {
-    widgets.diagnosticQuiz = {
-      question: "Qu'est-ce que ce concept fondamental ?",
-      options: ["Option A (correct)", "Option B"],
-      correctIndex: 0,
-      targetSectionId: "introduction",
-      sectionTitle: "Introduction"
-    };
-  } else {
+  if (widgets.diagnosticQuiz && typeof widgets.diagnosticQuiz === 'object') {
     if (!Array.isArray(widgets.diagnosticQuiz.options) || widgets.diagnosticQuiz.options.length < 2) {
-      widgets.diagnosticQuiz.options = ["Option A (Correct)", "Option B (Incorrect)"];
-      widgets.diagnosticQuiz.correctIndex = 0;
+      widgets.diagnosticQuiz = null;
+    } else {
+      widgets.diagnosticQuiz.options = widgets.diagnosticQuiz.options.filter((o: any) => o && String(o).trim().length > 0);
+      if (widgets.diagnosticQuiz.options.length < 2) {
+        widgets.diagnosticQuiz = null;
+      } else {
+        if (typeof widgets.diagnosticQuiz.correctIndex !== 'number' || widgets.diagnosticQuiz.correctIndex < 0 || widgets.diagnosticQuiz.correctIndex >= widgets.diagnosticQuiz.options.length) {
+          widgets.diagnosticQuiz.correctIndex = 0;
+        }
+        
+        // Translate diagnosticQuiz fields if leaked
+        if (detectLanguageLeakage(widgets.diagnosticQuiz.question, lang)) {
+          widgets.diagnosticQuiz.question = await translateText(widgets.diagnosticQuiz.question, lang);
+        }
+        if (detectLanguageLeakage(widgets.diagnosticQuiz.sectionTitle, lang)) {
+          widgets.diagnosticQuiz.sectionTitle = await translateText(widgets.diagnosticQuiz.sectionTitle, lang);
+        }
+        for (let i = 0; i < widgets.diagnosticQuiz.options.length; i++) {
+          if (detectLanguageLeakage(widgets.diagnosticQuiz.options[i], lang)) {
+            widgets.diagnosticQuiz.options[i] = await translateText(widgets.diagnosticQuiz.options[i], lang);
+          }
+        }
+      }
     }
-    if (typeof widgets.diagnosticQuiz.correctIndex !== 'number' || widgets.diagnosticQuiz.correctIndex < 0 || widgets.diagnosticQuiz.correctIndex >= widgets.diagnosticQuiz.options.length) {
-      widgets.diagnosticQuiz.correctIndex = 0;
-    }
+  } else {
+    widgets.diagnosticQuiz = null;
   }
 
   // 3. Objectives KSA validation
-  if (!widgets.learningObjectives || typeof widgets.learningObjectives !== 'object') {
-    widgets.learningObjectives = {
-      knowledge: ["Comprendre les notions abordées."],
-      skills: ["Savoir appliquer les modèles."],
-      attitudes: ["Développer un esprit critique et analytique."]
-    };
+  if (widgets.learningObjectives && typeof widgets.learningObjectives === 'object') {
+    widgets.learningObjectives.knowledge = Array.isArray(widgets.learningObjectives.knowledge)
+      ? widgets.learningObjectives.knowledge.filter((x: any) => x && String(x).trim().length > 0)
+      : [];
+    widgets.learningObjectives.skills = Array.isArray(widgets.learningObjectives.skills)
+      ? widgets.learningObjectives.skills.filter((x: any) => x && String(x).trim().length > 0)
+      : [];
+    widgets.learningObjectives.attitudes = Array.isArray(widgets.learningObjectives.attitudes)
+      ? widgets.learningObjectives.attitudes.filter((x: any) => x && String(x).trim().length > 0)
+      : [];
+
+    // Translate learningObjectives fields if leaked
+    const categories = ['knowledge', 'skills', 'attitudes'];
+    for (const cat of categories) {
+      const items = widgets.learningObjectives[cat];
+      for (let i = 0; i < items.length; i++) {
+        if (detectLanguageLeakage(items[i], lang)) {
+          items[i] = await translateText(items[i], lang);
+        }
+      }
+    }
+
+    if (widgets.learningObjectives.knowledge.length === 0 && widgets.learningObjectives.skills.length === 0 && widgets.learningObjectives.attitudes.length === 0) {
+      widgets.learningObjectives = null;
+    }
   } else {
-    if (!Array.isArray(widgets.learningObjectives.knowledge) || widgets.learningObjectives.knowledge.length === 0) {
-      widgets.learningObjectives.knowledge = ["Comprendre les notions abordées."];
-    }
-    if (!Array.isArray(widgets.learningObjectives.skills) || widgets.learningObjectives.skills.length === 0) {
-      widgets.learningObjectives.skills = ["Savoir appliquer les modèles."];
-    }
-    if (!Array.isArray(widgets.learningObjectives.attitudes) || widgets.learningObjectives.attitudes.length === 0) {
-      widgets.learningObjectives.attitudes = ["Développer un esprit critique."];
-    }
+    widgets.learningObjectives = null;
   }
 
   // 4. Formative interactiveComponents validation & sanitization
   if (!Array.isArray(widgets.interactiveComponents)) {
     widgets.interactiveComponents = [];
   } else {
-    widgets.interactiveComponents = widgets.interactiveComponents.map((comp: any, idx: number) => {
-      if (!comp || typeof comp !== 'object') {
-        return {
-          id: `widget_${idx}`,
-          componentType: "Quiz",
-          sectionAnchor: "## Section 1",
-          props: { questions: [] }
-        };
+    widgets.interactiveComponents = widgets.interactiveComponents.filter((comp: any) => {
+      if (!comp || typeof comp !== 'object' || !comp.id || !comp.componentType) {
+        return false;
       }
-      if (!comp.id) comp.id = `widget_${idx}`;
-      if (!comp.componentType) comp.componentType = "Quiz";
-      if (!comp.sectionAnchor) comp.sectionAnchor = "## Section";
-      if (!comp.props || typeof comp.props !== 'object') comp.props = {};
-
-      if (comp.componentType === "Quiz") {
-        if (!Array.isArray(comp.props.questions) || comp.props.questions.length === 0) {
-          comp.props.questions = [
-            {
-              q: "Question d'auto-évaluation ?",
-              explanation: "Explication de la réponse correcte.",
-              options: [
-                { text: "Option Correcte", correct: true },
-                { text: "Option Incorrecte", correct: false }
-              ]
-            }
-          ];
-        } else {
-          comp.props.questions = comp.props.questions.map((q: any) => {
-            if (!q.q) q.q = "Question d'auto-évaluation ?";
-            if (!Array.isArray(q.options) || q.options.length < 2) {
-              q.options = [
-                { text: "Option Correcte", correct: true },
-                { text: "Option Incorrecte", correct: false }
-              ];
-            } else {
-              q.options = q.options.map((o: any) => {
-                if (!o || typeof o !== 'object') {
-                  return { text: "Option", correct: false };
-                }
-                if (!o.text) o.text = "Option";
-                o.correct = !!o.correct;
-                return o;
-              });
-              if (!q.options.some((o: any) => o.correct)) {
-                q.options[0].correct = true;
-              }
-            }
-            return q;
-          });
+      const props = comp.props || {};
+      if (comp.componentType === "Biography") {
+        if (!props.name || /placeholder|dummy|todo|tbd/i.test(props.name)) {
+          return false;
         }
-      } else if (comp.componentType === "FillInBlanks") {
-        if (!comp.props.sentence || !comp.props.answer) {
-          const fallback = getDisciplineFallbackSentence(discipline, lang);
-          if (!comp.props.sentence) comp.props.sentence = fallback.sentence;
-          if (!comp.props.answer) comp.props.answer = fallback.answer;
-        }
-      } else if (comp.componentType === "SolvedExercise") {
-        if (!comp.props.title) comp.props.title = "Exercice résolu";
-        if (!comp.props.problem) comp.props.problem = "Formulez l'exercice ici.";
-        if (!comp.props.solution) comp.props.solution = "La solution détaillée.";
-      } else if (comp.componentType === "UnsolvedExercise") {
-        if (!comp.props.title) comp.props.title = "Exercice d'application";
-        if (!comp.props.problem) comp.props.problem = "Sujet de l'exercice à résoudre.";
-        if (!comp.props.correctAnswer) comp.props.correctAnswer = "Réponse attendue";
-      } else if (comp.componentType === "Mermaid") {
-        if (!comp.props.chart) comp.props.chart = "graph TD\n  A[Début] --> B[Fin]";
-      } else if (comp.componentType === "FunctionPlotter") {
-        if (!comp.props.fn) comp.props.fn = "x^2";
-      } else if (comp.componentType === "PronunciationSandbox" || comp.componentType === "SandboxPrononciation") {
-        if (!comp.props.word) comp.props.word = "concept";
-        if (!comp.props.ipa) comp.props.ipa = "";
-        if (!comp.props.lang) comp.props.lang = "en";
-      } else if (comp.componentType === "Video") {
-        if (!comp.props.title) comp.props.title = "Vidéo académique";
-        if (!comp.props.url && !comp.props.id) {
-          comp.props.url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
-          comp.props.provider = "YouTube";
-        }
-      } else if (comp.componentType === "Audio") {
-        if (!comp.props.title) comp.props.title = "Audio explicatif";
-        if (!comp.props.url) {
-          comp.props.url = "https://upload.wikimedia.org/wikipedia/commons/c/c8/Example.ogg";
-        }
-      } else if (comp.componentType === "OralEvaluation" || comp.componentType === "EvaluationOrale") {
-        if (!comp.props.prompt) comp.props.prompt = "Expliquez le concept clé de cette leçon de vive voix.";
-        if (!comp.props.gradingSystem) comp.props.gradingSystem = "0/20";
-      } else if (comp.componentType === "Image") {
-        if (!comp.props.description) {
-          let fallbackDesc = "";
-          if (comp.sectionAnchor) {
-            let clean = comp.sectionAnchor.replace(/^#+\s*/, '').trim();
-            clean = clean.replace(/^(Section|Leçon|Lesson)\s*\d+[\s:-]*/i, '').trim();
-            if (clean) {
-              fallbackDesc = clean;
-            }
-          }
-          if (!fallbackDesc) {
-            fallbackDesc = discipline || (lang === 'fr' ? "Astrophysique" : "Astrophysics");
-          }
-          comp.props.description = fallbackDesc;
-        }
-        if (!comp.props.alt) comp.props.alt = comp.props.description;
-        if (!comp.props.caption) comp.props.caption = lang === 'fr' ? `Illustration : ${comp.props.description}` : `Illustration: ${comp.props.description}`;
-        if (!comp.props.title) comp.props.title = comp.props.description;
-      } else if (comp.componentType === "Citation") {
-        if (!comp.props.quote) comp.props.quote = "Quote text.";
-        if (!comp.props.author) comp.props.author = "Author";
-        if (!comp.props.source) comp.props.source = "Source";
-        if (!comp.props.year) comp.props.year = "N.D.";
-        if (!comp.props.commentary) comp.props.commentary = "Analysis and context of the citation.";
-      } else if (comp.componentType === "Biography") {
-        if (!comp.props.name) comp.props.name = "Biography Subject";
-        if (!comp.props.dates) comp.props.dates = "";
-        if (!comp.props.description) comp.props.description = "Biographical details.";
-        if (!comp.props.wikipediaUrl) comp.props.wikipediaUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(comp.props.name)}`;
-      } else if (comp.componentType === "Epistemology") {
-        if (!comp.props.title) comp.props.title = "Critical Perspective";
-        if (!comp.props.content) comp.props.content = "Epistemological discussion.";
-      } else if (comp.componentType === "MatchingEvaluation" || comp.componentType === "AssociationCorrespondance") {
-        comp.componentType = "MatchingEvaluation";
-        if (!comp.props.pairs) comp.props.pairs = "Concept A|Definition A || Concept B|Definition B";
-        if (!comp.props.title) comp.props.title = "Associez les éléments";
-      } else if (comp.componentType === "ReorderEvaluation" || comp.componentType === "ReordonnerItems") {
-        comp.componentType = "ReorderEvaluation";
-        if (!comp.props.items) comp.props.items = "Étape 1 | Étape 2 | Étape 3";
-        if (!comp.props.title) comp.props.title = "Remettez dans l'ordre";
       }
-
-      return comp;
+      if (comp.componentType === "Image") {
+        if (!props.description || /illustration|placeholder/i.test(props.description)) {
+          return false;
+        }
+      }
+      return true;
     });
 
-    // Programmatically filter out components that are incompatible with the course discipline
     const disc = (discipline || "").toLowerCase().trim();
     const isMath = disc.includes("math") || disc.includes("algè") || disc.includes("geomet");
     const isPhysics = disc.includes("physic") || disc.includes("physiq") || disc.includes("astron");
@@ -1362,149 +1338,276 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       
       return false;
     });
+
+    // Heal, translate and clean up fields
+    for (const comp of widgets.interactiveComponents) {
+      if (!comp.props || typeof comp.props !== 'object') comp.props = {};
+      const props = comp.props;
+
+      // Intelligent biography healing
+      if (comp.componentType === "Biography") {
+        let name = (props.name || "").trim();
+        let description = (props.description || "").trim();
+        const isPlaceholder = !description || description.length < 20 || /placeholder|dummy|todo|tbd|biographie détaillée/i.test(description);
+        
+        if (name && isPlaceholder) {
+          console.log(`[BIOGRAPHY VALIDATOR] Biography placeholder or empty description for "${name}". Healing via Wikipedia...`);
+          try {
+            const targetLang = (lang || 'fr').toLowerCase().split('-')[0];
+            const wikiSearchUrl = `https://${targetLang}.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(name)}&srlimit=1`;
+            const res = await fetchWithTimeout(wikiSearchUrl);
+            if (res.ok) {
+              const data = await res.json();
+              const searchResult = data.query?.search?.[0];
+              if (searchResult) {
+                const canonicalTitle = searchResult.title;
+                const wikiExtractUrl = `https://${targetLang}.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(canonicalTitle)}&redirects=1`;
+                const res2 = await fetchWithTimeout(wikiExtractUrl);
+                if (res2.ok) {
+                  const data2 = await res2.json();
+                  const pages = data2.query?.pages;
+                  if (pages) {
+                    const pageId = Object.keys(pages)[0];
+                    if (pageId && pageId !== '-1') {
+                      const extract = pages[pageId].extract || '';
+                      if (extract && extract.length > 30) {
+                        let sentence = extract.split(/[.!?]\s/)[0].trim();
+                        const parts = extract.split(/[.!?]\s/);
+                        if (parts[1]) sentence += '. ' + parts[1].trim();
+                        if (parts[2]) sentence += '. ' + parts[2].trim();
+                        if (!sentence.endsWith('.')) sentence += '.';
+                        sentence = sentence.replace(/\s*\([^)]*\)/g, '').trim();
+                        sentence = sentence.replace(/\s+/g, ' ');
+                        
+                        props.description = sentence;
+                        props.name = canonicalTitle;
+                        props.wikipediaUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(canonicalTitle.replace(/\s+/g, '_'))}`;
+                        console.log(`[BIOGRAPHY VALIDATOR] Healed "${name}" description via Wikipedia.`);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            console.error(`[BIOGRAPHY VALIDATOR] Error healing biography:`, err);
+          }
+        }
+      }
+
+      // Check language leakage and translate
+      if (comp.componentType === "Quiz") {
+        if (Array.isArray(props.questions)) {
+          props.questions = props.questions.filter((q: any) => q && q.q && Array.isArray(q.options) && q.options.length >= 2);
+          for (const q of props.questions) {
+            if (detectLanguageLeakage(q.q, lang)) {
+              q.q = await translateText(q.q, lang);
+            }
+            if (detectLanguageLeakage(q.explanation, lang)) {
+              q.explanation = await translateText(q.explanation, lang);
+            }
+            q.options = q.options.map((o: any) => {
+              if (!o || typeof o !== 'object') return { text: "Option", correct: false };
+              if (!o.text) o.text = "Option";
+              o.correct = !!o.correct;
+              return o;
+            });
+            for (const o of q.options) {
+              if (detectLanguageLeakage(o.text, lang)) {
+                o.text = await translateText(o.text, lang);
+              }
+            }
+            if (!q.options.some((o: any) => o.correct)) {
+              q.options[0].correct = true;
+            }
+          }
+        }
+      } else if (comp.componentType === "Biography") {
+        if (detectLanguageLeakage(props.name, lang)) {
+          props.name = await translateText(props.name, lang);
+        }
+        if (detectLanguageLeakage(props.description, lang)) {
+          props.description = await translateText(props.description, lang);
+        }
+      } else if (comp.componentType === "Image") {
+        if (detectLanguageLeakage(props.description, lang)) {
+          props.description = await translateText(props.description, lang);
+        }
+        if (detectLanguageLeakage(props.alt, lang)) {
+          props.alt = await translateText(props.alt, lang);
+        }
+        if (props.caption && detectLanguageLeakage(props.caption, lang)) {
+          props.caption = await translateText(props.caption, lang);
+        }
+      } else if (comp.componentType === "Citation") {
+        if (detectLanguageLeakage(props.quote, lang)) {
+          props.quote = await translateText(props.quote, lang);
+        }
+        if (detectLanguageLeakage(props.commentary, lang)) {
+          props.commentary = await translateText(props.commentary, lang);
+        }
+      } else if (comp.componentType === "Epistemology") {
+        if (detectLanguageLeakage(props.title, lang)) {
+          props.title = await translateText(props.title, lang);
+        }
+        if (detectLanguageLeakage(props.content, lang)) {
+          props.content = await translateText(props.content, lang);
+        }
+      } else if (comp.componentType === "SolvedExercise" || comp.componentType === "UnsolvedExercise") {
+        if (detectLanguageLeakage(props.title, lang)) {
+          props.title = await translateText(props.title, lang);
+        }
+        if (detectLanguageLeakage(props.problem, lang)) {
+          props.problem = await translateText(props.problem, lang);
+        }
+        if (props.solution && detectLanguageLeakage(props.solution, lang)) {
+          props.solution = await translateText(props.solution, lang);
+        }
+        if (props.correctAnswer && detectLanguageLeakage(props.correctAnswer, lang)) {
+          props.correctAnswer = await translateText(props.correctAnswer, lang);
+        }
+        if (props.explanation && detectLanguageLeakage(props.explanation, lang)) {
+          props.explanation = await translateText(props.explanation, lang);
+        }
+      }
+    }
   }
 
   // 5. Whats next validation
-  if (!widgets.whatsNext || !Array.isArray(widgets.whatsNext.steps) || widgets.whatsNext.steps.length === 0) {
-    widgets.whatsNext = {
-      steps: [
-        { title: "Sujet suivant", description: "Découvrez le chapitre suivant pour approfondir.", slug: "next-chapter" }
-      ]
-    };
+  if (widgets.whatsNext && Array.isArray(widgets.whatsNext.steps)) {
+    widgets.whatsNext.steps = widgets.whatsNext.steps.filter((s: any) => s && s.title && s.description && !/placeholder|todo/i.test(s.description));
+    for (const step of widgets.whatsNext.steps) {
+      if (detectLanguageLeakage(step.title, lang)) {
+        step.title = await translateText(step.title, lang);
+      }
+      if (detectLanguageLeakage(step.description, lang)) {
+        step.description = await translateText(step.description, lang);
+      }
+    }
+  } else {
+    widgets.whatsNext = { steps: [] };
   }
 
   // 5b. Going further validation
-  if (!widgets.goingFurther || !Array.isArray(widgets.goingFurther.items) || widgets.goingFurther.items.length === 0) {
-    widgets.goingFurther = {
-      items: [
-        {
-          title: "Introduction aux concepts clés",
-          type: "website",
-          url: "",
-          description: "Explorez les notions fondamentales et historiques liées à cette leçon sur Wikipédia."
-        }
-      ]
-    };
-  } else {
+  if (widgets.goingFurther && Array.isArray(widgets.goingFurther.items)) {
     const PLACEHOLDER_URL_PATTERNS = [
       'example.com', 'your_youtube_id', 'youtube.com/watch?v=xxxxxx',
       'youtube.com/watch?v=abcdef', 'youtube.com/watch?v=12345',
       'youtube.com/watch?v=dqw4w9wgxcq', 'test.com', 'placeholder', 'fakeurl'
     ];
-    widgets.goingFurther.items = widgets.goingFurther.items.map((it: any) => {
-      const title = (it.title || "Ressource complémentaire").trim();
+    widgets.goingFurther.items = widgets.goingFurther.items.filter((it: any) => {
+      if (!it || !it.title || !it.description || /placeholder|todo/i.test(it.description)) return false;
+      return true;
+    }).map((it: any) => {
+      const title = String(it.title).trim();
       const type = ["book", "article", "video", "website", "research", "movie", "film"].includes(it.type) ? it.type : "website";
       let url = (it.url || "").trim();
       const lowerUrl = url.toLowerCase();
       if (url && PLACEHOLDER_URL_PATTERNS.some(p => lowerUrl.includes(p))) {
         url = "";
       }
-      const description = (it.description || "Pour approfondir vos connaissances sur le sujet.").trim();
+      const description = String(it.description).trim();
       const author = it.author ? String(it.author).trim() : "";
       const year = it.year ? String(it.year).trim() : "";
       return { title, type, url, description, author, year };
     });
+
+    for (const item of widgets.goingFurther.items) {
+      if (detectLanguageLeakage(item.title, lang)) {
+        item.title = await translateText(item.title, lang);
+      }
+      if (detectLanguageLeakage(item.description, lang)) {
+        item.description = await translateText(item.description, lang);
+      }
+      if (item.author && detectLanguageLeakage(item.author, lang)) {
+        item.author = await translateText(item.author, lang);
+      }
+    }
+  } else {
+    widgets.goingFurther = { items: [] };
   }
 
   // 6. Summary points validation (must be complete sentences ending with periods)
-  if (!widgets.conclusionSummary || !Array.isArray(widgets.conclusionSummary.items) || widgets.conclusionSummary.items.length === 0) {
-    widgets.conclusionSummary = {
-      items: [
-        "Ce chapitre a permis d'explorer les concepts fondamentaux de la discipline.",
-        "Les notions d'analyse et d'application ont été démontrées avec rigueur.",
-        "Les perspectives d'étude ouvrent la voie à de futurs développements majeurs."
-      ]
-    };
-  } else {
-    widgets.conclusionSummary.items = widgets.conclusionSummary.items.map((it: string) => {
+  if (widgets.conclusionSummary && Array.isArray(widgets.conclusionSummary.items)) {
+    widgets.conclusionSummary.items = widgets.conclusionSummary.items.filter((it: any) => it && String(it).trim().length > 0).map((it: string) => {
       let clean = (it || "").trim();
-      if (!clean) return "Concept clé assimilé de manière autonome.";
       if (!clean.endsWith(".") && !clean.endsWith("!") && !clean.endsWith("?")) {
         clean += ".";
       }
       return clean;
     });
+
+    for (let i = 0; i < widgets.conclusionSummary.items.length; i++) {
+      if (detectLanguageLeakage(widgets.conclusionSummary.items[i], lang)) {
+        widgets.conclusionSummary.items[i] = await translateText(widgets.conclusionSummary.items[i], lang);
+      }
+    }
+  } else {
+    widgets.conclusionSummary = { items: [] };
   }
 
   // 7. Final summative evaluation validation
-  if (!widgets.finalEvaluation || typeof widgets.finalEvaluation !== 'object') {
-    widgets.finalEvaluation = {
-      type: "Quiz",
-      props: {
-        durationLimit: 1800,
-        questions: [
-          {
-            q: lang === 'fr' ? "Quelle est la conclusion principale de cette leçon ?" : "What is the main conclusion of this lesson?",
-            explanation: lang === 'fr' ? "Le cours détaille les principes fondamentaux de cette notion." : "The lesson details the fundamental principles of this concept.",
-            options: [
-              { text: lang === 'fr' ? "L'assimilation et l'application rigoureuse des concepts clés" : "Understanding and rigorous application of key concepts", correct: true },
-              { text: lang === 'fr' ? "L'absence d'impact pratique" : "No practical impact", correct: false }
-            ]
-          }
-        ]
-      }
-    };
-  } else {
-    // Enforce type is ALWAYS Quiz
+  if (widgets.finalEvaluation && typeof widgets.finalEvaluation === 'object') {
     widgets.finalEvaluation.type = "Quiz";
     if (!widgets.finalEvaluation.props || typeof widgets.finalEvaluation.props !== 'object') {
       widgets.finalEvaluation.props = {};
     }
     const qProps = widgets.finalEvaluation.props;
     if (!qProps.durationLimit) qProps.durationLimit = 1800;
-    if (!Array.isArray(qProps.questions) || qProps.questions.length === 0) {
-      qProps.questions = [
-        {
-          q: lang === 'fr' ? "Quelle est la conclusion principale de cette leçon ?" : "What is the main conclusion of this lesson?",
-          explanation: lang === 'fr' ? "Le cours détaille les principes fondamentaux de cette notion." : "The lesson details the fundamental principles of this concept.",
-          options: [
-            { text: lang === 'fr' ? "L'assimilation et l'application rigoureuse des concepts clés" : "Understanding and rigorous application of key concepts", correct: true },
-            { text: lang === 'fr' ? "L'absence d'impact pratique" : "No practical impact", correct: false }
-          ]
-        }
-      ];
-    } else {
-      qProps.questions = qProps.questions.map((q: any) => {
-        if (!q || typeof q !== 'object') {
-          return {
-            q: lang === 'fr' ? "Question d'auto-évaluation ?" : "Evaluation question?",
-            explanation: lang === 'fr' ? "Explication de la réponse." : "Explanation of the answer.",
-            options: [
-              { text: "Option A", correct: true },
-              { text: "Option B", correct: false }
-            ]
-          };
-        }
-        if (!q.q) q.q = lang === 'fr' ? "Question d'auto-évaluation ?" : "Evaluation question?";
-        if (!q.explanation) q.explanation = lang === 'fr' ? "Explication de la réponse." : "Explanation of the answer.";
-        if (!Array.isArray(q.options) || q.options.length < 2) {
-          q.options = [
-            { text: lang === 'fr' ? "Option correcte" : "Correct option", correct: true },
-            { text: lang === 'fr' ? "Option incorrecte" : "Incorrect option", correct: false }
-          ];
-        } else {
-          q.options = q.options.map((o: any) => {
-            if (!o || typeof o !== 'object') return { text: "Option", correct: false };
-            if (!o.text) o.text = "Option";
-            o.correct = !!o.correct;
-            return o;
-          });
-          if (!q.options.some((o: any) => o.correct)) {
-            q.options[0].correct = true;
-          }
+    
+    if (qProps.prompt && detectLanguageLeakage(qProps.prompt, lang)) {
+      qProps.prompt = await translateText(qProps.prompt, lang);
+    }
+    if (qProps.subject && detectLanguageLeakage(qProps.subject, lang)) {
+      qProps.subject = await translateText(qProps.subject, lang);
+    }
+
+    if (Array.isArray(qProps.questions)) {
+      qProps.questions = qProps.questions.filter((q: any) => {
+        if (!q || typeof q !== 'object' || !q.q || !Array.isArray(q.options) || q.options.length < 2) return false;
+        if (/placeholder|question d'auto-évaluation|evaluation question/i.test(q.q)) return false;
+        return true;
+      }).map((q: any) => {
+        q.q = String(q.q).trim();
+        q.explanation = q.explanation ? String(q.explanation).trim() : "";
+        q.options = q.options.map((o: any) => {
+          if (!o || typeof o !== 'object') return { text: "Option", correct: false };
+          return { text: String(o.text || o).trim(), correct: !!o.correct };
+        });
+        if (!q.options.some((o: any) => o.correct)) {
+          q.options[0].correct = true;
         }
         return q;
       });
+
+      for (const q of qProps.questions) {
+        if (detectLanguageLeakage(q.q, lang)) {
+          q.q = await translateText(q.q, lang);
+        }
+        if (detectLanguageLeakage(q.explanation, lang)) {
+          q.explanation = await translateText(q.explanation, lang);
+        }
+        for (const o of q.options) {
+          if (detectLanguageLeakage(o.text, lang)) {
+            o.text = await translateText(o.text, lang);
+          }
+        }
+      }
+
+      if (qProps.questions.length === 0) {
+        widgets.finalEvaluation = null;
+      }
+    } else {
+      widgets.finalEvaluation = null;
     }
+  } else {
+    widgets.finalEvaluation = null;
   }
 
   // 8. Glossary & References validation
-  if (!Array.isArray(widgets.glossary) || widgets.glossary.length === 0) {
-    widgets.glossary = [
-      { term: lang === 'fr' ? "Souverain" : "Sovereign", definition: lang === 'fr' ? "Qui s'exerce de manière autonome et absolue." : "Exercising autonomous and absolute authority." }
-    ];
-  } else {
+  if (Array.isArray(widgets.glossary)) {
     const targetLang = (lang || 'fr').toLowerCase().split('-')[0];
+    const healedGlossary = [];
     for (let i = 0; i < widgets.glossary.length; i++) {
       const entry = widgets.glossary[i];
       if (!entry || typeof entry !== 'object') continue;
@@ -1512,20 +1615,21 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       let term = (entry.term || "").trim();
       let definition = (entry.definition || "").trim();
 
+      if (!term || !definition) continue;
+
       const isCircular = term.toLowerCase() === definition.toLowerCase();
       const isShort = definition.length < 8;
       const isPlaceholder = /placeholder|dummy|todo|tbd|a definir/i.test(definition);
 
-      // Check for English definition/term on non-English course
       const isWrongLanguage = (targetLang !== 'en') && (
         /\b(is a|are|refers to|the study of|of the|in the|and the|with the|is the|study of)\b/i.test(definition) ||
         (targetLang === 'fr' && !/\b(est|une|des|les|dans|pour|avec|qui|que|du|en)\b/i.test(definition))
       );
 
-      if (isCircular || isShort || isPlaceholder || isWrongLanguage || !term || !definition) {
+      if (isCircular || isShort || isPlaceholder || isWrongLanguage) {
         console.log(`[GLOSSARY VALIDATOR] Invalid or English glossary entry detected: "${term}": "${definition}". Healing via Wikipedia...`);
-        const queryTerm = term || definition || "Concept";
-        
+        const queryTerm = term || definition;
+        let healed = false;
         try {
           const wikiSearchUrl = `https://${targetLang}.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(queryTerm)}&srlimit=1`;
           const res = await fetchWithTimeout(wikiSearchUrl);
@@ -1552,12 +1656,12 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
                       sentence = sentence.replace(/\s*\([^)]*\)/g, '').trim();
                       sentence = sentence.replace(/\s+/g, ' ');
                       
-                      widgets.glossary[i] = {
+                      healedGlossary.push({
                         term: canonicalTitle,
                         definition: sentence
-                      };
+                      });
                       console.log(`[GLOSSARY VALIDATOR] Healed to: "${canonicalTitle}": "${sentence}"`);
-                      continue;
+                      healed = true;
                     }
                   }
                 }
@@ -1568,22 +1672,45 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
           console.error(`[GLOSSARY VALIDATOR] Error healing glossary entry:`, err);
         }
 
-        if (isCircular || !definition || isShort || isPlaceholder) {
-          widgets.glossary[i] = {
-            term: term || (lang === 'fr' ? "Concept clé" : "Key concept"),
-            definition: targetLang === 'fr' 
-              ? `Concept fondamental lié à la discipline de cette leçon.` 
-              : `Fundamental concept related to the discipline of this lesson.`
-          };
+        // Fallback to translation if Wikipedia healing failed
+        if (!healed) {
+          console.log(`[GLOSSARY VALIDATOR] Wikipedia healing failed. Translating term and definition directly...`);
+          try {
+            const translatedTerm = await translateText(term, targetLang);
+            const translatedDef = await translateText(definition, targetLang);
+            if (translatedTerm && translatedDef) {
+              healedGlossary.push({
+                term: translatedTerm,
+                definition: translatedDef
+              });
+              healed = true;
+            }
+          } catch (tErr) {
+            console.error(`[GLOSSARY VALIDATOR] Direct translation of glossary entry failed:`, tErr);
+          }
         }
+      } else {
+        healedGlossary.push({ term, definition });
       }
     }
+
+    // Final language leakage sweep for all glossary entries
+    for (const g of healedGlossary) {
+      if (detectLanguageLeakage(g.term, lang)) {
+        g.term = await translateText(g.term, lang);
+      }
+      if (detectLanguageLeakage(g.definition, lang)) {
+        g.definition = await translateText(g.definition, lang);
+      }
+    }
+
+    widgets.glossary = healedGlossary;
+  } else {
+    widgets.glossary = [];
   }
 
-  if (!Array.isArray(widgets.references) || widgets.references.length === 0) {
-    widgets.references = [
-      "OpenPrimer Academic Research. 2026. *Autonomous Synthesizer Journal* 12 (2): 45-67."
-    ];
+  if (!Array.isArray(widgets.references)) {
+    widgets.references = [];
   }
 
   return widgets;
@@ -1823,10 +1950,16 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     content = extractAndInjectCitations(content, widgets.references);
   }
 
-  const prerequisitesStr = `<Prerequisites items={${JSON.stringify(widgets.prerequisites.items)}} />`;
-  const diagnosticQuizStr = `<DiagnosticQuiz question="${widgets.diagnosticQuiz.question.replace(/"/g, '&quot;')}" options={${JSON.stringify(widgets.diagnosticQuiz.options)}} correctIndex={${widgets.diagnosticQuiz.correctIndex}} targetSectionId="${widgets.diagnosticQuiz.targetSectionId}" sectionTitle="${widgets.diagnosticQuiz.sectionTitle.replace(/"/g, '&quot;')}" />`;
+  const prerequisitesStr = widgets.prerequisites && Array.isArray(widgets.prerequisites.items) && widgets.prerequisites.items.length > 0
+    ? `<Prerequisites items={${JSON.stringify(widgets.prerequisites.items)}} />`
+    : '';
 
-  const objectivesStr = `<Objectives>
+  const diagnosticQuizStr = widgets.diagnosticQuiz && widgets.diagnosticQuiz.question
+    ? `<DiagnosticQuiz question="${widgets.diagnosticQuiz.question.replace(/"/g, '&quot;')}" options={${JSON.stringify(widgets.diagnosticQuiz.options)}} correctIndex={${widgets.diagnosticQuiz.correctIndex}} targetSectionId="${widgets.diagnosticQuiz.targetSectionId}" sectionTitle="${widgets.diagnosticQuiz.sectionTitle.replace(/"/g, '&quot;')}" />`
+    : '';
+
+  const objectivesStr = widgets.learningObjectives && Array.isArray(widgets.learningObjectives.knowledge) && widgets.learningObjectives.knowledge.length > 0
+    ? `<Objectives>
   <Knowledge>
     <ul className="list-disc pl-4 space-y-1">
       ${widgets.learningObjectives.knowledge.map((k: string) => `<li>${k}</li>`).join('\n      ')}
@@ -1842,7 +1975,8 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       ${widgets.learningObjectives.attitudes.map((a: string) => `<li>${a}</li>`).join('\n      ')}
     </ul>
   </Attitudes>
-</Objectives>`;
+</Objectives>`
+    : '';
 
   // Stitch New Pedagogical Widgets
   if (widgets.previousLessonSummary) {
@@ -1874,35 +2008,57 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     content = replaceWidget(content, 'recentNewsBridge', '').content;
   }
 
-  const { content: content1, replaced: repPrereq } = replaceWidget(content, 'prerequisites', prerequisitesStr);
-  content = content1;
-  if (!repPrereq) {
-    content = `${prerequisitesStr}\n\n${content}`;
-  }
-
-  const { content: content2, replaced: repDiag } = replaceWidget(content, 'diagnosticQuiz', diagnosticQuizStr);
-  content = content2;
-  if (!repDiag) {
-    content = content.replace(prerequisitesStr, `${prerequisitesStr}\n\n${diagnosticQuizStr}`);
-  }
-
-  const { content: content3, replaced: repObj } = replaceWidget(content, 'learningObjectives', objectivesStr);
-  content = content3;
-  if (!repObj) {
-    const introIdx = content.indexOf('## Introduction');
-    const presIdx = content.indexOf('## Présentation');
-    const targetIdx = introIdx !== -1 ? introIdx : (presIdx !== -1 ? presIdx : -1);
-
-    if (targetIdx !== -1) {
-      const nextHeadingIdx = content.indexOf('##', targetIdx + 15);
-      if (nextHeadingIdx !== -1) {
-        content = content.slice(0, nextHeadingIdx).trim() + `\n\n${objectivesStr}\n\n` + content.slice(nextHeadingIdx);
-      } else {
-        content = content + `\n\n${objectivesStr}`;
-      }
-    } else {
-      content = content.replace(diagnosticQuizStr, `${diagnosticQuizStr}\n\n${objectivesStr}`);
+  if (prerequisitesStr) {
+    const { content: content1, replaced: repPrereq } = replaceWidget(content, 'prerequisites', prerequisitesStr);
+    content = content1;
+    if (!repPrereq) {
+      content = `${prerequisitesStr}\n\n${content}`;
     }
+  } else {
+    content = replaceWidget(content, 'prerequisites', '').content;
+  }
+
+  if (diagnosticQuizStr) {
+    const { content: content2, replaced: repDiag } = replaceWidget(content, 'diagnosticQuiz', diagnosticQuizStr);
+    content = content2;
+    if (!repDiag) {
+      if (prerequisitesStr) {
+        content = content.replace(prerequisitesStr, `${prerequisitesStr}\n\n${diagnosticQuizStr}`);
+      } else {
+        content = `${diagnosticQuizStr}\n\n${content}`;
+      }
+    }
+  } else {
+    content = replaceWidget(content, 'diagnosticQuiz', '').content;
+  }
+
+  if (objectivesStr) {
+    const { content: content3, replaced: repObj } = replaceWidget(content, 'learningObjectives', objectivesStr);
+    content = content3;
+    if (!repObj) {
+      const introIdx = content.indexOf('## Introduction');
+      const presIdx = content.indexOf('## Présentation');
+      const targetIdx = introIdx !== -1 ? introIdx : (presIdx !== -1 ? presIdx : -1);
+
+      if (targetIdx !== -1) {
+        const nextHeadingIdx = content.indexOf('##', targetIdx + 15);
+        if (nextHeadingIdx !== -1) {
+          content = content.slice(0, nextHeadingIdx).trim() + `\n\n${objectivesStr}\n\n` + content.slice(nextHeadingIdx);
+        } else {
+          content = content + `\n\n${objectivesStr}`;
+        }
+      } else {
+        if (diagnosticQuizStr) {
+          content = content.replace(diagnosticQuizStr, `${diagnosticQuizStr}\n\n${objectivesStr}`);
+        } else if (prerequisitesStr) {
+          content = content.replace(prerequisitesStr, `${prerequisitesStr}\n\n${objectivesStr}`);
+        } else {
+          content = `${objectivesStr}\n\n${content}`;
+        }
+      }
+    }
+  } else {
+    content = replaceWidget(content, 'learningObjectives', '').content;
   }
 
   widgets.interactiveComponents.forEach((comp: any) => {
@@ -2085,14 +2241,16 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
   }
 
   let finalEvalStr = '';
-  const finalEvalType = (widgets.finalEvaluation.type || '').toLowerCase();
-  if (finalEvalType === "quiz" || finalEvalType === "qcm") {
-    const fProps = widgets.finalEvaluation.props || {};
-    finalEvalStr = `<Quiz durationLimit={${fProps.durationLimit || 1800}}${fProps.limit ? ` limit={${fProps.limit}}` : ''}>\n  ${(fProps.questions || []).map((q: any) => `  <Question q="${(q.q || '').replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${(o.text || '').replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
-  } else {
-    const promptVal = (widgets.finalEvaluation.props?.prompt || "Rédigez un essai de synthèse structuré sur les concepts clés de cette leçon.").replace(/"/g, '&quot;');
-    const subjectVal = (widgets.finalEvaluation.props?.subject || "Essai de synthèse").replace(/"/g, '&quot;');
-    finalEvalStr = `<EssayEvaluation prompt="${promptVal}" subject="${subjectVal}" durationLimit={3600} />`;
+  if (widgets.finalEvaluation) {
+    const finalEvalType = (widgets.finalEvaluation.type || '').toLowerCase();
+    if (finalEvalType === "quiz" || finalEvalType === "qcm") {
+      const fProps = widgets.finalEvaluation.props || {};
+      finalEvalStr = `<Quiz durationLimit={${fProps.durationLimit || 1800}}${fProps.limit ? ` limit={${fProps.limit}}` : ''}>\n  ${(fProps.questions || []).map((q: any) => `  <Question q="${(q.q || '').replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${(o.text || '').replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
+    } else {
+      const promptVal = (widgets.finalEvaluation.props?.prompt || "Rédigez un essai de synthèse structuré sur les concepts clés de cette leçon.").replace(/"/g, '&quot;');
+      const subjectVal = (widgets.finalEvaluation.props?.subject || "Essai de synthèse").replace(/"/g, '&quot;');
+      finalEvalStr = `<EssayEvaluation prompt="${promptVal}" subject="${subjectVal}" durationLimit={3600} />`;
+    }
   }
 
   // Remove any existing finalEvaluation anchors
@@ -2126,30 +2284,35 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     zh: '## 自我评估'
   };
 
-  const evalHeading = isTerminalEvaluation ? finalEvalHeadings[langKey] : selfEvalHeadings[langKey];
+  if (finalEvalStr) {
+    const evalHeading = isTerminalEvaluation ? finalEvalHeadings[langKey] : selfEvalHeadings[langKey];
+    const evalRegex = /^(#{2,3}\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/mi;
+    const evalMatch = content.match(evalRegex);
 
-  const evalRegex = /^(#{2,3}\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/mi;
-  const evalMatch = content.match(evalRegex);
-
-  if (evalMatch) {
-    const headerText = evalMatch[0];
-    const headerIdx = evalMatch.index!;
-    
-    // Find next heading
-    const postHeader = content.substring(headerIdx + headerText.length);
-    const nextHeadingRegex = /^#{2,3}\s+/m;
-    const nextHeadingMatch = postHeader.match(nextHeadingRegex);
-    
-    let sectionEnd = content.length;
-    if (nextHeadingMatch) {
-      sectionEnd = headerIdx + headerText.length + nextHeadingMatch.index!;
+    if (evalMatch) {
+      const headerText = evalMatch[0];
+      const headerIdx = evalMatch.index!;
+      
+      // Find next heading
+      const postHeader = content.substring(headerIdx + headerText.length);
+      const nextHeadingRegex = /^#{2,3}\s+/m;
+      const nextHeadingMatch = postHeader.match(nextHeadingRegex);
+      
+      let sectionEnd = content.length;
+      if (nextHeadingMatch) {
+        sectionEnd = headerIdx + headerText.length + nextHeadingMatch.index!;
+      }
+      
+      const prose = content.substring(headerIdx + headerText.length, sectionEnd).trim();
+      const rebuiltSection = `${evalHeading}\n\n${prose ? prose + '\n\n' : ''}${finalEvalStr}`;
+      content = content.substring(0, headerIdx) + rebuiltSection + content.substring(sectionEnd);
+    } else {
+      content = content.trim() + `\n\n${evalHeading}\n\n${finalEvalStr}`;
     }
-    
-    const prose = content.substring(headerIdx + headerText.length, sectionEnd).trim();
-    const rebuiltSection = `${evalHeading}\n\n${prose ? prose + '\n\n' : ''}${finalEvalStr}`;
-    content = content.substring(0, headerIdx) + rebuiltSection + content.substring(sectionEnd);
   } else {
-    content = content.trim() + `\n\n${evalHeading}\n\n${finalEvalStr}`;
+    // Remove any existing finalEvaluation anchors or sections
+    const evalRegex = /^(#{2,3}\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/mi;
+    content = content.replace(evalRegex, '');
   }
 
   // Strip markdown links ([text](url)) from glossary definitions to remove visible [Wikipedia] brackets
@@ -2183,8 +2346,10 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     .replace(glossaireRegex, '')
     .replace(referencesRegex, '');
 
-  const glossaryStr = `\n\n\n${glossaryHeading}\n\n${widgets.glossary.map((g: any) => `* **${g.term}** : ${cleanGlossaryDef(g.definition)}`).join('\n')}`;
-  content = content.trim() + glossaryStr;
+  if (Array.isArray(widgets.glossary) && widgets.glossary.length > 0) {
+    const glossaryStr = `\n\n\n${glossaryHeading}\n\n${widgets.glossary.map((g: any) => `* **${g.term}** : ${cleanGlossaryDef(g.definition)}`).join('\n')}`;
+    content = content.trim() + glossaryStr;
+  }
 
   // Convert [refN] citations in the narrative text to standard superscript links with back-links
   const citedSet = new Set<number>();
@@ -2209,8 +2374,10 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     referencesList.push(`[${refNum}] ${cleanRef}`);
   });
 
-  const referencesStr = `\n\n\n${refHeading}\n\n${referencesList.join('\n')}`;
-  content = content.trim() + referencesStr;
+  if (referencesList.length > 0) {
+    const referencesStr = `\n\n\n${refHeading}\n\n${referencesList.join('\n')}`;
+    content = content.trim() + referencesStr;
+  }
 
   // Clean up any remaining unresolved [[WIDGET:...]] placeholders
   content = content.replace(/\[\[\s*WIDGET\s*:.*?\]\]+/gi, '');
@@ -4112,11 +4279,39 @@ ${referencesMetadata}
       let widgetsIteration = 0;
       const maxWidgetsIterations = 5;
 
-      const widgetsJsonStr = await callAIEngine(widgetsPrompt, dynamicSchema, 0.1, undefined, undefined, false, 'widget_placement');
-      lessonStats.widgetsAttempts++;
-      saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_1.json`, widgetsJsonStr);
+      let widgetsJsonStr = await callAIEngine(widgetsPrompt, dynamicSchema, 0.1, undefined, undefined, false, 'widget_placement');
+      let wTruncated = (lastCallFinishReason === 'MAX_TOKENS');
+      let combinedWidgets = widgetsJsonStr;
+      let wContinuationCount = 0;
 
-      let cleanWidgetsJson = widgetsJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+      while (wTruncated && wContinuationCount < 3) {
+        wContinuationCount++;
+        await appendTaskLog(`[AI GENERATOR] Truncation detected during widgets JSON generation (Continuation #${wContinuationCount}). Fetching continuation...`);
+        const overlapSnippet = combinedWidgets.slice(-1500);
+        const continuationPrompt = `You are the curriculum architect (Agent 3B). Your previous JSON output was cut off due to strict token length limits.
+We need you to continue generating the widgets JSON from exactly where it was truncated.
+
+Here is the end of your previous output:
+"""
+... ${overlapSnippet}
+"""
+
+Please resume writing the JSON from exactly the last character of the text above.
+- Do NOT write any conversational intros or explanations. Start writing immediately from the continuation point.
+- Do NOT repeat any of the text above.
+- Continue the JSON properties, array items, and brackets seamlessly.
+- Make sure to cover all remaining interactive components, glossary terms, and references.
+- Do NOT wrap your output in markdown code blocks.`;
+
+        const continuationText = await callAIEngine(continuationPrompt, null, 0.1, undefined, undefined, false, 'widget_placement');
+        combinedWidgets = combinedWidgets.trim() + "\n" + continuationText.trim();
+        wTruncated = (lastCallFinishReason === 'MAX_TOKENS');
+      }
+
+      lessonStats.widgetsAttempts++;
+      saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_1.json`, combinedWidgets);
+
+      let cleanWidgetsJson = combinedWidgets.replace(/```json/gi, '').replace(/```/gi, '').trim();
 
       // Pre-flight validation / auto-repair loop
       let parseSuccess = false;
@@ -4316,7 +4511,7 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
           await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Widgets JSON APPROVED ${isTerminalEvaluation ? '(Terminal Evaluation Bypass)' : `on attempt ${widgetsIteration}`}!`);
           widgetsApproved = true;
         } else {
-          const isGlobalWidgets = false; // Force localized repairs only to prevent global rewrite loops and stabilize generation
+          const isGlobalWidgets = widgetsIteration === 1 && !!widgetsAudit?.isGlobalRevision; // Allow global rewrite on round 1, then force localized repair to converge
           const globalCritiqueText = widgetsAudit?.globalCritique || '';
           const criticWidgetsList: { key: string; approved: boolean; critique: string }[] = widgetsAudit?.widgets || [];
 
@@ -6588,13 +6783,25 @@ async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'
       }
     }
 
+    if (!resolvedUrl) {
+      if (isWebResource) {
+        resolvedUrl = `https://www.google.com/search?q=${encodeURIComponent(refText)}`;
+        resolvedTitle = refText;
+        console.log(`[BIBLIOGRAPHY VALIDATOR] Fallback to Google Search URL: ${resolvedUrl}`);
+      } else {
+        resolvedUrl = `https://books.google.com/books?q=${encodeURIComponent(refText)}`;
+        resolvedTitle = refText;
+        console.log(`[BIBLIOGRAPHY VALIDATOR] Fallback to Google Books Search URL: ${resolvedUrl}`);
+      }
+    }
+
     if (resolvedUrl) {
       const updatedRef = `<a id="ref-${refId}"></a>[${refNum}] [${resolvedTitle}](${resolvedUrl})`;
       replacements.push({ original: fullMatch, replacement: updatedRef, refId });
       console.log(`[BIBLIOGRAPHY VALIDATOR] Successfully resolved to alternative URL: ${resolvedUrl}`);
     } else {
       replacements.push({ original: fullMatch, replacement: '', refId });
-      console.warn(`[BIBLIOGRAPHY VALIDATOR] Failed to resolve Reference #${refId} after 3 attempts. Marking for removal.`);
+      console.warn(`[BIBLIOGRAPHY VALIDATOR] Failed to resolve Reference #${refId}. Marking for removal.`);
     }
   }
 

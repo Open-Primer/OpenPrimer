@@ -649,7 +649,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   getUsers: async () => {
     try {
-      const { data, error } = await supabase.from('profiles').select('*');
+      const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+      const { data, error } = await client.from('profiles').select('*');
       if (error) throw error;
       const mapped = (data || []).map(u => ({
         id: u.id,
@@ -682,7 +683,8 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   getUserProfile: async (id: string) => {
     try {
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
+      const client = typeof window === 'undefined' ? supabaseAdmin : supabase;
+      const { data, error } = await client.from('profiles').select('*').eq('id', id).single();
       if (error) {
         if (error.code === 'PGRST116') {
           return { data: null, error: null };
