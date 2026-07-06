@@ -12,10 +12,33 @@ import { verifySession } from '@/lib/authHelper';
 const execPromise = promisify(exec);
 
 async function checkAdminAuth(request: Request): Promise<boolean> {
-  // 1. Try Authorization header verifySession first
+  const isProd = process.env.NODE_ENV === 'production';
+
+  // 1. Check if we should allow sandbox access (for development/testing)
+  try {
+    if (!isProd) {
+      const cookieStore = await cookies();
+      const allowSandbox = cookieStore.get('op_allow_sandbox')?.value;
+      if (allowSandbox === 'true' || process.env.PLAYWRIGHT_TEST === 'true' || process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST === 'true') {
+        console.log('[SECURITY DEBUG] Sandbox/Test mode active. Bypassing admin authentication checks.');
+        return true;
+      }
+    }
+  } catch (err) {
+    console.error('[SECURITY] Sandbox check error in checkAdminAuth:', err);
+  }
+
+  // 2. Try Authorization header verifySession first
   try {
     const authUser = await verifySession(request);
     if (authUser) {
+      // If the authenticated user is the mock offline user, and we're not in production, allow it!
+      if (authUser.id === 'mock-offline-user-id') {
+        if (!isProd) {
+          console.log('[SECURITY DEBUG] Permitting mock offline developer user.');
+          return true;
+        }
+      }
       const { data: profile } = await dbService.getUserProfile(authUser.id);
       if (profile?.role === 'admin') {
         return true;
@@ -25,7 +48,7 @@ async function checkAdminAuth(request: Request): Promise<boolean> {
     console.error('[SECURITY] verifySession error in checkAdminAuth:', err);
   }
 
-  // 2. Try cookie op_user_id
+  // 3. Try cookie op_user_id
   try {
     const cookieStore = await cookies();
     const userId = cookieStore.get('op_user_id')?.value;
@@ -40,7 +63,6 @@ async function checkAdminAuth(request: Request): Promise<boolean> {
   }
 
   // Fallback for development if database is not configured
-  const isProd = process.env.NODE_ENV === 'production';
   if (!isProd && (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project'))) {
     console.log('[SECURITY DEBUG] Database not configured, allowing offline development access.');
     return true;

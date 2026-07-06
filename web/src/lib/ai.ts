@@ -128,32 +128,32 @@ export function getDescriptiveLevelForPrompt(level: string): string {
 }
 
 export function getWordCountLimitForLevel(level: string): { min: number; max: number } {
-  if (!level) return { min: 3000, max: 5000 };
+  if (!level) return { min: 2500, max: 3500 };
   const clean = level.trim();
   switch (clean) {
     case 'foundation_1':
     case 'foundation_2':
-      return { min: 800, max: 1500 };
+      return { min: 800, max: 1200 };
     case 'secondary_1':
-      return { min: 1200, max: 2000 };
+      return { min: 1000, max: 1500 };
     case 'secondary_2':
     case 'preuni_1':
     case 'preuni_2':
     case 'preuni_3':
-      return { min: 1800, max: 3000 };
+      return { min: 1500, max: 2200 };
     case 'L1':
-      return { min: 2500, max: 4000 };
+      return { min: 2000, max: 3000 };
     case 'L2':
     case 'L3':
     case 'intermediate':
     case 'advanced':
-      return { min: 3500, max: 5500 };
+      return { min: 2500, max: 3500 };
     case 'M1':
     case 'M2':
     case 'expert':
-      return { min: 5500, max: 8000 };
+      return { min: 3500, max: 4500 };
     default:
-      return { min: 3000, max: 5000 };
+      return { min: 2500, max: 3500 };
   }
 }
 
@@ -3086,6 +3086,8 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
       };
 
       try {
+      let lastCallFinishReason = '';
+
       // Helper to call Vertex AI or fallback Gemini 2.5 Flash
       const callAIEngine = async (
         promptText: string,
@@ -3099,6 +3101,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         let resultText = '';
         let success = false;
         let lastError = 'N/A';
+        lastCallFinishReason = '';
 
         const generationConfig: any = { 
           temperature,
@@ -3129,9 +3132,25 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
               resultText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
               success = true;
 
+              const candidate = resJson.candidates?.[0] || {};
+              const finishReason = candidate.finishReason || 'UNKNOWN';
+              lastCallFinishReason = finishReason;
+
               const usage = resJson.usageMetadata || {};
-              lessonStats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
-              lessonStats.tokenMetrics.candidatesTokens += usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+              const promptTokenCount = usage.promptTokenCount || 0;
+              const candidateTokenCount = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+
+              lessonStats.tokenMetrics.promptTokens += promptTokenCount;
+              lessonStats.tokenMetrics.candidatesTokens += candidateTokenCount;
+
+              const charCount = resultText.length;
+              const wordCount = resultText.trim().split(/\s+/).filter(Boolean).length;
+              const ratio = wordCount > 0 ? (candidateTokenCount / wordCount).toFixed(2) : '0';
+
+              await appendTaskLog(`[AI ENGINE - VERTEX] Response status: finishReason="${finishReason}", characters=${charCount}, words=${wordCount}, tokens=${candidateTokenCount} (promptTokens=${promptTokenCount}). Tokens-to-Words ratio = ${ratio}.`);
+              if (finishReason === 'MAX_TOKENS') {
+                await appendTaskLog(`[AI ENGINE - WARNING] Vertex AI response was TRUNCATED because it reached output limit (maxOutputTokens=8192).`);
+              }
             } else {
               lastError = res ? `HTTP ${res.status} ${res.statusText}` : 'Null Response';
             }
@@ -3159,10 +3178,27 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
               resultText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
               success = true;
               const durationMs = Date.now() - startTime;
+
+              const candidate = resJson.candidates?.[0] || {};
+              const finishReason = candidate.finishReason || 'UNKNOWN';
+              lastCallFinishReason = finishReason;
+
               const usage = resJson.usageMetadata || {};
-              lessonStats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
-              lessonStats.tokenMetrics.candidatesTokens += usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-              await recordMetrics(task, 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, compressedPrompt);
+              const promptTokenCount = usage.promptTokenCount || 0;
+              const candidateTokenCount = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+
+              lessonStats.tokenMetrics.promptTokens += promptTokenCount;
+              lessonStats.tokenMetrics.candidatesTokens += candidateTokenCount;
+
+              const charCount = resultText.length;
+              const wordCount = resultText.trim().split(/\s+/).filter(Boolean).length;
+              const ratio = wordCount > 0 ? (candidateTokenCount / wordCount).toFixed(2) : '0';
+
+              await appendTaskLog(`[AI ENGINE - STUDIO] Response status: finishReason="${finishReason}", characters=${charCount}, words=${wordCount}, tokens=${candidateTokenCount} (promptTokens=${promptTokenCount}). Tokens-to-Words ratio = ${ratio}.`);
+              if (finishReason === 'MAX_TOKENS') {
+                await appendTaskLog(`[AI ENGINE - WARNING] AI Studio response was TRUNCATED because it reached output limit.`);
+              }
+              await recordMetrics(task, 'gemini-2.5-flash', durationMs, promptTokenCount, candidateTokenCount, compressedPrompt);
             } else {
               lastError = `HTTP ${res.status} ${res.statusText}`;
             }
@@ -3261,10 +3297,10 @@ Your task is to write the complete, professional, extremely detailed academic MD
 ⚠️ MANDATORY WORD-COUNT & LENGTH DIRECTION (STRICT LEVEL-BASED ALIGNMENT):
 - The current academic level is: "${getDescriptiveLevelForPrompt(levelInput)}" (raw key: "${levelInput}").
 - You MUST write a highly comprehensive and publication-ready academic lesson matching this level's target length:
-  * For primary / low levels (foundation_1, foundation_2): 800 to 1500 words. Keep it narrative, engaging, and age-appropriate.
-  * For secondary levels (secondary_1, secondary_2, preuni): 1200 to 3000 words. Keep it clear, explanatory, and structured.
-  * For higher education / university levels (L1, L2, L3, intermediate, advanced): 3500 to 5500 words. Provide extreme academic rigor, detailed historical and technical contextualization, deep conceptual analyses, and extensive comparative and mathematical/empirical sections where appropriate.
-  * For graduate levels (M1, M2, expert): 5500 to 8000 words. Provide exhaustive master-class level coverage.
+  * For primary / low levels (foundation_1, foundation_2): 800 to 1200 words. Keep it narrative, engaging, and age-appropriate.
+  * For secondary levels (secondary_1, secondary_2, preuni): 1000 to 2200 words. Keep it clear, explanatory, and structured.
+  * For higher education / university levels (L1, L2, L3, intermediate, advanced): 2000 to 3500 words. Provide extreme academic rigor, detailed historical and technical contextualization, deep conceptual analyses, and extensive comparative and mathematical/empirical sections where appropriate.
+  * For graduate levels (M1, M2, expert): 3500 to 4500 words. Provide exhaustive master-class level coverage.
 - YOUR EXACT TARGET WORD COUNT FOR THIS SPECIFIC LESSON IS: **at least ${minWords} and up to ${maxWords} words** of rich, well-developed narrative paragraphs.
 - Shorter lessons WILL fail critical verification, causing immediate rejection. Be extremely detailed, thorough, and analytical.
 - To successfully achieve this target word count with high academic value:
@@ -3482,9 +3518,41 @@ This synthesis MUST (400–600 words):
         saveDraftRevision(`prompt_stage1_scribe_${item.slug}.md`, narrativePrompt);
 
         let narrativeText = await callAIEngine(narrativePrompt, null, 0.35, 0.25, 0.85);
+        let isTruncated = (lastCallFinishReason === 'MAX_TOKENS');
+        let combinedNarrative = narrativeText;
+        let continuationCount = 0;
+
+        while (isTruncated && continuationCount < 3) {
+          continuationCount++;
+          await appendTaskLog(`[AI GENERATOR] Truncation detected during narrative generation (Continuation #${continuationCount}). Fetching continuation...`);
+          const overlapSnippet = combinedNarrative.slice(-1500);
+          const continuationPrompt = `You are the academic professor Scribe (Agent 3A). Your previous output was cut off due to strict token length limits.
+We need you to continue writing the lesson narrative from exactly where it was truncated.
+
+Here is the end of your previous output:
+"""
+... ${overlapSnippet}
+"""
+
+Please resume writing from exactly the last character/word of the text above. 
+- Do NOT write any conversational intros or explanations. Start writing immediately from the continuation point.
+- Do NOT repeat any of the text above.
+- Continue the sentence or paragraph seamlessly.
+- Make sure to cover all remaining sections of the syllabus/plan.
+- You MUST finish with the mandatory "## Conclusion" section containing at least two comprehensive academic paragraphs, and all the required conclusion widgets:
+  [[WIDGET:conclusionSummary]]
+  [[WIDGET:whatsNext]]
+  [[WIDGET:goingFurther]]
+  followed by [[WIDGET:finalEvaluation]]
+- Do NOT wrap your output in markdown code blocks.`;
+
+          const continuationText = await callAIEngine(continuationPrompt, null, 0.35, 0.25, 0.85);
+          combinedNarrative = combinedNarrative.trim() + "\n" + continuationText.trim();
+          isTruncated = (lastCallFinishReason === 'MAX_TOKENS');
+        }
 
         // Pre-verifier 1: MDX Text Preprocessor & Cleaner
-        let cleanedNarrative = narrativeText.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
+        let cleanedNarrative = combinedNarrative.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
 
         // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees it!
         cleanedNarrative = preprocessMdx(cleanedNarrative, targetLang.toLowerCase(), false, item.slug);
@@ -3622,10 +3690,10 @@ The narrative critic (Agent 4A) has rejected your previously generated academic 
 ⚠️ MANDATORY WORD-COUNT & LENGTH DIRECTION (STRICT LEVEL-BASED ALIGNMENT):
 - The current academic level is: "${getDescriptiveLevelForPrompt(levelInput)}" (raw key: "${levelInput}").
 - You MUST write a highly comprehensive and publication-ready academic lesson matching this level's target length:
-  * For primary / low levels (foundation_1, foundation_2): 800 to 1500 words. Keep it narrative, engaging, and age-appropriate.
-  * For secondary levels (secondary_1, secondary_2, preuni): 1200 to 3000 words. Keep it clear, explanatory, and structured.
-  * For higher education / university levels (L1, L2, L3, intermediate, advanced): 3500 to 5500 words. Provide extreme academic rigor, detailed historical and technical contextualization, deep conceptual analyses, and extensive comparative and mathematical/empirical sections where appropriate.
-  * For graduate levels (M1, M2, expert): 5500 to 8000 words. Provide exhaustive master-class level coverage.
+  * For primary / low levels (foundation_1, foundation_2): 800 to 1200 words. Keep it narrative, engaging, and age-appropriate.
+  * For secondary levels (secondary_1, secondary_2, preuni): 1000 to 2200 words. Keep it clear, explanatory, and structured.
+  * For higher education / university levels (L1, L2, L3, intermediate, advanced): 2000 to 3500 words. Provide extreme academic rigor, detailed historical and technical contextualization, deep conceptual analyses, and extensive comparative and mathematical/empirical sections where appropriate.
+  * For graduate levels (M1, M2, expert): 3500 to 4500 words. Provide exhaustive master-class level coverage.
 - YOUR EXACT TARGET WORD COUNT FOR THIS SPECIFIC LESSON IS: **at least ${minWords} and up to ${maxWords} words** of rich, well-developed narrative paragraphs.
 
 [CRITICAL] CRITICAL REMINDER: You MUST maintain absolute XML/JSX markup compliance to prevent parser crashes:
@@ -3654,7 +3722,40 @@ Re-generate the ENTIRE academic narrative from scratch, fully addressing the glo
 Strictly follow the original writing, adaptation, and widget placement rules. Do NOT wrap the response in markdown code blocks.`;
 
               const refined = await callAIEngine(narrativeRefinerPrompt, null, 0.35, 0.25, 0.85);
-              const rawRefined = refined.replace(/```json/gi, '').replace(/```/gi, '').trim();
+              let refinedTruncated = (lastCallFinishReason === 'MAX_TOKENS');
+              let combinedRefined = refined;
+              let refContinuationCount = 0;
+
+              while (refinedTruncated && refContinuationCount < 3) {
+                refContinuationCount++;
+                await appendTaskLog(`[AI GENERATOR] Truncation detected during narrative rewrite (Continuation #${refContinuationCount}). Fetching continuation...`);
+                const overlapSnippet = combinedRefined.slice(-1500);
+                const continuationPrompt = `You are the academic professor Scribe (Agent 3A). Your previous output was cut off due to strict token length limits.
+We need you to continue writing the lesson narrative from exactly where it was truncated.
+
+Here is the end of your previous output:
+"""
+... ${overlapSnippet}
+"""
+
+Please resume writing from exactly the last character/word of the text above.
+- Do NOT write any conversational intros or explanations. Start writing immediately from the continuation point.
+- Do NOT repeat any of the text above.
+- Continue the sentence or paragraph seamlessly.
+- Make sure to cover all remaining sections of the syllabus/plan.
+- You MUST finish with the mandatory "## Conclusion" section containing at least two comprehensive academic paragraphs, and all the required conclusion widgets:
+  [[WIDGET:conclusionSummary]]
+  [[WIDGET:whatsNext]]
+  [[WIDGET:goingFurther]]
+  followed by [[WIDGET:finalEvaluation]]
+- Do NOT wrap your output in markdown code blocks.`;
+
+                const continuationText = await callAIEngine(continuationPrompt, null, 0.35, 0.25, 0.85);
+                combinedRefined = combinedRefined.trim() + "\n" + continuationText.trim();
+                refinedTruncated = (lastCallFinishReason === 'MAX_TOKENS');
+              }
+
+              const rawRefined = combinedRefined.replace(/```json/gi, '').replace(/```/gi, '').trim();
               // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees the refined draft!
               cleanedNarrative = preprocessMdx(rawRefined, targetLang.toLowerCase(), false, item.slug);
               lessonStats.narrativeAttempts++;

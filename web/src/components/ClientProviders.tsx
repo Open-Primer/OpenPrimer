@@ -231,6 +231,15 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
     // Sync user session, role, and enrolled courses to document cookies for Server Component checks
     const syncCookies = () => {
       if (typeof window === "undefined") return;
+
+      // Sync sandbox permission status to cookie
+      const isSandboxAllowed = localStorage.getItem("op_allow_sandbox") === "true";
+      if (isSandboxAllowed) {
+        document.cookie = "op_allow_sandbox=true; path=/; max-age=31536000; SameSite=Lax";
+      } else {
+        document.cookie = "op_allow_sandbox=; path=/; max-age=0; SameSite=Lax";
+      }
+
       const profileStr = localStorage.getItem("op_user_profile");
       const sessionActive = localStorage.getItem("op_session") === "true";
       if (profileStr && sessionActive) {
