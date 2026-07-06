@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifySession } from '@/lib/authHelper';
-import { callVertexAI, isVertexConfigured } from '@/lib/vertex-client';
+import { callVertexAI, isVertexConfigured, compressPromptText } from '@/lib/vertex-client';
 
 export async function POST(request: Request) {
   try {
@@ -18,13 +18,6 @@ export async function POST(request: Request) {
       console.log('[BADGE-COMPILE] Sandbox mode bypass, utilizing offline fallback engine.');
       return NextResponse.json({ success: true, evaluationRule: null, translations: null });
     }
-
-    if (!isVertexConfigured()) {
-      console.warn('[BADGE-COMPILE] Vertex AI not configured, returning empty for fallback.');
-      return NextResponse.json({ success: true, evaluationRule: null, translations: null });
-    }
-
-    console.log(`[BADGE-COMPILE] Calling Vertex AI to compile rule & translations for: "${name}"...`);
 
     const systemInstruction = `You are a high-fidelity academic rule compiler and localization engine for a student learning platform.
 Your task is to analyze an achievement badge's name, description, and threshold, and:
@@ -95,22 +88,69 @@ Do NOT output any markdown fences, triple backticks, explanations, or introducto
 Description: "${description}"
 Threshold: "${threshold || ''}"`;
 
-    const res = await callVertexAI({
-      task: 'badge_compile',
-      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      systemInstruction,
-      generationConfig: {
-        temperature: 0.1,
-        responseMimeType: 'application/json'
-      }
-    });
+    let success = false;
+    let text = '';
 
-    if (!res || !res.ok) {
-      throw new Error(`Vertex AI request failed: ${res ? res.statusText : 'No response'}`);
+    if (isVertexConfigured()) {
+      try {
+        console.log(`[BADGE-COMPILE] Calling Vertex AI to compile rule & translations for: "${name}"...`);
+        const res = await callVertexAI({
+          task: 'badge_compile',
+          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+          systemInstruction,
+          generationConfig: {
+            temperature: 0.1,
+            responseMimeType: 'application/json'
+          }
+        });
+
+        if (res && res.ok) {
+          const data = await res.json();
+          text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          success = true;
+        } else {
+          console.warn(`[BADGE-COMPILE WARNING] Vertex AI request failed: ${res ? res.statusText : 'No response'}`);
+        }
+      } catch (vertexErr) {
+        console.warn('[BADGE-COMPILE WARNING] Vertex AI exception, trying AI Studio fallback:', vertexErr);
+      }
     }
 
-    const data = await res.json();
-    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!success && apiKey) {
+      console.log(`[BADGE-COMPILE] Calling AI Studio fallback (gemini-2.0-flash-lite) for: "${name}"...`);
+      try {
+        const compressedPrompt = compressPromptText(userPrompt);
+        const compressedInstruction = compressPromptText(systemInstruction);
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: compressedPrompt }] }],
+            systemInstruction: { parts: [{ text: compressedInstruction }] },
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: 'application/json'
+            }
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          success = true;
+        } else {
+          const errText = await res.text();
+          console.error(`[BADGE-COMPILE ERROR] AI Studio fallback request failed (${res.status}):`, errText);
+        }
+      } catch (fallbackErr) {
+        console.error('[BADGE-COMPILE ERROR] AI Studio fallback exception:', fallbackErr);
+      }
+    }
+
+    if (!success) {
+      console.warn('[BADGE-COMPILE] Both Vertex and AI Studio fallback failed or not configured, returning empty.');
+      return NextResponse.json({ success: true, evaluationRule: null, translations: null });
+    }
     
     // Clean code fences if any
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();

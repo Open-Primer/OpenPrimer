@@ -111,7 +111,7 @@ export const mockDatabaseProvider: DatabaseService = {
     return { data: null, error: null };
   },
   getLesson: async (courseSlug: string, lessonSlug: string, lang: string) => {
-    if (courseSlug === 'Classical_Mechanics' && lessonSlug === 'newtons_laws_of_motion') {
+    if (courseSlug.toLowerCase() === 'classical_mechanics' && lessonSlug.toLowerCase() === 'newtons_laws_of_motion') {
       return {
         data: {
           course_slug: courseSlug,
@@ -140,8 +140,8 @@ This lesson covers:
         try {
           const lessons = JSON.parse(stored);
           const found = lessons.find((l: any) => 
-            l.course_slug === courseSlug && 
-            l.lesson_slug === lessonSlug && 
+            l.course_slug.toLowerCase() === courseSlug.toLowerCase() && 
+            l.lesson_slug.toLowerCase() === lessonSlug.toLowerCase() && 
             l.lang.toLowerCase() === lang.toLowerCase()
           );
           if (found) {
@@ -154,7 +154,7 @@ This lesson covers:
   },
 
   getFirstLessonSlug: async (courseSlug: string, lang: string) => {
-    if (courseSlug === 'Classical_Mechanics') {
+    if (courseSlug.toLowerCase() === 'classical_mechanics') {
       return { data: 'newtons_laws_of_motion', error: null };
     }
     if (typeof window !== 'undefined') {
@@ -163,7 +163,7 @@ This lesson covers:
         try {
           const lessons = JSON.parse(stored);
           const courseLessons = lessons.filter((l: any) => 
-            l.course_slug === courseSlug && 
+            l.course_slug.toLowerCase() === courseSlug.toLowerCase() && 
             l.lang.toLowerCase() === lang.toLowerCase()
           );
           if (courseLessons.length > 0) {
@@ -194,7 +194,7 @@ This lesson covers:
   },
 
   getSyllabus: async (id: string) => {
-    let course = getMockCourses().find(c => c.slug === id);
+    let course = getMockCourses().find(c => c.slug.toLowerCase() === id.toLowerCase());
     console.log(`[MOCK PROVIDER] getSyllabus called for id/slug: '${id}'. Found course:`, course ? { id: course.id, slug: course.slug, archivingLevel: course.archivingLevel } : null);
     if (course) {
       let mockLevels: Record<string, number> = {};

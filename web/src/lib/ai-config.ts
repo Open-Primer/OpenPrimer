@@ -13,12 +13,18 @@
  */
 
 export type ModelId =
+  | 'gemini-3.5-flash'     // High-performance workhorse
   | 'gemini-2.5-flash'     // Best cost/quality balance — primary workhorse
   | 'gemini-2.5-pro'       // Highest quality — course chapter generation only
   | 'gemini-2.0-flash-lite'; // Cheapest — simple tasks (badges, analytics)
 
 /** Vertex AI pricing in USD per 1M tokens (input / output) */
 export const MODEL_PRICING: Record<ModelId, { inputPer1M: number; outputPer1M: number; label: string }> = {
+  'gemini-3.5-flash': {
+    inputPer1M:  1.50,   // $1.50 / 1M input tokens
+    outputPer1M: 9.00,   // $9.00 / 1M output tokens
+    label: 'Gemini 3.5 Flash'
+  },
   'gemini-2.5-flash': {
     inputPer1M:  0.075,  // $0.075 / 1M input tokens
     outputPer1M: 0.30,   // $0.30  / 1M output tokens
@@ -39,13 +45,14 @@ export const MODEL_PRICING: Record<ModelId, { inputPer1M: number; outputPer1M: n
 /**
  * Model assignment per task.
  * Optimization strategy:
- * - Course generation  → Pro (quality matters, few calls)
+ * - Course generation  → 3.5 Flash (quality matters, robust structure)
  * - Tutor chat         → Flash (frequent, needs to be fast & cheap)
  * - Translation        → Flash (repetitive, structured output)
  * - Analytics/Badges   → Flash Lite (simple, lowest cost)
  */
 export const TASK_MODELS: Record<string, ModelId> = {
-  course_generation:  'gemini-2.5-flash',     // Fast & cheap direct replacement for 1.5 Flash
+  course_generation:  'gemini-2.5-flash',     // Enforce Gemini 2.5 Flash for general course generation
+  widgets_generation: 'gemini-3.5-flash',     // Enforce Gemini 3.5 Flash for interactive widgets creation & modification
   course_translation: 'gemini-2.5-flash',     // Good quality for academic translation
   tutor_chat:         'gemini-2.5-flash',     // Fast & cheap for real-time chat
   batch_translate:    'gemini-2.5-flash',     // Batch field translation
@@ -71,6 +78,7 @@ export function estimateCost(model: ModelId, inputTokens: number, outputTokens: 
 /** Typical token estimates per task (for admin cost display) */
 export const TASK_TOKEN_ESTIMATES: Record<string, { inputTokens: number; outputTokens: number }> = {
   course_generation:  { inputTokens: 2_000,  outputTokens: 8_000  }, // per lesson
+  widgets_generation: { inputTokens: 4_000,  outputTokens: 4_000  }, // per widgets batch
   course_translation: { inputTokens: 8_000,  outputTokens: 7_000  }, // per lesson
   tutor_chat:         { inputTokens: 4_000,  outputTokens: 800    }, // per exchange
   batch_translate:    { inputTokens: 1_500,  outputTokens: 1_200  }, // per batch

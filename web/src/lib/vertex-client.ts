@@ -299,20 +299,25 @@ export async function optimizeAccountQuotasInBackground(account: VertexAccount) 
           return dims.region === region;
         });
 
-        // 1. Try to find precise match for gemini-2.5-flash
-        let matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-2.5-flash');
+        // 1. Try to find precise match for gemini-3.5-flash
+        let matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-3.5-flash');
 
-        // 2. Fallback to gemini-1.5-flash
+        // 2. Fallback to gemini-2.5-flash
+        if (!matchingDim) {
+          matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-2.5-flash');
+        }
+
+        // 3. Fallback to gemini-1.5-flash
         if (!matchingDim) {
           matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-1.5-flash');
         }
 
-        // 3. Fallback to gemini-pro
+        // 4. Fallback to gemini-pro
         if (!matchingDim) {
           matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-pro');
         }
 
-        // 4. Fallback to any regional dimension
+        // 5. Fallback to any regional dimension
         if (!matchingDim && regionalDims.length > 0) {
           matchingDim = regionalDims[0];
         }
@@ -353,7 +358,7 @@ export async function optimizeAccountQuotasInBackground(account: VertexAccount) 
           quotaId: targetQuotaId,
           dimensions: {
             region: region,
-            base_model: "gemini-2.5-flash"
+            base_model: "gemini-3.5-flash"
           },
           justification: "Automated real-time scaling for OpenPrimer educational platform."
         };
@@ -662,6 +667,120 @@ export interface VertexRequest {
   }[];
   stream?: boolean;
   userCountry?: string; // Optional user country for geo-IP based regional routing
+  disableCompression?: boolean; // Optional flag to disable automatic prompt compression
+}
+
+/**
+ * Strips the common leading indentation from all lines of a multi-line string.
+ * This is crucial for removing the template-literal indentation in TypeScript files.
+ */
+export function stripCommonIndent(text: string): string {
+  const lines = text.split('\n');
+  
+  // Find the minimum indentation of non-empty lines
+  let minIndent = Infinity;
+  for (const line of lines) {
+    if (line.trim() === '') continue;
+    const match = line.match(/^(\s*)/);
+    if (match) {
+      const indent = match[1].length;
+      if (indent < minIndent) {
+        minIndent = indent;
+      }
+    }
+  }
+  
+  if (minIndent === Infinity || minIndent === 0) {
+    return text;
+  }
+  
+  return lines.map(line => {
+    if (line.trim() === '') return '';
+    return line.slice(minIndent);
+  }).join('\n');
+}
+
+/**
+ * Compresses prompt text by removing excess whitespace, collapsing consecutive newlines,
+ * and minifying inline JSON code blocks, while preserving relative indentation for lists
+ * and formatting of other code blocks.
+ */
+export function compressPromptText(text: string): string {
+  if (!text) return text;
+  
+  // First, strip common indentation so relative formatting is clean
+  const strippedText = stripCommonIndent(text);
+  
+  const lines = strippedText.split('\n');
+  let inCodeBlock = false;
+  let inJsonBlock = false;
+  let jsonBuffer: string[] = [];
+  let consecutiveEmptyLines = 0;
+  const processedLines: string[] = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmedLine = line.trim();
+    
+    // Handle markdown code block boundaries
+    if (trimmedLine.startsWith('```')) {
+      if (inCodeBlock) {
+        // Exiting code block
+        if (inJsonBlock) {
+          try {
+            const jsonContent = jsonBuffer.join('\n').trim();
+            const minified = JSON.stringify(JSON.parse(jsonContent));
+            processedLines.push(minified);
+          } catch (e) {
+            // Fallback if parsing fails (e.g. contains placeholders or templates)
+            processedLines.push(...jsonBuffer.map(l => l.trim()));
+          }
+          inJsonBlock = false;
+          jsonBuffer = [];
+        }
+        processedLines.push(trimmedLine);
+        inCodeBlock = false;
+      } else {
+        // Entering code block
+        processedLines.push(trimmedLine);
+        inCodeBlock = true;
+        if (trimmedLine.toLowerCase().startsWith('```json')) {
+          inJsonBlock = true;
+          jsonBuffer = [];
+        }
+      }
+      consecutiveEmptyLines = 0;
+      continue;
+    }
+    
+    if (inCodeBlock) {
+      if (inJsonBlock) {
+        jsonBuffer.push(line);
+      } else {
+        // For non-JSON code blocks (like mdx, html, typescript), trim end to save tokens
+        processedLines.push(line.trimEnd());
+      }
+      continue;
+    }
+    
+    // Outside code blocks
+    if (trimmedLine === '') {
+      consecutiveEmptyLines++;
+      if (consecutiveEmptyLines <= 1) {
+        processedLines.push('');
+      }
+      continue;
+    }
+    
+    consecutiveEmptyLines = 0;
+    
+    // Preserve any relative leading indentation
+    const matchIndent = line.match(/^(\s*)/);
+    const indent = matchIndent ? matchIndent[1] : '';
+    processedLines.push(indent + trimmedLine.replace(/[ \t]+/g, ' '));
+  }
+  
+  return processedLines.join('\n').trim();
 }
 
 /**
@@ -669,7 +788,24 @@ export interface VertexRequest {
  * Returns the raw fetch Response so callers can handle streaming or JSON.
  */
 export async function callVertexAI(req: VertexRequest): Promise<Response | null> {
-  const estimatedTokens = estimateRequestTokens(req);
+  // Compress contents and systemInstruction if not disabled
+  const compressedReq = { ...req };
+  if (!req.disableCompression) {
+    compressedReq.contents = req.contents.map(c => ({
+      ...c,
+      parts: c.parts.map(p => {
+        if ('text' in p && typeof p.text === 'string') {
+          return { ...p, text: compressPromptText(p.text) };
+        }
+        return p;
+      })
+    }));
+    if (req.systemInstruction) {
+      compressedReq.systemInstruction = compressPromptText(req.systemInstruction);
+    }
+  }
+
+  const estimatedTokens = estimateRequestTokens(compressedReq);
 
   // Initialize and check pool
   await initializeAccounts();
@@ -678,11 +814,13 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
     return null;
   }
 
-  const configuredModel = TASK_MODELS[req.task];
+  const configuredModel = TASK_MODELS[compressedReq.task];
   
   // Decide candidate models to try
   let modelsToTry: string[] = [configuredModel];
-  if (configuredModel === 'gemini-2.5-pro') {
+  if (configuredModel === 'gemini-3.5-flash') {
+    modelsToTry = ['gemini-3.5-flash', 'gemini-2.5-flash'];
+  } else if (configuredModel === 'gemini-2.5-pro') {
     modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-pro'];
   } else if (configuredModel === 'gemini-2.0-flash-lite') {
     modelsToTry = ['gemini-2.0-flash-lite', 'gemini-2.5-flash'];
@@ -690,27 +828,27 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
     modelsToTry = [configuredModel];
   }
 
-  const method = req.stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
+  const method = compressedReq.stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
   let response: Response | null = null;
   let lastError = '';
 
   for (const model of modelsToTry) {
-    const body: Record<string, unknown> = { contents: req.contents };
-    if (req.systemInstruction) {
-      body.systemInstruction = { parts: [{ text: req.systemInstruction }] };
+    const body: Record<string, unknown> = { contents: compressedReq.contents };
+    if (compressedReq.systemInstruction) {
+      body.systemInstruction = { parts: [{ text: compressedReq.systemInstruction }] };
     }
-    if (req.generationConfig) {
-      body.generationConfig = req.generationConfig;
+    if (compressedReq.generationConfig) {
+      body.generationConfig = compressedReq.generationConfig;
     }
-    if (req.safetySettings) {
-      body.safetySettings = req.safetySettings;
+    if (compressedReq.safetySettings) {
+      body.safetySettings = compressedReq.safetySettings;
     }
 
     const maxRetries = 10;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       let selected;
       try {
-        selected = await acquireEndpointAndRateLimitSlot(estimatedTokens, req.userCountry);
+        selected = await acquireEndpointAndRateLimitSlot(estimatedTokens, compressedReq.userCountry);
       } catch (e) {
         console.error('[VERTEX-POOL] Failed to acquire endpoint:', e);
         return null;
@@ -766,18 +904,18 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
               // Report actual token usage back to the Token-Bucket
               handleSuccessfulEndpointRequest(endpoint, actualTokens);
 
-              const firstPart = req.contents?.[0]?.parts?.[0];
+              const firstPart = compressedReq.contents?.[0]?.parts?.[0];
               const promptText = (firstPart && 'text' in firstPart) ? firstPart.text : '';
-              await recordMetrics(req.task, model, durationMs, promptTokens, candidatesTokens, promptText);
+              await recordMetrics(compressedReq.task, model, durationMs, promptTokens, candidatesTokens, promptText);
             } catch (e) {
               console.warn('[VERTEX-POOL] Failed to parse usage metadata from response clone:', e);
               // Fallback: estimate tokens if parsing failed
-              const est = TASK_TOKEN_ESTIMATES[req.task] || { inputTokens: 1000, outputTokens: 500 };
+              const est = TASK_TOKEN_ESTIMATES[compressedReq.task] || { inputTokens: 1000, outputTokens: 500 };
               handleSuccessfulEndpointRequest(endpoint, est.inputTokens + est.outputTokens);
 
-              const firstPart = req.contents?.[0]?.parts?.[0];
+              const firstPart = compressedReq.contents?.[0]?.parts?.[0];
               const promptText = (firstPart && 'text' in firstPart) ? firstPart.text : '';
-              await recordMetrics(req.task, model, durationMs, est.inputTokens, est.outputTokens, promptText);
+              await recordMetrics(compressedReq.task, model, durationMs, est.inputTokens, est.outputTokens, promptText);
             }
           })();
 
@@ -844,7 +982,10 @@ export async function recordMetrics(
 
     let metricId = 'tutor';
     if (task === 'course_generation') {
-      if (promptTextForClassifier.includes('Verifier/Critic Agent') || promptTextForClassifier.includes('Agent 4')) {
+      const lowerPrompt = (promptTextForClassifier || '').toLowerCase();
+      if (lowerPrompt.includes('agent 3b - widgets architect') || lowerPrompt.includes('agent 4b - widgets critic') || lowerPrompt.includes('json syntax repair assistant')) {
+        metricId = 'widgets';
+      } else if (promptTextForClassifier.includes('Verifier/Critic Agent') || promptTextForClassifier.includes('Agent 4')) {
         metricId = 'revision';
       } else {
         metricId = 'generation';

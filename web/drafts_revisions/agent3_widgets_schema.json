@@ -106,7 +106,7 @@
               "componentType": {
                 "type": "string",
                 "enum": [
-                  "Media"
+                  "Citation"
                 ]
               },
               "sectionAnchor": {
@@ -115,41 +115,77 @@
               "props": {
                 "type": "object",
                 "properties": {
-                  "type": {
+                  "quote": {
                     "type": "string",
-                    "enum": [
-                      "image",
-                      "audio",
-                      "video"
-                    ]
+                    "description": "The exact quote text in the target language."
                   },
-                  "description": {
+                  "author": {
                     "type": "string",
-                    "description": "The detailed search/generation description for the media."
+                    "description": "Full name of the author."
                   },
-                  "alt": {
+                  "source": {
                     "type": "string",
-                    "description": "Short description for accessibility."
+                    "description": "Title of the book, paper, or landmark publication."
                   },
-                  "caption": {
+                  "year": {
                     "type": "string",
-                    "description": "A detailed, italicized caption explaining academic relevance."
+                    "description": "Year of publication, e.g., '1776'."
                   },
-                  "title": {
+                  "original": {
                     "type": "string",
-                    "description": "Short title."
+                    "description": "Original untranslated quote text in the author's original language of writing. MANDATORY if the author's original language of writing is different from the target language. Empty or omitted if the original language is the same as the target language."
                   },
-                  "searchQuery": {
+                  "commentary": {
                     "type": "string",
-                    "description": "Highly canonical 1 to 3 search words (e.g. 'Claudio Monteverdi', 'Larynx humain', 'Doppler acoustique') to ensure precise database matches."
+                    "description": "Academic analysis explaining the relevance of the quote (at least 3-4 sentences)."
                   }
                 },
                 "required": [
-                  "type",
-                  "description",
-                  "alt",
-                  "caption",
-                  "searchQuery"
+                  "quote",
+                  "author",
+                  "source",
+                  "year",
+                  "commentary"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "componentType",
+              "sectionAnchor",
+              "props"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "componentType": {
+                "type": "string",
+                "enum": [
+                  "Epistemology"
+                ]
+              },
+              "sectionAnchor": {
+                "type": "string"
+              },
+              "props": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "The title of the debate or critical controversy."
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Deeply academic analysis of the epistemology debate (150-250 words)."
+                  }
+                },
+                "required": [
+                  "title",
+                  "content"
                 ]
               }
             },
@@ -316,31 +352,6 @@
       "items": {
         "type": "string"
       }
-    },
-    "previousLessonSummary": {
-      "type": "object",
-      "properties": {
-        "previousLessonTitle": {
-          "type": "string"
-        },
-        "previousLessonSlug": {
-          "type": "string"
-        },
-        "keyTakeaways": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "cognitiveBridge": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "previousLessonTitle",
-        "keyTakeaways",
-        "cognitiveBridge"
-      ]
     }
   },
   "required": [

@@ -1456,5 +1456,17 @@ export const initialAgentMetrics: AgentMetric[] = [
     rolling30DaysCost: 0.00,
     requests: 0,
     avgResponseTime: '0ms'
+  },
+  {
+    id: 'widgets',
+    nameEN: 'Interactive Widgets Agent',
+    nameFR: 'Agent de Génération de Widgets Interactifs',
+    nameES: 'Agente de Generación de Widgets Interactivos',
+    nameDE: 'Interaktiver Widget-Agent',
+    nameZH: '互动组件生成智能体',
+    totalCost: 0.00,
+    rolling30DaysCost: 0.00,
+    requests: 0,
+    avgResponseTime: '0ms'
   }
 ];

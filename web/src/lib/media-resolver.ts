@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { supabaseAdmin } from './supabase';
+import { compressPromptText } from './vertex-client';
 
 class TransientNetworkError extends Error {
   constructor(message: string) {
@@ -715,7 +716,7 @@ Réponds UNIQUEMENT avec ces mots-clés optimisés en français ou en anglais se
           role: 'user',
           parts: [
             {
-              text: promptText
+              text: compressPromptText(promptText)
             }
           ]
         }
@@ -2036,7 +2037,7 @@ Réponds uniquement par OUI ou NON.`;
               }
             },
             {
-              text: promptText
+              text: compressPromptText(promptText)
             }
           ]
         }

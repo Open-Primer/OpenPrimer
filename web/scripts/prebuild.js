@@ -13,8 +13,10 @@ try {
     console.log(`[PREBUILD] Copying content directory from ${contentSrc} to ${contentDest}...`);
     fs.cpSync(contentSrc, contentDest, { recursive: true });
     console.log('[PREBUILD] Content successfully copied.');
+  } else if (!fs.existsSync(contentDest)) {
+    console.warn(`[PREBUILD WARNING] Source content directory not found at ${contentSrc} and destination ${contentDest} does not exist.`);
   } else {
-    console.warn(`[PREBUILD WARNING] Source content directory not found at ${contentSrc}`);
+    console.log(`[PREBUILD INFO] Source content directory not found at ${contentSrc}, but destination ${contentDest} already exists. Skipping copy.`);
   }
 
   // 2. Copy syllabus file

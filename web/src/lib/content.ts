@@ -512,7 +512,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             .from('lessons')
             .update({ content: newDbContent })
             .ilike('course_slug', courseSlug)
-            .eq('lesson_slug', lessonSlug)
+            .ilike('lesson_slug', lessonSlug)
             .eq('lang', lang.toLowerCase())
             .then(({ error }: any) => {
               if (error) {
@@ -543,7 +543,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         .from('lessons')
         .select('*')
         .ilike('course_slug', courseSlug)
-        .eq('lesson_slug', lessonSlug)
+        .ilike('lesson_slug', lessonSlug)
         .limit(1)
         .single();
 
@@ -562,7 +562,7 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
             .from('lessons')
             .update({ content: newDbContent })
             .ilike('course_slug', courseSlug)
-            .eq('lesson_slug', lessonSlug)
+            .ilike('lesson_slug', lessonSlug)
             .eq('lang', fallbackLesson.lang)
             .then(({ error }: any) => {
               if (error) {
@@ -606,7 +606,7 @@ export async function getFirstAvailableLanguage(slug: string[]): Promise<string 
         .from('lessons')
         .select('lang')
         .ilike('course_slug', courseSlug)
-        .eq('lesson_slug', lessonSlug)
+        .ilike('lesson_slug', lessonSlug)
         .limit(1);
       if (dbLessons && dbLessons.length > 0 && dbLessons[0].lang) {
         console.log(`[getFirstAvailableLanguage] Found lang '${dbLessons[0].lang}' in DB for ${courseSlug}/${lessonSlug}`);

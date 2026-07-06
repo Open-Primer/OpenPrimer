@@ -218,7 +218,7 @@ export const EnrollmentModal = ({
           const { data, error } = await supabase
             .from('lessons')
             .select('title, lesson_slug')
-            .eq('course_slug', activeCourse.slug)
+            .ilike('course_slug', activeCourse.slug)
             .eq('lang', lang.toLowerCase())
             .order('order', { ascending: true });
           
@@ -229,7 +229,7 @@ export const EnrollmentModal = ({
             const { data: enData, error: enError } = await supabase
               .from('lessons')
               .select('title, lesson_slug')
-              .eq('course_slug', activeCourse.slug)
+              .ilike('course_slug', activeCourse.slug)
               .eq('lang', 'en')
               .order('order', { ascending: true });
             

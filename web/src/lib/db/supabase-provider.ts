@@ -45,7 +45,7 @@ export async function purgeOrphanedCourseMedia(courseSlug: string): Promise<{ da
     const { data: lessons } = await supabaseAdmin
       .from('lessons')
       .select('content')
-      .eq('course_slug', courseSlug);
+      .ilike('course_slug', courseSlug);
 
     if (!lessons || lessons.length === 0) return { data: null, error: null };
 
@@ -71,7 +71,7 @@ export async function purgeOrphanedCourseMedia(courseSlug: string): Promise<{ da
     const { data: otherLessons } = await supabaseAdmin
       .from('lessons')
       .select('content')
-      .neq('course_slug', courseSlug);
+      .not('course_slug', 'ilike', courseSlug);
 
     const referencedElsewhere = new Set<string>();
     for (const lesson of (otherLessons || [])) {
@@ -131,7 +131,7 @@ export async function performCascadeCourseDeletion(courseId: number): Promise<{ 
       }
 
       // B. Cascade delete lessons belonging to this course
-      const { error: lessonErr } = await supabaseAdmin.from('lessons').delete().eq('course_slug', slug);
+      const { error: lessonErr } = await supabaseAdmin.from('lessons').delete().ilike('course_slug', slug);
       if (lessonErr) console.error('[CASCADE DELETE] Error deleting lessons:', lessonErr);
 
       // C. Cascade delete progress entries
@@ -300,7 +300,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         .from('lessons')
         .select('*')
         .ilike('course_slug', courseSlug)
-        .eq('lesson_slug', lessonSlug)
+        .ilike('lesson_slug', lessonSlug)
         .eq('lang', lang.toLowerCase())
         .single();
       if (error) throw error;
@@ -2325,6 +2325,28 @@ export const supabaseDatabaseProvider: DatabaseService = {
           .eq('id', id);
         
         if (updateError) throw updateError;
+      } else {
+        const nameEn = id === 'widgets' ? 'Interactive Widgets Agent' : (id.charAt(0).toUpperCase() + id.slice(1) + ' Agent');
+        const nameFr = id === 'widgets' ? 'Agent de Génération de Widgets Interactifs' : (id.charAt(0).toUpperCase() + id.slice(1) + ' Agent');
+        const nameEs = id === 'widgets' ? 'Agente de Generación de Widgets Interactivos' : '';
+        const nameDe = id === 'widgets' ? 'Interaktiver Widget-Agent' : '';
+        const nameZh = id === 'widgets' ? '互动组件生成智能体' : '';
+
+        const { error: insertError } = await supabaseAdmin
+          .from('agent_metrics')
+          .insert({
+            id,
+            name_en: nameEn,
+            name_fr: nameFr,
+            name_es: nameEs,
+            name_de: nameDe,
+            name_zh: nameZh,
+            total_cost: cost,
+            rolling_30_days_cost: cost,
+            requests: 1,
+            avg_response_time: `${durationMs}ms`
+          });
+        if (insertError) throw insertError;
       }
       return { data: null, error: null };
     } catch (e: any) {

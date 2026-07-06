@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifySession } from '@/lib/authHelper';
-import { callVertexAI, isVertexConfigured } from '@/lib/vertex-client';
+import { callVertexAI, isVertexConfigured, compressPromptText } from '@/lib/vertex-client';
 
 export async function POST(request: Request) {
   try {
@@ -16,10 +16,7 @@ export async function POST(request: Request) {
 
     let expandedPrompt = `a premium stylized flat vector achievement badge medallion for "${name}" - ${description}, glassmorphism, 3d render, dark neon backdrop, high resolution, clean icons, centered, no text, no words`;
 
-    if (isVertexConfigured()) {
-      try {
-        console.log(`[BADGE-GEN] Expanding prompt with Vertex AI (gemini-2.0-flash-lite) for badge: "${name}"...`);
-        const geminiPrompt = `Create a single, highly detailed, professional image generation prompt for a modern, stylized achievement badge medallion.
+    const geminiPrompt = `Create a single, highly detailed, professional image generation prompt for a modern, stylized achievement badge medallion.
 The achievement name is: "${name}"
 The description is: "${description}"
 
@@ -31,6 +28,11 @@ Style guidelines:
 
 Output ONLY the expanded English image prompt in a single sentence or short paragraph. Do not include any explanations or surrounding text.`;
 
+    let success = false;
+
+    if (isVertexConfigured()) {
+      try {
+        console.log(`[BADGE-GEN] Expanding prompt with Vertex AI (gemini-2.0-flash-lite) for badge: "${name}"...`);
         const res = await callVertexAI({
           task: 'badge_expand',
           contents: [{ role: 'user', parts: [{ text: geminiPrompt }] }],
@@ -43,10 +45,38 @@ Output ONLY the expanded English image prompt in a single sentence or short para
           if (expandedText?.trim()) {
             expandedPrompt = expandedText.trim();
             console.log(`[BADGE-GEN SUCCESS] Expanded prompt via Vertex AI.`);
+            success = true;
           }
         }
       } catch (vertexErr) {
-        console.warn(`[BADGE-GEN WARNING] Prompt expansion failed, using fallback template.`, vertexErr);
+        console.warn(`[BADGE-GEN WARNING] Prompt expansion failed, trying AI Studio fallback.`, vertexErr);
+      }
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!success && apiKey) {
+      console.log(`[BADGE-GEN] Expanding prompt via AI Studio fallback (gemini-2.0-flash-lite)...`);
+      try {
+        const compressedPrompt = compressPromptText(geminiPrompt);
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: compressedPrompt }] }],
+            generationConfig: { temperature: 0.7 }
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const expandedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (expandedText?.trim()) {
+            expandedPrompt = expandedText.trim();
+            console.log(`[BADGE-GEN SUCCESS] Expanded prompt via AI Studio fallback.`);
+            success = true;
+          }
+        }
+      } catch (fallbackErr) {
+        console.warn(`[BADGE-GEN WARNING] AI Studio prompt expansion fallback failed.`, fallbackErr);
       }
     }
 

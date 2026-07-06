@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
       const { data: course } = await supabase
         .from('courses')
         .select('level, subject')
-        .eq('slug', courseSlug)
+        .ilike('slug', courseSlug)
         .limit(1)
         .single();
 
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
         const { data: dbLessons } = await supabase
           .from('lessons')
           .select('lesson_slug, title, content')
-          .eq('course_slug', courseSlug)
+          .ilike('course_slug', courseSlug)
           .eq('lang', lang);
 
         if (dbLessons && dbLessons.length > 0) {

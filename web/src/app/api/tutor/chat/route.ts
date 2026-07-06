@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifySession } from '@/lib/authHelper';
 import { isRateLimited } from '@/lib/rateLimit';
 import { z } from 'zod';
-import { callVertexAI, isVertexConfigured } from '@/lib/vertex-client';
+import { callVertexAI, isVertexConfigured, compressPromptText } from '@/lib/vertex-client';
 import { TASK_MODELS, MODEL_PRICING, TASK_TOKEN_ESTIMATES, estimateCost } from '@/lib/ai-config';
 import { sanitizeString, detectPromptInjection, isSpam } from '@/lib/security';
 
@@ -374,6 +374,82 @@ export async function POST(request: Request) {
         return new Response(stream, {
           headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' }
         });
+      }
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (apiKey) {
+      console.log(`[TUTOR CHAT] Vertex AI failed/unavailable. Dispatching to AI Studio fallback (gemini-2.5-flash) for persona "${persona}"...`);
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${apiKey}`;
+        const compressedContents = contents.map((c: any) => ({
+          ...c,
+          parts: c.parts.map((p: any) => {
+            if ('text' in p && typeof p.text === 'string') {
+              return { ...p, text: compressPromptText(p.text) };
+            }
+            return p;
+          })
+        }));
+        const compressedInstruction = compressPromptText(systemInstruction);
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: compressedContents,
+            systemInstruction: {
+              parts: [{ text: compressedInstruction }]
+            },
+            generationConfig: { temperature: 0.7 }
+          })
+        });
+
+        if (res.ok) {
+          const stream = new ReadableStream({
+            async start(controller) {
+              const reader = res.body?.getReader();
+              const decoder = new TextDecoder('utf-8');
+              if (!reader) { controller.close(); return; }
+              try {
+                let buffer = '';
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  buffer += decoder.decode(value, { stream: true });
+                  const lines = buffer.split('\n');
+                  buffer = lines.pop() || '';
+                  for (const line of lines) {
+                    if (line.startsWith('data:')) {
+                      try {
+                        const rawData = line.slice(5).trim();
+                        if (rawData) {
+                          const parsed = JSON.parse(rawData);
+                          const chunkText = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                          if (chunkText) {
+                            controller.enqueue(`data: ${JSON.stringify({ text: chunkText })}\n\n`);
+                          }
+                        }
+                      } catch {}
+                    }
+                  }
+                }
+              } catch (err) {
+                controller.error(err);
+              } finally {
+                controller.close();
+              }
+            }
+          });
+          return new Response(stream, {
+            headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' }
+          });
+        } else {
+          const errText = await res.text();
+          console.error(`[TUTOR CHAT ERROR] AI Studio fallback failed:`, errText);
+        }
+      } catch (fallbackErr) {
+        console.error(`[TUTOR CHAT ERROR] AI Studio fallback exception:`, fallbackErr);
       }
     }
 

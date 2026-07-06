@@ -858,6 +858,7 @@ const getTaskFromId = (id: string) => {
   if (id === 'translation') return 'course_translation';
   if (id === 'revision') return 'analytics';
   if (id === 'tutor') return 'tutor_chat';
+  if (id === 'widgets') return 'widgets_generation';
   return 'tutor_chat';
 };
 
@@ -1207,7 +1208,9 @@ export default function AdminDashboard() {
     const pricing = MODEL_PRICING[model];
     const est = TASK_TOKEN_ESTIMATES[task] || { inputTokens: 1000, outputTokens: 500 };
     if (!pricing) return acc;
-    const inputCost = ((m.requests || 0) * est.inputTokens / 1_000_000) * pricing.inputPer1M;
+    const estTotalCost = (est.inputTokens * pricing.inputPer1M + est.outputTokens * pricing.outputPer1M);
+    const inputRatio = estTotalCost > 0 ? (est.inputTokens * pricing.inputPer1M) / estTotalCost : 0.5;
+    const inputCost = m.totalCost > 0 ? m.totalCost * inputRatio : ((m.requests || 0) * est.inputTokens / 1_000_000) * pricing.inputPer1M;
     return acc + inputCost;
   }, 0);
   const savedAmount = (totalInputCost * (dynamicCachedRatio / 100)).toFixed(2);

@@ -1,6 +1,6 @@
 import { dbService } from './db';
 import { supabase, supabaseAdmin } from './supabase';
-import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client';
+import { callVertexAI, isVertexConfigured, recordMetrics, compressPromptText } from './vertex-client';
 import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation } from './content';
 import { resolveAndPersistMedia } from './media-resolver';
 import { cleanPathSegment } from './translations';
@@ -2274,8 +2274,8 @@ Rules:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: userPrompt }] }],
-          systemInstruction: { parts: [{ text: systemInstruction }] },
+          contents: [{ parts: [{ text: compressPromptText(userPrompt) }] }],
+          systemInstruction: { parts: [{ text: compressPromptText(systemInstruction) }] },
           generationConfig: { temperature: 0.1 }
         })
       });
@@ -2765,11 +2765,12 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         console.log(`[AI GENERATOR] Generating syllabus for "${courseName}" via AI Studio fallback (gemini-2.5-flash)...`);
         const startTime = Date.now();
         try {
+          const compressedSyllabus = compressPromptText(promptSyllabus);
           const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: promptSyllabus }] }],
+              contents: [{ parts: [{ text: compressedSyllabus }] }],
               generationConfig: {
                 temperature: 0.1,
                 responseMimeType: "application/json",
@@ -2786,7 +2787,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
             const usage = jsonRes.usageMetadata || {};
             const promptTokens = usage.promptTokenCount || 0;
             const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-            await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptSyllabus);
+            await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedSyllabus);
           } else {
             const errText = await res.text();
             console.error(`[AI GENERATOR] AI Studio syllabus call failed (${res.status}):`, errText);
@@ -2958,7 +2959,9 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         schema?: any,
         temperature: number = 0.2,
         frequencyPenalty?: number,
-        topP?: number
+        topP?: number,
+        isJsonMode: boolean = false,
+        task: keyof typeof TASK_MODELS = 'course_generation'
       ): Promise<string> => {
         let resultText = '';
         let success = false;
@@ -2977,14 +2980,14 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         if (schema) {
           generationConfig.responseMimeType = "application/json";
           generationConfig.responseSchema = schema;
-        } else if (promptText.toLowerCase().includes('json') || promptText.toLowerCase().includes('schema')) {
+        } else if (isJsonMode || promptText.toLowerCase().includes('json') || promptText.toLowerCase().includes('schema')) {
           generationConfig.responseMimeType = "application/json";
         }
 
         if (isVertexConfigured()) {
           try {
             const res = await callVertexAI({
-              task: 'course_generation',
+              task,
               contents: [{ role: 'user', parts: [{ text: promptText }] }],
               generationConfig
             });
@@ -3008,8 +3011,9 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         if (!success && apiKey) {
           const startTime = Date.now();
           try {
+            const compressedPrompt = compressPromptText(promptText);
             const bodyPayload: any = {
-              contents: [{ parts: [{ text: promptText }] }],
+              contents: [{ parts: [{ text: compressedPrompt }] }],
               generationConfig
             };
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
@@ -3025,7 +3029,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
               const usage = resJson.usageMetadata || {};
               lessonStats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
               lessonStats.tokenMetrics.candidatesTokens += usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-              await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, promptText);
+              await recordMetrics(task, 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, compressedPrompt);
             } else {
               lastError = `HTTP ${res.status} ${res.statusText}`;
             }
@@ -3874,7 +3878,7 @@ ${referencesMetadata}
       let widgetsIteration = 0;
       const maxWidgetsIterations = 5;
 
-      const widgetsJsonStr = await callAIEngine(widgetsPrompt, dynamicSchema, 0.1);
+      const widgetsJsonStr = await callAIEngine(widgetsPrompt, dynamicSchema, 0.1, undefined, undefined, false, 'widgets_generation');
       lessonStats.widgetsAttempts++;
       saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_1.json`, widgetsJsonStr);
 
@@ -3913,7 +3917,7 @@ ${currentWidgetsJsonStr}
 
 Return ONLY the corrected and valid JSON response. Do NOT include any explanations, markdown headers, or natural language notes. Do NOT wrap your response in markdown code blocks (\`\`\`).`;
 
-            const repairedJsonStr = await callAIEngine(preflightRepairPrompt, dynamicSchema, 0.1);
+            const repairedJsonStr = await callAIEngine(preflightRepairPrompt, dynamicSchema, 0.1, undefined, undefined, false, 'widgets_generation');
             currentWidgetsJsonStr = repairedJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
             saveDraftRevision(`draft_stage2_widgets_${item.slug}_preflight_repair_${preflightAttempts}.json`, currentWidgetsJsonStr);
           } else {
@@ -3985,9 +3989,9 @@ You are the Widgets Critic Agent (Agent 4B). Your job is to strictly review the 
 
 ### INPUT WIDGETS JSON TO AUDIT
 Review the generated widgets JSON structure:
----
+\`\`\`json
 ${JSON.stringify(parsedWidgets, null, 2)}
----
+\`\`\`
 
 ### INPUT APPROVED NARRATIVE DRAFT (FOR REFERENCE)
 Verify that all anchors and citations match the approved text perfectly:
@@ -4070,7 +4074,7 @@ You must return ONLY a valid JSON object matching the \`widgetsAuditSchema\` wit
 Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
 `;
 
-        const widgetsAuditStr = await callAIEngine(widgetsCriticPrompt, widgetsAuditSchema, 0.1);
+        const widgetsAuditStr = await callAIEngine(widgetsCriticPrompt, widgetsAuditSchema, 0.1, undefined, undefined, false, 'widgets_generation');
         const cleanWidgetsAudit = widgetsAuditStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
         const widgetsAudit = safeJsonParse(cleanWidgetsAudit, 'Widgets Critic Audit');
 
@@ -4118,9 +4122,9 @@ GLOBAL CRITIQUE FROM AGENT 4B:
 "${globalCritiqueText}"
 
 PREVIOUS WIDGETS JSON:
----
+\`\`\`json
 ${JSON.stringify(parsedWidgets, null, 2)}
----
+\`\`\`
 
 INPUT APPROVED NARRATIVE DRAFT:
 ---
@@ -4132,7 +4136,7 @@ Generate the complete, updated, fully-fledged widgets JSON conforming strictly t
             saveDraftRevision(`prompt_stage2_refiner_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRefinerPrompt);
 
             const dynamicSchemaGlobal = getDynamicWidgetsSchema(approvedNarrativeText);
-            const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, dynamicSchemaGlobal, 0.1);
+            const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, dynamicSchemaGlobal, 0.1, undefined, undefined, false, 'widgets_generation');
             lessonStats.widgetsAttempts++;
             saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_${widgetsIteration + 1}.json`, refinedWidgetsStr);
 
@@ -4190,12 +4194,16 @@ Key: "${rw.key}"
 Critique from Agent 4B:
   "${rw.critique}"
 Current JSON Value:
+\`\`\`json
 ${JSON.stringify(rw.currentValue, null, 2)}
+\`\`\`
 ----------------------------------
 `).join('\n')}
 
 ### STRICT JSON SCHEMAS FOR REJECTED WIDGETS:
+\`\`\`json
 ${repairSchemasStr}
+\`\`\`
 
 INSTRUCTIONS:
 1. Repair each rejected widget key to fully resolve its critique.
@@ -4214,7 +4222,7 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`json or \`\`\`).`;
 
             saveDraftRevision(`prompt_stage2_repair_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRepairPrompt);
 
-            const repairedWidgetsStr = await callAIEngine(widgetsRepairPrompt, null, 0.1);
+            const repairedWidgetsStr = await callAIEngine(widgetsRepairPrompt, null, 0.1, undefined, undefined, false, 'widgets_generation');
             lessonStats.widgetsAttempts++;
             saveDraftRevision(`draft_stage2_widgets_repair_${item.slug}_attempt_${widgetsIteration + 1}.json`, repairedWidgetsStr);
 
@@ -4609,11 +4617,12 @@ ${isolatedContent}`;
               console.log(`[AI GENERATOR] Translating lesson "${lesson.title}" to ${targetLang} via AI Studio fallback (gemini-2.5-flash)...`);
               const startTime = Date.now();
               try {
+                const compressedPrompt = compressPromptText(promptTranslate);
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptTranslate }] }]
+                    contents: [{ parts: [{ text: compressedPrompt }] }]
                   })
                 });
                 if (res.ok) {
@@ -4626,7 +4635,7 @@ ${isolatedContent}`;
                   const usage = resJson.usageMetadata || {};
                   const promptTokens = usage.promptTokenCount || 0;
                   const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-                  await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptTranslate);
+                  await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedPrompt);
                 }
               } catch (err) {
                 console.error(`[AI GENERATOR] AI Studio translation fetch exception:`, err);
@@ -4715,7 +4724,7 @@ let criticResText = '';
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      contents: [{ parts: [{ text: promptCritic }] }],
+                      contents: [{ parts: [{ text: compressPromptText(promptCritic) }] }],
                       generationConfig: {
                         responseMimeType: "application/json",
                         responseSchema: verificationSchema
@@ -4810,7 +4819,7 @@ if (process.env.DEBUG === 'true') {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
-                        contents: [{ parts: [{ text: promptRefine }] }]
+                        contents: [{ parts: [{ text: compressPromptText(promptRefine) }] }]
                       })
                     });
                     if (resRefine.ok) {
@@ -4868,11 +4877,12 @@ if (process.env.DEBUG === 'true') {
                 console.log(`[AI GENERATOR] Translating title "${lesson.title}" via AI Studio fallback (gemini-2.5-flash)...`);
                 const startTime = Date.now();
                 try {
+                  const compressedTitle = compressPromptText(promptTitle);
                   const resTitle = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      contents: [{ parts: [{ text: promptTitle }] }]
+                      contents: [{ parts: [{ text: compressedTitle }] }]
                     })
                   });
                   if (resTitle.ok) {
@@ -4884,7 +4894,7 @@ if (process.env.DEBUG === 'true') {
                     const usage = tJson.usageMetadata || {};
                     const promptTokens = usage.promptTokenCount || 0;
                     const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-                    await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptTitle);
+                    await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedTitle);
                   }
                 } catch (err) {
                   console.error(`[AI GENERATOR] AI Studio title translation fetch exception:`, err);
@@ -5002,7 +5012,7 @@ if (process.env.DEBUG === 'true') {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                contents: [{ parts: [{ text: promptCourseTitle }] }]
+                contents: [{ parts: [{ text: compressPromptText(promptCourseTitle) }] }]
               })
             });
             if (res.ok) {
@@ -5039,7 +5049,7 @@ if (process.env.DEBUG === 'true') {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                contents: [{ parts: [{ text: promptCourseDesc }] }]
+                contents: [{ parts: [{ text: compressPromptText(promptCourseDesc) }] }]
               })
             });
             if (res.ok) {
@@ -5241,7 +5251,7 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: promptIdentify }] }],
+          contents: [{ parts: [{ text: compressPromptText(promptIdentify) }] }],
           generationConfig: {
             responseMimeType: "application/json",
             responseSchema: slugsArraySchema
@@ -5334,7 +5344,7 @@ INSTRUCTIONS:
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: promptRevise }] }],
+            contents: [{ parts: [{ text: compressPromptText(promptRevise) }] }],
             generationConfig: {
               temperature: 0.35,
               frequencyPenalty: 0.25,
@@ -5455,7 +5465,7 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: promptCritic }] }],
+              contents: [{ parts: [{ text: compressPromptText(promptCritic) }] }],
               generationConfig: {
                 responseMimeType: "application/json",
                 responseSchema: revisionAuditSchema
@@ -5545,7 +5555,7 @@ Return ONLY the revised MDX content. Do NOT include markdown code block wrappers
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  contents: [{ parts: [{ text: promptRefineGlobal }] }],
+                  contents: [{ parts: [{ text: compressPromptText(promptRefineGlobal) }] }],
                   generationConfig: {
                     temperature: 0.35,
                     frequencyPenalty: 0.25,
@@ -5673,7 +5683,7 @@ INSTRUCTIONS:
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptJointRepair }] }],
+                    contents: [{ parts: [{ text: compressPromptText(promptJointRepair) }] }],
                     generationConfig: {
                       temperature: 0.35,
                       frequencyPenalty: 0.25,
@@ -5862,7 +5872,7 @@ Return ONLY the raw JSON object. Do not wrap it in markdown blockticks (\`\`\`).
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: promptSystemic }] }],
+          contents: [{ parts: [{ text: compressPromptText(promptSystemic) }] }],
           generationConfig: {
             responseMimeType: "application/json",
             responseSchema: systemicAnalysisSchema
@@ -5943,11 +5953,12 @@ INSTRUCTIONS:
     console.log(`[SELF-HEALING] Healing MDX content via AI Studio fallback (gemini-2.5-flash)...`);
     try {
       const startTime = Date.now();
+      const compressedHealer = compressPromptText(promptHealer);
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: promptHealer }] }]
+          contents: [{ parts: [{ text: compressedHealer }] }]
         })
       });
       if (res.ok) {
@@ -5959,7 +5970,7 @@ INSTRUCTIONS:
           const usage = jsonRes.usageMetadata || {};
           const promptTokens = usage.promptTokenCount || 0;
           const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptHealer);
+          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedHealer);
         } else {
           console.warn("[SELF-HEALING] AI Studio healer returned empty content");
         }
@@ -6148,7 +6159,7 @@ If you cannot find any real audio, output: {}`;
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
+            contents: [{ parts: [{ text: compressPromptText(prompt) }] }],
             generationConfig: {
               responseMimeType: "application/json",
               responseSchema: audioSearchSchema
@@ -6800,11 +6811,12 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
       console.log(`[AI CURRICULUM] Generating curriculum for "${curriculumName}" via AI Studio fallback (gemini-2.5-flash)...`);
       const startTime = Date.now();
       try {
+        const compressedCurriculum = compressPromptText(promptCurriculum);
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: promptCurriculum }] }],
+            contents: [{ parts: [{ text: compressedCurriculum }] }],
             generationConfig: {
               temperature: 0.1,
               responseMimeType: "application/json",
@@ -6820,7 +6832,7 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
           const usage = jsonRes.usageMetadata || {};
           const promptTokens = usage.promptTokenCount || 0;
           const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptCurriculum);
+          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedCurriculum);
         }
       } catch (err) {
         console.error("[AI CURRICULUM] AI Studio curriculum generation fetch exception:", err);
