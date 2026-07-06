@@ -91,16 +91,20 @@ OpenPrimer structures the course generation pipeline into a strictly ordered, de
 
 5.  **⚙️ Agent 3B (Widgets Architect - Stage 2):**
     *   **Scope & Input**: Takes the approved narrative draft, scans and extracts all `[[WIDGET:id]]` anchors, and maps bibliography citations.
-    *   **Operation**: Generates a validated JSON object conforming strictly to `lessonWidgetsSchema` to define every single anchor.
+    *   **Subdivision into Blocks (to resolve context & output token limitations)**:
+        *   **Block 1 (Introductory Structure)**: Generates prerequisites, diagnostic quiz, and learning objectives.
+        *   **Block 2 (Interactive Components)**: Scans bracketed widget anchors in the narrative text (e.g., `[[WIDGET:biography:bio_einstein]]`) and maps props.
+        *   **Block 3 (Synthesis & Glossary)**: Generates the lesson's conclusion summary, transition links (`whatsNext`, `goingFurther`), and glossary terms.
+        *   **Block 4 (Evaluation & References)**: Generates a high-density lesson quiz or course-level final exam (5 to 15 questions) and academic bibliography references.
     *   **Curation & Budget**:
-        *   Acts as a Matchmaker to select suitable pre-designed, curated widgets (e.g. `<FunctionPlotter />` for math/physics, `<CodeSandbox />` for CS) from the pruned catalog.
+        *   Acts as a Matchmaker to select suitable pre-designed, curated widgets (e.g., `<FunctionPlotter />` for math/physics, `<CodeSandbox />` for CS) from the pruned catalog.
         *   Enforces a strict budget of at most 2 database-curated widgets per course and at most 1 per lesson (with empty `props` `{}`).
         *   Generates accurate quizzes, objectives, glossaries, and bibliographical references matching the written text.
 
 6.  **🔬 Agent 4B (Widgets Critic - Stage 4B):**
-    *   **Scope & Input**: Reviews the generated widgets JSON.
-    *   **Operation**: Audits the pedagogical correctness of quizzes, option formatting, citation schema compliance, and structured JSON parameters.
-    *   **Feedback Loop**: If checks fail, Agent 4B returns a critique, looping back to Agent 3B to correct (maximum of 3 attempts).
+    *   **Scope & Input**: Reviews the generated widgets JSON for each of the 4 blocks independently.
+    *   **Operation**: Audits the pedagogical correctness of quizzes, option formatting, Bloom's Taxonomy verbs in objectives, citation style compliance, and structured JSON parameters.
+    *   **Localized Feedback Loop**: Auditing is decoupled per block. If checks fail on Block X, Agent 4B returns a critique, looping back to Agent 3B to regenerate only Block X (maximum of 3 attempts), keeping other approved blocks untouched.
 
 ---
 
@@ -143,6 +147,29 @@ To maintain absolute academic, scientific, and factual accuracy, OpenPrimer enfo
         *   **Step C (Wikipedia Original Image Fetch)**: Retrieves the primary original source image of the matched page.
         *   **Step D (English Wiki Fallback)**: If localized searches fail, it runs the query against the English Wikipedia API as a final fallback.
     *   Factual images are classified automatically via `isFactualMedia` to prevent utilizing generic decorative images for academic/scientific concepts.
+
+---
+
+### Pedagogical Pre-processors & Wiki-Compiler
+
+To enrich course content with high-fidelity, peer-reviewed educational data without manual input, OpenPrimer utilizes two custom regex-driven pre-processors (`web/src/lib/content.ts`):
+
+1. **Precompiled Anchors Resolver (`resolvePrecompiledAnchors`)**:
+   - **Syntax**: Scans the draft MDX content for bracketed anchors like `[[WIDGET:Type:ID:Topic]]` (e.g. `[[WIDGET:biography:bio_albert_einstein:Albert Einstein]]` or `[[WIDGET:location:loc_paris]]`).
+   - **Entity Resolution**: Queries Wikipedia's REST Summary & Action APIs using `resolveWikiDetails` to fetch a localized summary, official URL, and date/lifespan metadata.
+   - **Compilation**: Replaces the text anchor with a rich semantic JSX tag (e.g. `<Biography name="Albert Einstein" dates="1879-1955" description="..." wikipediaUrl="..." />`).
+
+2. **Entity Tags Wikipedia Enricher (`enrichEntityTagsWithWikipedia`)**:
+   - **Syntax**: Scans standard custom JSX entity tags (e.g. `<HistoricalPerson>`, `<Location>`, `<Glossary>`, `<CelestialLink>`, `<ChemicalLink>`, `<SpeciesLink>`).
+   - **Automatic Enrichment**: Detects missing properties like `url`/`wikipediaUrl`, `description`/`definition`, and `dates`/`lifespan` and fills them automatically with authenticated facts from Wikipedia.
+   - **Caching System**: To stay within Wikimedia API rate limits, all resolved details are cached in `src/lib/wikipedia-extended-cache.json` for 30 days.
+
+3. **Multi-language Wiki Resolution Cascade**:
+   - When fetching page details, the resolver executes a fallback chain:
+     1. Localized Wikipedia REST page summary (in target locale, e.g. `FR`, `ES`).
+     2. Localized Action API fallback search.
+     3. Interlanguage translation link mapping (e.g., matching the `FR` title back to `EN` page metadata via Wiki link tables).
+     4. Google Translate proxy wrapping for missing local translations.
 
 ---
 
@@ -206,6 +233,36 @@ Because Vercel serverless functions enforce a strict execution timeout ceiling t
 | `fix_child_courses.ts` | `npx tsx scripts/fix_child_courses.ts` | Scans all `completed` tasks that carry a `parentCurriculumSlug` payload and retroactively populates the `child_courses` array on their parent curricula. Use this as a repair tool if the automated hook in the CRON handler missed any associations due to server restarts or transient errors. |
 
 **Prerequisite:** Ensure `.env.local` is populated and run `npm run env-loader` (or prefix with `import './scripts/env-loader'`) before executing any script that uses Supabase credentials.
+
+
+---
+
+### Forensic Observability & Audit Tracing (`saveDraftRevision`)
+
+For diagnostic transparency, the pipeline implements comprehensive audit logging of all intermediate generation and critique stages when running in debug or local environments. The system saves the exact prompts, raw outputs, critique prompts, and critique results as physical files inside the `/drafts_revisions/` workspace directory:
+
+- **Syllabus Generation**:
+  - `prompt_stage0_syllabus_critique_[courseSlug]_iter[X].md`
+  - `critique_stage0_syllabus_[courseSlug]_iter[X].json`
+- **JIT Outline Generation**:
+  - `prompt_stage1_outline_[courseSlug]_iter[X].md`
+  - `draft_stage1_outline_[courseSlug]_iter[X].json`
+  - `prompt_stage1_outline_critique_[courseSlug]_iter[X].md`
+  - `critique_stage1_outline_[courseSlug]_iter[X].json`
+- **Narrative Scribe Blocks**:
+  - `prompt_stage1_narrative_block[B]_[courseSlug]_iter[X].md`
+  - `draft_stage1_narrative_block[B]_[courseSlug]_iter[X].md`
+  - `prompt_stage1_narrative_block[B]_critique_[courseSlug]_iter[X].md`
+  - `critique_stage1_narrative_block[B]_[courseSlug]_iter[X].json`
+- **Widget Blocks (1 to 4)**:
+  - `prompt_stage2_widgets_block[N]_[courseSlug]_iter[X].md`
+  - `draft_stage2_widgets_block[N]_[courseSlug]_iter[X].json`
+  - `prompt_stage2_widgets_block[N]_critique_[courseSlug]_iter[X].md`
+  - `critique_stage2_widgets_block[N]_[courseSlug]_iter[X].json`
+
+This structure allows developers to inspect exactly where an AI generator produced invalid JSON formats or where a critique agent rejected a draft.
+
+---
 
 
 
