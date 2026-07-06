@@ -341,6 +341,12 @@ This lesson covers:
   },
 
   getUserProfile: async (id: string) => {
+    if (id === 'admin_1') {
+      return { data: { id: 'admin_1', role: 'admin', email: 'admin@openprimer.app', name: 'Admin User' } as any, error: null };
+    }
+    if (id === 'student_1') {
+      return { data: { id: 'student_1', role: 'student', email: 'student@openprimer.app', name: 'Student User' } as any, error: null };
+    }
     if (typeof window !== 'undefined') {
       const stored = window.localStorage.getItem('openprimer_users');
       if (stored) {

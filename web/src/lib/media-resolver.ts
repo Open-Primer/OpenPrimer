@@ -355,15 +355,26 @@ export function isFactualMedia(alt: string, caption: string = ''): boolean {
 // ─── Wikidata P18 — canonical image for a named entity ─────────────────────
 // Queries Wikidata for the P18 (image) property of an entity matching the title.
 // Returns a direct Wikimedia Commons file URL (Special:FilePath redirect).
-async function fetchWikidataImage(title: string): Promise<string | null> {
+async function fetchWikidataImage(title: string, lang: string = 'en'): Promise<string | null> {
   try {
     const clean = title.trim().replace(/_/g, ' ');
-    // 1. Search Wikidata entities by label
-    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(clean)}&language=en&limit=3&format=json&origin=*`;
-    const searchRes = await fetchWithTimeout(searchUrl, {}, 4000);
+    // 1. Search Wikidata entities by label using the target language
+    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(clean)}&language=${lang}&limit=3&format=json&origin=*`;
+    let searchRes = await fetchWithTimeout(searchUrl, {}, 4000);
     if (!searchRes.ok) return null;
-    const searchJson = await safeResponseJson(searchRes, 'Wikidata entity search');
-    const entities: any[] = searchJson?.search ?? [];
+    let searchJson = await safeResponseJson(searchRes, 'Wikidata entity search');
+    let entities: any[] = searchJson?.search ?? [];
+
+    // Fallback to English if no entities found in target language
+    if (entities.length === 0 && lang !== 'en') {
+      const fallbackUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(clean)}&language=en&limit=3&format=json&origin=*`;
+      searchRes = await fetchWithTimeout(fallbackUrl, {}, 4000);
+      if (searchRes.ok) {
+        searchJson = await safeResponseJson(searchRes, 'Wikidata entity search fallback');
+        entities = searchJson?.search ?? [];
+      }
+    }
+
     if (entities.length === 0) return null;
 
     // 2. For top 3 candidates, try to get P18 (image)
@@ -764,7 +775,7 @@ export async function resolveImageFromSources(
   console.log(`[MEDIA-RESOLVER] Original query: "${originalQuery}" | Optimized search query: "${query}"`);
 
   // 1. Wikidata P18 — canonical, most reliable for named entities
-  const wdImage = await fetchWikidataImage(query);
+  const wdImage = await fetchWikidataImage(query, lang);
   if (wdImage) {
     const isValid = await validateImageWithGemini(wdImage, validationDesc);
     if (isValid) {

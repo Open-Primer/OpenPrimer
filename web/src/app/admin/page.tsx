@@ -858,7 +858,7 @@ const getTaskFromId = (id: string) => {
   if (id === 'translation') return 'course_translation';
   if (id === 'revision') return 'analytics';
   if (id === 'tutor') return 'tutor_chat';
-  if (id === 'widgets') return 'widgets_generation';
+  if (id === 'widgets') return 'widget_placement';
   return 'tutor_chat';
 };
 

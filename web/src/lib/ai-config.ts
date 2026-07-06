@@ -44,17 +44,31 @@ export const MODEL_PRICING: Record<ModelId, { inputPer1M: number; outputPer1M: n
 
 /**
  * Model assignment per task.
- * Optimization strategy:
- * - Course generation  → 3.5 Flash (quality matters, robust structure)
- * - Tutor chat         → Flash (frequent, needs to be fast & cheap)
- * - Translation        → Flash (repetitive, structured output)
- * - Analytics/Badges   → Flash Lite (simple, lowest cost)
+ *
+ * ⚠️  MODEL ROUTING POLICY — STRICTLY ENFORCED:
+ *
+ * gemini-3.5-flash is RESERVED EXCLUSIVELY for the "Atelier des Widgets Pédagogiques"
+ * (manual widget creation/modification from the Admin UI → `widgets_workshop` task).
+ *
+ * It MUST NOT be used for any automated pipeline step:
+ *   - Course generation         → gemini-2.5-flash  (course_generation)
+ *   - Widget placement / 4B     → gemini-2.5-flash  (widget_placement)   [Stage 2 Architect + 4B Critic + Repair]
+ *   - Translation               → gemini-2.5-flash  (course_translation)
+ *   - Tutor chat                → gemini-2.5-flash  (tutor_chat)
+ *   - Analytics / Badges        → gemini-2.0-flash-lite
+ *
+ * NAMING CONVENTION:
+ *   widget_placement  = automated parameterization of STANDARD pedagogical widgets (Quiz, Image,
+ *                       Citation, Biography, Video…) into lesson MDX — Stages 3B / 4B.
+ *   widgets_workshop  = manual creation / modification of CUSTOM INTERACTIVE widgets from the
+ *                       Admin Atelier UI (QuantumOrbitalExplorer, ChemicalStoichiometry…).
  */
 export const TASK_MODELS: Record<string, ModelId> = {
-  course_generation:  'gemini-2.5-flash',     // Enforce Gemini 2.5 Flash for general course generation
-  widgets_generation: 'gemini-3.5-flash',     // Enforce Gemini 3.5 Flash for interactive widgets creation & modification
-  course_translation: 'gemini-2.5-flash',     // Good quality for academic translation
-  tutor_chat:         'gemini-2.5-flash',     // Fast & cheap for real-time chat
+  course_generation:  'gemini-2.5-flash',     // Automated pipeline: narrative gen, critique, revision
+  widget_placement:   'gemini-2.5-flash',     // Automated pipeline: Stage 3B param + 4B Critic + Repair (standard widgets)
+  widgets_workshop:   'gemini-3.5-flash',     // ⭐ Atelier des Widgets Pédagogiques (Admin UI only — manual creation & modification)
+  course_translation: 'gemini-2.5-flash',     // Automated pipeline: academic translation
+  tutor_chat:         'gemini-2.5-flash',     // Real-time tutor chat — fast & cheap
   batch_translate:    'gemini-2.5-flash',     // Batch field translation
   analytics:          'gemini-2.5-flash',     // Simple report generation
   badge_expand:       'gemini-2.5-flash',     // Simple prompt expansion
@@ -78,7 +92,8 @@ export function estimateCost(model: ModelId, inputTokens: number, outputTokens: 
 /** Typical token estimates per task (for admin cost display) */
 export const TASK_TOKEN_ESTIMATES: Record<string, { inputTokens: number; outputTokens: number }> = {
   course_generation:  { inputTokens: 2_000,  outputTokens: 8_000  }, // per lesson
-  widgets_generation: { inputTokens: 4_000,  outputTokens: 4_000  }, // per widgets batch
+  widget_placement:   { inputTokens: 4_000,  outputTokens: 4_000  }, // per lesson widget batch — Stage 3B/4B (automated pipeline)
+  widgets_workshop:   { inputTokens: 6_000,  outputTokens: 6_000  }, // per Atelier session — custom interactive widget (manual, high-quality)
   course_translation: { inputTokens: 8_000,  outputTokens: 7_000  }, // per lesson
   tutor_chat:         { inputTokens: 4_000,  outputTokens: 800    }, // per exchange
   batch_translate:    { inputTokens: 1_500,  outputTokens: 1_200  }, // per batch

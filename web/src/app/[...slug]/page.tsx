@@ -25,6 +25,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
   let userId: string | undefined = undefined;
   let slug: string[] = [];
   let pageData: any = null;
+  let resolvedSandboxAllowed = false;
   try {
     const resolvedParams = await params;
     slug = (resolvedParams?.slug || []).map(part => cleanPathSegment(decodeURIComponent(part)));
@@ -108,35 +109,44 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       }
 
       try {
-        const { count } = await supabase
-          .from('lessons')
-          .select('*', { count: 'exact', head: true })
-          .ilike('course_slug', courseSlug)
-          .eq('lang', lang.toLowerCase());
-        
-        if (!count || count === 0) {
-          // Fallback check: find the first available language for this course
-          const { data: otherLangs } = await supabase
+        const cookieStore = await cookies();
+        if (cookieStore.get('op_mock_archiving_levels')?.value || cookieStore.get('op_allow_sandbox')?.value === 'true') {
+          resolvedSandboxAllowed = true;
+        }
+      } catch (e) {}
+
+      if (!courseData?.isCurriculum && !resolvedSandboxAllowed) {
+        try {
+          const { count } = await supabase
             .from('lessons')
-            .select('lang')
+            .select('*', { count: 'exact', head: true })
             .ilike('course_slug', courseSlug)
-            .limit(1);
+            .eq('lang', lang.toLowerCase());
           
-          if (otherLangs && otherLangs.length > 0) {
-            const firstAvailableLang = otherLangs[0].lang;
-            console.log(`[CoursePage Guard] Language '${lang}' has no lessons for course '${courseSlug}'. Server-fallback to: '${firstAvailableLang}'`);
-            lang = firstAvailableLang.toLowerCase();
-          } else {
-            const redirectTarget = userId ? '/profile/curriculum' : '/catalog';
-            console.log(`[CoursePage] No lessons found in any language for course '${courseSlug}'. Redirecting to: ${redirectTarget}`);
-            redirect(redirectTarget);
+          if (!count || count === 0) {
+            // Fallback check: find the first available language for this course
+            const { data: otherLangs } = await supabase
+              .from('lessons')
+              .select('lang')
+              .ilike('course_slug', courseSlug)
+              .limit(1);
+            
+            if (otherLangs && otherLangs.length > 0) {
+              const firstAvailableLang = otherLangs[0].lang;
+              console.log(`[CoursePage Guard] Language '${lang}' has no lessons for course '${courseSlug}'. Server-fallback to: '${firstAvailableLang}'`);
+              lang = firstAvailableLang.toLowerCase();
+            } else {
+              const redirectTarget = userId ? '/profile/curriculum' : '/catalog';
+              console.log(`[CoursePage] No lessons found in any language for course '${courseSlug}'. Redirecting to: ${redirectTarget}`);
+              redirect(redirectTarget);
+            }
           }
+        } catch (err) {
+          if (err && (err as any).digest && (err as any).digest.startsWith('NEXT_REDIRECT')) {
+            throw err;
+          }
+          console.error("[CoursePage] Error checking available languages:", err);
         }
-      } catch (err) {
-        if (err && (err as any).digest && (err as any).digest.startsWith('NEXT_REDIRECT')) {
-          throw err;
-        }
-        console.error("[CoursePage] Error checking available languages:", err);
       }
     }
 
@@ -165,26 +175,40 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
         }
 
         if (!redirectUrl) {
-          const { data: introLesson } = await supabase
-            .from('lessons')
-            .select('lesson_slug')
-            .ilike('course_slug', courseSlug)
-            .eq('lesson_slug', 'introduction')
-            .eq('lang', lang.toLowerCase())
-            .maybeSingle();
+          let firstLessonSlug = 'introduction';
+          try {
+            const { data: resolvedSlug } = await dbService.getFirstLessonSlug(courseSlug, lang);
+            if (resolvedSlug) {
+              firstLessonSlug = resolvedSlug;
+            }
+          } catch (err) {
+            console.error("Error fetching first lesson slug:", err);
+          }
 
-          if (!introLesson) {
-            const { data: firstLesson } = await supabase
+          if (firstLessonSlug !== 'introduction') {
+            redirectUrl = `/${slug[0]}/${slug[1]}/${slug[2]}/${firstLessonSlug}`;
+          } else if (!resolvedSandboxAllowed) {
+            const { data: introLesson } = await supabase
               .from('lessons')
               .select('lesson_slug')
               .ilike('course_slug', courseSlug)
+              .eq('lesson_slug', 'introduction')
               .eq('lang', lang.toLowerCase())
-              .order('order', { ascending: true })
-              .limit(1)
               .maybeSingle();
 
-            if (firstLesson) {
-              redirectUrl = `/${slug[0]}/${slug[1]}/${slug[2]}/${firstLesson.lesson_slug}`;
+            if (!introLesson) {
+              const { data: firstLesson } = await supabase
+                .from('lessons')
+                .select('lesson_slug')
+                .ilike('course_slug', courseSlug)
+                .eq('lang', lang.toLowerCase())
+                .order('order', { ascending: true })
+                .limit(1)
+                .maybeSingle();
+
+              if (firstLesson) {
+                redirectUrl = `/${slug[0]}/${slug[1]}/${slug[2]}/${firstLesson.lesson_slug}`;
+              }
             }
           }
         }

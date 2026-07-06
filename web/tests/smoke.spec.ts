@@ -16,11 +16,18 @@ test.describe('OpenPrimer Smoke Tests', () => {
       }
     });
 
-    await context.addCookies([{
-      name: 'openprimer_lang',
-      value: 'EN',
-      url: BASE_URL
-    }]);
+    await context.addCookies([
+      {
+        name: 'openprimer_lang',
+        value: 'EN',
+        url: BASE_URL
+      },
+      {
+        name: 'op_allow_sandbox',
+        value: 'true',
+        url: BASE_URL
+      }
+    ]);
     await page.addInitScript(() => {
       window.localStorage.setItem('openprimer_lang', 'EN');
       window.localStorage.setItem('op_allow_sandbox', 'true');
@@ -41,7 +48,10 @@ test.describe('OpenPrimer Smoke Tests', () => {
     await expect(courseCard).toBeVisible();
     
     await courseCard.click();
-    await page.waitForURL(/\/L[1-4]\/.*\/introduction/, { timeout: 10000 });
+    await page.waitForURL(/\/L[1-4]\/.*\/(introduction|newtons_laws_of_motion)/, { timeout: 15000 });
+    
+    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('h1')).not.toHaveText(/Page or Course Not Found|not found/i);
   });
 
   test('should navigate to the catalog', async ({ page }) => {

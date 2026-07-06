@@ -26,6 +26,9 @@ import { FunctionManipulator } from '../../../../components/mdx/FunctionManipula
 import { EquationManipulator } from '../../../../components/mdx/EquationManipulator';
 import { Geometry2D } from '../../../../components/mdx/Geometry2D';
 import { GestaltInteractive } from '../../../../components/mdx/GestaltInteractive';
+import { LogicGateSimulator } from '../../../../components/mdx/LogicGateSimulator';
+import { GeneticsPedigreeLab } from '../../../../components/mdx/GeneticsPedigreeLab';
+import { OrbitalMechanicsSim } from '../../../../components/mdx/OrbitalMechanicsSim';
 
 
 interface Widget {
@@ -1086,6 +1089,9 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       Geometry2D,
       GestaltInteractive,
       Mermaid,
+      LogicGateSimulator,
+      GeneticsPedigreeLab,
+      OrbitalMechanicsSim,
     };
 
     const WidgetComponent = componentMap[selectedWidget.id];

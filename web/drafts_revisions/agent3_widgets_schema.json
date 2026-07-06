@@ -106,6 +106,56 @@
               "componentType": {
                 "type": "string",
                 "enum": [
+                  "Biography"
+                ]
+              },
+              "sectionAnchor": {
+                "type": "string"
+              },
+              "props": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Full name of the person."
+                  },
+                  "dates": {
+                    "type": "string",
+                    "description": "Lifespan dates, e.g., '1856-1939' or '1723-1790'."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Detailed biographical summary focusing on their contributions (8-12 sentences)."
+                  },
+                  "wikipediaUrl": {
+                    "type": "string",
+                    "description": "Direct link to their English Wikipedia page."
+                  }
+                },
+                "required": [
+                  "name",
+                  "dates",
+                  "description",
+                  "wikipediaUrl"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "componentType",
+              "sectionAnchor",
+              "props"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "componentType": {
+                "type": "string",
+                "enum": [
                   "Citation"
                 ]
               },
@@ -165,7 +215,7 @@
               "componentType": {
                 "type": "string",
                 "enum": [
-                  "Epistemology"
+                  "Image"
                 ]
               },
               "sectionAnchor": {
@@ -174,18 +224,32 @@
               "props": {
                 "type": "object",
                 "properties": {
+                  "description": {
+                    "type": "string",
+                    "description": "The detailed search/generation description for the image (at least 2-3 sentences of visual instructions). DO NOT generate sequential figure numbers."
+                  },
+                  "alt": {
+                    "type": "string",
+                    "description": "Short description for accessibility."
+                  },
+                  "caption": {
+                    "type": "string",
+                    "description": "A detailed, italicized caption explaining academic relevance. DO NOT generate sequential figure numbers."
+                  },
                   "title": {
                     "type": "string",
-                    "description": "The title of the debate or critical controversy."
+                    "description": "Short title of the image."
                   },
-                  "content": {
+                  "searchQuery": {
                     "type": "string",
-                    "description": "Deeply academic analysis of the epistemology debate (150-250 words)."
+                    "description": "Highly canonical 1 to 3 search words (e.g. 'Claudio Monteverdi', 'Larynx humain', 'Doppler acoustique') to ensure precise database matches."
                   }
                 },
                 "required": [
-                  "title",
-                  "content"
+                  "description",
+                  "alt",
+                  "caption",
+                  "searchQuery"
                 ]
               }
             },

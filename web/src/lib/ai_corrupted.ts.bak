@@ -1,6 +1,6 @@
 import { dbService } from './db';
 import { supabase, supabaseAdmin } from './supabase';
-import { callVertexAI, isVertexConfigured, recordMetrics, compressPromptText } from './vertex-client';
+import { callVertexAI, isVertexConfigured, recordMetrics } from './vertex-client';
 import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation } from './content';
 import { resolveAndPersistMedia } from './media-resolver';
 import { cleanPathSegment } from './translations';
@@ -39,6 +39,81 @@ export async function safeResponseJson(res: Response, contextName: string = 'unk
   }
 }
 
+export function tryRepairTruncatedJson(jsonStr: string): string {
+  let state = 'normal'; // 'normal', 'string', 'escape'
+  const stack: ('object' | 'array')[] = [];
+  let repaired = '';
+  
+  for (let i = 0; i < jsonStr.length; i++) {
+    const char = jsonStr[i];
+    repaired += char;
+    
+    if (state === 'normal') {
+      if (char === '"') {
+        state = 'string';
+      } else if (char === '{') {
+        stack.push('object');
+      } else if (char === '}') {
+        if (stack[stack.length - 1] === 'object') {
+          stack.pop();
+        }
+      } else if (char === '[') {
+        stack.push('array');
+      } else if (char === ']') {
+        if (stack[stack.length - 1] === 'array') {
+          stack.pop();
+        }
+      }
+    } else if (state === 'string') {
+      if (char === '\\') {
+        state = 'escape';
+      } else if (char === '"') {
+        state = 'normal';
+      }
+    } else if (state === 'escape') {
+      state = 'string';
+    }
+  }
+  
+  if (state === 'escape') {
+    repaired = repaired.slice(0, -1);
+    state = 'string';
+  }
+  
+  if (state === 'string') {
+    repaired += '"';
+    state = 'normal';
+  }
+  
+  repaired = repaired.trim();
+  
+  while (true) {
+    const len = repaired.length;
+    if (len === 0) break;
+    const lastChar = repaired[len - 1];
+    
+    if (lastChar === ',' || lastChar === ':' || /\s/.test(lastChar)) {
+      repaired = repaired.slice(0, -1);
+    } else if (repaired.endsWith('""')) {
+      repaired = repaired.slice(0, -2);
+    } else {
+      break;
+    }
+  }
+  
+  const tempStack = [...stack];
+  while (tempStack.length > 0) {
+    const openType = tempStack.pop();
+    if (openType === 'object') {
+      repaired += '}';
+    } else if (openType === 'array') {
+      repaired += ']';
+    }
+  }
+  
+  return repaired;
+}
+
 export function safeJsonParse(text: string, contextName: string = 'unknown'): any {
   if (!text) return null;
   const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -65,6 +140,17 @@ export function safeJsonParse(text: string, contextName: string = 'unknown'): an
       } catch (innerErr) {}
     }
     
+    // Attempt custom truncated JSON repair
+    try {
+      console.warn(`[safeJsonParse] ⚠️ JSON parse failed in context "${contextName}". Attempting automatic truncation repair...`);
+      const repaired = tryRepairTruncatedJson(cleaned);
+      const parsed = JSON.parse(repaired);
+      console.warn(`[safeJsonParse] ✅ Automatic truncation repair succeeded in context "${contextName}"!`);
+      return parsed;
+    } catch (repairErr) {
+      console.warn(`[safeJsonParse] ❌ Automatic truncation repair failed in context "${contextName}":`, repairErr);
+    }
+    
     console.error(`[safeJsonParse] JSON parse failure in context "${contextName}". Raw length: ${cleaned.length}`);
     console.error(`[safeJsonParse] Content snippet: "${cleaned.slice(0, 1000)}"`);
     
@@ -79,8 +165,7 @@ export function saveDraftRevision(filename: string, content: string) {
       fs.mkdirSync(dir, { recursive: true });
     }
     fs.writeFileSync(path.join(dir, filename), content, 'utf8');
-
-    console.log(`[DRAFTS_REVISIONS] Successfully saved ${filename} to drafts_revisions`);
+    console.log(`[DRAFTS_REVISIONS] Successfully saved ${filename}`);
   } catch (err) {
     console.error(`[DRAFTS_REVISIONS] Error saving ${filename}:`, err);
   }
@@ -124,36 +209,6 @@ export function getDescriptiveLevelForPrompt(level: string): string {
       return 'Expert Level';
     default:
       return clean;
-  }
-}
-
-export function getWordCountLimitForLevel(level: string): { min: number; max: number } {
-  if (!level) return { min: 3000, max: 5000 };
-  const clean = level.trim();
-  switch (clean) {
-    case 'foundation_1':
-    case 'foundation_2':
-      return { min: 800, max: 1500 };
-    case 'secondary_1':
-      return { min: 1200, max: 2000 };
-    case 'secondary_2':
-    case 'preuni_1':
-    case 'preuni_2':
-    case 'preuni_3':
-      return { min: 1800, max: 3000 };
-    case 'L1':
-      return { min: 2500, max: 4000 };
-    case 'L2':
-    case 'L3':
-    case 'intermediate':
-    case 'advanced':
-      return { min: 3500, max: 5500 };
-    case 'M1':
-    case 'M2':
-    case 'expert':
-      return { min: 5500, max: 8000 };
-    default:
-      return { min: 3000, max: 5000 };
   }
 }
 
@@ -498,7 +553,6 @@ const lessonWidgetsSchema = {
                   author: { type: "string", description: "Full name of the author." },
                   source: { type: "string", description: "Title of the book, paper, or landmark publication." },
                   year: { type: "string", description: "Year of publication, e.g., '1776'." },
-                  original: { type: "string", description: "Original untranslated quote text in the author's original language of writing. MANDATORY if the author's original language of writing is different from the target language. Empty or omitted if the original language is the same as the target language." },
                   commentary: { type: "string", description: "Academic analysis explaining the relevance of the quote (at least 3-4 sentences)." }
                 },
                 required: ["quote", "author", "source", "year", "commentary"]
@@ -527,60 +581,14 @@ const lessonWidgetsSchema = {
             type: "object",
             properties: {
               id: { type: "string" },
-              componentType: { type: "string", enum: ["Image"] },
+              componentType: { type: "string", enum: ["BrilliantIdea"] },
               sectionAnchor: { type: "string" },
               props: {
                 type: "object",
                 properties: {
-                  description: { type: "string", description: "The detailed search/generation description for the image (at least 2-3 sentences of visual instructions). DO NOT generate sequential figure numbers." },
-                  alt: { type: "string", description: "Short description for accessibility." },
-                  caption: { type: "string", description: "A detailed, italicized caption explaining academic relevance. DO NOT generate sequential figure numbers." },
-                  title: { type: "string", description: "Short title of the image." },
-                  searchQuery: { type: "string", description: "Highly canonical 1 to 3 search words (e.g. 'Claudio Monteverdi', 'Larynx humain', 'Doppler acoustique') to ensure precise database matches." }
+                  content: { type: "string", description: "An intuitive analogy or brilliant pedagogical explanation (100-180 words)." }
                 },
-                required: ["description", "alt", "caption", "searchQuery"]
-              }
-            },
-            required: ["id", "componentType", "sectionAnchor", "props"]
-          },
-          {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              componentType: { type: "string", enum: ["Audio"] },
-              sectionAnchor: { type: "string" },
-              props: {
-                type: "object",
-                properties: {
-                  title: { type: "string", description: "Short descriptive title for the audio narration." },
-                  url: { type: "string", description: "Optional pre-resolved or empty audio URL." },
-                  duration: { type: "string", description: "Estimated duration, e.g. '1:30' or '2:45'." },
-                  unresolved: { type: "boolean", description: "Whether the resource is unresolved/needs backend matching. Defaults to true." },
-                  alt: { type: "string", description: "Short accessibility text." },
-                  description: { type: "string", description: "Detailed description of the audio track's content, narration, or pronunciation details." }
-                },
-                required: ["title"]
-              }
-            },
-            required: ["id", "componentType", "sectionAnchor", "props"]
-          },
-          {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              componentType: { type: "string", enum: ["Video"] },
-              sectionAnchor: { type: "string" },
-              props: {
-                type: "object",
-                properties: {
-                  title: { type: "string", description: "Title of the video documentary or lecture segment." },
-                  url: { type: "string", description: "Optional video URL (e.g. YouTube/Vimeo)." },
-                  id: { type: "string", description: "Optional video platform ID." },
-                  provider: { type: "string", enum: ["youtube", "vimeo", "direct"] },
-                  duration: { type: "string", description: "Estimated duration, e.g. '3:15'." },
-                  unresolved: { type: "boolean", description: "Whether the resource is unresolved/needs backend matching. Defaults to true." }
-                },
-                required: ["title"]
+                required: ["content"]
               }
             },
             required: ["id", "componentType", "sectionAnchor", "props"]
@@ -609,6 +617,26 @@ const lessonWidgetsSchema = {
             type: "object",
             properties: {
               id: { type: "string" },
+              componentType: { type: "string", enum: ["Media"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  type: { type: "string", enum: ["image", "audio", "video"] },
+                  description: { type: "string", description: "The detailed search/generation description for the media." },
+                  alt: { type: "string", description: "Short description for accessibility." },
+                  caption: { type: "string", description: "A detailed, italicized caption explaining academic relevance." },
+                  title: { type: "string", description: "Short title." }
+                },
+                required: ["type", "description", "alt", "caption"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
               componentType: { type: "string", enum: ["Quiz"] },
               sectionAnchor: { type: "string" },
               props: {
@@ -618,30 +646,30 @@ const lessonWidgetsSchema = {
                   mode: { type: "string", enum: ["standard", "speed"] },
                   questionDurationLimit: { type: "integer", description: "Optional speed mode time limit in seconds per question." },
                   questions: {
-                     type: "array",
-                     items: {
-                       type: "object",
-                       properties: {
-                         q: { type: "string", description: "The question card text." },
-                         explanation: { type: "string", description: "Extremely concise, punchy explanation of the correct choice." },
-                         mode: { type: "string", enum: ["standard", "elimination"] },
-                         mediaType: { type: "string", enum: ["image", "audio", "video"] },
-                         mediaUrl: { type: "string" },
-                         mediaCaption: { type: "string" },
-                         options: {
-                           type: "array",
-                           items: {
-                             type: "object",
-                             properties: {
-                               text: { type: "string", description: "The text of the option." },
-                               correct: { type: "boolean", description: "Whether this option is correct." }
-                             },
-                             required: ["text", "correct"]
-                           }
-                         }
-                       },
-                       required: ["q", "explanation", "options"]
-                     }
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        q: { type: "string", description: "The question card text." },
+                        explanation: { type: "string", description: "Extremely concise, punchy explanation of the correct choice." },
+                        mode: { type: "string", enum: ["standard", "elimination"] },
+                        mediaType: { type: "string", enum: ["image", "audio", "video"] },
+                        mediaUrl: { type: "string" },
+                        mediaCaption: { type: "string" },
+                        options: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              text: { type: "string", description: "The text of the option." },
+                              correct: { type: "boolean", description: "Whether this option is correct." }
+                            },
+                            required: ["text", "correct"]
+                          }
+                        }
+                      },
+                      required: ["q", "explanation", "options"]
+                    }
                   }
                 },
                 required: ["limit", "questions"]
@@ -816,38 +844,8 @@ const lessonWidgetsSchema = {
     finalEvaluation: {
       type: "object",
       properties: {
-        type: { type: "string", enum: ["Quiz"] },
-        props: {
-          type: "object",
-          properties: {
-            durationLimit: { type: "integer" },
-            questions: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  q: { type: "string" },
-                  explanation: { type: "string" },
-                  options: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        text: { type: "string" },
-                        correct: { type: "boolean" }
-                      },
-                      required: ["text", "correct"]
-                    },
-                    minItems: 2
-                  }
-                },
-                required: ["q", "explanation", "options"]
-              },
-              minItems: 1
-            }
-          },
-          required: ["questions"]
-        }
+        type: { type: "string" },
+        props: { type: "object" }
       },
       required: ["type", "props"]
     },
@@ -935,7 +933,7 @@ const lessonWidgetsSchema = {
 
 function extractWidgetAnchors(narrativeText: string): { raw: string, type: string, id: string, topic?: string }[] {
   const matches: { raw: string, type: string, id: string, topic?: string }[] = [];
-  const regex = /\[\[WIDGET:(.*?)\]\]+/gi;
+  const regex = /\[\[WIDGET:(.*?)\]\]/gi;
   let match;
   while ((match = regex.exec(narrativeText)) !== null) {
     const raw = match[0];
@@ -1114,7 +1112,7 @@ function getDisciplineFallbackSentence(discipline?: string, lang: string = 'fr')
   return langSentences[normLang] || langSentences['en'] || { sentence: "The Earth revolves around the _____.", answer: "Sun" };
 }
 
-export async function validateAndFixWidgets(widgets: any, discipline?: string, lang: string = 'fr'): Promise<any> {
+export function validateAndFixWidgets(widgets: any, discipline?: string, lang: string = 'fr'): any {
   if (!widgets || typeof widgets !== 'object') {
     throw new Error("Widgets content is empty or malformed.");
   }
@@ -1179,6 +1177,7 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       if (!comp.componentType) comp.componentType = "Quiz";
       if (!comp.sectionAnchor) comp.sectionAnchor = "## Section";
       if (!comp.props || typeof comp.props !== 'object') comp.props = {};
+      const isFr = lang.toLowerCase().startsWith('fr');
 
       if (comp.componentType === "Quiz") {
         if (!Array.isArray(comp.props.questions) || comp.props.questions.length === 0) {
@@ -1223,36 +1222,39 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
           if (!comp.props.answer) comp.props.answer = fallback.answer;
         }
       } else if (comp.componentType === "SolvedExercise") {
-        if (!comp.props.title) comp.props.title = "Exercice résolu";
-        if (!comp.props.problem) comp.props.problem = "Formulez l'exercice ici.";
-        if (!comp.props.solution) comp.props.solution = "La solution détaillée.";
+        if (!comp.props.title) comp.props.title = isFr ? "Exercice résolu" : "Solved Exercise";
+        if (!comp.props.problem) comp.props.problem = isFr ? "Formulez l'exercice ici." : "Formulate the exercise here.";
+        if (!comp.props.solution) comp.props.solution = isFr ? "La solution détaillée." : "Detailed solution.";
       } else if (comp.componentType === "UnsolvedExercise") {
-        if (!comp.props.title) comp.props.title = "Exercice d'application";
-        if (!comp.props.problem) comp.props.problem = "Sujet de l'exercice à résoudre.";
-        if (!comp.props.correctAnswer) comp.props.correctAnswer = "Réponse attendue";
+        if (!comp.props.title) comp.props.title = isFr ? "Exercice d'application" : "Application Exercise";
+        if (!comp.props.problem) comp.props.problem = isFr ? "Sujet de l'exercice à résoudre." : "Problem to be solved.";
+        if (!comp.props.correctAnswer) comp.props.correctAnswer = isFr ? "Réponse attendue" : "Expected answer";
       } else if (comp.componentType === "Mermaid") {
-        if (!comp.props.chart) comp.props.chart = "graph TD\n  A[Début] --> B[Fin]";
+        if (!comp.props.chart) comp.props.chart = isFr ? "graph TD\n  A[Début] --> B[Fin]" : "graph TD\n  A[Start] --> B[End]";
       } else if (comp.componentType === "FunctionPlotter") {
         if (!comp.props.fn) comp.props.fn = "x^2";
       } else if (comp.componentType === "PronunciationSandbox" || comp.componentType === "SandboxPrononciation") {
         if (!comp.props.word) comp.props.word = "concept";
         if (!comp.props.ipa) comp.props.ipa = "";
-        if (!comp.props.lang) comp.props.lang = "en";
+        if (!comp.props.lang) comp.props.lang = lang;
+        if (!comp.props.definition) comp.props.definition = isFr ? "Définition du mot." : "Definition of the word.";
+        if (!comp.props.explanation) comp.props.explanation = isFr ? "Conseils de prononciation." : "Pronunciation guidance.";
       } else if (comp.componentType === "Video") {
-        if (!comp.props.title) comp.props.title = "Vidéo académique";
+        if (!comp.props.title) comp.props.title = isFr ? "Vidéo académique" : "Academic Video";
         if (!comp.props.url && !comp.props.id) {
           comp.props.url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
           comp.props.provider = "YouTube";
         }
-      } else if (comp.componentType === "Audio") {
-        if (!comp.props.title) comp.props.title = "Audio explicatif";
+      } else if (comp.componentType === "AudioPlayer" || comp.componentType === "Audio") {
+        if (!comp.props.title) comp.props.title = isFr ? "Audio explicatif" : "Explanatory Audio";
         if (!comp.props.url) {
           comp.props.url = "https://upload.wikimedia.org/wikipedia/commons/c/c8/Example.ogg";
         }
       } else if (comp.componentType === "OralEvaluation" || comp.componentType === "EvaluationOrale") {
-        if (!comp.props.prompt) comp.props.prompt = "Expliquez le concept clé de cette leçon de vive voix.";
+        if (!comp.props.prompt) comp.props.prompt = isFr ? "Expliquez le concept clé de cette leçon de vive voix." : "Explain the key concept of this lesson orally.";
         if (!comp.props.gradingSystem) comp.props.gradingSystem = "0/20";
-      } else if (comp.componentType === "Image") {
+      } else if (comp.componentType === "Media") {
+        if (!comp.props.type) comp.props.type = "image";
         if (!comp.props.description) {
           let fallbackDesc = "";
           if (comp.sectionAnchor) {
@@ -1263,35 +1265,37 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
             }
           }
           if (!fallbackDesc) {
-            fallbackDesc = discipline || (lang === 'fr' ? "Astrophysique" : "Astrophysics");
+            fallbackDesc = discipline || (isFr ? "Astrophysique" : "Astrophysics");
           }
           comp.props.description = fallbackDesc;
         }
         if (!comp.props.alt) comp.props.alt = comp.props.description;
-        if (!comp.props.caption) comp.props.caption = lang === 'fr' ? `Illustration : ${comp.props.description}` : `Illustration: ${comp.props.description}`;
+        if (!comp.props.caption) comp.props.caption = isFr ? `Illustration : ${comp.props.description}` : `Illustration: ${comp.props.description}`;
         if (!comp.props.title) comp.props.title = comp.props.description;
       } else if (comp.componentType === "Citation") {
-        if (!comp.props.quote) comp.props.quote = "Quote text.";
-        if (!comp.props.author) comp.props.author = "Author";
+        if (!comp.props.quote) comp.props.quote = isFr ? "Texte de la citation." : "Quote text.";
+        if (!comp.props.author) comp.props.author = isFr ? "Auteur" : "Author";
         if (!comp.props.source) comp.props.source = "Source";
         if (!comp.props.year) comp.props.year = "N.D.";
-        if (!comp.props.commentary) comp.props.commentary = "Analysis and context of the citation.";
+        if (!comp.props.commentary) comp.props.commentary = isFr ? "Analyse et contexte de la citation." : "Analysis and context of the citation.";
       } else if (comp.componentType === "Biography") {
-        if (!comp.props.name) comp.props.name = "Biography Subject";
+        if (!comp.props.name) comp.props.name = isFr ? "Sujet de la biographie" : "Biography Subject";
         if (!comp.props.dates) comp.props.dates = "";
-        if (!comp.props.description) comp.props.description = "Biographical details.";
+        if (!comp.props.description) comp.props.description = isFr ? "Détails biographiques." : "Biographical details.";
         if (!comp.props.wikipediaUrl) comp.props.wikipediaUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(comp.props.name)}`;
       } else if (comp.componentType === "Epistemology") {
-        if (!comp.props.title) comp.props.title = "Critical Perspective";
-        if (!comp.props.content) comp.props.content = "Epistemological discussion.";
+        if (!comp.props.title) comp.props.title = isFr ? "Perspective critique" : "Critical Perspective";
+        if (!comp.props.content) comp.props.content = isFr ? "Discussion épistémologique." : "Epistemological discussion.";
+      } else if (comp.componentType === "BrilliantIdea") {
+        if (!comp.props.content) comp.props.content = isFr ? "Explication d'une idée pédagogique brillante." : "Brilliant pedagogical idea explanation.";
       } else if (comp.componentType === "MatchingEvaluation" || comp.componentType === "AssociationCorrespondance") {
         comp.componentType = "MatchingEvaluation";
         if (!comp.props.pairs) comp.props.pairs = "Concept A|Definition A || Concept B|Definition B";
-        if (!comp.props.title) comp.props.title = "Associez les éléments";
+        if (!comp.props.title) comp.props.title = isFr ? "Associez les éléments" : "Match the elements";
       } else if (comp.componentType === "ReorderEvaluation" || comp.componentType === "ReordonnerItems") {
         comp.componentType = "ReorderEvaluation";
         if (!comp.props.items) comp.props.items = "Étape 1 | Étape 2 | Étape 3";
-        if (!comp.props.title) comp.props.title = "Remettez dans l'ordre";
+        if (!comp.props.title) comp.props.title = isFr ? "Remettez dans l'ordre" : "Reorder the items";
       }
 
       return comp;
@@ -1312,8 +1316,12 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       if (!comp || !comp.componentType) return false;
       
       const alwaysAllowed = [
-        "Quiz", "FillInBlanks", "SolvedExercise", "UnsolvedExercise", "Mermaid", "Video", "Audio",
-        "Biography", "Image", "Citation", "Epistemology", "MatchingEvaluation", "AssociationCorrespondance",
+        "Quiz", "FillInBlanks", "SolvedExercise", "UnsolvedExercise", "Mermaid", "Video", "Audio", "AudioPlayer",
+        "StructureViewer3D", "QuantumOrbitalExplorer", "DynamicSimulation",
+        "ChemicalStoichiometry", "BasicMathExplorer", "FunctionPlotter",
+        "ComparisonSlider", "CodeSandbox", "DataChart", "InteractiveDiagram",
+        "FunctionManipulator", "EquationManipulator", "Geometry2D", "GestaltInteractive", "Biography",
+        "Media", "Citation", "Epistemology", "BrilliantIdea", "MatchingEvaluation", "AssociationCorrespondance",
         "ReorderEvaluation", "ReordonnerItems"
       ];
       if (alwaysAllowed.includes(comp.componentType)) {
@@ -1434,152 +1442,43 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
         durationLimit: 1800,
         questions: [
           {
-            q: lang === 'fr' ? "Quelle est la conclusion principale de cette leçon ?" : "What is the main conclusion of this lesson?",
-            explanation: lang === 'fr' ? "Le cours détaille les principes fondamentaux de cette notion." : "The lesson details the fundamental principles of this concept.",
+            q: "Question d'examen finale ?",
+            explanation: "Explication générale.",
             options: [
-              { text: lang === 'fr' ? "L'assimilation et l'application rigoureuse des concepts clés" : "Understanding and rigorous application of key concepts", correct: true },
-              { text: lang === 'fr' ? "L'absence d'impact pratique" : "No practical impact", correct: false }
+              { text: "Option Correcte", correct: true },
+              { text: "Option Incorrecte", correct: false }
             ]
           }
         ]
       }
     };
   } else {
-    // Enforce type is ALWAYS Quiz
-    widgets.finalEvaluation.type = "Quiz";
-    if (!widgets.finalEvaluation.props || typeof widgets.finalEvaluation.props !== 'object') {
-      widgets.finalEvaluation.props = {};
-    }
-    const qProps = widgets.finalEvaluation.props;
-    if (!qProps.durationLimit) qProps.durationLimit = 1800;
-    if (!Array.isArray(qProps.questions) || qProps.questions.length === 0) {
-      qProps.questions = [
-        {
-          q: lang === 'fr' ? "Quelle est la conclusion principale de cette leçon ?" : "What is the main conclusion of this lesson?",
-          explanation: lang === 'fr' ? "Le cours détaille les principes fondamentaux de cette notion." : "The lesson details the fundamental principles of this concept.",
-          options: [
-            { text: lang === 'fr' ? "L'assimilation et l'application rigoureuse des concepts clés" : "Understanding and rigorous application of key concepts", correct: true },
-            { text: lang === 'fr' ? "L'absence d'impact pratique" : "No practical impact", correct: false }
+    if (widgets.finalEvaluation.type === "Quiz") {
+      const qProps = widgets.finalEvaluation.props || {};
+      if (!Array.isArray(qProps.questions) || qProps.questions.length === 0) {
+        widgets.finalEvaluation.props = {
+          durationLimit: 1800,
+          questions: [
+            {
+              q: "Question d'examen finale ?",
+              explanation: "Explication générale.",
+              options: [
+                { text: "Option Correcte", correct: true },
+                { text: "Option Incorrecte", correct: false }
+              ]
+            }
           ]
-        }
-      ];
-    } else {
-      qProps.questions = qProps.questions.map((q: any) => {
-        if (!q || typeof q !== 'object') {
-          return {
-            q: lang === 'fr' ? "Question d'auto-évaluation ?" : "Evaluation question?",
-            explanation: lang === 'fr' ? "Explication de la réponse." : "Explanation of the answer.",
-            options: [
-              { text: "Option A", correct: true },
-              { text: "Option B", correct: false }
-            ]
-          };
-        }
-        if (!q.q) q.q = lang === 'fr' ? "Question d'auto-évaluation ?" : "Evaluation question?";
-        if (!q.explanation) q.explanation = lang === 'fr' ? "Explication de la réponse." : "Explanation of the answer.";
-        if (!Array.isArray(q.options) || q.options.length < 2) {
-          q.options = [
-            { text: lang === 'fr' ? "Option correcte" : "Correct option", correct: true },
-            { text: lang === 'fr' ? "Option incorrecte" : "Incorrect option", correct: false }
-          ];
-        } else {
-          q.options = q.options.map((o: any) => {
-            if (!o || typeof o !== 'object') return { text: "Option", correct: false };
-            if (!o.text) o.text = "Option";
-            o.correct = !!o.correct;
-            return o;
-          });
-          if (!q.options.some((o: any) => o.correct)) {
-            q.options[0].correct = true;
-          }
-        }
-        return q;
-      });
+        };
+      }
     }
   }
 
   // 8. Glossary & References validation
   if (!Array.isArray(widgets.glossary) || widgets.glossary.length === 0) {
     widgets.glossary = [
-      { term: lang === 'fr' ? "Souverain" : "Sovereign", definition: lang === 'fr' ? "Qui s'exerce de manière autonome et absolue." : "Exercising autonomous and absolute authority." }
+      { term: "Souverain", definition: "Qui s'exerce de manière autonome et absolue." }
     ];
-  } else {
-    const targetLang = (lang || 'fr').toLowerCase().split('-')[0];
-    for (let i = 0; i < widgets.glossary.length; i++) {
-      const entry = widgets.glossary[i];
-      if (!entry || typeof entry !== 'object') continue;
-
-      let term = (entry.term || "").trim();
-      let definition = (entry.definition || "").trim();
-
-      const isCircular = term.toLowerCase() === definition.toLowerCase();
-      const isShort = definition.length < 8;
-      const isPlaceholder = /placeholder|dummy|todo|tbd|a definir/i.test(definition);
-
-      // Check for English definition/term on non-English course
-      const isWrongLanguage = (targetLang !== 'en') && (
-        /\b(is a|are|refers to|the study of|of the|in the|and the|with the|is the|study of)\b/i.test(definition) ||
-        (targetLang === 'fr' && !/\b(est|une|des|les|dans|pour|avec|qui|que|du|en)\b/i.test(definition))
-      );
-
-      if (isCircular || isShort || isPlaceholder || isWrongLanguage || !term || !definition) {
-        console.log(`[GLOSSARY VALIDATOR] Invalid or English glossary entry detected: "${term}": "${definition}". Healing via Wikipedia...`);
-        const queryTerm = term || definition || "Concept";
-        
-        try {
-          const wikiSearchUrl = `https://${targetLang}.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(queryTerm)}&srlimit=1`;
-          const res = await fetchWithTimeout(wikiSearchUrl);
-          if (res.ok) {
-            const data = await res.json();
-            const searchResult = data.query?.search?.[0];
-            if (searchResult) {
-              const canonicalTitle = searchResult.title;
-              const wikiExtractUrl = `https://${targetLang}.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(canonicalTitle)}&redirects=1`;
-              const res2 = await fetchWithTimeout(wikiExtractUrl);
-              if (res2.ok) {
-                const data2 = await res2.json();
-                const pages = data2.query?.pages;
-                if (pages) {
-                  const pageId = Object.keys(pages)[0];
-                  if (pageId && pageId !== '-1') {
-                    const extract = pages[pageId].extract || '';
-                    if (extract && extract.length > 20) {
-                      let sentence = extract.split(/[.!?]\s/)[0].trim();
-                      if (sentence.length < 30 && extract.split(/[.!?]\s/)[1]) {
-                        sentence += '. ' + extract.split(/[.!?]\s/)[1].trim();
-                      }
-                      if (!sentence.endsWith('.')) sentence += '.';
-                      sentence = sentence.replace(/\s*\([^)]*\)/g, '').trim();
-                      sentence = sentence.replace(/\s+/g, ' ');
-                      
-                      widgets.glossary[i] = {
-                        term: canonicalTitle,
-                        definition: sentence
-                      };
-                      console.log(`[GLOSSARY VALIDATOR] Healed to: "${canonicalTitle}": "${sentence}"`);
-                      continue;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        } catch (err) {
-          console.error(`[GLOSSARY VALIDATOR] Error healing glossary entry:`, err);
-        }
-
-        if (isCircular || !definition || isShort || isPlaceholder) {
-          widgets.glossary[i] = {
-            term: term || (lang === 'fr' ? "Concept clé" : "Key concept"),
-            definition: targetLang === 'fr' 
-              ? `Concept fondamental lié à la discipline de cette leçon.` 
-              : `Fundamental concept related to the discipline of this lesson.`
-          };
-        }
-      }
-    }
   }
-
   if (!Array.isArray(widgets.references) || widgets.references.length === 0) {
     widgets.references = [
       "OpenPrimer Academic Research. 2026. *Autonomous Synthesizer Journal* 12 (2): 45-67."
@@ -1693,36 +1592,8 @@ export function extractAndInjectCitations(content: string, references: string[])
 export function stitchLessonContent(narrativeMdx: string, widgets: any, isTerminalEvaluation: boolean = false): string {
   let content = narrativeMdx.trim();
 
-  // Compile Category A (direct markdown/prose enclosers) inline *before* suffix normalization
-  const categoryAMap: { [key: string]: string } = {
-    didyouknow: "DidYouKnow",
-    lesaviezvous: "LeSaviezVous",
-    historicalanecdote: "HistoricalAnecdote",
-    anecdotehistorique: "AnecdoteHistorique",
-    pointofview: "PointOfView",
-    pointdevue: "PointDeVue",
-    criticalthinking: "CriticalThinking",
-    espritcritique: "EspritCritique",
-    scientificmethod: "ScientificMethod",
-    methodescientifique: "MethodeScientifique",
-    scientificdebate: "ScientificDebate",
-    debatscientifique: "DebatScientifique",
-    openquestion: "OpenQuestion",
-    historicalfact: "HistoricalFact",
-    faithistorique: "FaitHistorique",
-    historicalevent: "HistoricalEvent",
-    evenementhistorique: "EvenementHistorique",
-    brilliantidea: "BrilliantIdea",
-    ideebrillante: "IdeeBrillante"
-  };
-
-  content = content.replace(/\[\[\s*WIDGET\s*:\s*(DidYouKnow|LeSaviezVous|HistoricalAnecdote|AnecdoteHistorique|PointOfView|PointDeVue|CriticalThinking|EspritCritique|ScientificMethod|MethodeScientifique|ScientificDebate|DebatScientifique|OpenQuestion|HistoricalFact|FaitHistorique|HistoricalEvent|EvenementHistorique|BrilliantIdea|IdeeBrillante)\s*:\s*([^:\s\]]+)\s*:\s*([\s\S]*?)\s*\]\]/gi, (match, type, id, payload) => {
-    const canonicalType = categoryAMap[type.toLowerCase()] || type;
-    return `<${canonicalType}>\n${payload.trim()}\n</${canonicalType}>`;
-  });
-
   // Normalize suffix-augmented anchors [[WIDGET:Type:ID:Topic]] and [[WIDGET:Type:ID]] to [[WIDGET:ID]]
-  content = content.replace(/\[\[\s*WIDGET\s*:\s*([^:\s\]]+)\s*:\s*([^:\s\]]+)(?:\s*:\s*(.*?))?\s*\]\]+/gi, (match, type, id) => {
+  content = content.replace(/\[\[\s*WIDGET\s*:\s*([^:\s\]]+)\s*:\s*([^:\s\]]+)(?:\s*:\s*([^\]]*?))?\s*\]\]/gi, (match, type, id) => {
     return `[[WIDGET:${id}]]`;
   });
 
@@ -1941,7 +1812,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const vDur = props.duration ? ` duration="${props.duration.replace(/"/g, '&quot;')}"` : '';
       const vUnres = props.unresolved !== undefined ? ` unresolved={${props.unresolved}}` : '';
       compStr = `<Video title="${vTitle}"${vIdAttr}${vProvider}${vUrl}${vDur}${vUnres} />`;
-    } else if (comp.componentType === "Audio") {
+    } else if (comp.componentType === "AudioPlayer" || comp.componentType === "Audio") {
       const aTitle = (props.title || '').replace(/"/g, '&quot;');
       const aUrl = (props.url || '').replace(/"/g, '&quot;');
       const aDur = props.duration ? ` duration="${props.duration.replace(/"/g, '&quot;')}"` : '';
@@ -1949,7 +1820,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const aUnres = props.unresolved !== undefined ? ` unresolved={${props.unresolved}}` : '';
       const aAlt = props.alt ? ` alt="${props.alt.replace(/"/g, '&quot;')}"` : '';
       const aDesc = props.description ? ` description="${props.description.replace(/"/g, '&quot;')}"` : '';
-      compStr = `<Audio title="${aTitle}" url="${aUrl}"${aDur}${aAi}${aUnres}${aAlt}${aDesc} />`;
+      compStr = `<AudioPlayer title="${aTitle}" url="${aUrl}"${aDur}${aAi}${aUnres}${aAlt}${aDesc} />`;
     } else if (comp.componentType === "OralEvaluation" || comp.componentType === "EvaluationOrale") {
       const oPrompt = (props.prompt || '').replace(/"/g, '&quot;');
       const oSubject = props.subject ? ` subject="${props.subject.replace(/"/g, '&quot;')}"` : '';
@@ -1967,16 +1838,13 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const bDesc = (props.description || '').replace(/"/g, '&quot;');
       const bWiki = props.wikipediaUrl ? ` wikipediaUrl="${props.wikipediaUrl.replace(/"/g, '&quot;')}"` : '';
       compStr = `<Biography name="${bName}"${bDates} description="${bDesc}"${bWiki} />`;
-    } else if (comp.componentType === "Image") {
+    } else if (comp.componentType === "Media") {
+      const mType = (props.type || 'image').replace(/"/g, '&quot;');
       const mDesc = (props.description || '').replace(/"/g, '&quot;');
       const mAlt = props.alt ? ` alt="${props.alt.replace(/"/g, '&quot;')}"` : '';
       const mCap = props.caption ? ` caption="${props.caption.replace(/"/g, '&quot;')}"` : '';
       const mTitle = props.title ? ` title="${props.title.replace(/"/g, '&quot;')}"` : '';
-      const mSrc = props.src ? ` src="${props.src.replace(/"/g, '&quot;')}"` : '';
-      const mFallbackUrl = props.fallbackUrl ? ` fallbackUrl="${props.fallbackUrl.replace(/"/g, '&quot;')}"` : '';
-      const mUnresolved = props.unresolved !== undefined ? ` unresolved={${props.unresolved}}` : '';
-      const mIsIllustration = props.isIllustration !== undefined ? ` isIllustration={${props.isIllustration}}` : '';
-      compStr = `<Image description="${mDesc}"${mAlt}${mCap}${mTitle}${mSrc}${mFallbackUrl}${mUnresolved}${mIsIllustration} />`;
+      compStr = `<CustomFigure type="${mType}" description="${mDesc}"${mAlt}${mCap}${mTitle} />`;
     } else if (comp.componentType === "Citation") {
       const cQuote = (props.quote || '').replace(/"/g, '&quot;');
       const cAuthor = (props.author || '').replace(/"/g, '&quot;');
@@ -1989,6 +1857,9 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const eTitle = (props.title || 'Critical Perspective').replace(/"/g, '&quot;');
       const eContent = props.content || '';
       compStr = `<Epistemology title="${eTitle}">\n${eContent}\n</Epistemology>`;
+    } else if (comp.componentType === "BrilliantIdea") {
+      const iContent = props.content || '';
+      compStr = `<BrilliantIdea>\n${iContent}\n</BrilliantIdea>`;
     } else if (comp.componentType === "MatchingEvaluation" || comp.componentType === "AssociationCorrespondance") {
       const titleAttr = props.title ? ` title="${props.title.replace(/"/g, '&quot;')}"` : '';
       const pairsAttr = (props.pairs || '').replace(/"/g, '&quot;');
@@ -2098,38 +1969,16 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
   // Remove any existing finalEvaluation anchors
   content = content.replace(/\[\[\s*WIDGET\s*:\s*finalEvaluation\s*\]\]/gi, '');
 
-  const contentLowerTmp = content.toLowerCase();
-  let langKey = 'en';
-  if (contentLowerTmp.includes('présentation') || contentLowerTmp.includes('introduction') || contentLowerTmp.includes('références') || contentLowerTmp.includes('glossaire') || contentLowerTmp.includes('conclusion') || contentLowerTmp.includes('synthèse')) {
-    langKey = 'fr';
-  } else if (contentLowerTmp.includes('referencias') || contentLowerTmp.includes('glosario') || contentLowerTmp.includes('conclusión')) {
-    langKey = 'es';
-  } else if (contentLowerTmp.includes('referenzen') || contentLowerTmp.includes('glossar') || contentLowerTmp.includes('fazit')) {
-    langKey = 'de';
-  } else if (contentLowerTmp.includes('参考文献') || contentLowerTmp.includes('词汇表') || contentLowerTmp.includes('结论')) {
-    langKey = 'zh';
-  }
-
-  const finalEvalHeadings: Record<string, string> = {
+  const evalRegex = /^(#{2,3}\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/mi;
+  const evalMatch = content.match(evalRegex);
+  
+  const evalHeadings: Record<string, string> = {
     fr: '## Évaluation Finale',
     en: '## Final Evaluation',
     es: '## Evaluación Final',
     de: '## Abschlussbewertung',
     zh: '## 最终评估'
   };
-
-  const selfEvalHeadings: Record<string, string> = {
-    fr: '## Auto-évaluation',
-    en: '## Self-Evaluation',
-    es: '## Autoevaluación',
-    de: '## Selbstbewertung',
-    zh: '## 自我评估'
-  };
-
-  const evalHeading = isTerminalEvaluation ? finalEvalHeadings[langKey] : selfEvalHeadings[langKey];
-
-  const evalRegex = /^(#{2,3}\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/mi;
-  const evalMatch = content.match(evalRegex);
 
   if (evalMatch) {
     const headerText = evalMatch[0];
@@ -2146,12 +1995,23 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     }
     
     const prose = content.substring(headerIdx + headerText.length, sectionEnd).trim();
-    const rebuiltSection = `${evalHeading}\n\n${prose ? prose + '\n\n' : ''}${finalEvalStr}`;
+    const rebuiltSection = `${headerText}\n\n${prose ? prose + '\n\n' : ''}${finalEvalStr}`;
     content = content.substring(0, headerIdx) + rebuiltSection + content.substring(sectionEnd);
   } else {
+    const contentLowerTmp = content.toLowerCase();
+    let langKey = 'en';
+    if (contentLowerTmp.includes('présentation') || contentLowerTmp.includes('introduction') || contentLowerTmp.includes('références') || contentLowerTmp.includes('glossaire') || contentLowerTmp.includes('conclusion') || contentLowerTmp.includes('synthèse')) {
+      langKey = 'fr';
+    } else if (contentLowerTmp.includes('referencias') || contentLowerTmp.includes('glosario') || contentLowerTmp.includes('conclusión')) {
+      langKey = 'es';
+    } else if (contentLowerTmp.includes('referenzen') || contentLowerTmp.includes('glossar') || contentLowerTmp.includes('fazit')) {
+      langKey = 'de';
+    } else if (contentLowerTmp.includes('参考文献') || contentLowerTmp.includes('词汇表') || contentLowerTmp.includes('结论')) {
+      langKey = 'zh';
+    }
+    const evalHeading = evalHeadings[langKey];
     content = content.trim() + `\n\n${evalHeading}\n\n${finalEvalStr}`;
   }
-
   // Strip markdown links ([text](url)) from glossary definitions to remove visible [Wikipedia] brackets
   const cleanGlossaryDef = (def: string): string => (def || '')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')  // [text](url) -> text
@@ -2213,92 +2073,13 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
   content = content.trim() + referencesStr;
 
   // Clean up any remaining unresolved [[WIDGET:...]] placeholders
-  content = content.replace(/\[\[\s*WIDGET\s*:.*?\]\]+/gi, '');
+  content = content.replace(/\[\[\s*WIDGET\s*:\s*[^\]\s]+\s*\]\]/gi, '');
 
   // Clean up empty self-closing InteractiveDiagram components without hotspotsBase64
   content = content.replace(/<InteractiveDiagram(?![\s\S]*?hotspotsBase64)[^>]*?\/>/gi, '');
 
   // Clean up generic/empty developer placeholders at the end of lessons
   content = content.replace(/<FunctionPlotter\s+fn=["']x\^2["']\s*\/?>/gi, '');
-
-  // Nested function to sequentially renumber figures and diagrams in order of appearance
-  function renumberFiguresAndCaptions(text: string, lang: string): string {
-    let counter = 1;
-    const tagRegex = /<(Image|CustomFigure|Mermaid)\b([\s\S]*?)\/?>/gi;
-    
-    return text.replace(tagRegex, (tagMatch, tagName, attrsStr) => {
-      const captionRegex = /\bcaption=(?:"([^"]*)"|'([^']*)'|\{([\s\S]*?)\})/i;
-      const captionMatch = attrsStr.match(captionRegex);
-      
-      let captionText = '';
-      let matchedDelimiter = '"';
-      
-      if (captionMatch) {
-        captionText = captionMatch[1] || captionMatch[2] || captionMatch[3] || '';
-        if (captionMatch[2] !== undefined) matchedDelimiter = "'";
-        if (captionMatch[3] !== undefined) matchedDelimiter = '{';
-      }
-      
-      // If caption is empty/missing, look for description
-      if (!captionText.trim()) {
-        const descRegex = /\bdescription=(?:"([^"]*)"|'([^']*)'|\{([\s\S]*?)\})/i;
-        const descMatch = attrsStr.match(descRegex);
-        if (descMatch) {
-          captionText = descMatch[1] || descMatch[2] || descMatch[3] || '';
-        }
-      }
-      
-      let cleanCaption = captionText.trim();
-      const prefixRegex = /^(?:figure|fig|illustration|abbildung|abb|image|custom\s*figure)\s*(?:\d+(?:\.\d+)*|[a-z])?\s*(?:[:：\-–—]\s*)*/i;
-      cleanCaption = cleanCaption.replace(prefixRegex, '').trim();
-      
-      let prefix = `Figure ${counter} : `;
-      if (lang === 'en') {
-        prefix = `Figure ${counter}: `;
-      } else if (lang === 'de') {
-        prefix = `Abbildung ${counter}: `;
-      } else if (lang === 'es') {
-        prefix = `Figura ${counter}: `;
-      } else if (lang === 'zh') {
-        prefix = `图 ${counter}: `;
-      }
-      
-      const newCaptionText = `${prefix}${cleanCaption}`;
-      counter++;
-      
-      let newAttrsStr = attrsStr;
-      if (captionMatch) {
-        const fullAttrMatch = captionMatch[0];
-        let newAttrStr = '';
-        if (matchedDelimiter === '{') {
-          newAttrStr = `caption={\`${newCaptionText.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`}`;
-        } else {
-          newAttrStr = `caption=${matchedDelimiter}${newCaptionText.replace(new RegExp(matchedDelimiter, 'g'), '\\' + matchedDelimiter)}${matchedDelimiter}`;
-        }
-        newAttrsStr = attrsStr.replace(fullAttrMatch, newAttrStr);
-      } else {
-        newAttrsStr = ` caption="${newCaptionText}"` + attrsStr;
-      }
-      
-      return `<${tagName}${newAttrsStr}/>`;
-    });
-  }
-
-  // Renumber figures sequentially
-  content = renumberFiguresAndCaptions(content, langKey);
-
-  // Clean up any trailing unbalanced closing brackets ']' at the end of lines
-  content = content.split('\n').map(line => {
-    let cleanLine = line;
-    const openCount = (cleanLine.match(/\[/g) || []).length;
-    const closeCount = (cleanLine.match(/\]/g) || []).length;
-    if (closeCount > openCount) {
-      while (cleanLine.trim().endsWith(']') && (cleanLine.match(/\]/g) || []).length > (cleanLine.match(/\[/g) || []).length) {
-        cleanLine = cleanLine.trim().slice(0, -1);
-      }
-    }
-    return cleanLine;
-  }).join('\n');
 
   content = content.replace(/```mdx/g, '').replace(/```/g, '').trim();
 
@@ -2407,8 +2188,8 @@ Rules:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: compressPromptText(userPrompt) }] }],
-          systemInstruction: { parts: [{ text: compressPromptText(systemInstruction) }] },
+          contents: [{ parts: [{ text: userPrompt }] }],
+          systemInstruction: { parts: [{ text: systemInstruction }] },
           generationConfig: { temperature: 0.1 }
         })
       });
@@ -2824,16 +2605,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
     let courseContext: any = {};
     let originalSyllabusLessonsLength = 0;
 
-    const courseSlugForSyllabus = cleanPathSegment(correctedCourseName);
-    const localSyllabusPath = path.join(process.cwd(), 'drafts_revisions', `final_stage0_syllabus_${courseSlugForSyllabus}.json`);
-    const localDraftSyllabusPath = path.join(process.cwd(), 'drafts_revisions', `draft_stage0_syllabus_${courseSlugForSyllabus}.json`);
-    if (fs.existsSync(localSyllabusPath)) {
-      await appendTaskLog(`[AI GENERATOR] Found local syllabus file ${localSyllabusPath}. Reusing to preserve customized structure.`);
-      parsedSyllabus = JSON.parse(fs.readFileSync(localSyllabusPath, 'utf8'));
-    } else if (fs.existsSync(localDraftSyllabusPath)) {
-      await appendTaskLog(`[AI GENERATOR] Found local draft syllabus file ${localDraftSyllabusPath}. Reusing to preserve customized structure.`);
-      parsedSyllabus = JSON.parse(fs.readFileSync(localDraftSyllabusPath, 'utf8'));
-    } else if (taskId && extra && extra.syllabus) {
+    if (taskId && extra && extra.syllabus) {
       await appendTaskLog(`[AI GENERATOR] Found cached syllabus in task description. Reusing to prevent duplicate chapters.`);
       parsedSyllabus = extra.syllabus;
     }
@@ -2898,12 +2670,11 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         console.log(`[AI GENERATOR] Generating syllabus for "${courseName}" via AI Studio fallback (gemini-2.5-flash)...`);
         const startTime = Date.now();
         try {
-          const compressedSyllabus = compressPromptText(promptSyllabus);
           const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: compressedSyllabus }] }],
+              contents: [{ parts: [{ text: promptSyllabus }] }],
               generationConfig: {
                 temperature: 0.1,
                 responseMimeType: "application/json",
@@ -2920,7 +2691,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
             const usage = jsonRes.usageMetadata || {};
             const promptTokens = usage.promptTokenCount || 0;
             const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-            await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedSyllabus);
+            await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptSyllabus);
           } else {
             const errText = await res.text();
             console.error(`[AI GENERATOR] AI Studio syllabus call failed (${res.status}):`, errText);
@@ -3092,9 +2863,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         schema?: any,
         temperature: number = 0.2,
         frequencyPenalty?: number,
-        topP?: number,
-        isJsonMode: boolean = false,
-        task: keyof typeof TASK_MODELS = 'course_generation'
+        topP?: number
       ): Promise<string> => {
         let resultText = '';
         let success = false;
@@ -3113,14 +2882,14 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         if (schema) {
           generationConfig.responseMimeType = "application/json";
           generationConfig.responseSchema = schema;
-        } else if (isJsonMode || promptText.toLowerCase().includes('json') || promptText.toLowerCase().includes('schema')) {
+        } else if (promptText.toLowerCase().includes('json') || promptText.toLowerCase().includes('schema')) {
           generationConfig.responseMimeType = "application/json";
         }
 
         if (isVertexConfigured()) {
           try {
             const res = await callVertexAI({
-              task,
+              task: 'course_generation',
               contents: [{ role: 'user', parts: [{ text: promptText }] }],
               generationConfig
             });
@@ -3144,9 +2913,8 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         if (!success && apiKey) {
           const startTime = Date.now();
           try {
-            const compressedPrompt = compressPromptText(promptText);
             const bodyPayload: any = {
-              contents: [{ parts: [{ text: compressedPrompt }] }],
+              contents: [{ parts: [{ text: promptText }] }],
               generationConfig
             };
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
@@ -3162,7 +2930,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
               const usage = resJson.usageMetadata || {};
               lessonStats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
               lessonStats.tokenMetrics.candidatesTokens += usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-              await recordMetrics(task, 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, compressedPrompt);
+              await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, usage.promptTokenCount || 0, usage.candidatesTokenCount || 0, promptText);
             } else {
               lastError = `HTTP ${res.status} ${res.statusText}`;
             }
@@ -3230,20 +2998,20 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
             pronunciationMandate = `
 =============================================================================
 🚨 MANDATORY PRONUNCIATION WIDGET REQUIREMENT 🚨
-Since this lesson belongs to a Language or Linguistics course, you MUST insert the following bracketed widget:
-[[WIDGET:SandboxPrononciation:psb_id:word_to_pronounce]]
+Since this lesson belongs to a Language or Linguistics course, you MUST insert a custom bracketed anchor:
+[[WIDGET:SandboxPrononciation:prononciation_id:word_to_pronounce]]
 at least once (and ideally multiple times) directly in the pronunciation, phonetic, or practice sections of your narrative text.
-Do NOT use raw HTML/JSX tags. Exclusively write it as a bracketed anchor: [[WIDGET:SandboxPrononciation:psb_id:word_to_pronounce]].
+Do NOT use raw JSX tags. Exclusively write it as a bracketed anchor: [[WIDGET:SandboxPrononciation:id:word]].
 =============================================================================
 `;
           } else {
             pronunciationMandate = `
 =============================================================================
 🚨 MANDATORY PRONUNCIATION WIDGET REQUIREMENT 🚨
-Since this lesson belongs to a Language or Linguistics course, you MUST insert the following bracketed widget:
-[[WIDGET:PronunciationSandbox:psb_id:word_to_pronounce]]
+Since this lesson belongs to a Language or Linguistics course, you MUST insert a custom bracketed anchor:
+[[WIDGET:PronunciationSandbox:pronunciation_id:word_to_pronounce]]
 at least once (and ideally multiple times) directly in the pronunciation, phonetic, or practice sections of your narrative text.
-Do NOT use raw HTML/JSX tags. Exclusively write it as a bracketed anchor: [[WIDGET:PronunciationSandbox:psb_id:word_to_pronounce]].
+Do NOT use raw JSX tags. Exclusively write it as a bracketed anchor: [[WIDGET:PronunciationSandbox:id:word]].
 =============================================================================
 `;
           }
@@ -3253,34 +3021,19 @@ Do NOT use raw HTML/JSX tags. Exclusively write it as a bracketed anchor: [[WIDG
           ? usedMediaRegistry.map(m => `- Type: ${m.type}, Description: "${m.description}"${m.caption ? `, Caption: "${m.caption}"` : ''}`).join('\n')
           : 'None yet. This is the first lesson or no media has been used yet.';
 
-        const { min: minWords, max: maxWords } = getWordCountLimitForLevel(levelInput);
-
         let narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the specified lesson.
 
-⚠️ MANDATORY WORD-COUNT & LENGTH DIRECTION (STRICT LEVEL-BASED ALIGNMENT):
-- The current academic level is: "${getDescriptiveLevelForPrompt(levelInput)}" (raw key: "${levelInput}").
-- You MUST write a highly comprehensive and publication-ready academic lesson matching this level's target length:
-  * For primary / low levels (foundation_1, foundation_2): 800 to 1500 words. Keep it narrative, engaging, and age-appropriate.
-  * For secondary levels (secondary_1, secondary_2, preuni): 1200 to 3000 words. Keep it clear, explanatory, and structured.
-  * For higher education / university levels (L1, L2, L3, intermediate, advanced): 3500 to 5500 words. Provide extreme academic rigor, detailed historical and technical contextualization, deep conceptual analyses, and extensive comparative and mathematical/empirical sections where appropriate.
-  * For graduate levels (M1, M2, expert): 5500 to 8000 words. Provide exhaustive master-class level coverage.
-- YOUR EXACT TARGET WORD COUNT FOR THIS SPECIFIC LESSON IS: **at least ${minWords} and up to ${maxWords} words** of rich, well-developed narrative paragraphs.
-- Shorter lessons WILL fail critical verification, causing immediate rejection. Be extremely detailed, thorough, and analytical.
-- To successfully achieve this target word count with high academic value:
-  * Do NOT use fluff, empty transitions, or repetitive sentences.
-  * Expand on historical/epistemological context, detail all physical or social mechanisms, trace the timeline of key discoveries, and analyze the implications of theoretical models.
-  * Write extensive, highly descriptive body text before and after each bracketed [[WIDGET:...]] anchor. Every section must have multiple long, well-developed paragraphs.
-  * Break down major concepts into sub-concepts, provide detailed case studies, or walk through real-world/applied scenarios in full.
+${pronunciationMandate}
 
 =============================================================================
 ⚠️ CRITICAL MARKUP & XML/JSX COMPLIANCE RULES (MDX SAFETY MANDATE) ⚠️
 To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
 
-1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS:
-   - Do NOT write raw JSX or HTML tags of any kind for custom components or widgets (such as <DidYouKnow>, <HistoricalAnecdote>, <Quiz>, <FillInBlanks>, <Image>, <Audio>, <Video>, etc. or their closing tags </DidYouKnow>, etc.) in your prose.
-   - You must exclusively use bracketed anchors: [[WIDGET:Type:ID:Topic]] or [[WIDGET:Type:ID:Prose]]. Writing raw tags will crash the compiler and reject your lesson.
-   - The ONLY custom tags allowed inline in your prose are hover-cards: <RealPerson>, <FictionalCharacter>, <Location>, <EventLink>, <Artwork>, <ConceptLink>, <TheoremLink>, <InstitutionLink>, <SpeciesLink>, <ChemicalLink>, and <CelestialLink>. Note: Do NOT write <SandboxPrononciation /> or <PronunciationSandbox /> as raw tags anymore; they must also use bracketed anchors.
+1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE JSX TAGS:
+   - Do NOT write raw JSX tags for interactive widgets (such as <DataChart>, <BasicMathExplorer>, <CodeSandbox>, <Mermaid>, <InteractiveDiagram>, <Quiz>, <FillInBlanks>, <SandboxPrononciation />, or <PronunciationSandbox />) in your prose.
+   - You must exclusively use bracketed anchors: [[WIDGET:id]]. Writing raw interactive tags will crash the compiler and reject your lesson.
+   - The ONLY custom tags allowed inline in your prose are hover-cards: <RealPerson>, <FictionalCharacter>, <Location>, <EventLink>, <Artwork>, <ConceptLink>, <TheoremLink>, <InstitutionLink>, <SpeciesLink>, <ChemicalLink>, and <CelestialLink>. All interactive elements must use standard bracketed widget anchors.
 
 2. NO RAW HTML FOR LISTS:
    - Do NOT use raw HTML tags (<ul>, <ol>, <li>) to build bulleted or numbered lists.
@@ -3293,22 +3046,7 @@ To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
 
 4. NO STRAY import/export STATEMENTS:
    - Never write "import " or "export " at the beginning of a line in normal text.
-   - If you must show code blocks containing imports/exports, wrap them in standard markdown code blocks (e.g. \`\`\`\`javascript ... \`\`\`\`).
-
-5. NO WIDGET ANCHORS INSIDE LISTS OR TABLES:
-   - Never place any [[WIDGET:...]] bracketed anchors inside bullet points, list items, or tables. Placing anchors inside lists disrupts the formatting and crashes the MDX stitcher.
-   - Always place every widget anchor on its own separate, clean line, surrounded by a blank line before and after.
-
-6. ABSOLUTE PROHIBITION ON RAW INTERACTIVE, QUESTION, OR EVALUATION TAGS:
-   - You MUST NEVER write raw tags like <Question>, <Option>, <Quiz>, <EssayEvaluation>, <OralEvaluation>, <DidYouKnow>, <HistoricalAnecdote>, etc. in your prose under any circumstances. All interactive questions, quizzes, or evaluations are handled entirely via the standard block anchors like [[WIDGET:finalEvaluation]] or [[WIDGET:diagnosticQuiz]]. Writing these raw tags will crash the compiler and reject your lesson.
-
-7. NO MANUAL FIGURE NUMBERING OR LABELS:
-   - Do NOT write prefix numbers like "Figure 1:", "Figure A:", "Image 1 -" or relative links like "comme le montre la figure ci-dessus" or "voir Figure 2" inside the captions or descriptions of images/figures.
-   - The stitching layer programmatically and sequentially numbers all figures/images in order of their appearance across the entire lesson and automatically prefixes them with the beautifully formatted, localized label (e.g. "Figure 1 : ").
-   - All captions or descriptions you write MUST contain only clean, natural, academic prose describing the visual asset itself (e.g. "Une représentation tridimensionnelle de la molécule de méthane...").
-
-8. COMPREHENSIVE CONCLUSION PROSE:
-   - The "## Conclusion" section must NEVER be empty or consist solely of widget anchors. You MUST write at least two comprehensive, well-developed academic paragraphs in the "## Conclusion" section to synthesize the lesson's main takeaways and transition to the next phase.
+   - If you must show code blocks containing imports/exports, wrap them in standard markdown code blocks (e.g. \`\`\`\`javascript ... \`\`\`).
 =============================================================================
 
 ---
@@ -3379,60 +3117,55 @@ Instead, you must decide where these elements belong and insert standard or cust
 - \`[[WIDGET:goingFurther]]\`: Place inside the \`## Conclusion\` section, at the very end (after whatsNext).
 - \`[[WIDGET:finalEvaluation]]\`: Place after the Conclusion section, as the ultimate validation quiz or essay.
 
-#### B. Custom/Narrative Widget Anchors (Represented as [[WIDGET:Type:ID:Payload]]):
+#### B. Custom/Narrative Widget Anchors (Represented as [[WIDGET:Type:ID:Topic]]):
+1. **Controlled Digressions (Epistemology Widget)**:
+   - Include at least one historical controversy or limit-of-concept discussion.
+   - Do NOT write raw \`<Epistemology>\` JSX tags. Exclusively represent this as an anchor:
+     \`[[WIDGET:Epistemology:epistemology_id:Brief description of the controversy or critical perspective topic]]\`
+     Example: \`[[WIDGET:Epistemology:value_paradox:The diamond-water paradox of value and early classical utility controversies]]\`
+2. **Contextual Mini-Biographies (Biography Widget)**:
+   - Include at least one biographical sidebar.
+   - Do NOT write raw markdown callouts (\`> [!INFO] **Mini-Biography: ...**\`) or Wikipedia links. Exclusively represent this as an anchor:
+     \`[[WIDGET:Biography:biography_id:RealPerson Name, dates, and main academic contributions/role]]\`
+     Example: \`[[WIDGET:Biography:adam_smith:Adam Smith (1723-1790), Scottish philosopher and pioneer of political economy]]\`
+3. **Author Quotes with Citations (Citation Widget)**:
+   - Weave at least one high-impact, authentic quotation from a notable expert/scientist.
+   - Do NOT write raw blockquotes or text quote blocks. You must exclusively represent it as an anchor:
+     \`[[WIDGET:Citation:citation_id:Author Name, original publication details, and the core topic or text hint of the quote]]\`
+     Example: \`[[WIDGET:Citation:smith_quote:Adam Smith, Quote from Wealth of Nations (1776) about the invisible hand and self-interest of the butcher and baker]]\`
+     Agent 3B (Architect) will expand this anchor into the full quote, translation, and commentary.
+4. **Factual Images & Multimedia (Media Widget)**:
+   - Include 5 to 6 factual/sourced images/figures and 1 to 2 audio/video resources for Licence level.
+   - Do NOT use standard Markdown image syntax (\`![Alt]()\`), raw URLs, or raw \`<CustomFigure>\` JSX tags.
+   - You MUST represent all media (images, audio, and video) using the unified Media widget anchor:
+     \`[[WIDGET:Media:media_id:detailed topic description of the image/audio/video, including specific names and visual representations]]\`
+     Examples:
+     - For images: \`[[WIDGET:Media:image_smith_portrait:image:Portrait of Adam Smith, John Kay 1790 painting]]\`
+     - For audio: \`[[WIDGET:Media:audio_pronunciation:audio:Pronunciation of laissez-faire in French]]\`
+     - For video: \`[[WIDGET:Media:video_economics:video:Video documentary segment on Adam Smith's division of labor]]\`
+   - Strict prohibition: Do NOT use images for mathematical curves or plots. Use custom interactive anchors instead.
+   - **CRITICAL DUPLICATION CONSTRAINT**: The following media descriptions/captions have already been used in this course. You MUST NOT repeat them or use similar representations. Ensure every figure is completely unique:
+\${usedMediaListStr}
+5. **Brilliant Ideas (BrilliantIdea Widget)**:
+   - You may include pedagogical analogies, intuitive mental models, or brilliant ideas.
+   - Do NOT write raw \`<BrilliantIdea>\` JSX tags. Exclusively represent this as an anchor:
+     \`[[WIDGET:BrilliantIdea:idea_id:Brief description of the pedagogical analogy/concept box]]\`
+     Example: \`[[WIDGET:BrilliantIdea:self_interest:Analogy of how self-interest regulates daily transactions like buying bread]]\`
 
-To keep the narrative text safe from Next-MDX compilation errors, you MUST NEVER write raw HTML or JSX tags (like <DidYouKnow>, <HistoricalAnecdote>, etc.). Instead, represent all custom components using bracketed anchors: \`[[WIDGET:Type:ID:Payload]]\`.
-These are split into two categories:
+6. **Pronunciation Workshops (SandboxPrononciation Widget)**:
+   - For Language, Linguistics, or courses requiring phonetic or sound practice.
+   - Do NOT write raw \`<SandboxPrononciation />\` or \`<PronunciationSandbox />\` JSX tags. Exclusively represent this as an anchor:
+     \`[[WIDGET:SandboxPrononciation:prononciation_id:word_to_pronounce]]\` (or \`[[WIDGET:PronunciationSandbox:pronunciation_id:word_to_pronounce]]\` for English lessons)
+     Example: \`[[WIDGET:SandboxPrononciation:phonologie_saussure:signifiant]]\`
 
-1. **Category A: Prose Box Widgets (Direct Narrative Enclosures)**
-For decorative narrative boxes. The ID should be short and unique, and the Payload is the exact natural text of the block. Do NOT write raw JSX tags for these.
-- **DidYouKnow / LeSaviezVous**: Useful for surprising scientific/historical trivia.
-  Example: \`[[WIDGET:DidYouKnow:dyk_gravity:La gravitation n'est pas une force au sens newtonien en relativité générale, mais une courbure de l'espace-temps produite par la masse.]]\`
-- **HistoricalAnecdote / AnecdoteHistorique**: Humanizing historical accounts.
-  Example: \`[[WIDGET:HistoricalAnecdote:anec_galileo:Le récit de l'expérience légendaire de Galilée du haut de la tour de Pise pour démontrer l'universalité de la chute libre.]]\`
-- **PointOfView / PointDeVue**: Alternative perspectives or philosophical standpoints.
-  Example: \`[[WIDGET:PointOfView:pov_copernicus:Le point de vue héliocentrique face au géocentrisme ptolémaïque soutenu par les autorités théologiques de l'époque.]]\`
-- **CriticalThinking / EspritCritique**: Prompts/questions that invite students to think critically.
-  Example: \`[[WIDGET:CriticalThinking:crit_einstein:Comment concevoir que le temps s'écoule plus lentement pour un observateur en mouvement rapide sans contredire notre intuition quotidienne ?]]\`
-- **ScientificMethod / MethodeScientifique**: Demonstrating hypothesis testing.
-  Example: \`[[WIDGET:ScientificMethod:meth_lavoisier:La méthode rigoureuse de Lavoisier utilisant la balance pour prouver la conservation de la masse lors de la combustion.]]\`
-- **ScientificDebate / DebatScientifique**: Unresolved controversies or competing theories.
-  Example: \`[[WIDGET:ScientificDebate:deb_quantum:Le débat Bohr-Einstein à l'institut Solvay concernant le déterminisme et l'interprétation de la mécanique quantique.]]\`
-- **OpenQuestion**: An open discussion question.
-  Example: \`[[WIDGET:OpenQuestion:oq_darkmatter:Quelle est la véritable nature de la matière noire, qui représente pourtant plus de 85% de la matière totale de l'univers ?]]\`
-- **HistoricalFact / FaitHistorique**: Rigorous, verified historical fact.
-  Example: \`[[WIDGET:HistoricalFact:fact_bastille:La prise de la Bastille le 14 juillet 1789 marque un tournant symbolique majeur dans le déclenchement de la Révolution française.]]\`
-- **HistoricalEvent / EvenementHistorique**: A specific landmark event.
-  Example: \`[[WIDGET:HistoricalEvent:event_moon:Le premier pas de l'homme sur la Lune par Neil Armstrong le 21 juillet 1969 dans le cadre de la mission Apollo 11.]]\`
-- **BrilliantIdea / IdeeBrillante**: Pedagogical analogies or intuitive conceptual models.
-  Example: \`[[WIDGET:BrilliantIdea:idea_trampoline:Visualiser l'espace-temps comme une toile de trampoline déformée par une boule de bowling représentant le Soleil.]]\`
-
-2. **Category B: Structured Dynamic Widgets (Metadata Payloads)**
-These widgets require detailed configurations or external API resolving. The Payload contains only reference topic details, not the full prose. Agent 3B will design their JSON schemas.
-- **Biography**: Sidebar about historical experts.
-  Example: \`[[WIDGET:Biography:bio_newton:Isaac Newton (1643-1727), mathématicien et physicien anglais ayant formulé la loi de la gravitation universelle.]]\`
-- **Citation**: Authentic high-impact quotes with translations.
-  Example: \`[[WIDGET:Citation:quote_newton:Isaac Newton, Lettre à Robert Hooke (1675) sur le fait d'être monté sur des épaules de géants pour voir plus loin.]]\`
-- **Epistemology**: Detailed critical controversies.
-  Example: \`[[WIDGET:Epistemology:epi_calculus:La controverse de paternité du calcul infinitésimal entre Newton et Leibniz et ses implications épistémologiques.]]\`
-- **Image**: Factual images/diagrams.
-  Example: \`[[WIDGET:Image:img_prisme:image:Un prisme en verre décomposant un faisceau de lumière blanche en spectre de couleurs de l'arc-en-ciel.]]\`
-- **Audio**: Narrative audio/voice-overs or pronunciations.
-  Example: \`[[WIDGET:Audio:aud_larynx:audio:Une démonstration audio montrant la vibration des cordes vocales et le fonctionnement du larynx humain.]]\`
-- **Video**: Video documentary segments.
-  Example: \`[[WIDGET:Video:vid_relativity:video:Un documentaire de la NASA expliquant les principes fondamentaux de la relativité restreinte.]]\`
-- **SandboxPrononciation / PronunciationSandbox**: Pronunciation sandbox for linguistics.
-  Example (French course): \`[[WIDGET:SandboxPrononciation:pron_laissez:laissez-faire]]\`
-  Example (English course): \`[[WIDGET:PronunciationSandbox:pron_hello:hello]]\`
-
-6. **In-text Bibliography Citations (CRITICAL)**:
+7. **In-text Bibliography Citations (CRITICAL)**:
    - Ground the lesson in these specific, canonical course-level references:
-${referencesMetadata}
+\${referencesMetadata}
    - When making claims or citing definitions, you must cite these references inline using the strict format: [refN] (where N is the 1-based number of the reference, e.g. [ref1], [ref2]).
    - Do NOT use other citation formats (like superscript HTML links, raw URLs, or bracketed numbers like [1]).
    - Only cite references that are relevant to this lesson, but make sure to cite at least 1 or 2 canonical references from the list.
 
-7. **Entity Hover-Cards**:
+8. **Entity Hover-Cards**:
    - Wrap named historical figures, landmark artworks, locations, events, fictional characters, scientific concepts, mathematical theorems, or academic institutions mentioned inline in Hover-Card components with a short description:
      - \`<RealPerson name="Wiki_Title" description="...">Name (Dates)</RealPerson>\`
      - \`<FictionalCharacter name="Wiki_Title" description="...">Character Name</FictionalCharacter>\`
@@ -3497,7 +3230,7 @@ This synthesis MUST (400–600 words):
         // ───────────────────────────────────────────────────────────────
         let narrativeApproved = false;
         let narrativeIteration = 0;
-        const maxNarrativeIterations = 5;
+        const maxNarrativeIterations = 3;
 
         while (!narrativeApproved && narrativeIteration < maxNarrativeIterations) {
           narrativeIteration++;
@@ -3523,13 +3256,13 @@ ${cleanedNarrative}
 ---
 
 ### CORE CHECKPOINTS
-You must audit the narrative text against the following 11 critical checkpoints:
+You must audit the narrative text against the following 7 critical checkpoints:
 
 1. **Zero-Placeholder Constraint**:
    - **STRICT REJECTION**: You MUST reject (\`approved: false\`) if the text contains any comments, skeletons, or placeholder phrases like "write section here," "[À compléter]," "Lorem Ipsum," or undeveloped paragraphs. The narrative must be 100% complete and publication-ready.
 2. **Academic Density & Length**:
    - For higher education levels (L1-M2), verify that the lesson is detailed, rigorous, and exhaustive. It must cover at least 4 to 5 core conceptual sections under distinct \`## \` headings.
-   - Target word count: **${minWords} to ${maxWords} words** of rich, well-formed narrative paragraphs. Reject if the writer produced a brief, simplistic, or highly summarized text.
+   - Target word count: **3,000 to 5,000 words** of rich, well-formed narrative paragraphs. Reject if the writer produced a brief, simplistic, or highly summarized text.
 3. **Widget Placement & Anchors**:
    - Verify that the standard structural widget anchors are placed exactly once and at correct positions:
      - \`[[WIDGET:prerequisites]]\` (at the very beginning)
@@ -3540,7 +3273,7 @@ You must audit the narrative text against the following 11 critical checkpoints:
      - \`[[WIDGET:goingFurther]]\` (inside ## Conclusion, at the very end, after whatsNext)
      - \`[[WIDGET:finalEvaluation]]\` (after conclusion, as ultimate validation)
    - Verify that there are **at least 1 to 2** custom interactive/narrative anchors (\`[[WIDGET:Type:ID:Topic]]\` or \`[[WIDGET:Type:ID]]\`) placed within conceptual body sections, and each is surrounded by high-quality explanatory paragraphs.
-   - **STRICT PROHIBITION ON RAW CUSTOM JSX**: Verify that the narrative contains NO raw JSX tags representing interactive components (such as \`<DataChart>\`, \`<Quiz>\`, \`<CodeSandbox>\`, \`<Mermaid>\`, \`<CustomFigure>\`, \`<Epistemology>\`, \`<Biography>\`, \`<BrilliantIdea>\`, or \`<Citation>\`). They must exclusively use suffix-augmented bracketed anchors. Absolutely NO raw interactive/custom JSX tags are allowed in the narrative (this includes pronunciation sandboxes like \`<SandboxPrononciation />\` or \`<PronunciationSandbox />\`).
+   - **STRICT PROHIBITION ON RAW CUSTOM JSX**: Verify that the narrative contains NO raw JSX tags representing interactive components (such as \`<DataChart>\`, \`<Quiz>\`, \`<CodeSandbox>\`, \`<Mermaid>\`, \`<CustomFigure>\`, \`<Epistemology>\`, \`<Biography>\`, \`<BrilliantIdea>\`, \`<Citation>\`, \`<SandboxPrononciation />\`, or \`<PronunciationSandbox />\`). They must exclusively use suffix-augmented bracketed anchors.
 4. **Author Quotes & Citation Anchors**:
    - Verify that quotes and citations are represented using suffix-augmented anchors:
      \`[[WIDGET:Citation:citation_id:Topic/Hint]]\`
@@ -3556,6 +3289,8 @@ You must audit the narrative text against the following 11 critical checkpoints:
    - **STRICT REJECTION FOR WRAPPED VERBS**: Strictly check and REJECT if any active verbs, action verbs, or Revised Bloom's Taxonomy verbs (such as *analyser*, *comprendre*, *créer*, *identifier*, *expliquer*, etc., or their English equivalents) are wrapped inside any hover-card tags. Verify that only proper names, nouns, and true entities are wrapped.
    - Ensure these custom tags are NOT placed inside JSX attributes (like component property values) where they are syntactically invalid.
    - Check for and reject any nested or duplicated Hover-Cards.
+
+
 7. **Media Anchors & Assets**:
    - Verify that the lesson contains at least 5 to 6 image anchors and 1 to 2 audio/video anchors represented as:
      \`[[WIDGET:Media:media_id:Topic/Hint]]\`
@@ -3565,12 +3300,6 @@ You must audit the narrative text against the following 11 critical checkpoints:
      - Verify that the narrative contains **at least 1 to 2 rich Markdown comparison tables** (using standard \`| Column 1 | Column 2 |\` format) to summarize complex conceptual comparisons, multi-variable data, or historical timelines.
      - Verify that the narrative contains **at least 1 to 2 Mermaid diagrams** (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model processes, system architectures, decision flows, or conceptual hierarchies.
      - Reject if these rich visual/structural elements are missing from a university-level narrative.
-9. **No Raw Interactive, Question, or Evaluation Tags**:
-   - **STRICT REJECTION**: You MUST reject if there are raw interactive, question, or evaluation tags like \`<Question>\`, \`<Option>\`, \`<Quiz>\`, \`<EssayEvaluation>\`, \`<OralEvaluation>\`, etc. in the narrative text. All evaluations must be referred to via standard block anchors like [[WIDGET:finalEvaluation]].
-10. **Strict Figure Prefix & Numbering Exclusion**:
-   - **STRICT REJECTION**: Verify that any captions or descriptions of visual/image/diagram assets (Image, CustomFigure, Mermaid, etc.) contain absolutely NO prefix numbers like 'Figure 1:', 'Figure A:', 'Image 1 -' or relative links like 'comme le montre la figure ci-dessus' or 'voir Figure 2'. All sequential figure numbering is handled programmatically at stitching time.
-11. **Comprehensive Conclusion Prose**:
-   - **STRICT REJECTION**: Verify that the "## Conclusion" section contains at least two comprehensive, well-developed academic prose paragraphs. Reject if the section is empty or has only widget anchors or list items.
 
 ---
 
@@ -3619,23 +3348,13 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
               const narrativeRefinerPrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 The narrative critic (Agent 4A) has rejected your previously generated academic narrative text with a GLOBAL critique requiring a full rewrite.
 
-⚠️ MANDATORY WORD-COUNT & LENGTH DIRECTION (STRICT LEVEL-BASED ALIGNMENT):
-- The current academic level is: "${getDescriptiveLevelForPrompt(levelInput)}" (raw key: "${levelInput}").
-- You MUST write a highly comprehensive and publication-ready academic lesson matching this level's target length:
-  * For primary / low levels (foundation_1, foundation_2): 800 to 1500 words. Keep it narrative, engaging, and age-appropriate.
-  * For secondary levels (secondary_1, secondary_2, preuni): 1200 to 3000 words. Keep it clear, explanatory, and structured.
-  * For higher education / university levels (L1, L2, L3, intermediate, advanced): 3500 to 5500 words. Provide extreme academic rigor, detailed historical and technical contextualization, deep conceptual analyses, and extensive comparative and mathematical/empirical sections where appropriate.
-  * For graduate levels (M1, M2, expert): 5500 to 8000 words. Provide exhaustive master-class level coverage.
-- YOUR EXACT TARGET WORD COUNT FOR THIS SPECIFIC LESSON IS: **at least ${minWords} and up to ${maxWords} words** of rich, well-developed narrative paragraphs.
+${pronunciationMandate}
 
 [CRITICAL] CRITICAL REMINDER: You MUST maintain absolute XML/JSX markup compliance to prevent parser crashes:
 - Do NOT use raw JSX tags for interactive widgets (<DataChart>, <BasicMathExplorer>, <Quiz>, etc.). Use bracketed anchors: [[WIDGET:id]].
 - Do NOT use raw HTML tags (<ul>, <ol>, <li>) for lists; use standard Markdown instead.
-- Do NOT use literal curly braces { } in plain text; escape them as \`{x}\` or wrap math in LaTeX $ \{...\} $ or $$ \{...\} $$.
+- Do NOT use literal curly braces { } in plain text; escape them as \`{x}\` or wrap math in LaTeX $ \\{...\\} $ or $ \\{...\\} $.
 - Never write "import " or "export " at the start of a line in plain prose.
-- You MUST NEVER write raw tags like <Question>, <Option>, <Quiz>, <EssayEvaluation>, <OralEvaluation>, <DidYouKnow>, <HistoricalAnecdote>, etc. in your prose.
-- Do NOT write any manual figure numbers/prefixes (like "Figure 1:", "Abbildung 2:") or relative links (like "comme le montre la figure ci-dessus") in captions or descriptions.
-- The "## Conclusion" section must contain at least two comprehensive, well-developed academic paragraphs.
 
 [CRITICAL] RICH MARKDOWN TABLES AND MERMAID DIAGRAMS (MANDATORY FOR UNIVERSITY LEVELS):
 - If the academic level is University/Higher Education (L1, L2, L3, M1, M2):
@@ -3687,17 +3406,13 @@ Strictly follow the original writing, adaptation, and widget placement rules. Do
                 }
               }
 
-              if (rejectedSectionsData.length > 0) {
-                const promptJointRepair = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
+                  const promptJointRepair = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 We need to repair specific sections of the lesson narrative "${item.title}" that were rejected by the Narrative Critic (Agent 4A).
 
 [CRITICAL] CRITICAL MDX COMPLIANCE:
 - Do NOT use raw JSX tags for interactive widgets. Use bracketed anchors: [[WIDGET:id]].
 - Do NOT use raw HTML tags; use standard Markdown instead.
 - Do NOT use literal curly braces { } in plain text.
-- You MUST NEVER write raw tags like <Question>, <Option>, <Quiz>, <EssayEvaluation>, <OralEvaluation>, <DidYouKnow>, <HistoricalAnecdote>, etc. in your prose.
-- Do NOT write any manual figure numbers/prefixes (like "Figure 1:", "Abbildung 2:") or relative links (like "comme le montre la figure ci-dessus") in captions or descriptions.
-- The "## Conclusion" section must contain at least two comprehensive, well-developed academic paragraphs.
 
 [CRITICAL] RICH MARKDOWN TABLES AND MERMAID DIAGRAMS (MANDATORY FOR UNIVERSITY LEVELS):
 - If the academic level is University/Higher Education (L1, L2, L3, M1, M2):
@@ -3725,65 +3440,44 @@ INSTRUCTIONS:
 3. Preserve all [[WIDGET:id]] anchors exactly as they are in the current content.
 4. Do NOT include markdown code block wrappers or conversational text.`;
 
-                const scribeRepairOutput = await callAIEngine(promptJointRepair, null, 0.35, 0.25, 0.85);
-                const repairs = parseJointRepairOutput(scribeRepairOutput);
+                  const scribeRepairOutput = await callAIEngine(promptJointRepair, null, 0.35, 0.25, 0.85);
+                  const repairs = parseJointRepairOutput(scribeRepairOutput);
 
-                // Fallback: single section repair with no XML tags
-                if (repairs.size === 0 && rejectedSectionsData.length === 1) {
-                  const key = rejectedSectionsData[0].heading.trim().toLowerCase();
-                  repairs.set(key, scribeRepairOutput.trim());
-                }
-
-                for (const sec of parsedSections) {
-                  const key = (sec.heading || 'Header / Introduction Block').trim().toLowerCase();
-                  if (repairs.has(key)) {
-                    await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Applied repair for section: "${sec.heading}"`);
-                    sec.content = repairs.get(key)!;
+                  // Fallback: single section repair with no XML tags
+                  if (repairs.size === 0 && rejectedSectionsData.length === 1) {
+                    const key = rejectedSectionsData[0].heading.trim().toLowerCase();
+                    repairs.set(key, scribeRepairOutput.trim());
                   }
-                }
 
-                const repairedNarrative = reconstructMarkdown(parsedSections);
-                const rawRepaired = repairedNarrative.replace(/```json/gi, '').replace(/```/gi, '').trim();
-                // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees the repaired draft!
-                cleanedNarrative = preprocessMdx(rawRepaired, targetLang.toLowerCase(), false, item.slug);
-                lessonStats.narrativeAttempts++;
-                saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_${narrativeIteration + 1}.md`, cleanedNarrative);
-              } else {
-                await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] No matching sections found for localized repair. Moving forward.`);
-                break;
+                  for (const sec of parsedSections) {
+                    const key = (sec.heading || 'Header / Introduction Block').trim().toLowerCase();
+                    if (repairs.has(key)) {
+                      await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Applied repair for section: "${sec.heading}"`);
+                      sec.content = repairs.get(key)!;
+                    }
+                  }
+
+                  const repairedNarrative = reconstructMarkdown(parsedSections);
+                  const rawRepaired = repairedNarrative.replace(/```json/gi, '').replace(/```/gi, '').trim();
+                  // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees the repaired draft!
+                  cleanedNarrative = preprocessMdx(rawRepaired, targetLang.toLowerCase(), false, item.slug);
+                  lessonStats.narrativeAttempts++;
+                  saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_${narrativeIteration + 1}.md`, cleanedNarrative);
+                } else {
+                  await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] No matching sections found for localized repair. Moving forward.`);
+                  break;
+                }
               }
             }
           }
+          approvedNarrativeText = cleanedNarrative;
         }
-      approvedNarrativeText = cleanedNarrative;
       }
 
       // ───────────────────────────────────────────────────────────────
       // [STAGE 2] WIDGETS ARCHITECT (AGENT 3B)
       // ───────────────────────────────────────────────────────────────
       await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 2] Designing interactive widgets JSON for lesson "${item.title}"...`);
-
-      const activeAnchors = extractWidgetAnchors(approvedNarrativeText);
-      const activeAnchorIds = new Set(activeAnchors.map(a => a.id.toLowerCase()));
-      const activeAnchorTypes = new Set(activeAnchors.map(a => a.type.toLowerCase()));
-
-      const dynamicCatalog = Object.fromEntries(
-        Object.entries(prunedCatalog).filter(([id, meta]: [string, any]) => {
-          const lowerId = id.toLowerCase();
-          const lowerType = (meta.componentType || '').toLowerCase();
-          return activeAnchorIds.has(lowerId) || activeAnchorTypes.has(lowerId) || (lowerType && activeAnchorIds.has(lowerType));
-        })
-      );
-
-      const dynamicCatalogList = Object.entries(dynamicCatalog).map(([id, meta]: [string, any]) => {
-        return `- ID: "${id}"
-  Name: "${meta.nameEN || id}" (${meta.nameFR || id})
-  Description: "${meta.descEN || meta.descFR || ''}"
-  Disciplines: [${(meta.disciplines || []).join(', ')}]
-  Educational Level: "${meta.levelEN || meta.levelFR || 'All levels'}"`;
-      }).join('\n\n') || 'None anchored.';
-
-      const dynamicSchema = getDynamicWidgetsSchema(approvedNarrativeText);
 
       const prunedNarrativeText = pruneNarrativeForWidgets(approvedNarrativeText);
 
@@ -3796,6 +3490,38 @@ INSTRUCTIONS:
 
       const sectionQuizPoolCount = isLvlPrimary ? 5 : isLvlSecondary ? 10 : 20;
       const sectionQuizDisplayLimit = isLvlPrimary ? 3 : isLvlSecondary ? 5 : 10;
+
+      // Extract active widget anchors and prune catalog dynamically
+      const activeAnchors = extractWidgetAnchors(approvedNarrativeText);
+      const activeCatalogKeys = new Set<string>();
+      for (const a of activeAnchors) {
+        const idLower = a.id.toLowerCase();
+        const typeLower = a.type.toLowerCase();
+        for (const catId of Object.keys(prunedCatalog)) {
+          const catIdLower = catId.toLowerCase();
+          if (idLower === catIdLower || typeLower === catIdLower) {
+            activeCatalogKeys.add(catId);
+          }
+        }
+      }
+
+      // Re-format catalog list to only include active catalog keys matching anchors in the approved narrative!
+      const activeCatalog: Record<string, any> = {};
+      for (const catId of activeCatalogKeys) {
+        activeCatalog[catId] = prunedCatalog[catId];
+      }
+
+      const dynamicCatalogList = Object.keys(activeCatalog).length > 0
+        ? Object.entries(activeCatalog).map(([id, meta]: [string, any]) => {
+            return `- ID: "${id}"
+  Name: "${meta.nameEN || id}" (${meta.nameFR || id})
+  Description: "${meta.descEN || meta.descFR || ''}"
+  Disciplines: [${(meta.disciplines || []).join(', ')}]
+  Educational Level: "${meta.levelEN || meta.levelFR || 'All levels'}"`;
+          }).join('\n\n')
+        : "None (No database-curated widgets were anchored in the narrative draft. Only use standard simple discursive widgets like Quiz, MatchingEvaluation, ReorderEvaluation, FillInBlanks, SolvedExercise, UnsolvedExercise, etc.)";
+
+      const dynamicSchema = getDynamicWidgetsSchema(approvedNarrativeText);
 
       const widgetsPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 Your task is to parse the approved academic narrative draft of the lesson, extract all custom and standard bracketed widget anchors (\`[[WIDGET:id]]\`), and generate a valid JSON object conforming strictly to the requested \`lessonWidgetsSchema\` to fully define each anchor.
@@ -3939,37 +3665,25 @@ ${referencesMetadata}
    - Ensure the citations in the narrative and their order in this array align perfectly.
    - Book/article titles must be in standard quotes (or French guillemets « ... »), not asterisks.
    - Exclude this references array only for primary school levels.
- 9. **\`interactiveComponents\`**:
-   - An array of all custom Category B interactive components (such as Image, Audio, Video, Biography, Citation, Epistemology, Quiz, FillInBlanks, PronunciationSandbox, etc.).
-   - CRITICAL: You MUST completely IGNORE all Category A prose box anchors (DidYouKnow, LeSaviezVous, HistoricalAnecdote, AnecdoteHistorique, PointOfView, PointDeVue, CriticalThinking, EspritCritique, ScientificMethod, MethodeScientifique, ScientificDebate, DebatScientifique, OpenQuestion, HistoricalFact, FaitHistorique, HistoricalEvent, EvenementHistorique, BrilliantIdea, IdeeBrillante). Do NOT create any items for Category A anchors in this array, as they are compiled directly as inline Markdown boxes.
-   - For Category B anchors like \`[[WIDGET:Type:ID:Topic]]\`, map:
+9. **\`interactiveComponents\`**:
+   - An array of all custom interactive components. Every custom widget anchor placed in the narrative draft (e.g. \`[[WIDGET:Type:ID:Topic]]\` or \`[[WIDGET:ID]]\`) MUST have a corresponding object here.
+   - For anchors like \`[[WIDGET:Type:ID:Topic]]\`, map:
      - \`id\` -> the \`ID\` part of the anchor.
-     - \`componentType\` -> the \`Type\` part of the anchor (which will be one of: "Image", "Audio", "Video", "Citation", "Biography", "Epistemology", or custom widgets).
+     - \`componentType\` -> the \`Type\` part of the anchor (which will be one of: "Media", "Citation", "Biography", "Epistemology", "BrilliantIdea", or custom widgets).
      - \`sectionAnchor\` -> the heading title of the parent section.
      - \`props\` -> an object containing the resolved content details populated from the \`Topic\` hint:
-       - **Image**:
-          - \`searchQuery\`: Highly canonical and extremely concise 1 to 3 search words or keywords (e.g., "Claudio Monteverdi", "Larynx humain", "Doppler acoustique") extracted directly from the detailed description to ensure precise database matches on Wikidata, Wikimedia Commons, and other repositories. Do NOT repeat or use long, complex descriptions or captions here.
-         - \`description\`: The detailed search/generation description for the image. MUST be populated using the original detailed \`Topic\` description hint from the \`[[WIDGET:Image:ID:Topic]]\` anchor. STRICTLY PROHIBITED: Do NOT copy-paste the chapter's section anchor, heading, or parent section title here.
+       - **Media**:
+         - \`type\`: "image", "audio", or "video".
+         - \`description\`: The detailed search/generation description for the media. MUST be populated using the original detailed \`Topic\` description hint from the \`[[WIDGET:Media:ID:Topic]]\` anchor. STRICTLY PROHIBITED: Do NOT copy-paste the chapter's section anchor, heading, or parent section title here.
          - \`alt\`: Short description for accessibility. MUST describe the actual subject specified in the \`Topic\` hint. Do NOT use the parent section title here.
-         - \`caption\`: A detailed, italicized caption explaining the figure's academic relevance. **STRICT PROHIBITION**: You MUST NEVER write any manual prefix numbers, figures indices (e.g. 'Figure 1:', 'Figure A:', 'Expérience 1:', 'Illustration .2', or 'Figure 1.2:') or relative spatial links (e.g., 'comme le montre la figure ci-dessus', 'voir Figure 2') in the caption or description. The stitching layer handles all sequential figure numbering and prefixes programmatically at assembly time. Captions must contain only clean, natural, academic prose describing the visual subject itself (e.g. 'Une représentation tridimensionnelle...'). Do NOT use the parent section title here.
-         - \`title\`: Short title (optional).
-       - **Audio**:
-         - \`title\`: Short descriptive title for the audio track.
-         - \`duration\`: Estimated duration (e.g., "1:30" or "2:45").
-         - \`description\`: Detailed description of the audio track's content, narration, or pronunciation details.
-         - \`alt\`: Short description for accessibility.
-       - **Video**:
-         - \`title\`: Title of the video.
-         - \`url\`: Optional video URL (e.g., YouTube/Vimeo).
-         - \`id\`: Optional video platform ID.
-         - \`provider\`: "youtube", "vimeo", or "direct".
-         - \`duration\`: e.g., "3:15".
+         - \`caption\`: A detailed, italicized caption explaining the figure's academic relevance. MUST be a meaningful description of the specific subject from the \`Topic\` hint. Do NOT use the parent section title here.
+         - \`title\`: Short title (used for audio/video).
        - **Citation**:
          - \`quote\`: The text of the quote in the target language.
          - \`author\`: The author name.
          - \`source\`: The book/publication source title in its original language (untranslated).
          - \`year\`: The publication year.
-         - \`original\`: Original language quote text in the author's original language of writing. This field is MANDATORY if the author's original language of writing is different from the target language. Leave empty or omit ONLY if the original language is the exact same as the target language.
+         - \`original\`: (Optional) Original language quote text if different from target language.
          - \`commentary\`: Academic commentary explaining the significance of the quote (at least 3-4 sentences).
        - **Biography**:
          - \`name\`: Full name.
@@ -3979,9 +3693,17 @@ ${referencesMetadata}
        - **Epistemology**:
          - \`title\`: Controversy title.
          - \`content\`: Deeply academic prose discussion (150-250 words) detailing the controversy.
+       - **BrilliantIdea**:
+         - \`content\`: An intuitive analogy or brilliant pedagogical explanation (100-180 words).
+        - **PronunciationSandbox** (alias **SandboxPrononciation**):
+          - \`word\`: The word/phrase to practice pronouncing.
+          - \`ipa\`: Phonetic transcription in International Phonetic Alphabet (e.g., "[bjo.ɡʁa.fi]").
+          - \`lang\`: The language code of the word (e.g., "fr" or "en").
+          - \`definition\`: A short, clear definition of the word in the target language.
+          - \`explanation\`: Clear, helpful tips and orthographic/pronunciation instructions in the target language.
    - **Quiz Pool Size and Display Limit (CRITICAL - NO GUESSING)**:
      - For any \`Quiz\` component in this array, you MUST generate EXACTLY ${sectionQuizPoolCount} questions in its \`props.questions\` array.
-     - You MUST specify \`props.limit\`: ${sectionQuizDisplayLimit} in the \`props\` object.
+     - You MUST specify \`props.limit\`: ${sectionQuizDisplayLimit} in its \`props\` object.
      - This guarantees the pool is larger than the visible slice for retry randomisation.
 
 =============================================================================
@@ -4009,9 +3731,9 @@ ${referencesMetadata}
       let parsedWidgets: any = null;
       let widgetsApproved = false;
       let widgetsIteration = 0;
-      const maxWidgetsIterations = 5;
+      const maxWidgetsIterations = 3;
 
-      const widgetsJsonStr = await callAIEngine(widgetsPrompt, dynamicSchema, 0.1, undefined, undefined, false, 'widget_placement');
+      const widgetsJsonStr = await callAIEngine(widgetsPrompt, dynamicSchema, 0.1);
       lessonStats.widgetsAttempts++;
       saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_1.json`, widgetsJsonStr);
 
@@ -4050,7 +3772,7 @@ ${currentWidgetsJsonStr}
 
 Return ONLY the corrected and valid JSON response. Do NOT include any explanations, markdown headers, or natural language notes. Do NOT wrap your response in markdown code blocks (\`\`\`).`;
 
-            const repairedJsonStr = await callAIEngine(preflightRepairPrompt, dynamicSchema, 0.1, undefined, undefined, false, 'widget_placement');
+            const repairedJsonStr = await callAIEngine(preflightRepairPrompt, dynamicSchema, 0.1);
             currentWidgetsJsonStr = repairedJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
             saveDraftRevision(`draft_stage2_widgets_${item.slug}_preflight_repair_${preflightAttempts}.json`, currentWidgetsJsonStr);
           } else {
@@ -4059,7 +3781,7 @@ Return ONLY the corrected and valid JSON response. Do NOT include any explanatio
         }
       }
 
-      parsedWidgets = await validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
+      parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
 
       while (!widgetsApproved && widgetsIteration < maxWidgetsIterations) {
         widgetsIteration++;
@@ -4122,9 +3844,9 @@ You are the Widgets Critic Agent (Agent 4B). Your job is to strictly review the 
 
 ### INPUT WIDGETS JSON TO AUDIT
 Review the generated widgets JSON structure:
-\`\`\`json
+---
 ${JSON.stringify(parsedWidgets, null, 2)}
-\`\`\`
+---
 
 ### INPUT APPROVED NARRATIVE DRAFT (FOR REFERENCE)
 Verify that all anchors and citations match the approved text perfectly:
@@ -4141,15 +3863,15 @@ You must audit the widgets JSON against the following 6 critical checkpoints:
    - **STRICT REJECTION**: You MUST verify that every custom widget anchor in the narrative draft (e.g. \`[[WIDGET:Type:ID:Topic]]\` or \`[[WIDGET:ID]]\`) has a corresponding object in the \`interactiveComponents\` array.
    - Map:
      - \`id\` -> matches the \`ID\` part of the anchor.
-     - \`componentType\` -> matches the \`Type\` part of the anchor (e.g., "Image", "Audio", "Video", "Biography", "Citation", "Epistemology", or custom widgets).
+     - \`componentType\` -> matches the \`Type\` part of the anchor (e.g., "Media", "Biography", "Citation", "Epistemology", "BrilliantIdea", or custom widgets).
      - \`sectionAnchor\` -> matches the section heading title in the narrative draft where the anchor is placed.
    - **STRICT PROPERTIES AUDIT**: Verify that \`props\` contains the fully resolved fields based on the component type:
-     - **Image**: Must have \`description\`, \`alt\`, \`caption\` (detailed italicized explanation of the figure's relevance), and \`searchQuery\` (highly canonical 1 to 3 search words or keywords like "Claudio Monteverdi", "Larynx humain", etc. extracted directly from the detailed description). Do NOT allow blank or placeholder descriptions, captions, or searchQuery. STRICTLY REJECT if description, alt, caption, or searchQuery are lazy copy-pastes of the chapter's heading or parent section title, if they contain manual figure prefixes or labels (such as "Figure 1:", "Figure :", "Figure %d:", "Figure -", etc.), or if they contain relative/local image links or filenames (such as "./media/image.png" or "/images/photo.jpg").
-     - **Audio**: Must have \`title\` and optional \`description\` (narration details, pronunciation guide).
-     - **Video**: Must have \`title\` and optionally \`url\` or \`id\` if specified.
+     - **Media**: Must have \`type\` ("image", "audio", or "video"), \`description\`, \`alt\`, and \`caption\` (detailed italicized explanation of the figure's relevance). Do NOT allow blank or placeholder descriptions/captions, and STRICTLY REJECT if description, alt, or caption are lazy copy-pastes of the chapter's heading or parent section title.
      - **Citation**: Must have \`quote\`, \`author\`, \`source\`, \`year\`, and \`commentary\` (an academic paragraph explaining the quote's importance). Reject if commentary is generic or blank.
      - **Biography**: Must have \`name\`, \`dates\`, \`description\` (8-12 lines of biography detailing main contributions), and \`wikipediaUrl\` (working direct link to English Wikipedia page).
      - **Epistemology**: Must have \`title\` and \`content\` (detailed discussion of controversy/debate, 150-250 words).
+     - **BrilliantIdea**: Must have \`content\` (analogy or intuitive explanation, 100-180 words).
+      - **PronunciationSandbox** (or **SandboxPrononciation**): Must have \`word\`, \`ipa\`, \`lang\`, \`definition\`, and \`explanation\`. Verify that all are populated with highly accurate phonetic/transcription details and do not contain lazy defaults or generic placeholders.
    - Reject if any extra/undeclared anchors exist, or if any placed anchors are missing from the JSON, or if any of the properties above contain default placeholder texts.
 
 
@@ -4207,7 +3929,7 @@ You must return ONLY a valid JSON object matching the \`widgetsAuditSchema\` wit
 Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
 `;
 
-        const widgetsAuditStr = await callAIEngine(widgetsCriticPrompt, widgetsAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
+        const widgetsAuditStr = await callAIEngine(widgetsCriticPrompt, widgetsAuditSchema, 0.1);
         const cleanWidgetsAudit = widgetsAuditStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
         const widgetsAudit = safeJsonParse(cleanWidgetsAudit, 'Widgets Critic Audit');
 
@@ -4215,7 +3937,7 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
           await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Widgets JSON APPROVED ${isTerminalEvaluation ? '(Terminal Evaluation Bypass)' : `on attempt ${widgetsIteration}`}!`);
           widgetsApproved = true;
         } else {
-          const isGlobalWidgets = false; // Force localized repairs only to prevent global rewrite loops and stabilize generation
+          const isGlobalWidgets = !!widgetsAudit?.isGlobalRevision;
           const globalCritiqueText = widgetsAudit?.globalCritique || '';
           const criticWidgetsList: { key: string; approved: boolean; critique: string }[] = widgetsAudit?.widgets || [];
 
@@ -4255,9 +3977,9 @@ GLOBAL CRITIQUE FROM AGENT 4B:
 "${globalCritiqueText}"
 
 PREVIOUS WIDGETS JSON:
-\`\`\`json
+---
 ${JSON.stringify(parsedWidgets, null, 2)}
-\`\`\`
+---
 
 INPUT APPROVED NARRATIVE DRAFT:
 ---
@@ -4268,19 +3990,13 @@ Generate the complete, updated, fully-fledged widgets JSON conforming strictly t
 
             saveDraftRevision(`prompt_stage2_refiner_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRefinerPrompt);
 
-            const dynamicSchemaGlobal = getDynamicWidgetsSchema(approvedNarrativeText);
-            const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, dynamicSchemaGlobal, 0.1, undefined, undefined, false, 'widget_placement');
+            const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, lessonWidgetsSchema, 0.1);
             lessonStats.widgetsAttempts++;
             saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_${widgetsIteration + 1}.json`, refinedWidgetsStr);
 
-            try {
-              const cleanRefinedWidgets = refinedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-              const newlyParsed = safeJsonParse(cleanRefinedWidgets, 'WFTA Stage 2 Widgets Refinement');
-              parsedWidgets = await validateAndFixWidgets(newlyParsed, courseContext.discipline || correctedCourseName, targetLang);
-              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Successfully parsed globally refined widgets JSON.`);
-            } catch (jsonErr: any) {
-              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] ⚠️ Global widgets refinement parsing failed (${jsonErr.message}). Falling back to the previous widgets JSON version to prevent crash.`);
-            }
+            const cleanRefinedWidgets = refinedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+            parsedWidgets = safeJsonParse(cleanRefinedWidgets, 'WFTA Stage 2 Widgets Refinement');
+            parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
           } else {
             // === LOCALIZED COMPONENT-BY-COMPONENT REPAIR PATH ===
             const rejectedWidgets = criticWidgetsList.filter(w => !w.approved);
@@ -4308,8 +4024,6 @@ Generate the complete, updated, fully-fledged widgets JSON conforming strictly t
               });
             }
 
-            const repairSchemasStr = getSchemasForRejectedKeys(rejectedWidgets.map(w => w.key), lessonWidgetsSchema);
-
             const widgetsRepairPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 We need to repair specific component keys of the generated widgets JSON for the lesson "${item.title}" that were rejected by the Widgets Critic (Agent 4B).
 
@@ -4327,16 +4041,9 @@ Key: "${rw.key}"
 Critique from Agent 4B:
   "${rw.critique}"
 Current JSON Value:
-\`\`\`json
 ${JSON.stringify(rw.currentValue, null, 2)}
-\`\`\`
 ----------------------------------
 `).join('\n')}
-
-### STRICT JSON SCHEMAS FOR REJECTED WIDGETS:
-\`\`\`json
-${repairSchemasStr}
-\`\`\`
 
 INSTRUCTIONS:
 1. Repair each rejected widget key to fully resolve its critique.
@@ -4355,17 +4062,12 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`json or \`\`\`).`;
 
             saveDraftRevision(`prompt_stage2_repair_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRepairPrompt);
 
-            const repairedWidgetsStr = await callAIEngine(widgetsRepairPrompt, null, 0.1, undefined, undefined, false, 'widget_placement');
+            const repairedWidgetsStr = await callAIEngine(widgetsRepairPrompt, null, 0.1);
             lessonStats.widgetsAttempts++;
             saveDraftRevision(`draft_stage2_widgets_repair_${item.slug}_attempt_${widgetsIteration + 1}.json`, repairedWidgetsStr);
 
-            let repairedWidgetsJson: any = null;
-            try {
-              const cleanRepairedWidgets = repairedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-              repairedWidgetsJson = safeJsonParse(cleanRepairedWidgets, 'Widgets Local Repair Parsing');
-            } catch (jsonErr: any) {
-              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] ⚠️ Localized widgets repair parsing failed (${jsonErr.message}). Skipping this repair iteration to prevent crash.`);
-            }
+            const cleanRepairedWidgets = repairedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+            const repairedWidgetsJson = safeJsonParse(cleanRepairedWidgets, 'Widgets Local Repair Parsing');
 
             if (repairedWidgetsJson) {
               if (Array.isArray(repairedWidgetsJson.interactiveComponents)) {
@@ -4405,7 +4107,7 @@ Do NOT wrap your JSON response in markdown code blocks (\`\`\`json or \`\`\`).`;
               }
             }
 
-            parsedWidgets = await validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
+            parsedWidgets = validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
           }
         }
       }
@@ -4750,12 +4452,11 @@ ${isolatedContent}`;
               console.log(`[AI GENERATOR] Translating lesson "${lesson.title}" to ${targetLang} via AI Studio fallback (gemini-2.5-flash)...`);
               const startTime = Date.now();
               try {
-                const compressedPrompt = compressPromptText(promptTranslate);
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    contents: [{ parts: [{ text: compressedPrompt }] }]
+                    contents: [{ parts: [{ text: promptTranslate }] }]
                   })
                 });
                 if (res.ok) {
@@ -4768,7 +4469,7 @@ ${isolatedContent}`;
                   const usage = resJson.usageMetadata || {};
                   const promptTokens = usage.promptTokenCount || 0;
                   const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-                  await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedPrompt);
+                  await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptTranslate);
                 }
               } catch (err) {
                 console.error(`[AI GENERATOR] AI Studio translation fetch exception:`, err);
@@ -4789,7 +4490,7 @@ ${isolatedContent}`;
             let critique = '';
             let currentTranslation = translatedMdx;
             let critiqueIteration = 0;
-            const maxCritiqueIterations = 5;
+            const maxCritiqueIterations = 3;
 
             while (!approved && critiqueIteration < maxCritiqueIterations && currentTranslation) {
               critiqueIteration++;
@@ -4857,7 +4558,7 @@ let criticResText = '';
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      contents: [{ parts: [{ text: compressPromptText(promptCritic) }] }],
+                      contents: [{ parts: [{ text: promptCritic }] }],
                       generationConfig: {
                         responseMimeType: "application/json",
                         responseSchema: verificationSchema
@@ -4952,7 +4653,7 @@ if (process.env.DEBUG === 'true') {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
-                        contents: [{ parts: [{ text: compressPromptText(promptRefine) }] }]
+                        contents: [{ parts: [{ text: promptRefine }] }]
                       })
                     });
                     if (resRefine.ok) {
@@ -5010,12 +4711,11 @@ if (process.env.DEBUG === 'true') {
                 console.log(`[AI GENERATOR] Translating title "${lesson.title}" via AI Studio fallback (gemini-2.5-flash)...`);
                 const startTime = Date.now();
                 try {
-                  const compressedTitle = compressPromptText(promptTitle);
                   const resTitle = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      contents: [{ parts: [{ text: compressedTitle }] }]
+                      contents: [{ parts: [{ text: promptTitle }] }]
                     })
                   });
                   if (resTitle.ok) {
@@ -5027,7 +4727,7 @@ if (process.env.DEBUG === 'true') {
                     const usage = tJson.usageMetadata || {};
                     const promptTokens = usage.promptTokenCount || 0;
                     const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-                    await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedTitle);
+                    await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptTitle);
                   }
                 } catch (err) {
                   console.error(`[AI GENERATOR] AI Studio title translation fetch exception:`, err);
@@ -5145,7 +4845,7 @@ if (process.env.DEBUG === 'true') {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                contents: [{ parts: [{ text: compressPromptText(promptCourseTitle) }] }]
+                contents: [{ parts: [{ text: promptCourseTitle }] }]
               })
             });
             if (res.ok) {
@@ -5182,7 +4882,7 @@ if (process.env.DEBUG === 'true') {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                contents: [{ parts: [{ text: compressPromptText(promptCourseDesc) }] }]
+                contents: [{ parts: [{ text: promptCourseDesc }] }]
               })
             });
             if (res.ok) {
@@ -5384,7 +5084,7 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: compressPromptText(promptIdentify) }] }],
+          contents: [{ parts: [{ text: promptIdentify }] }],
           generationConfig: {
             responseMimeType: "application/json",
             responseSchema: slugsArraySchema
@@ -5477,7 +5177,7 @@ INSTRUCTIONS:
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: compressPromptText(promptRevise) }] }],
+            contents: [{ parts: [{ text: promptRevise }] }],
             generationConfig: {
               temperature: 0.35,
               frequencyPenalty: 0.25,
@@ -5505,7 +5205,7 @@ INSTRUCTIONS:
     let critique = '';
     let currentMdx = revisedMdx;
     let critiqueIteration = 0;
-    const maxCritiqueIterations = 5;
+    const maxCritiqueIterations = 3;
 
     while (!approved && critiqueIteration < maxCritiqueIterations && currentMdx) {
       critiqueIteration++;
@@ -5598,7 +5298,7 @@ Do not write any markdown code block wrappers (like \`\`\`json) or any conversat
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: compressPromptText(promptCritic) }] }],
+              contents: [{ parts: [{ text: promptCritic }] }],
               generationConfig: {
                 responseMimeType: "application/json",
                 responseSchema: revisionAuditSchema
@@ -5688,7 +5388,7 @@ Return ONLY the revised MDX content. Do NOT include markdown code block wrappers
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  contents: [{ parts: [{ text: compressPromptText(promptRefineGlobal) }] }],
+                  contents: [{ parts: [{ text: promptRefineGlobal }] }],
                   generationConfig: {
                     temperature: 0.35,
                     frequencyPenalty: 0.25,
@@ -5816,7 +5516,7 @@ INSTRUCTIONS:
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    contents: [{ parts: [{ text: compressPromptText(promptJointRepair) }] }],
+                    contents: [{ parts: [{ text: promptJointRepair }] }],
                     generationConfig: {
                       temperature: 0.35,
                       frequencyPenalty: 0.25,
@@ -6005,7 +5705,7 @@ Return ONLY the raw JSON object. Do not wrap it in markdown blockticks (\`\`\`).
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: compressPromptText(promptSystemic) }] }],
+          contents: [{ parts: [{ text: promptSystemic }] }],
           generationConfig: {
             responseMimeType: "application/json",
             responseSchema: systemicAnalysisSchema
@@ -6086,12 +5786,11 @@ INSTRUCTIONS:
     console.log(`[SELF-HEALING] Healing MDX content via AI Studio fallback (gemini-2.5-flash)...`);
     try {
       const startTime = Date.now();
-      const compressedHealer = compressPromptText(promptHealer);
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: compressedHealer }] }]
+          contents: [{ parts: [{ text: promptHealer }] }]
         })
       });
       if (res.ok) {
@@ -6103,7 +5802,7 @@ INSTRUCTIONS:
           const usage = jsonRes.usageMetadata || {};
           const promptTokens = usage.promptTokenCount || 0;
           const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedHealer);
+          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptHealer);
         } else {
           console.warn("[SELF-HEALING] AI Studio healer returned empty content");
         }
@@ -6292,7 +5991,7 @@ If you cannot find any real audio, output: {}`;
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: compressPromptText(prompt) }] }],
+            contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
               responseMimeType: "application/json",
               responseSchema: audioSearchSchema
@@ -6340,54 +6039,17 @@ async function findAlternativeAudioWithFallback(title: string, targetLang: strin
   return null;
 }
 
-function isBookReference(text: string): boolean {
-  const lowercase = text.toLowerCase();
-  const bookKeywords = [
-    'presses universitaires', 'éditions', 'editions', 'publisher', 'publishing', 'university press', 
-    'lgdj', 'dalloz', 'lexisnexis', 'gualino', 'lextenso', 'springer', 'routledge', 'oxford', 
-    'cambridge', 'palgrave', 'book', 'livre', 'manuel', 'traité', 'précis', 'introduction au', 
-    'droit de', 'droit des', 'droit civil', 'droit commercial', 'droit des affaires'
-  ];
-  const articleKeywords = [
-    'journal of', 'review of', 'revue de', 'revue française', 'revue internationale',
-    'vol.', 'no.', 'issue', 'tome', 'fascicule', 'colloque', 'actes du colloque', 
-    'article', 'working paper', 'preprint', 'doi:'
-  ];
-  let bookScore = 0;
-  let articleScore = 0;
-  for (const kw of bookKeywords) {
-    if (lowercase.includes(kw)) bookScore++;
-  }
-  for (const kw of articleKeywords) {
-    if (lowercase.includes(kw)) articleScore++;
-  }
-  if (/, (paris|london|new york|boston|chicago|berlin|tokyo),/i.test(lowercase)) {
-    bookScore += 2;
-  }
-  if (/\bp\.\s*\d+/i.test(lowercase)) {
-    bookScore += 0.5;
-  }
-  return bookScore >= articleScore;
-}
-
 async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'): Promise<string> {
-  const refRegex = /(?:<a\s+id="ref-(\d+)"[^>]*><\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\n\s*(?:<a\s+id="ref-\d+"|\[\d+\]|###|---\s*|$))/g;
+  const refRegex = /<a id="ref-(\d+)"><\/a>\[(\d+)\]\s*\[(.*?)\]\((.*?)\)/g;
   let match;
   const replacements: { original: string; replacement: string; refId: string }[] = [];
 
   while ((match = refRegex.exec(mdx)) !== null) {
     const fullMatch = match[0];
-    const refId = match[1] || match[2];
+    const refId = match[1];
     const refNum = match[2];
-    const rawRefText = match[3].trim();
-
-    const linkMatch = rawRefText.match(/\[(.*?)\]\((.*?)\)/);
-    let refText = rawRefText;
-    let refUrl = '';
-    if (linkMatch) {
-      refText = linkMatch[1];
-      refUrl = linkMatch[2];
-    }
+    const refText = match[3];
+    const refUrl = match[4];
 
     console.log(`[BIBLIOGRAPHY VALIDATOR] Verifying Reference #${refId}: "${refText}" with URL "${refUrl}"`);
 
@@ -6412,29 +6074,10 @@ async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'
         : refText.replace(/[^\w\s-]/g, '').split(/\s+/).slice(0, 8).join(' ')
     ];
 
-    const isWebResource = !isBookReference(refText) || 
-      /futura\s*science|futura-science|site|web|article\s*en\s*ligne|en\s*ligne|internet|blog|press|news/i.test(refText);
-
     for (let attempt = 0; attempt < 3; attempt++) {
       const query = queries[attempt];
       if (!query) continue;
-      console.log(`[BIBLIOGRAPHY VALIDATOR] Attempt ${attempt + 1}/3 with query: "${query}" (isWebResource: ${isWebResource})`);
-
-      if (isWebResource) {
-        try {
-          const wikiRes = await fetchWithTimeout(`https://${targetLang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=1&format=json`);
-          if (wikiRes.ok) {
-            const data = await wikiRes.json();
-            if (data && data[3] && data[3][0]) {
-              resolvedUrl = data[3][0];
-              resolvedTitle = data[1]?.[0] || refText;
-              break;
-            }
-          }
-        } catch (e) {
-          console.warn(`[BIBLIOGRAPHY VALIDATOR] Wikipedia search attempt ${attempt + 1} failed:`, e);
-        }
-      }
+      console.log(`[BIBLIOGRAPHY VALIDATOR] Attempt ${attempt + 1}/3 with query: "${query}"`);
 
       try {
         const searchRes = await fetchWithTimeout(`https://api.crossref.org/works?query=${encodeURIComponent(query)}&rows=1`);
@@ -6468,22 +6111,6 @@ async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'
         }
       } catch (e) {
         console.warn(`[BIBLIOGRAPHY VALIDATOR] Google Books attempt ${attempt + 1} failed:`, e);
-      }
-
-      if (!isWebResource) {
-        try {
-          const wikiRes = await fetchWithTimeout(`https://${targetLang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=1&format=json`);
-          if (wikiRes.ok) {
-            const data = await wikiRes.json();
-            if (data && data[3] && data[3][0]) {
-              resolvedUrl = data[3][0];
-              resolvedTitle = data[1]?.[0] || refText;
-              break;
-            }
-          }
-        } catch (e) {
-          console.warn(`[BIBLIOGRAPHY VALIDATOR] Fallback Wikipedia search attempt ${attempt + 1} failed:`, e);
-        }
       }
     }
 
@@ -6738,7 +6365,7 @@ async function validateAndFixExternalResources(mdx: string, targetLang: string =
         if (title) {
           const altUrl = await findAlternativeAudioWithFallback(title, targetLang);
           if (altUrl) {
-            const newTag = `<Audio url="${altUrl}" title="${title}" duration="${duration}" />`;
+            const newTag = `<AudioPlayer url="${altUrl}" title="${title}" duration="${duration}" />`;
             updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
             alternativeFound = true;
             console.log(`[EXTERNAL RESOURCE VALIDATOR] Replaced dead audio with alternative: ${newTag}`);
@@ -7016,12 +6643,11 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
       console.log(`[AI CURRICULUM] Generating curriculum for "${curriculumName}" via AI Studio fallback (gemini-2.5-flash)...`);
       const startTime = Date.now();
       try {
-        const compressedCurriculum = compressPromptText(promptCurriculum);
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: compressedCurriculum }] }],
+            contents: [{ parts: [{ text: promptCurriculum }] }],
             generationConfig: {
               temperature: 0.1,
               responseMimeType: "application/json",
@@ -7037,7 +6663,7 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
           const usage = jsonRes.usageMetadata || {};
           const promptTokens = usage.promptTokenCount || 0;
           const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedCurriculum);
+          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptCurriculum);
         }
       } catch (err) {
         console.error("[AI CURRICULUM] AI Studio curriculum generation fetch exception:", err);
@@ -7225,7 +6851,7 @@ function sanitizeMdxFallback(mdx: string): string {
     
     // Additional registered elements
     'Alert', 'CustomFigure', 'Objectives', 'Objective', 'Knowledge', 'Skills', 'Attitudes',
-    'References', 'Explanation', 'Solution', 'KeyConcept', 'Instruction', 'Shape',
+    'References', 'AudioPlayer', 'Explanation', 'Solution', 'KeyConcept', 'Instruction', 'Shape',
     'MetaNote', 'SelfAssessment', 'FictionalCharacter', 'Place', 'EvenementHistorique',
     'ExternalSandbox', 'GestaltInteractive', 'GestaltLab', 'DataChart', 'StructureViewer3D',
     'DynamicSimulation', 'GoingFurther', 'GoingFurtherItem', 'FunctionManipulator',
@@ -7236,7 +6862,7 @@ function sanitizeMdxFallback(mdx: string): string {
     'SummativeEvaluation', 'EvaluationSection', 'Assignment', 'Deadline', 'Submission',
     'Evaluation', 'FinalProject', 'FinalWork', 'Format', 'Instructions', 'FinalQuiz',
     'QuizQuestion', 'Answer', 'Description', 'Title', 'FormativeQuiz', 'Callout',
-    'CalloutContainer', 'Image', 'Biography', 'Citation',
+    'CalloutContainer', 'Image', 'Media', 'Biography', 'Citation',
     
     // Common standard HTML elements that could be output or generated
     'p', 'span', 'div', 'a', 'img', 'br', 'hr', 'ul', 'ol', 'li', 'strong', 'em', 'code', 'pre',
@@ -7263,24 +6889,22 @@ function sanitizeMdxFallback(mdx: string): string {
   return processedParts.join('');
 }
 
-export function extractCustomFigures(mdx: string): Array<{ type: string; description: string; title?: string; caption?: string; searchQuery?: string }> {
-  const figures: Array<{ type: string; description: string; title?: string; caption?: string; searchQuery?: string }> = [];
-  const regex = /<(CustomFigure|Image)\s+([^>]*)\/>/g;
+export function extractCustomFigures(mdx: string): Array<{ type: string; description: string; title?: string; caption?: string }> {
+  const figures: Array<{ type: string; description: string; title?: string; caption?: string }> = [];
+  const regex = /<CustomFigure\s+([^>]*)\/>/g;
   let match;
   while ((match = regex.exec(mdx)) !== null) {
-    const attrsStr = match[2];
+    const attrsStr = match[1];
     const typeMatch = attrsStr.match(/type=(["'])([\s\S]*?)\1/i);
     const descMatch = attrsStr.match(/description=(["'])([\s\S]*?)\1/i);
     const titleMatch = attrsStr.match(/title=(["'])([\s\S]*?)\1/i);
     const captionMatch = attrsStr.match(/caption=(["'])([\s\S]*?)\1/i);
-    const searchQueryMatch = attrsStr.match(/searchQuery=(["'])([\s\S]*?)\1/i);
     if (typeMatch && descMatch) {
       figures.push({
         type: typeMatch[2],
         description: descMatch[2],
         title: titleMatch ? titleMatch[2] : undefined,
-        caption: captionMatch ? captionMatch[2] : undefined,
-        searchQuery: searchQueryMatch ? searchQueryMatch[2] : undefined
+        caption: captionMatch ? captionMatch[2] : undefined
       });
     }
   }
