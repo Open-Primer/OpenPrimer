@@ -256,6 +256,60 @@ const verificationSchema = {
   required: ["approved", "critique"]
 };
 
+const syllabusAuditSchema = {
+  type: "object",
+  properties: {
+    approved: { type: "boolean" },
+    critique: { type: "string" }
+  },
+  required: ["approved", "critique"]
+};
+
+const lessonOutlineSchema = {
+  type: "object",
+  properties: {
+    sections: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          heading: { type: "string" },
+          description: { type: "string" }
+        },
+        required: ["heading", "description"]
+      }
+    }
+  },
+  required: ["sections"]
+};
+
+const outlineAuditSchema = {
+  type: "object",
+  properties: {
+    approved: { type: "boolean" },
+    critique: { type: "string" }
+  },
+  required: ["approved", "critique"]
+};
+
+const blockNarrativeAuditSchema = {
+  type: "object",
+  properties: {
+    approved: { type: "boolean" },
+    critique: { type: "string" }
+  },
+  required: ["approved", "critique"]
+};
+
+const widgetBlockAuditSchema = {
+  type: "object",
+  properties: {
+    approved: { type: "boolean" },
+    critique: { type: "string" }
+  },
+  required: ["approved", "critique"]
+};
+
 const widgetsAuditSchema = {
   type: "object",
   properties: {
@@ -933,6 +987,45 @@ const lessonWidgetsSchema = {
   ]
 };
 
+const widgetBlock1Schema = {
+  type: "object",
+  properties: {
+    prerequisites: lessonWidgetsSchema.properties.prerequisites,
+    diagnosticQuiz: lessonWidgetsSchema.properties.diagnosticQuiz,
+    learningObjectives: lessonWidgetsSchema.properties.learningObjectives
+  },
+  required: ["prerequisites", "diagnosticQuiz", "learningObjectives"]
+};
+
+const widgetBlock2Schema = {
+  type: "object",
+  properties: {
+    interactiveComponents: lessonWidgetsSchema.properties.interactiveComponents
+  },
+  required: ["interactiveComponents"]
+};
+
+const widgetBlock3Schema = {
+  type: "object",
+  properties: {
+    conclusionSummary: lessonWidgetsSchema.properties.conclusionSummary,
+    whatsNext: lessonWidgetsSchema.properties.whatsNext,
+    goingFurther: lessonWidgetsSchema.properties.goingFurther,
+    glossary: lessonWidgetsSchema.properties.glossary
+  },
+  required: ["conclusionSummary", "whatsNext", "goingFurther", "glossary"]
+};
+
+const widgetBlock4Schema = {
+  type: "object",
+  properties: {
+    finalEvaluation: lessonWidgetsSchema.properties.finalEvaluation,
+    references: lessonWidgetsSchema.properties.references
+  },
+  required: ["finalEvaluation", "references"]
+};
+
+
 function extractWidgetAnchors(narrativeText: string): { raw: string, type: string, id: string, topic?: string }[] {
   const matches: { raw: string, type: string, id: string, topic?: string }[] = [];
   const regex = /\[\[WIDGET:(.*?)\]\]+/gi;
@@ -1165,9 +1258,18 @@ async function translateText(text: string, targetLang: string): Promise<string> 
 TEXT TO TRANSLATE:
 ${text}`;
   try {
-    const res = await callAIEngine(prompt, null, 0.1);
-    const cleanRes = res.replace(/```[a-z]*/g, '').replace(/```/g, '').trim();
-    return cleanRes;
+    const res = await callVertexAI({
+      task: 'course_generation',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.1 }
+    });
+    if (res && res.ok) {
+      const resJson = await res.json();
+      const resultText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const cleanRes = resultText.replace(/```[a-z]*/g, '').replace(/```/g, '').trim();
+      return cleanRes;
+    }
+    return text;
   } catch (err) {
     console.error(`[TRANSLATE] Failed to translate:`, err);
     return text;
@@ -3037,72 +3139,194 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
     try {
       let rawJson = '';
       let success = false;
-      
-      if (isVertexConfigured()) {
-        console.log(`[AI GENERATOR] Generating syllabus for "${courseName}" via Vertex AI (${TASK_MODELS['course_generation']})...`);
-        try {
-          const res = await callVertexAI({
-            task: 'course_generation',
-            contents: [{ role: 'user', parts: [{ text: promptSyllabus }] }],
-            generationConfig: {
-              temperature: 0.1,
-              responseMimeType: "application/json",
-              responseSchema: syllabusSchema
-            }
-          });
+      let syllabusApproved = false;
+      let syllabusIteration = 0;
+      const maxSyllabusIterations = 3;
+      let currentSyllabusPrompt = promptSyllabus;
 
-          if (res && res.ok) {
-            const jsonRes = await safeResponseJson(res, 'Vertex course syllabus generation');
-            rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-            success = true;
-          }
-        } catch (err) {
-          console.warn(`[AI GENERATOR] Vertex AI syllabus generation exception.`, err);
-        }
-      }
-      
-      if (!success && apiKey) {
-        console.log(`[AI GENERATOR] Generating syllabus for "${courseName}" via AI Studio fallback (gemini-2.5-flash)...`);
-        const startTime = Date.now();
-        try {
-          const compressedSyllabus = compressPromptText(promptSyllabus);
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: compressedSyllabus }] }],
+      while (!syllabusApproved && syllabusIteration < maxSyllabusIterations) {
+        syllabusIteration++;
+        await appendTaskLog(`[AI GENERATOR] Syllabus generation iteration #${syllabusIteration}...`);
+        
+        let attemptJson = '';
+        let attemptSuccess = false;
+
+        if (isVertexConfigured()) {
+          console.log(`[AI GENERATOR] Generating syllabus iteration #${syllabusIteration} for "${courseName}" via Vertex AI (${TASK_MODELS['course_generation']})...`);
+          try {
+            const res = await callVertexAI({
+              task: 'course_generation',
+              contents: [{ role: 'user', parts: [{ text: currentSyllabusPrompt }] }],
               generationConfig: {
                 temperature: 0.1,
                 responseMimeType: "application/json",
                 responseSchema: syllabusSchema
               }
-            })
-          });
-          if (res.ok) {
-            const jsonRes = await safeResponseJson(res, 'AI Studio syllabus generation fallback');
-            rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-            success = true;
+            });
 
-            const durationMs = Date.now() - startTime;
-            const usage = jsonRes.usageMetadata || {};
-            const promptTokens = usage.promptTokenCount || 0;
-            const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-            await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedSyllabus);
-          } else {
-            const errText = await res.text();
-            console.error(`[AI GENERATOR] AI Studio syllabus call failed (${res.status}):`, errText);
+            if (res && res.ok) {
+              const jsonRes = await safeResponseJson(res, 'Vertex course syllabus generation');
+              attemptJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+              attemptSuccess = true;
+            }
+          } catch (err) {
+            console.warn(`[AI GENERATOR] Vertex AI syllabus generation exception.`, err);
           }
-        } catch (err) {
-          console.error(`[AI GENERATOR] AI Studio fetch exception:`, err);
+        }
+
+        if (!attemptSuccess && apiKey) {
+          console.log(`[AI GENERATOR] Generating syllabus iteration #${syllabusIteration} for "${courseName}" via AI Studio fallback (gemini-2.5-flash)...`);
+          const startTime = Date.now();
+          try {
+            const compressedSyllabus = compressPromptText(currentSyllabusPrompt);
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: compressedSyllabus }] }],
+                generationConfig: {
+                  temperature: 0.1,
+                  responseMimeType: "application/json",
+                  responseSchema: syllabusSchema
+                }
+              })
+            });
+            if (res.ok) {
+              const jsonRes = await safeResponseJson(res, 'AI Studio syllabus generation fallback');
+              attemptJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+              attemptSuccess = true;
+
+              const durationMs = Date.now() - startTime;
+              const usage = jsonRes.usageMetadata || {};
+              const promptTokens = usage.promptTokenCount || 0;
+              const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+              await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedSyllabus);
+            } else {
+              const errText = await res.text();
+              console.error(`[AI GENERATOR] AI Studio syllabus call failed (${res.status}):`, errText);
+            }
+          } catch (err) {
+            console.error(`[AI GENERATOR] AI Studio fetch exception:`, err);
+          }
+        }
+
+        if (!attemptSuccess || !attemptJson) {
+          throw new Error(`[AI GENERATOR CRITICAL ERROR] AI model failed to generate syllabus for course "${correctedCourseName}". Syllabus raw JSON is empty.`);
+        }
+
+        const cleanedJson = attemptJson.replace(/```json/g, '').replace(/```/g, '').trim();
+        let currentParsedSyllabus = null;
+        try {
+          currentParsedSyllabus = safeJsonParse(cleanedJson, 'generateCourseContent (Syllabus)');
+        } catch (e) {
+          await appendTaskLog(`[AI GENERATOR] Syllabus JSON syntax invalid: ${String(e)}. Retrying...`);
+          continue;
+        }
+
+        // Run syllabus critique
+        await appendTaskLog(`[AI GENERATOR] Running Critique on generated syllabus (Iteration #${syllabusIteration})...`);
+        const syllabusCriticPrompt = `You are the Syllabus Critique Agent. Your job is to review the syllabus generated by the Pedagogical Architect.
+Verify that:
+1. The syllabus is completely aligned with the course name: "${correctedCourseName}" and level: "${getDescriptiveLevelForPrompt(level)}".
+2. There are no redundant lessons or generic filler lessons.
+3. The progression is logical and pedagogically sound.
+4. The output matches the syllabusSchema structure.
+
+### GENERATED SYLLABUS:
+${JSON.stringify(currentParsedSyllabus, null, 2)}
+
+You must return ONLY a valid JSON object matching this schema:
+\`\`\`json
+{
+  "approved": boolean,
+  "critique": "detailed critique explaining what to fix, or empty if approved"
+}
+\`\`\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+        let critiqueJsonStr = '';
+        let critiqueSuccess = false;
+
+        if (isVertexConfigured()) {
+          try {
+            const res = await callVertexAI({
+              task: 'course_generation',
+              contents: [{ role: 'user', parts: [{ text: syllabusCriticPrompt }] }],
+              generationConfig: {
+                temperature: 0.1,
+                responseMimeType: "application/json",
+                responseSchema: syllabusAuditSchema
+              }
+            });
+            if (res && res.ok) {
+              const jsonRes = await safeResponseJson(res, 'Vertex syllabus critique');
+              critiqueJsonStr = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              critiqueSuccess = true;
+            }
+          } catch (err) {
+            console.warn(`[AI GENERATOR] Vertex AI syllabus critique exception.`, err);
+          }
+        }
+
+        if (!critiqueSuccess && apiKey) {
+          try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: compressPromptText(syllabusCriticPrompt) }] }],
+                generationConfig: {
+                  temperature: 0.1,
+                  responseMimeType: "application/json",
+                  responseSchema: syllabusAuditSchema
+                }
+              })
+            });
+            if (res.ok) {
+              const jsonRes = await safeResponseJson(res, 'AI Studio syllabus critique');
+              critiqueJsonStr = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              critiqueSuccess = true;
+            }
+          } catch (err) {
+            console.error(`[AI GENERATOR] AI Studio critique fetch exception:`, err);
+          }
+        }
+
+        saveDraftRevision(`prompt_stage0_syllabus_critique_${courseSlugForSyllabus}_iter${syllabusIteration}.md`, syllabusCriticPrompt);
+        if (critiqueSuccess && critiqueJsonStr) {
+          saveDraftRevision(`critique_stage0_syllabus_${courseSlugForSyllabus}_iter${syllabusIteration}.json`, critiqueJsonStr);
+        }
+
+        let critiqueObj = { approved: true, critique: '' };
+        if (critiqueSuccess && critiqueJsonStr) {
+          try {
+            critiqueObj = safeJsonParse(critiqueJsonStr.replace(/```json/g, '').replace(/```/g, '').trim(), 'Syllabus Critique Parsing');
+          } catch (e) {
+            console.warn(`[AI GENERATOR] Failed to parse syllabus critique JSON:`, e);
+          }
+        }
+
+        if (critiqueObj.approved) {
+          await appendTaskLog(`[AI GENERATOR] Syllabus approved by Critique Agent on iteration #${syllabusIteration}!`);
+          rawJson = attemptJson;
+          parsedSyllabus = currentParsedSyllabus;
+          syllabusApproved = true;
+        } else {
+          await appendTaskLog(`[AI GENERATOR WARNING] Syllabus REJECTED by Critique Agent. Critique: "${critiqueObj.critique}". Retrying generation...`);
+          currentSyllabusPrompt = `${promptSyllabus}
+          
+=============================================================================
+🚨 SYLLABUS CRITIQUE FROM PREVIOUS ATTEMPT 🚨
+Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correct the following issues in this new generation:
+"${critiqueObj.critique}"
+=============================================================================`;
         }
       }
 
-      if (!rawJson) {
-        throw new Error(`[AI GENERATOR CRITICAL ERROR] AI model failed to generate syllabus for course "${correctedCourseName}". Syllabus raw JSON is empty.`);
+      if (!parsedSyllabus) {
+        throw new Error(`[AI GENERATOR CRITICAL ERROR] Syllabus failed critique validation after ${maxSyllabusIterations} iterations.`);
       }
 
-      const cleanedJson = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
-      parsedSyllabus = safeJsonParse(cleanedJson, 'generateCourseContent (Syllabus)');
       lessonsList = Array.isArray(parsedSyllabus)
         ? parsedSyllabus
         : (parsedSyllabus.lessons || []);
@@ -3422,11 +3646,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
                                         (courseContext.discipline || '').toLowerCase().includes('linguistic') ||
                                         correctedCourseName.toLowerCase().includes('espagnol') ||
                                         correctedCourseName.toLowerCase().includes('semantique') ||
-                                        correctedCourseName.toLowerCase().includes('sémantique') ||
-                                        item.title.toLowerCase().includes('son') ||
-                                        item.title.toLowerCase().includes('prononciation') ||
-                                        item.title.toLowerCase().includes('phonet') ||
-                                        item.title.toLowerCase().includes('phonét');
+                                        correctedCourseName.toLowerCase().includes('sémantique');
 
         if (isLanguageOrLinguistics) {
           if (targetLang.toLowerCase() === 'fr') {
@@ -3452,578 +3672,254 @@ Do NOT use raw HTML/JSX tags. Exclusively write it as a bracketed anchor: [[WIDG
           }
         }
 
-        const usedMediaListStr = usedMediaRegistry.length > 0
-          ? usedMediaRegistry.map(m => `- Type: ${m.type}, Description: "${m.description}"${m.caption ? `, Caption: "${m.caption}"` : ''}`).join('\n')
-          : 'None yet. This is the first lesson or no media has been used yet.';
 
-        const { min: minWords, max: maxWords } = getWordCountLimitForLevel(levelInput);
+        // --- 1. JIT Lesson Outline Generation & Critique ---
+        await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 1-A] Generating JIT outline plan for lesson "${item.title}"...`);
+        const outlinePrompt = `You are the Lesson Planner Agent. Your job is to design the chapter outline/plan for the lesson:
+Course: "${correctedCourseName}"
+Level: "${getDescriptiveLevelForPrompt(levelInput)}"
+Lesson Title: "${item.title}"
+Lesson Description/Technical Depth: "${item.technicalDepth || 'N/A'}"
+Discipline: "${courseContext.discipline || 'General'}"
+Target Language: "${targetLang.toUpperCase()}"
 
-        let narrativePrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
-Your task is to write the complete, professional, extremely detailed academic MDX narrative content for the specified lesson.
+Generate a list of 4 to 6 logical chapters/sections for this lesson, including an Introduction and a Conclusion.
+For each section, provide a clear heading title (starting with "## ") and a short explanation of what Scribe should write in that section.
+Do NOT write the content of the lesson, only the plan/structure.
 
-⚠️ MANDATORY WORD-COUNT & LENGTH DIRECTION (STRICT LEVEL-BASED ALIGNMENT):
-- The current academic level is: "${getDescriptiveLevelForPrompt(levelInput)}" (raw key: "${levelInput}").
-- You MUST write a highly comprehensive and publication-ready academic lesson matching this level's target length:
-  * For primary / low levels (foundation_1, foundation_2): 800 to 1200 words. Keep it narrative, engaging, and age-appropriate.
-  * For secondary levels (secondary_1, secondary_2, preuni): 1000 to 2200 words. Keep it clear, explanatory, and structured.
-  * For higher education / university levels (L1, L2, L3, intermediate, advanced): 2000 to 3500 words. Provide extreme academic rigor, detailed historical and technical contextualization, deep conceptual analyses, and extensive comparative and mathematical/empirical sections where appropriate.
-  * For graduate levels (M1, M2, expert): 3500 to 4500 words. Provide exhaustive master-class level coverage.
-- YOUR EXACT TARGET WORD COUNT FOR THIS SPECIFIC LESSON IS: **at least ${minWords} and up to ${maxWords} words** of rich, well-developed narrative paragraphs.
-- Shorter lessons WILL fail critical verification, causing immediate rejection. Be extremely detailed, thorough, and analytical.
-- To successfully achieve this target word count with high academic value:
-  * Do NOT use fluff, empty transitions, or repetitive sentences.
-  * Expand on historical/epistemological context, detail all physical or social mechanisms, trace the timeline of key discoveries, and analyze the implications of theoretical models.
-  * Write extensive, highly descriptive body text before and after each bracketed [[WIDGET:...]] anchor. Every section must have multiple long, well-developed paragraphs.
-  * Break down major concepts into sub-concepts, provide detailed case studies, or walk through real-world/applied scenarios in full.
+You must return ONLY a valid JSON object matching the lessonOutlineSchema schema:
+\`\`\`json
+{
+  "sections": [
+    {
+      "heading": "## Title of the Section",
+      "description": "Pedagogical guidelines for this section"
+    }
+  ]
+}
+\`\`\`
+Do NOT wrap your JSON response in markdown code blocks.`;
 
-=============================================================================
-⚠️ CRITICAL MARKUP & XML/JSX COMPLIANCE RULES (MDX SAFETY MANDATE) ⚠️
-To prevent Next-MDX compilation crashes, you MUST strictly follow these rules:
+        let lessonOutlineObj: any = null;
+        let outlineApproved = false;
+        let outlineIteration = 0;
+        const maxOutlineIterations = 3;
+        let currentOutlinePrompt = outlinePrompt;
 
-1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS:
-   - Do NOT write raw JSX or HTML tags of any kind for custom components or widgets (such as <DidYouKnow>, <HistoricalAnecdote>, <Quiz>, <FillInBlanks>, <Image>, <Audio>, <Video>, etc. or their closing tags </DidYouKnow>, etc.) in your prose.
-   - You must exclusively use bracketed anchors: [[WIDGET:Type:ID:Topic]] or [[WIDGET:Type:ID:Prose]]. Writing raw tags will crash the compiler and reject your lesson.
-   - The ONLY custom tags allowed inline in your prose are hover-cards: <RealPerson>, <FictionalCharacter>, <Location>, <EventLink>, <Artwork>, <ConceptLink>, <TheoremLink>, <InstitutionLink>, <SpeciesLink>, <ChemicalLink>, and <CelestialLink>. Note: Do NOT write <SandboxPrononciation /> or <PronunciationSandbox /> as raw tags anymore; they must also use bracketed anchors.
+        while (!outlineApproved && outlineIteration < maxOutlineIterations) {
+          outlineIteration++;
+          let outlineRaw = await callAIEngine(currentOutlinePrompt, lessonOutlineSchema, 0.1);
+          let cleanOutline = outlineRaw.replace(/```json/gi, '').replace(/```/gi, '').trim();
+          let parsedOutline: any = null;
+          try {
+            parsedOutline = safeJsonParse(cleanOutline, 'JIT Lesson Outline Parsing');
+          } catch (e) {
+            await appendTaskLog(`[AI GENERATOR] JIT Outline JSON parsing failed: ${String(e)}. Retrying...`);
+            continue;
+          }
 
-2. NO RAW HTML FOR LISTS:
-   - Do NOT use raw HTML tags (<ul>, <ol>, <li>) to build bulleted or numbered lists.
-   - Exclusively use standard Markdown bullet points (- or *) or numbered lists (1.). Mixing HTML tags with markdown text inside lists crashes the parser.
+          // Critique the outline
+          await appendTaskLog(`[AI GENERATOR] Critiquing outline for lesson "${item.title}" (Attempt #${outlineIteration})...`);
+          const outlineCriticPrompt = `You are the Outline Critic Agent. Review this JIT lesson plan:
+${JSON.stringify(parsedOutline, null, 2)}
 
-3. NO LITERAL CURLY BRACES IN PLAIN TEXT:
-   - Literal { and } characters in normal text are parsed as JSX expressions.
-   - For math equations, always wrap curly braces inside LaTeX delimiters: $ \\{x \\in \\mathbb{R}\\} $ or $$ \\{a, b\\} $$.
-   - For normal text, wrap curly braces in inline code backticks: \`{x}\` or use HTML entities &#123; and &#125;.
+Ensure:
+1. The progression is pedagogically sound for the level "${getDescriptiveLevelForPrompt(levelInput)}".
+2. The headings start with "## " (except intro/conclusion if needed, but they should be consistent).
+3. The sections cover the technical depth: "${item.technicalDepth || 'N/A'}".
 
-4. NO STRAY import/export STATEMENTS:
-   - Never write "import " or "export " at the beginning of a line in normal text.
-   - If you must show code blocks containing imports/exports, wrap them in standard markdown code blocks (e.g. \`\`\`\`javascript ... \`\`\`\`).
+Return ONLY a valid JSON object matching the outlineAuditSchema:
+\`\`\`json
+{
+  "approved": boolean,
+  "critique": "detailed critique explaining what to fix, or empty if approved"
+}
+\`\`\`
+Do NOT wrap your JSON response in markdown code blocks.`;
 
-5. NO WIDGET ANCHORS INSIDE LISTS OR TABLES:
-   - Never place any [[WIDGET:...]] bracketed anchors inside bullet points, list items, or tables. Placing anchors inside lists disrupts the formatting and crashes the MDX stitcher.
-   - Always place every widget anchor on its own separate, clean line, surrounded by a blank line before and after.
+          saveDraftRevision(`prompt_stage1_outline_${item.slug}_iter${outlineIteration}.md`, currentOutlinePrompt);
+          saveDraftRevision(`draft_stage1_outline_${item.slug}_iter${outlineIteration}.json`, outlineRaw);
+          saveDraftRevision(`prompt_stage1_outline_critique${item.slug}_iter${outlineIteration}.md`, outlineCriticPrompt);
 
-6. ABSOLUTE PROHIBITION ON RAW INTERACTIVE, QUESTION, OR EVALUATION TAGS:
-   - You MUST NEVER write raw tags like <Question>, <Option>, <Quiz>, <EssayEvaluation>, <OralEvaluation>, <DidYouKnow>, <HistoricalAnecdote>, etc. in your prose under any circumstances. All interactive questions, quizzes, or evaluations are handled entirely via the standard block anchors like [[WIDGET:finalEvaluation]] or [[WIDGET:diagnosticQuiz]]. Writing these raw tags will crash the compiler and reject your lesson.
+          let outlineCritiqueStr = await callAIEngine(outlineCriticPrompt, outlineAuditSchema, 0.1);
+          saveDraftRevision(`critique_stage1_outline${item.slug}_iter${outlineIteration}.json`, outlineCritiqueStr);
+          let cleanCritique = outlineCritiqueStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+          let outlineCritique = { approved: true, critique: '' };
+          try {
+            outlineCritique = safeJsonParse(cleanCritique, 'Outline Critique Parsing');
+          } catch (e) {
+            console.warn(`[AI GENERATOR] Failed to parse outline critique JSON:`, e);
+          }
 
-7. NO MANUAL FIGURE NUMBERING OR LABELS:
-   - Do NOT write prefix numbers like "Figure 1:", "Figure A:", "Image 1 -" or relative links like "comme le montre la figure ci-dessus" or "voir Figure 2" inside the captions or descriptions of images/figures.
-   - The stitching layer programmatically and sequentially numbers all figures/images in order of their appearance across the entire lesson and automatically prefixes them with the beautifully formatted, localized label (e.g. "Figure 1 : ").
-   - All captions or descriptions you write MUST contain only clean, natural, academic prose describing the visual asset itself (e.g. "Une représentation tridimensionnelle de la molécule de méthane...").
-
-8. COMPREHENSIVE CONCLUSION PROSE:
-   - The "## Conclusion" section must NEVER be empty or consist solely of widget anchors. You MUST write at least two comprehensive, well-developed academic paragraphs in the "## Conclusion" section to synthesize the lesson's main takeaways and transition to the next phase.
-=============================================================================
-
----
-
-### METADATA
-- **Course Name**: "${correctedCourseName}"
-- **Academic Level**: "${getDescriptiveLevelForPrompt(levelInput)}"
-- **Lesson Title**: "${item.title}"
-- **Lesson Slug**: "${item.slug}"
-- **Target Language**: "${targetLang.toUpperCase()}"
-- **Course Discipline**: "${courseContext.discipline || 'General'}"
-- **Epistemological Matrix**: "${courseContext.epistemologicalMatrix || 'N/A'}"
-- **Expected Cognitive Artifact**: "${item.cognitiveArtifact || 'N/A'}"
-- **Expected Guidelines / Technical Depth**: "${item.technicalDepth || 'N/A'}"
-
----
-
-### 1. DISCIPLINARY WRITING MATRIX
-You must adapt your writing style, formatting, and density strictly to the epistemological DNA of the discipline:
-
-1. **Deductive / Formal Sciences (Mathematics, Logic, Theoretical Physics):**
-   - Style: Formal, absolute logical rigor, and deductive reasoning.
-   - Requirements: Systematically include Lemma ➔ Theorem ➔ Proof ➔ Corollary blocks. Use LaTeX equations inline (\`$...$\`) and block (\`$$...$$\`) extensively. Ensure every formula is defined and placed in logical sequence.
-2. **Empirical / Experimental Sciences (Biology, Experimental Physics, Chemistry, Medicine):**
-   - Style: Observational, analytical, and highly structured.
-   - Requirements: Follow the Hypothesis ➔ Experimental Protocol ➔ Observation ➔ Interpretation/Modeling workflow. Use labeled anatomical or structural diagrams and process flows.
-3. **Humanities and Discursive Sciences (Philosophy, History, Literature, Sociology):**
-   - Style: Discursive, argumentative, rhetorical, and dialectical.
-   - Requirements: Follow a Thesis ➔ Antithesis ➔ Synthesis framework. Focus on deep textual analysis, socio-historical contextualization, and competing intellectual doctrines/controversies.
-4. **Applied Sciences / Engineering (Computer Science, Electronics, Systems Design):**
-   - Style: Problem-solving, architectural, and constructivist.
-   - Requirements: Follow the Requirements ➔ Technical Constraints ➔ Architectural Design ➔ Implementation ➔ Validation workflow. Use code structures and technical schemas.
-
----
-
-### 2. LEVEL & LANGUAGE ADAPTATION (BLOOM'S TAXONOMY)
-- **Vocabulary & Tone**: Tailor all terminology, sentence complexity, and conceptual depth to the target academic level ("${getDescriptiveLevelForPrompt(levelInput)}").
-- **Language**: Write the ENTIRE content — every word including lesson titles, all section headings (## ...), figure captions, hover-card attributes, and all prose — exclusively in **"${targetLang.toUpperCase()}"**. This is absolute and non-negotiable. A heading or title in any other language is a CRITICAL ERROR that will immediately reject the lesson.
-- **Bloom's Taxonomy Rule**:
-  - If the target level is University/Higher Education (L1-M2, beginner-expert):
-    - If Target Language is **FR** (French): Systematically use Revised Bloom's Taxonomy verbs: **Analyser** (Analyze), **Évaluer** (Evaluate), and **Créer** (Create) when introducing goals and activities.
-    - If Target Language is **EN** (English) or any other language: Systematically use their exact localized equivalents: **Analyze**, **Evaluate**, and **Create**.
-- **Rich Markdown Tables and Diagrams (MANDATORY for University Levels)**:
-  - If the target level is University/Higher Education (L1, L2, L3, M1, M2): You MUST systematically design and include at least **1 to 2 rich Markdown tables** (using standard \`| Column 1 | Column 2 |\` format) to summarize complex conceptual comparisons, multi-variable data, or historical timelines.
-  - You MUST also include at least **1 to 2 Mermaid diagrams** (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model processes, system architectures, decision flows, or conceptual hierarchies. Ensure these are integrated naturally and professionally within your text.
-- **Grade-Level Tailoring Matrix for Widgets**:
-  When describing, introducing, or placing custom interactive widget anchors in your narrative sections, align the context and instructions with the target grade:
-  - Middle School (Primary/Maternelle): Focus on visual metaphors (e.g., slicing pizza slices, balancing weights on scales), simple interactive sliders, zero complex algebra symbols, and gamified problem-solving challenges.
-  - High School: Use balanced descriptions linking standard mathematical/physics equations to visual preset changes (e.g., mapping cell division stages, ideal gas variables, or membrane potentials).
-  - University: Instruct students on utilizing full scientific controls, manipulating rigorous mathematical/biological/physical variables, utilizing analytical grids, and analyzing multi-variable outcomes or downloading output datasets.
-
----
-
-### 3. WIDGET PLACEMENT SYSTEM (WFTA SYSTEM)
-You do NOT write interactive components, quizzes, or glossary definitions in raw HTML or JS. Doing so is strictly prohibited and will cause compile-time failures.
-Instead, you must decide where these elements belong and insert standard or custom bracketed anchor tags \`[[WIDGET:id]]\` directly into your narrative. The **Widgets Architect (Agent 3B)** will parse these anchors and generate matching interactive components programmatically.
-
-#### A. Standard/Structural Widget Anchors (Insert Each Exactly Once):
-- \`[[WIDGET:previousLessonSummary]]\`: If this lesson is not the first lesson of the module (Lesson 2+), place this at the absolute beginning, before prerequisites, to reactivate memory.
-- \`[[WIDGET:prerequisites]]\`: Place at the very beginning of the document, before the introduction (after previousLessonSummary if present).
-- \`[[WIDGET:diagnosticQuiz]]\`: Place immediately after the prerequisites block, before the introduction. This provides a diagnostic skip-pass for students.
-- \`[[WIDGET:learningObjectives]]\`: Place immediately after the \`## Introduction\` section.
-- \`[[WIDGET:careerProfile]]\`: OPTIONAL (recommended for theoretical or applied courses). Place this inside any conceptual body section to link the theoretical material directly with real-world careers, salary outlooks, and employment opportunities.
-- \`[[WIDGET:researchFocus]]\`: OPTIONAL (recommended for science or research-intensive courses). Place this inside body sections to highlight unresolved questions, mysteries, or competing hypotheses currently under research.
-- \`[[WIDGET:recentNewsBridge]]\`: OPTIONAL (recommended for rapidly evolving fields). Place this in body sections to bridge the theory to a recent media event or scientific breakthrough (e.g., ESA/NASA LISA mission, JWST discoveries).
-- \`[[WIDGET:conclusionSummary]]\`: Place inside the \`## Conclusion\` section, at the beginning of the section.
-- \`[[WIDGET:whatsNext]]\`: Place inside the \`## Conclusion\` section, immediately after conclusionSummary.
-- \`[[WIDGET:goingFurther]]\`: Place inside the \`## Conclusion\` section, at the very end (after whatsNext).
-- \`[[WIDGET:finalEvaluation]]\`: Place after the Conclusion section, as the ultimate validation quiz or essay.
-
-#### B. Custom/Narrative Widget Anchors (Represented as [[WIDGET:Type:ID:Payload]]):
-
-To keep the narrative text safe from Next-MDX compilation errors, you MUST NEVER write raw HTML or JSX tags (like <DidYouKnow>, <HistoricalAnecdote>, etc.). Instead, represent all custom components using bracketed anchors: \`[[WIDGET:Type:ID:Payload]]\`.
-These are split into two categories:
-
-1. **Category A: Prose Box Widgets (Direct Narrative Enclosures)**
-For decorative narrative boxes. The ID should be short and unique, and the Payload is the exact natural text of the block. Do NOT write raw JSX tags for these.
-- **DidYouKnow / LeSaviezVous**: Useful for surprising scientific/historical trivia.
-  Example: \`[[WIDGET:DidYouKnow:dyk_gravity:La gravitation n'est pas une force au sens newtonien en relativité générale, mais une courbure de l'espace-temps produite par la masse.]]\`
-- **HistoricalAnecdote / AnecdoteHistorique**: Humanizing historical accounts.
-  Example: \`[[WIDGET:HistoricalAnecdote:anec_galileo:Le récit de l'expérience légendaire de Galilée du haut de la tour de Pise pour démontrer l'universalité de la chute libre.]]\`
-- **PointOfView / PointDeVue**: Alternative perspectives or philosophical standpoints.
-  Example: \`[[WIDGET:PointOfView:pov_copernicus:Le point de vue héliocentrique face au géocentrisme ptolémaïque soutenu par les autorités théologiques de l'époque.]]\`
-- **CriticalThinking / EspritCritique**: Prompts/questions that invite students to think critically.
-  Example: \`[[WIDGET:CriticalThinking:crit_einstein:Comment concevoir que le temps s'écoule plus lentement pour un observateur en mouvement rapide sans contredire notre intuition quotidienne ?]]\`
-- **ScientificMethod / MethodeScientifique**: Demonstrating hypothesis testing.
-  Example: \`[[WIDGET:ScientificMethod:meth_lavoisier:La méthode rigoureuse de Lavoisier utilisant la balance pour prouver la conservation de la masse lors de la combustion.]]\`
-- **ScientificDebate / DebatScientifique**: Unresolved controversies or competing theories.
-  Example: \`[[WIDGET:ScientificDebate:deb_quantum:Le débat Bohr-Einstein à l'institut Solvay concernant le déterminisme et l'interprétation de la mécanique quantique.]]\`
-- **OpenQuestion**: An open discussion question.
-  Example: \`[[WIDGET:OpenQuestion:oq_darkmatter:Quelle est la véritable nature de la matière noire, qui représente pourtant plus de 85% de la matière totale de l'univers ?]]\`
-- **HistoricalFact / FaitHistorique**: Rigorous, verified historical fact.
-  Example: \`[[WIDGET:HistoricalFact:fact_bastille:La prise de la Bastille le 14 juillet 1789 marque un tournant symbolique majeur dans le déclenchement de la Révolution française.]]\`
-- **HistoricalEvent / EvenementHistorique**: A specific landmark event.
-  Example: \`[[WIDGET:HistoricalEvent:event_moon:Le premier pas de l'homme sur la Lune par Neil Armstrong le 21 juillet 1969 dans le cadre de la mission Apollo 11.]]\`
-- **BrilliantIdea / IdeeBrillante**: Pedagogical analogies or intuitive conceptual models.
-  Example: \`[[WIDGET:BrilliantIdea:idea_trampoline:Visualiser l'espace-temps comme une toile de trampoline déformée par une boule de bowling représentant le Soleil.]]\`
-
-2. **Category B: Structured Dynamic Widgets (Metadata Payloads)**
-These widgets require detailed configurations or external API resolving. The Payload contains only reference topic details, not the full prose. Agent 3B will design their JSON schemas.
-- **Biography**: Sidebar about historical experts.
-  Example: \`[[WIDGET:Biography:bio_newton:Isaac Newton (1643-1727), mathématicien et physicien anglais ayant formulé la loi de la gravitation universelle.]]\`
-- **Citation**: Authentic high-impact quotes with translations.
-  Example: \`[[WIDGET:Citation:quote_newton:Isaac Newton, Lettre à Robert Hooke (1675) sur le fait d'être monté sur des épaules de géants pour voir plus loin.]]\`
-- **Epistemology**: Detailed critical controversies.
-  Example: \`[[WIDGET:Epistemology:epi_calculus:La controverse de paternité du calcul infinitésimal entre Newton et Leibniz et ses implications épistémologiques.]]\`
-- **Image**: Factual images/diagrams.
-  Example: \`[[WIDGET:Image:img_prisme:image:Un prisme en verre décomposant un faisceau de lumière blanche en spectre de couleurs de l'arc-en-ciel.]]\`
-- **Audio**: Narrative audio/voice-overs or pronunciations.
-  Example: \`[[WIDGET:Audio:aud_larynx:audio:Une démonstration audio montrant la vibration des cordes vocales et le fonctionnement du larynx humain.]]\`
-- **Video**: Video documentary segments.
-  Example: \`[[WIDGET:Video:vid_relativity:video:Un documentaire de la NASA expliquant les principes fondamentaux de la relativité restreinte.]]\`
-- **SandboxPrononciation / PronunciationSandbox**: Pronunciation sandbox for linguistics.
-  Example (French course): \`[[WIDGET:SandboxPrononciation:pron_laissez:laissez-faire]]\`
-  Example (English course): \`[[WIDGET:PronunciationSandbox:pron_hello:hello]]\`
-
-6. **In-text Bibliography Citations (CRITICAL)**:
-   - Ground the lesson in these specific, canonical course-level references:
-${referencesMetadata}
-   - When making claims or citing definitions, you must cite these references inline using the strict format: [refN] (where N is the 1-based number of the reference, e.g. [ref1], [ref2]).
-   - Do NOT use other citation formats (like superscript HTML links, raw URLs, or bracketed numbers like [1]).
-   - Only cite references that are relevant to this lesson, but make sure to cite at least 1 or 2 canonical references from the list.
-
-7. **Entity Hover-Cards**:
-   - Wrap named historical figures, landmark artworks, locations, events, fictional characters, scientific concepts, mathematical theorems, or academic institutions mentioned inline in Hover-Card components with a short description:
-     - \`<RealPerson name="Wiki_Title" description="...">Name (Dates)</RealPerson>\`
-     - \`<FictionalCharacter name="Wiki_Title" description="...">Character Name</FictionalCharacter>\`
-     - \`<Artwork name="Wiki_Title" description="...">Title</Artwork>\`
-     - \`<Location name="Wiki_Title" description="...">Name</Location>\`
-     - \`<EventLink name="Wiki_Title" description="...">Name</EventLink>\`
-     - \`<ConceptLink name="Wiki_Title" description="...">Concept Name</ConceptLink>\`
-     - \`<TheoremLink name="Wiki_Title" description="...">Theorem/Law Name</TheoremLink>\`
-     - \`<InstitutionLink name="Wiki_Title" description="...">Institution Name</InstitutionLink>\`
-     - \`<SpeciesLink name="Wiki_Title" description="...">Species Name</SpeciesLink>\`
-     - \`<ChemicalLink name="Wiki_Title" description="...">Chemical/Molecule Name (Formula)</ChemicalLink>\`
-     - \`<CelestialLink name="Wiki_Title" description="...">Celestial Body/Space Mission</CelestialLink>\`
-   *Strict Constraints*:
-   - ⛔ ABSOLUTELY FORBIDDEN: Wrapping any verb, adjective, or cognitive action word inside these entity tags. This includes ALL Bloom’s Taxonomy verbs (analyser, évaluer, créer, comprendre, identifier, analyze, evaluate, create, understand, apply, etc.) as well as any other action verbs. These MUST remain as plain bold text (**analyser**) or plain text, NEVER as JSX hover-card tags.
-   - ⛔ FORBIDDEN EXAMPLE (never do this): \`<analyser>analyser</analyser>\`, \`<ConceptLink name="analyser">analyser</ConceptLink>\`, \`<ConceptLink name="Évaluer">Évaluer</ConceptLink>\`
-   - ✅ VALID EXAMPLES (only wrap true named entities): \`<RealPerson name="Socrate">Socrate (470-399 av. J.-C.)</RealPerson>\`, \`<ConceptLink name="Logos">logos</ConceptLink>\`, \`<Location name="Athènes">Athènes</Location>\`
-   - Do NOT require or place Hover-Cards inside JSX attribute properties (like inside options, questions, or other strings), or inside image captions.
-
-
-- Return ONLY the raw MDX content.
-- Do NOT wrap your output in markdown code blocks (\`\`\`).
-- Ensure no headings for \`## Glossary\` or \`## References\` are written, as those are appended programmatically by the Stitching layer.
-`;
-
-        if (isPenultimateLesson) {
-          narrativePrompt += `
-
----
-
-### 6. COURSE SYNTHESIS MANDATE 🎓 (PENULTIMATE LESSON — MANDATORY)
-This is the **penultimate lesson** of the course "${correctedCourseName}", immediately preceding the Final Evaluation.
-In addition to delivering rich content on this lesson's specific topic, you MUST include a **comprehensive course-wide synthesis** as the FINAL section of this document, titled:
-- **FR**: \`## Bilan général du cours\`
-- **EN**: \`## Course Synthesis\`
-- Use the appropriate title in the target language **${targetLang.toUpperCase()}**.
-
-This synthesis MUST (400–600 words):
-1. Summarize the intellectual journey of the entire course "${correctedCourseName}", connecting all major themes.
-2. Highlight 3–5 major conceptual pillars or breakthroughs covered across the course.
-3. Position this knowledge in the broader academic landscape of the discipline.
-4. End with a forward-looking perspective: open questions, future research, or real-world applications.
-`;
-        }
-
-
-        // Export Scribe Prompt
-        saveDraftRevision(`prompt_stage1_scribe_${item.slug}.md`, narrativePrompt);
-
-        let narrativeText = await callAIEngine(narrativePrompt, null, 0.35, 0.25, 0.85);
-        let isTruncated = (lastCallFinishReason === 'MAX_TOKENS');
-        let combinedNarrative = narrativeText;
-        let continuationCount = 0;
-
-        while (isTruncated && continuationCount < 3) {
-          continuationCount++;
-          await appendTaskLog(`[AI GENERATOR] Truncation detected during narrative generation (Continuation #${continuationCount}). Fetching continuation...`);
-          const overlapSnippet = combinedNarrative.slice(-1500);
-          const continuationPrompt = `You are the academic professor Scribe (Agent 3A). Your previous output was cut off due to strict token length limits.
-We need you to continue writing the lesson narrative from exactly where it was truncated.
-
-Here is the end of your previous output:
-"""
-... ${overlapSnippet}
-"""
-
-Please resume writing from exactly the last character/word of the text above. 
-- Do NOT write any conversational intros or explanations. Start writing immediately from the continuation point.
-- Do NOT repeat any of the text above.
-- Continue the sentence or paragraph seamlessly.
-- Make sure to cover all remaining sections of the syllabus/plan.
-- You MUST finish with the mandatory "## Conclusion" section containing at least two comprehensive academic paragraphs, and all the required conclusion widgets:
-  [[WIDGET:conclusionSummary]]
-  [[WIDGET:whatsNext]]
-  [[WIDGET:goingFurther]]
-  followed by [[WIDGET:finalEvaluation]]
-- Do NOT wrap your output in markdown code blocks.`;
-
-          const continuationText = await callAIEngine(continuationPrompt, null, 0.35, 0.25, 0.85);
-          combinedNarrative = combinedNarrative.trim() + "\n" + continuationText.trim();
-          isTruncated = (lastCallFinishReason === 'MAX_TOKENS');
-        }
-
-        // Pre-verifier 1: MDX Text Preprocessor & Cleaner
-        let cleanedNarrative = combinedNarrative.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
-
-        // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees it!
-        cleanedNarrative = preprocessMdx(cleanedNarrative, targetLang.toLowerCase(), false, item.slug);
-
-        lessonStats.narrativeAttempts++;
-        saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_1.md`, cleanedNarrative);
-
-        // ───────────────────────────────────────────────────────────────
-        // [STAGE 4A] NARRATIVE CRITIC (AGENT 4A)
-        // ───────────────────────────────────────────────────────────────
-        let narrativeApproved = false;
-        let narrativeIteration = 0;
-        const maxNarrativeIterations = 5;
-
-        while (!narrativeApproved && narrativeIteration < maxNarrativeIterations) {
-          narrativeIteration++;
-          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Reviewing narrative text (Attempt ${narrativeIteration}/${maxNarrativeIterations})...`);
-
-          const narrativeCriticPrompt = `You are the Narrative Critic Agent (Agent 4A). Your job is to strictly review the generated academic lesson narrative text to ensure it complies with our "Zero-Placeholder", "Academic Density", and "Pedagogical Formatting" policies before widgets are designed.
-
----
-
-### METADATA
-- **Course Name**: "${correctedCourseName}"
-- **Academic Level**: "${getDescriptiveLevelForPrompt(levelInput)}"
-- **Lesson Title**: "${item.title}"
-- **Target Language**: "${targetLang.toUpperCase()}"
-
----
-
-### INPUT NARRATIVE TEXT TO AUDIT
----
-${cleanedNarrative}
----
-
----
-
-### CORE CHECKPOINTS
-You must audit the narrative text against the following 11 critical checkpoints:
-
-1. **Zero-Placeholder Constraint**:
-   - **STRICT REJECTION**: You MUST reject (\`approved: false\`) if the text contains any comments, skeletons, or placeholder phrases like "write section here," "[À compléter]," "Lorem Ipsum," or undeveloped paragraphs. The narrative must be 100% complete and publication-ready.
-2. **Academic Density & Length**:
-   - For higher education levels (L1-M2), verify that the lesson is detailed, rigorous, and exhaustive. It must cover at least 4 to 5 core conceptual sections under distinct \`## \` headings.
-   - Target word count: **${minWords} to ${maxWords} words** of rich, well-formed narrative paragraphs. Reject if the writer produced a brief, simplistic, or highly summarized text.
-3. **Widget Placement & Anchors**:
-   - Verify that the standard structural widget anchors are placed exactly once and at correct positions:
-     - \`[[WIDGET:prerequisites]]\` (at the very beginning)
-     - \`[[WIDGET:diagnosticQuiz]]\` (before introduction)
-     - \`[[WIDGET:learningObjectives]]\` (after introduction)
-     - \`[[WIDGET:conclusionSummary]]\` (inside ## Conclusion, at the beginning)
-     - \`[[WIDGET:whatsNext]]\` (inside ## Conclusion, immediately after conclusionSummary)
-     - \`[[WIDGET:goingFurther]]\` (inside ## Conclusion, at the very end, after whatsNext)
-     - \`[[WIDGET:finalEvaluation]]\` (after conclusion, as ultimate validation)
-   - Verify that there are **at least 1 to 2** custom interactive/narrative anchors (\`[[WIDGET:Type:ID:Topic]]\` or \`[[WIDGET:Type:ID]]\`) placed within conceptual body sections, and each is surrounded by high-quality explanatory paragraphs.
-   - **STRICT PROHIBITION ON RAW CUSTOM JSX**: Verify that the narrative contains NO raw JSX tags representing interactive components (such as \`<DataChart>\`, \`<Quiz>\`, \`<CodeSandbox>\`, \`<Mermaid>\`, \`<CustomFigure>\`, \`<Epistemology>\`, \`<Biography>\`, \`<BrilliantIdea>\`, or \`<Citation>\`). They must exclusively use suffix-augmented bracketed anchors. Absolutely NO raw interactive/custom JSX tags are allowed in the narrative (this includes pronunciation sandboxes like \`<SandboxPrononciation />\` or \`<PronunciationSandbox />\`).
-4. **Author Quotes & Citation Anchors**:
-   - Verify that quotes and citations are represented using suffix-augmented anchors:
-     \`[[WIDGET:Citation:citation_id:Topic/Hint]]\`
-     Reject if quotes are written as raw blockquotes (\`> "..."\`) or raw text quote blocks.
-   - Verify that references are cited inline using standard brackets grounded in canonical references (e.g. \`[ref1]\`, \`[ref2]\`).
-5. **Controlled Digressions & Mini-Biographies**:
-   - Verify that epistemology controversies and biographies are represented exclusively as bracketed anchors:
-     \`[[WIDGET:Epistemology:epistemology_id:Topic/Hint]]\`
-     \`[[WIDGET:Biography:biography_id:Topic/Hint]]\`
-     Reject if they are written out as raw JSX tags (\`<Epistemology>\`, \`<Biography>\`) or raw markdown callouts.
-6. **Connected Entity Hover-Cards**:
-   - Verify that named entities mentioned inline are wrapped in their custom Hover-Cards: \`<RealPerson>\`, \`<FictionalCharacter>\`, \`<Location>\`, \`<EventLink>\`, \`<Artwork>\`, \`<ConceptLink>\`, \`<TheoremLink>\`, \`<InstitutionLink>\`, \`<SpeciesLink>\`, \`<ChemicalLink>\`, or \`<CelestialLink>\`.
-   - **STRICT REJECTION FOR WRAPPED VERBS**: Strictly check and REJECT if any active verbs, action verbs, or Revised Bloom's Taxonomy verbs (such as *analyser*, *comprendre*, *créer*, *identifier*, *expliquer*, etc., or their English equivalents) are wrapped inside any hover-card tags. Verify that only proper names, nouns, and true entities are wrapped.
-   - Ensure these custom tags are NOT placed inside JSX attributes (like component property values) where they are syntactically invalid.
-   - Check for and reject any nested or duplicated Hover-Cards.
-7. **Media Anchors & Assets**:
-   - Verify that the lesson contains at least 5 to 6 image anchors and 1 to 2 audio/video anchors represented as:
-     \`[[WIDGET:Media:media_id:Topic/Hint]]\`
-     Reject if standard Markdown image syntax (\`![Alt]()\`), raw URLs, or raw \`<CustomFigure>\` JSX tags are used.
-8. **Rich Markdown Tables and Diagrams (MANDATORY for University Levels)**:
-   - If the academic level is University/Higher Education (L1, L2, L3, M1, M2):
-     - Verify that the narrative contains **at least 1 to 2 rich Markdown comparison tables** (using standard \`| Column 1 | Column 2 |\` format) to summarize complex conceptual comparisons, multi-variable data, or historical timelines.
-     - Verify that the narrative contains **at least 1 to 2 Mermaid diagrams** (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model processes, system architectures, decision flows, or conceptual hierarchies.
-     - Reject if these rich visual/structural elements are missing from a university-level narrative.
-9. **No Raw Interactive, Question, or Evaluation Tags**:
-   - **STRICT REJECTION**: You MUST reject if there are raw interactive, question, or evaluation tags like \`<Question>\`, \`<Option>\`, \`<Quiz>\`, \`<EssayEvaluation>\`, \`<OralEvaluation>\`, etc. in the narrative text. All evaluations must be referred to via standard block anchors like [[WIDGET:finalEvaluation]].
-10. **Strict Figure Prefix & Numbering Exclusion**:
-   - **STRICT REJECTION**: Verify that any captions or descriptions of visual/image/diagram assets (Image, CustomFigure, Mermaid, etc.) contain absolutely NO prefix numbers like 'Figure 1:', 'Figure A:', 'Image 1 -' or relative links like 'comme le montre la figure ci-dessus' or 'voir Figure 2'. All sequential figure numbering is handled programmatically at stitching time.
-11. **Comprehensive Conclusion Prose**:
-   - **STRICT REJECTION**: Verify that the "## Conclusion" section contains at least two comprehensive, well-developed academic prose paragraphs. Reject if the section is empty or has only widget anchors or list items.
-
----
-
-### OUTPUT FORMAT
-Your audit must be in dual-mode:
-- **\`isGlobalRevision\` MUST ONLY be set to \`true\` if the issues are widespread and catastrophic** (completely unparseable structure, severe length deficiency representing a complete failure, or massive plan mismatch requiring a total lesson rewrite), and provide a comprehensive **\`globalCritique\`**.
-- **For standard, localized, or section-specific errors, you MUST set \`isGlobalRevision\`: false** and list each \`## \` section in the **\`sections\`** array with its own \`approved\` flag and \`critique\`, allowing localized repairs. Do NOT trigger a global rewrite for localized mistakes.
-
-You must return ONLY a valid JSON object with the following keys:
-- **\`approved\`**: boolean (true if the narrative complies perfectly with all checkpoints).
-- **\`isGlobalRevision\`**: boolean (true = full rewrite needed; false = localized section fixes).
-- **\`globalCritique\`**: string (comprehensive global critique if isGlobalRevision is true; empty otherwise).
-- **\`sections\`**: array of \`{ heading: string, approved: boolean, critique: string }\` - list all \`## \` sections. Required when approved is true and isGlobalRevision is false. [CRITICAL] If isGlobalRevision is true, you MUST leave this array empty (\`[]\`) or omit it entirely to avoid running out of output tokens and causing truncation.
-
-Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
-`;
-
-          const critiqueJsonStr = await callAIEngine(narrativeCriticPrompt, revisionAuditSchema, 0.1);
-          saveDraftRevision(`critique_stage4a_narrative_${item.slug}_attempt_${narrativeIteration}.json`, critiqueJsonStr);
-
-          const critiqueClean = critiqueJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-          const audit = safeJsonParse(critiqueClean, 'Narrative Critic Audit');
-
-          if (audit && audit.approved === true) {
-            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Narrative text APPROVED on attempt ${narrativeIteration}!`);
-            narrativeApproved = true;
+          if (outlineCritique.approved) {
+            await appendTaskLog(`[AI GENERATOR] Outline plan approved by Critique Agent on iteration #${outlineIteration}!`);
+            lessonOutlineObj = parsedOutline;
+            outlineApproved = true;
           } else {
-            const isGlobalNarrative = !!audit?.isGlobalRevision;
-            const globalCritiqueText = audit?.globalCritique || '';
-            const criticSectionsNarrative: { heading: string; approved: boolean; critique: string }[] = audit?.sections || [];
-            const critiqueText = isGlobalNarrative
-              ? globalCritiqueText
-              : (criticSectionsNarrative.filter(s => !s.approved).map(s => `[${s.heading}]: ${s.critique}`).join(' | ') || 'Invalid response from critic.');
-
-            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Narrative REJECTED (${isGlobalNarrative ? 'GLOBAL rewrite' : 'LOCALIZED repair'}). Critique: ${critiqueText}`);
-            lessonStats.narrativeRejections++;
-
-            if (narrativeIteration >= maxNarrativeIterations) {
-              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Max narrative critique loops reached. Moving forward.`);
-              break;
-            }
-
-            if (isGlobalNarrative) {
-              // === GLOBAL REWRITE PATH ===
-              lessonStats.narrativeGlobalRewrites++;
-              const narrativeRefinerPrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
-The narrative critic (Agent 4A) has rejected your previously generated academic narrative text with a GLOBAL critique requiring a full rewrite.
-
-⚠️ MANDATORY WORD-COUNT & LENGTH DIRECTION (STRICT LEVEL-BASED ALIGNMENT):
-- The current academic level is: "${getDescriptiveLevelForPrompt(levelInput)}" (raw key: "${levelInput}").
-- You MUST write a highly comprehensive and publication-ready academic lesson matching this level's target length:
-  * For primary / low levels (foundation_1, foundation_2): 800 to 1200 words. Keep it narrative, engaging, and age-appropriate.
-  * For secondary levels (secondary_1, secondary_2, preuni): 1000 to 2200 words. Keep it clear, explanatory, and structured.
-  * For higher education / university levels (L1, L2, L3, intermediate, advanced): 2000 to 3500 words. Provide extreme academic rigor, detailed historical and technical contextualization, deep conceptual analyses, and extensive comparative and mathematical/empirical sections where appropriate.
-  * For graduate levels (M1, M2, expert): 3500 to 4500 words. Provide exhaustive master-class level coverage.
-- YOUR EXACT TARGET WORD COUNT FOR THIS SPECIFIC LESSON IS: **at least ${minWords} and up to ${maxWords} words** of rich, well-developed narrative paragraphs.
-
-[CRITICAL] CRITICAL REMINDER: You MUST maintain absolute XML/JSX markup compliance to prevent parser crashes:
-- Do NOT use raw JSX tags for interactive widgets (<DataChart>, <BasicMathExplorer>, <Quiz>, etc.). Use bracketed anchors: [[WIDGET:id]].
-- Do NOT use raw HTML tags (<ul>, <ol>, <li>) for lists; use standard Markdown instead.
-- Do NOT use literal curly braces { } in plain text; escape them as \`{x}\` or wrap math in LaTeX $ \{...\} $ or $$ \{...\} $$.
-- Never write "import " or "export " at the start of a line in plain prose.
-- You MUST NEVER write raw tags like <Question>, <Option>, <Quiz>, <EssayEvaluation>, <OralEvaluation>, <DidYouKnow>, <HistoricalAnecdote>, etc. in your prose.
-- Do NOT write any manual figure numbers/prefixes (like "Figure 1:", "Abbildung 2:") or relative links (like "comme le montre la figure ci-dessus") in captions or descriptions.
-- The "## Conclusion" section must contain at least two comprehensive, well-developed academic paragraphs.
-
-[CRITICAL] RICH MARKDOWN TABLES AND MERMAID DIAGRAMS (MANDATORY FOR UNIVERSITY LEVELS):
-- If the academic level is University/Higher Education (L1, L2, L3, M1, M2):
-  * You MUST systematically design and include at least **1 to 2 rich Markdown tables** (using standard \`| Column 1 | Column 2 |\` format) to summarize complex conceptual comparisons, multi-variable data, or historical timelines.
-  * You MUST also include at least **1 to 2 Mermaid diagrams** (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model processes, system architectures, decision flows, or conceptual hierarchies.
-
-GLOBAL CRITIQUE FROM AGENT 4A:
-"${globalCritiqueText}"
-
-PREVIOUS ACADEMIC NARRATIVE TEXT:
----
-${cleanedNarrative}
----
-
-Re-generate the ENTIRE academic narrative from scratch, fully addressing the global critique.
-Strictly follow the original writing, adaptation, and widget placement rules. Do NOT wrap the response in markdown code blocks.`;
-
-              const refined = await callAIEngine(narrativeRefinerPrompt, null, 0.35, 0.25, 0.85);
-              let refinedTruncated = (lastCallFinishReason === 'MAX_TOKENS');
-              let combinedRefined = refined;
-              let refContinuationCount = 0;
-
-              while (refinedTruncated && refContinuationCount < 3) {
-                refContinuationCount++;
-                await appendTaskLog(`[AI GENERATOR] Truncation detected during narrative rewrite (Continuation #${refContinuationCount}). Fetching continuation...`);
-                const overlapSnippet = combinedRefined.slice(-1500);
-                const continuationPrompt = `You are the academic professor Scribe (Agent 3A). Your previous output was cut off due to strict token length limits.
-We need you to continue writing the lesson narrative from exactly where it was truncated.
-
-Here is the end of your previous output:
-"""
-... ${overlapSnippet}
-"""
-
-Please resume writing from exactly the last character/word of the text above.
-- Do NOT write any conversational intros or explanations. Start writing immediately from the continuation point.
-- Do NOT repeat any of the text above.
-- Continue the sentence or paragraph seamlessly.
-- Make sure to cover all remaining sections of the syllabus/plan.
-- You MUST finish with the mandatory "## Conclusion" section containing at least two comprehensive academic paragraphs, and all the required conclusion widgets:
-  [[WIDGET:conclusionSummary]]
-  [[WIDGET:whatsNext]]
-  [[WIDGET:goingFurther]]
-  followed by [[WIDGET:finalEvaluation]]
-- Do NOT wrap your output in markdown code blocks.`;
-
-                const continuationText = await callAIEngine(continuationPrompt, null, 0.35, 0.25, 0.85);
-                combinedRefined = combinedRefined.trim() + "\n" + continuationText.trim();
-                refinedTruncated = (lastCallFinishReason === 'MAX_TOKENS');
-              }
-
-              const rawRefined = combinedRefined.replace(/```json/gi, '').replace(/```/gi, '').trim();
-              // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees the refined draft!
-              cleanedNarrative = preprocessMdx(rawRefined, targetLang.toLowerCase(), false, item.slug);
-              lessonStats.narrativeAttempts++;
-              saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_${narrativeIteration + 1}.md`, cleanedNarrative);
-
-            } else {
-              // === LOCALIZED SECTION-BY-SECTION REPAIR PATH ===
-              lessonStats.narrativeLocalRepairs++;
-              const rejectedSections = criticSectionsNarrative.filter(s => !s.approved);
-              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Localized repair for ${rejectedSections.length} section(s): ${rejectedSections.map(s => `"${s.heading}"`).join(', ')}`);
-
-              const parsedSections = parseMarkdownSections(cleanedNarrative);
-              const rejectedSectionsData: { heading: string; content: string; critique: string; precedingHeading: string | null; succeedingHeading: string | null; }[] = [];
-
-              for (let i = 0; i < parsedSections.length; i++) {
-                const sec = parsedSections[i];
-                const secHeadingNorm = (sec.heading || 'Header / Introduction Block').trim().toLowerCase();
-                const criticMatch = criticSectionsNarrative.find(cs => {
-                  const csHeadingNorm = (cs.heading || 'Header / Introduction Block').trim().toLowerCase();
-                  return csHeadingNorm === secHeadingNorm || csHeadingNorm.replace(/^##\s+/, '') === secHeadingNorm.replace(/^##\s+/, '');
-                });
-                if (criticMatch && !criticMatch.approved) {
-                  rejectedSectionsData.push({
-                    heading: sec.heading || 'Header / Introduction Block',
-                    content: sec.content,
-                    critique: criticMatch.critique,
-                    precedingHeading: i > 0 ? parsedSections[i - 1].heading : null,
-                    succeedingHeading: i < parsedSections.length - 1 ? parsedSections[i + 1].heading : null
-                  });
-                }
-              }
-
-              if (rejectedSectionsData.length > 0) {
-                const promptJointRepair = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
-We need to repair specific sections of the lesson narrative "${item.title}" that were rejected by the Narrative Critic (Agent 4A).
-
-[CRITICAL] CRITICAL MDX COMPLIANCE:
-- Do NOT use raw JSX tags for interactive widgets. Use bracketed anchors: [[WIDGET:id]].
-- Do NOT use raw HTML tags; use standard Markdown instead.
-- Do NOT use literal curly braces { } in plain text.
-- You MUST NEVER write raw tags like <Question>, <Option>, <Quiz>, <EssayEvaluation>, <OralEvaluation>, <DidYouKnow>, <HistoricalAnecdote>, etc. in your prose.
-- Do NOT write any manual figure numbers/prefixes (like "Figure 1:", "Abbildung 2:") or relative links (like "comme le montre la figure ci-dessus") in captions or descriptions.
-- The "## Conclusion" section must contain at least two comprehensive, well-developed academic paragraphs.
-
-[CRITICAL] RICH MARKDOWN TABLES AND MERMAID DIAGRAMS (MANDATORY FOR UNIVERSITY LEVELS):
-- If the academic level is University/Higher Education (L1, L2, L3, M1, M2):
-  * Ensure that if the section or heading is criticized for lacking structured comparative data or visual flows, you design and insert 1 to 2 rich Markdown tables (using standard \`| Column 1 | Column 2 |\` format) and/or 1 to 2 Mermaid diagrams (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model the concepts.
-
-CONTEXT:
-Course: "${correctedCourseName}" | Level: "${getDescriptiveLevelForPrompt(levelInput)}" | Language: "${targetLang.toUpperCase()}"
-
-${rejectedSectionsData.map((rj, idx) => `
---- REJECTED SECTION ${idx + 1} ---
-Heading: "${rj.heading}"
-Neighborhood:
-  - Preceding: ${rj.precedingHeading || 'None'}
-  - Succeeding: ${rj.succeedingHeading || 'None'}
-Critique from Agent 4A:
-  "${rj.critique}"
-Current Content:
-${rj.content}
-----------------------------------
-`).join('\n')}
-
-INSTRUCTIONS:
-1. Repair each rejected section to fully resolve its critique.
-2. Wrap each repaired section in: <revised_section heading="HEADING_EXACTLY_AS_SHOWN">[your repaired content]</revised_section>
-3. Preserve all [[WIDGET:id]] anchors exactly as they are in the current content.
-4. Do NOT include markdown code block wrappers or conversational text.`;
-
-                const scribeRepairOutput = await callAIEngine(promptJointRepair, null, 0.35, 0.25, 0.85);
-                const repairs = parseJointRepairOutput(scribeRepairOutput);
-
-                // Fallback: single section repair with no XML tags
-                if (repairs.size === 0 && rejectedSectionsData.length === 1) {
-                  const key = rejectedSectionsData[0].heading.trim().toLowerCase();
-                  repairs.set(key, scribeRepairOutput.trim());
-                }
-
-                for (const sec of parsedSections) {
-                  const key = (sec.heading || 'Header / Introduction Block').trim().toLowerCase();
-                  if (repairs.has(key)) {
-                    await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] Applied repair for section: "${sec.heading}"`);
-                    sec.content = repairs.get(key)!;
-                  }
-                }
-
-                const repairedNarrative = reconstructMarkdown(parsedSections);
-                const rawRepaired = repairedNarrative.replace(/```json/gi, '').replace(/```/gi, '').trim();
-                // Programmatic Preprocessor execution BEFORE the critique (Agent 4A) sees the repaired draft!
-                cleanedNarrative = preprocessMdx(rawRepaired, targetLang.toLowerCase(), false, item.slug);
-                lessonStats.narrativeAttempts++;
-                saveDraftRevision(`draft_stage1_narrative_${item.slug}_attempt_${narrativeIteration + 1}.md`, cleanedNarrative);
-              } else {
-                await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4A] No matching sections found for localized repair. Moving forward.`);
-                break;
-              }
-            }
+            await appendTaskLog(`[AI GENERATOR WARNING] Outline REJECTED. Critique: "${outlineCritique.critique}". Retrying outline generation...`);
+            currentOutlinePrompt = `${outlinePrompt}
+            
+=============================================================================
+🚨 OUTLINE CRITIQUE FROM PREVIOUS ATTEMPT 🚨
+"${outlineCritique.critique}"
+=============================================================================`;
           }
         }
-      approvedNarrativeText = cleanedNarrative;
+
+        if (!lessonOutlineObj || !lessonOutlineObj.sections) {
+          await appendTaskLog(`[AI GENERATOR WARNING] Outline plan failed critique validation. Fallback to default outline.`);
+          lessonOutlineObj = {
+            sections: [
+              { heading: "## Introduction", description: "Introduction to the topic" },
+              { heading: "## Core Concepts", description: "First core concept explanations" },
+              { heading: "## Advanced Mechanism", description: "Deep dive mechanics and models" },
+              { heading: "## Conclusion", description: "Summary and conclusion of the lesson" }
+            ]
+          };
+        }
+
+        // Export outline
+        saveDraftRevision(`jit_outline_${item.slug}.json`, JSON.stringify(lessonOutlineObj, null, 2));
+
+        // Group outline sections into blocks of at most 2 sections each
+        const outlineSections = lessonOutlineObj.sections;
+        const blocks: any[] = [];
+        for (let i = 0; i < outlineSections.length; i += 2) {
+          blocks.push(outlineSections.slice(i, i + 2));
+        }
+        await appendTaskLog(`[AI GENERATOR] Grouped JIT plan into ${blocks.length} blocks for narrative writing.`);
+
+        let fullNarrativeText = '';
+        for (let bIdx = 0; bIdx < blocks.length; bIdx++) {
+          const currentBlockSections = blocks[bIdx];
+          const blockHeaderNames = currentBlockSections.map((s: any) => `"${s.heading}"`).join(', ');
+          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 1-B] Writing narrative block ${bIdx + 1}/${blocks.length} (Sections: ${blockHeaderNames})...`);
+
+          let blockApproved = false;
+          let blockIteration = 0;
+          const maxBlockIterations = 3;
+          let blockFeedback = '';
+          let cleanedBlockText = '';
+
+          while (!blockApproved && blockIteration < maxBlockIterations) {
+            blockIteration++;
+            lessonStats.narrativeAttempts++;
+            await appendTaskLog(`[AI GENERATOR] Scribe block generation iteration #${blockIteration} for block ${bIdx + 1}...`);
+
+            const { min: minWords, max: maxWords } = getWordCountLimitForLevel(levelInput);
+
+            const blockPrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
+Your task is to write a section of the academic MDX narrative content for the specified lesson.
+
+We are writing the lesson block-by-block.
+- This is Block ${bIdx + 1} out of ${blocks.length}.
+- You MUST write the content for the following sections:
+${currentBlockSections.map((s: any) => `* Heading: "${s.heading}"\n  Instructions: "${s.description}"`).join('\n')}
+
+---
+
+### GLOBAL CONTEXT:
+- Course Name: "${correctedCourseName}"
+- Academic Level: "${getDescriptiveLevelForPrompt(levelInput)}"
+- Lesson Title: "${item.title}"
+- Discipline: "${courseContext.discipline || 'General'}"
+- Target Language: "${targetLang.toUpperCase()}"
+- References available:
+${referencesMetadata}
+
+---
+
+### PREVIOUS TEXT (for transitions and context):
+${bIdx > 0 ? `Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
+"""
+... ${fullNarrativeText.slice(-3000)}
+"""` : 'None. This is the first block of the lesson.'}
+
+---
+
+⚠️ CRITICAL MARKUP & XML/JSX COMPLIANCE RULES (MDX SAFETY MANDATE):
+1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Only Hover-Cards like <ConceptLink>, <RealPerson>, etc. are allowed inline in prose. Use [[WIDGET:id]] anchors for everything else.
+2. NO RAW HTML FOR LISTS. Use Markdown bullets/numbering.
+3. NO LITERAL CURLY BRACES in plain text. Wrap in LaTeX or backticks.
+4. NO STRAY import/export statements.
+5. NO WIDGET ANCHORS INSIDE LISTS OR TABLES. Place them on separate blank lines.
+6. Captions of images or Mermaid diagrams must NOT contain figure prefixes (like 'Figure 1:', 'Image A -'). CAPTIONS MUST ONLY contain the descriptive prose.
+${pronunciationMandate}
+${bIdx === blocks.length - 1 ? `7. Since this is the LAST block, you MUST end with the ## Conclusion section containing at least two comprehensive academic paragraphs, and all conclusion widgets in this exact order:
+  [[WIDGET:conclusionSummary]]
+  [[WIDGET:whatsNext]]
+  [[WIDGET:goingFurther]]
+  followed by [[WIDGET:finalEvaluation]]` : ''}
+
+${blockFeedback ? `
+🚨 CRITIQUE FROM PREVIOUS ATTEMPT 🚨
+The critique agent rejected your previous attempt for this block. Correct the following issues:
+"${blockFeedback}"` : ''}
+
+Write the content for the specified sections. Return ONLY the markdown content. Do NOT wrap the response in markdown code blocks.`;
+
+            let blockRawText = await callAIEngine(blockPrompt, null, 0.35, 0.25, 0.85);
+            cleanedBlockText = blockRawText.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
+
+            // Audit the block text using Critic (Agent 4A)
+            await appendTaskLog(`[AI GENERATOR] Auditing block ${bIdx + 1} text (Attempt #${blockIteration})...`);
+            const blockCriticPrompt = `You are the Narrative Critic Agent (Agent 4A). Review the generated block of text for the lesson:
+---
+${cleanedBlockText}
+---
+
+Check checkpoints:
+1. Zero-placeholders.
+2. Accurate academic density and level-appropriate language.
+3. Strict MDX/JSX safety (no raw custom component tags, no wrapped verbs in hover-cards).
+4. No figure prefixes like "Figure 1:" in visual captions.
+${bIdx === blocks.length - 1 ? `5. Valid ## Conclusion section with at least two paragraphs and the required conclusion widgets.` : ''}
+
+Return ONLY a valid JSON object matching blockNarrativeAuditSchema:
+\`\`\`json
+{
+  "approved": boolean,
+  "critique": "detailed feedback explaining what to fix, or empty if approved"
+}
+\`\`\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+            saveDraftRevision(`prompt_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.md`, blockPrompt);
+            saveDraftRevision(`draft_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.md`, blockRawText);
+            saveDraftRevision(`prompt_stage1_narrative_block${bIdx + 1}_critique_${item.slug}_iter${blockIteration}.md`, blockCriticPrompt);
+
+            let auditJsonStr = await callAIEngine(blockCriticPrompt, blockNarrativeAuditSchema, 0.1);
+            saveDraftRevision(`critique_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.json`, auditJsonStr);
+            let auditClean = auditJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
+            let blockAudit = { approved: true, critique: '' };
+            try {
+              blockAudit = safeJsonParse(auditClean, 'Block Narrative Audit Parsing');
+            } catch (e) {
+              console.warn(`[AI GENERATOR] Failed to parse block audit JSON:`, e);
+            }
+
+            if (blockAudit.approved) {
+              await appendTaskLog(`[AI GENERATOR] Block ${bIdx + 1} approved by Critique Agent!`);
+              fullNarrativeText = (fullNarrativeText.trim() + "\n\n" + cleanedBlockText.trim()).trim();
+              blockApproved = true;
+            } else {
+              await appendTaskLog(`[AI GENERATOR WARNING] Block ${bIdx + 1} REJECTED. Critique: "${blockAudit.critique}".`);
+              lessonStats.narrativeRejections++;
+                            lessonStats.narrativeLocalRepairs++;
+              blockFeedback = blockAudit.critique;
+            }
+          }
+
+          if (!blockApproved) {
+            await appendTaskLog(`[AI GENERATOR WARNING] Block ${bIdx + 1} failed critique validation after max attempts. Moving forward with last draft.`);
+            fullNarrativeText = (fullNarrativeText.trim() + "\n\n" + cleanedBlockText.trim()).trim();
+          }
+        }
+
+        // Programmatic final preprocessor call on completed narrative
+        let finalCleanedNarrative = preprocessMdx(fullNarrativeText, targetLang.toLowerCase(), false, item.slug);
+        saveDraftRevision(`final_reconstructed_narrative_${item.slug}.md`, finalCleanedNarrative);
+        approvedNarrativeText = finalCleanedNarrative;
       }
 
       // ───────────────────────────────────────────────────────────────
@@ -4051,287 +3947,32 @@ INSTRUCTIONS:
   Educational Level: "${meta.levelEN || meta.levelFR || 'All levels'}"`;
       }).join('\n\n') || 'None anchored.';
 
-      const dynamicSchema = getDynamicWidgetsSchema(approvedNarrativeText);
+      async function generateAndParseWidgetBlock(
+        blockPrompt: string,
+        blockSchema: any,
+        blockName: string
+      ): Promise<any> {
+        let blockJsonStr = await callAIEngine(blockPrompt, blockSchema, 0.1, undefined, undefined, false, 'widget_placement');
+        let cleanJson = blockJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
 
-      const prunedNarrativeText = pruneNarrativeForWidgets(approvedNarrativeText);
+        let parsed: any = null;
+        let parseSuccess = false;
+        let preflightAttempts = 0;
+        const maxPreflightAttempts = 2;
+        let currentJsonStr = cleanJson;
 
-      const cleanLevel = (levelInput || 'L1').trim().toLowerCase();
-      const isLvlPrimary = cleanLevel.startsWith('p') || cleanLevel.startsWith('m') || cleanLevel.includes('primary') || cleanLevel.includes('maternelle') || ['1', '2', '3', 'foundation_1', 'foundation_2'].includes(cleanLevel);
-      const isLvlSecondary = cleanLevel.includes('secondary') || cleanLevel.startsWith('coll') || cleanLevel.startsWith('lyc') || cleanLevel.includes('preuni') || ['secondary_1', 'secondary_2', 'preuni_1', 'preuni_2', 'preuni_3'].includes(cleanLevel);
-
-      const finalQuizDisplayLimit = isLvlPrimary ? 5 : isLvlSecondary ? 15 : 30;
-      const finalQuizPoolCount = isTerminalEvaluation ? finalQuizDisplayLimit : (isLvlPrimary ? 10 : isLvlSecondary ? 25 : 60);
-
-      const sectionQuizPoolCount = isLvlPrimary ? 5 : isLvlSecondary ? 10 : 20;
-      const sectionQuizDisplayLimit = isLvlPrimary ? 3 : isLvlSecondary ? 5 : 10;
-
-      const widgetsPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
-Your task is to parse the approved academic narrative draft of the lesson, extract all custom and standard bracketed widget anchors (\`[[WIDGET:id]]\`), and generate a valid JSON object conforming strictly to the requested \`lessonWidgetsSchema\` to fully define each anchor.
-
-=============================================================================
-⚠️ CRITICAL DATA INTEGRITY & MDX SAFETY RULES ⚠️
-To ensure that the generated JSON translates to correct MDX attributes:
-
-1. NO RAW CODE IN ANCHORS OR PROPS:
-   - Ensure that interactive component JSON attributes (such as "props") do NOT contain raw javascript arrow functions, backticks (\`), or complex unescaped double quotes.
-   - Keep MCQ options as simple, plain text strings. Never place markdown list items (- or *) or HTML tags inside of quiz "options" or "question" strings.
-=============================================================================
-
-=============================================================================
-⚠️ GRADE-LEVEL TAILORING MATRIX ⚠️
-Interactive widgets must adapt to the grade level specified by the course generation context:
-
-1. **Middle School (Collège / level: 1st-9th grade / Primary/Maternelle)**:
-   - Design Theme: High visual emphasis, gamified challenges, simplified sliders, zero complex algebra symbols.
-   - Interaction: Visual metaphors (e.g. sharing pizza slices for fractions, balancing scales for basic equations, coloring elements).
-2. **High School (Lycée / level: secondary/preuni)**:
-   - Design Theme: Balanced representation of equations alongside visual models. Interactive variables mapping to standard physics/math formulas.
-   - Interaction: Presets aligned with official curricula (e.g., standard cell division phases, basic Cartesian graphs, ideal gas law, Nernst potentials).
-3. **University (L3 / Master / Higher Education / any level above High School)**:
-   - Design Theme: Full scientific controls, rigorous mathematical formulas, multiple overlays, analytical grids, data export (JSON/CSV).
-   - Interaction: Sandbox exploration of full wave functions, GHK multi-ion equations, multi-variable simulations, derivative and integral solvers.
-=============================================================================
-
----
-
-### METADATA
-- **Course Name**: "${correctedCourseName}"
-- **Academic Level**: "${getDescriptiveLevelForPrompt(levelInput)}"
-- **Lesson Title**: "${item.title}"
-- **Target Language**: "${targetLang.toUpperCase()}"
-- **Course Discipline**: "${courseContext.discipline || 'General'}"
-- **Citation Style**: "${getCitationStyle(courseContext.discipline || correctedCourseName).name}"
-
----
-
-### INPUT APPROVED NARRATIVE DRAFT
-Review the approved narrative text (pruned for layout) to identify all placed \`[[WIDGET:id]]\` anchors and the bibliography citation links (e.g. \`[1](#ref-1)\`):
----
-${prunedNarrativeText}
----
-
----
-
-### 1. CURATION-FIRST INTERACTIVE COMPONENTS MANDATE
-For every custom interactive widget anchor you find in the approved narrative draft (other than standard structural ones), you must define a corresponding item inside the \`interactiveComponents\` JSON array:
-
-#### A. Approved Pruned Widgets for this Discipline:
-${dynamicCatalogList}
-
-#### B. Selection Heuristics & Budget Enforcer:
-1. **Simple Discursive Components (Can be generated from scratch)**:
-   - \`Quiz\`: Multiple-choice question sets. Props: \`questions\` (array of question items with \`q\`, \`options\` array, \`correctIndex\`, and \`explanation\`).
-     * Supports **multimedia**: Each question item can have optional props: \`mediaType\` ("image" | "audio" | "video"), \`mediaUrl\`, and \`mediaCaption\`.
-     * Supports **speed mode** (timed runs with auto-advancing): set \`mode\` to "speed" and \`questionDurationLimit\` (seconds, default: 10) on the main Quiz props.
-     * Supports **elimination mode** (interactive negative eliminations): set \`mode\` to "elimination" on individual Question objects (learners click wrong answers to cross them out).
-   - \`MatchingEvaluation\` (French alias: \`AssociationCorrespondance\`): Interactive left-right items matching challenge. Props: \`pairs\` (left-right elements matched, formatted like: "Concept A|Def A || Concept B|Def B"), \`title\` (optional title), and \`explanation\` (optional tutor explanation).
-   - \`ReorderEvaluation\` (French alias: \`ReordonnerItems\`): Clickable chip Duolingo-style step-reordering puzzle. Props: \`items\` (sequence of blocks in correct order separated by vertical bars, like: "Step 1 | Step 2 | Step 3"), \`title\` (optional title), and \`explanation\` (optional tutor explanation).
-   - \`FillInBlanks\`: Sentence structures with blank gaps.
-   - \`SolvedExercise\`: Step-by-step worked analytical or mathematical solution.
-   - \`UnsolvedExercise\`: Conceptual or mathematical question with an explanation and correct answer string.
-2. **Complex Structural Tools (Matchmaker Database-Curated Widgets)**:
-   - If the narrative draft places a database widget (e.g. \`[[WIDGET:FunctionPlotter:my_plot]]\`), you must select it from the approved catalog list above.
-   - **Crucial Curation-First Rule**: For all database-curated widgets, set "props" to \`{}\` (empty object), as their pre-configured behaviors and schemas are handled programmatically by the system.
-   - **Strict Budget Constraints**:
-     - Remaining database widget budget for this lesson: ${remainingBudget}.
-     - If the remaining budget is 0, do NOT select any database-curated widgets. Use simple discursives instead.
-     - Never repeat a database widget ID that has already been used in this course: Already used list: ${alreadyUsedList}.
-
----
-
-### 2. CORE SCHEMA FIELDS TO GENERATE (CONFORMING TO lessonWidgetsSchema)
-Your generated JSON must contain the following top-level keys:
-
-1. **\`prerequisites\`**:
-   - Provide 1 to 2 logical prerequisite lessons. Each must have \`title\`, \`slug\`, \`level\`, and \`subject\` (in target language "${targetLang.toUpperCase()}").
-2. **\`diagnosticQuiz\`**:
-   - A single premium multiple-choice question designed to allow advanced students to bypass this lesson. Include \`question\`, \`options\` array, \`correctIndex\`, \`targetSectionId\` (anchor of the bypass section), and \`sectionTitle\`.
-3. **\`learningObjectives\`**:
-   - Provide learning objectives broken down into \`knowledge\` (concepts), \`skills\` (capabilities), and \`attitudes\` (metacognition) arrays.
-   - **Bloom's Taxonomy Rule**: For all pedagogical objectives (under \`knowledge\`, \`skills\`, and \`attitudes\`), you must EXCLUSIVELY use Revised Bloom's Taxonomy verbs from the highest cognitive levels (Analyze/Analyser, Evaluate/Évaluer, Create/Créer depending on target language "\${targetLang.toUpperCase()}"). Lower-level passive verbs (such as understand, know, list, comprendre, connaître) are STRICTLY FORBIDDEN.
-4. **\`conclusionSummary\`**:
-   - Provide exactly 3 to 4 complete, grammatically whole and self-contained sentences summarizing the key takeaways (each item in the \`items\` array must end with a period).
-5. **\`whatsNext\`**:
-   - Provide 2 to 3 engaging next steps or follow-up courses, each with \`title\`, \`description\`, and \`slug\`.
-5b. **\`goingFurther\`**:
-    - Provide a pool of EXACTLY 5 to 6 suggested readings or external resources (books, articles, videos, websites) to explore the topic deeper. Do NOT invent or generate URLs yourself. Focus on providing accurate, highly relevant titles, types, and descriptions. The system will automatically search and resolve real links for them. Each item must have:
-      - \`title\`: Title of the resource.
-      - \`type\`: One of "book", "article", "video", "website", "research", "movie", "film".
-      - \`description\`: A brief explanation of what the resource contains and why it is valuable.
-5c. **\`previousLessonSummary\`** (Generate ONLY if the anchor \`[[WIDGET:previousLessonSummary]]\` is present in the narrative draft):
-    - Synthesize the content of the previous lesson of this module. Must match the following schema:
-      - \`previousLessonTitle\`: The title of the previous lesson in the module (can be derived from previous lessons or context).
-      - \`previousLessonSlug\`: (Optional) The slug of the previous lesson.
-      - \`keyTakeaways\`: An array of 3 to 4 concise, high-impact key takeaway sentences.
-      - \`cognitiveBridge\`: A transition paragraph (2-3 sentences) linking the previous lesson's concepts to the current lesson's introduction.
-5d. **\`careerProfile\`** (Generate ONLY if the anchor \`[[WIDGET:careerProfile]]\` is present in the narrative draft):
-    - Link the theory to a professional career. Must match the following schema:
-      - \`profession\`: Name of the professional career/role.
-      - \`discipline\`: Field of study.
-      - \`courseConnection\`: Transition paragraph linking the lesson's theory directly to the daily practice or importance of this career.
-      - \`keyMissions\`: An array of 3 to 4 typical high-impact missions/tasks this professional performs.
-      - \`careerOutlook\`: Object with:
-        - \`demand\`: Growth perspective (e.g., "High", "Growing").
-        - \`typicalEmployers\`: Array of 2 to 3 typical employers.
-        - \`salaryIndication\`: Salary description or range.
-5e. **\`researchFocus\`** (Generate ONLY if the anchor \`[[WIDGET:researchFocus]]\` is present in the narrative draft):
-    - Highlight mysteries under active academic research. Must match the following schema:
-      - \`question\`: The primary unresolved scientific or theoretical question/mystery.
-      - \`category\`: The field or type of research (e.g., "Quantum Foundations", "Sociological Controversy", etc.).
-      - \`context\`: Historical/academic context (3-4 sentences) explaining why this is a current topic of interest.
-      - \`whyUnresolved\`: A detailed explanation (3-4 sentences) of the methodological or technological hurdles.
-      - \`activeHypotheses\`: An array of 2 to 3 competing active hypotheses currently being investigated.
-5f. **\`recentNewsBridge\`** (Generate ONLY if the anchor \`[[WIDGET:recentNewsBridge]]\` is present in the narrative draft):
-    - Provide a modern context connection. Must match the following schema:
-      - \`eventTitle\`: Title of the recent real-world event, news, or scientific breakthrough.
-      - \`date\`: Approximate date (e.g., "2023-2026").
-      - \`source\`: Prestigious scientific journal, space agency, or media outlet (e.g., "Nature", "NASA", "ESA").
-      - \`description\`: A clear, professional description (2-3 sentences) of the event/breakthrough.
-      - \`courseConnection\`: Detailed explanation (3-4 sentences) linking this real event directly to the theoretical principles discussed in this lesson.
-      - \`whyItMatters\`: A summarizing sentence or two highlighting why this breakthrough matters for the future of the discipline.
- 6. **\`finalEvaluation\`**:
-   - A comprehensive final test. This must be a structured JSON object representing either an \`EssayEvaluation\` with a detailed prompt, or a high-fidelity MCQ \`Quiz\`.
-   - **MCQ Quiz Pool Size and Display Limit (CRITICAL - NO GUESSING)**:
-     - You MUST generate a pool of EXACTLY ${finalQuizPoolCount} questions in the \`props.questions\` array.
-     - You MUST specify \`props.limit\`: ${finalQuizDisplayLimit} in the \`props\` object.
-     - This ensures there are enough extra questions in the pool so that the platform randomly shuffles and selects ${finalQuizDisplayLimit} questions at runtime, preventing repetition.
-     - **TOKEN EFFICIENCY & EXTREME CONCISENESS RULE**: To prevent hitting output token limits, you MUST write extremely concise, high-impact question cards. Options should be short, distinct, single-phrase choices. Explanations MUST be highly compressed, punchy, and limited to EXACTLY 1 to 2 short sentences (maximum of 20-25 words per explanation). Avoid verbose commentary, repetitive introductory phrases, or structural bloat. Focus on density and clarity.
-7. **\`glossary\`**:
-   - An array of at least 3 key academic terms with clear definitions.
-8. **\`references\` (CRITICAL REFERENCE MAPPING RULE)**:
-   - You MUST populate this array.
-   - Start the array with the exact canonical course references provided in:
-${referencesMetadata}
-   - In the lesson narrative, the citations are marked as [ref1], [ref2], etc.
-   - You must map [ref1] to references[0], [ref2] to references[1], and so on, keeping their exact content.
-   - Ensure the citations in the narrative and their order in this array align perfectly.
-   - Book/article titles must be in standard quotes (or French guillemets « ... »), not asterisks.
-   - Exclude this references array only for primary school levels.
- 9. **\`interactiveComponents\`**:
-   - An array of all custom Category B interactive components (such as Image, Audio, Video, Biography, Citation, Epistemology, Quiz, FillInBlanks, PronunciationSandbox, etc.).
-   - CRITICAL: You MUST completely IGNORE all Category A prose box anchors (DidYouKnow, LeSaviezVous, HistoricalAnecdote, AnecdoteHistorique, PointOfView, PointDeVue, CriticalThinking, EspritCritique, ScientificMethod, MethodeScientifique, ScientificDebate, DebatScientifique, OpenQuestion, HistoricalFact, FaitHistorique, HistoricalEvent, EvenementHistorique, BrilliantIdea, IdeeBrillante). Do NOT create any items for Category A anchors in this array, as they are compiled directly as inline Markdown boxes.
-   - For Category B anchors like \`[[WIDGET:Type:ID:Topic]]\`, map:
-     - \`id\` -> the \`ID\` part of the anchor.
-     - \`componentType\` -> the \`Type\` part of the anchor (which will be one of: "Image", "Audio", "Video", "Citation", "Biography", "Epistemology", or custom widgets).
-     - \`sectionAnchor\` -> the heading title of the parent section.
-     - \`props\` -> an object containing the resolved content details populated from the \`Topic\` hint:
-       - **Image**:
-          - \`searchQuery\`: Highly canonical and extremely concise 1 to 3 search words or keywords (e.g., "Claudio Monteverdi", "Larynx humain", "Doppler acoustique") extracted directly from the detailed description to ensure precise database matches on Wikidata, Wikimedia Commons, and other repositories. Do NOT repeat or use long, complex descriptions or captions here.
-         - \`description\`: The detailed search/generation description for the image. MUST be populated using the original detailed \`Topic\` description hint from the \`[[WIDGET:Image:ID:Topic]]\` anchor. STRICTLY PROHIBITED: Do NOT copy-paste the chapter's section anchor, heading, or parent section title here.
-         - \`alt\`: Short description for accessibility. MUST describe the actual subject specified in the \`Topic\` hint. Do NOT use the parent section title here.
-         - \`caption\`: A detailed, italicized caption explaining the figure's academic relevance. **STRICT PROHIBITION**: You MUST NEVER write any manual prefix numbers, figures indices (e.g. 'Figure 1:', 'Figure A:', 'Expérience 1:', 'Illustration .2', or 'Figure 1.2:') or relative spatial links (e.g., 'comme le montre la figure ci-dessus', 'voir Figure 2') in the caption or description. The stitching layer handles all sequential figure numbering and prefixes programmatically at assembly time. Captions must contain only clean, natural, academic prose describing the visual subject itself (e.g. 'Une représentation tridimensionnelle...'). Do NOT use the parent section title here.
-         - \`title\`: Short title (optional).
-       - **Audio**:
-         - \`title\`: Short descriptive title for the audio track.
-         - \`duration\`: Estimated duration (e.g., "1:30" or "2:45").
-         - \`description\`: Detailed description of the audio track's content, narration, or pronunciation details.
-         - \`alt\`: Short description for accessibility.
-       - **Video**:
-         - \`title\`: Title of the video.
-         - \`url\`: Optional video URL (e.g., YouTube/Vimeo).
-         - \`id\`: Optional video platform ID.
-         - \`provider\`: "youtube", "vimeo", or "direct".
-         - \`duration\`: e.g., "3:15".
-       - **Citation**:
-         - \`quote\`: The text of the quote in the target language.
-         - \`author\`: The author name.
-         - \`source\`: The book/publication source title in its original language (untranslated).
-         - \`year\`: The publication year.
-         - \`original\`: Original language quote text in the author's original language of writing. This field is MANDATORY if the author's original language of writing is different from the target language. Leave empty or omit ONLY if the original language is the exact same as the target language.
-         - \`commentary\`: Academic commentary explaining the significance of the quote (at least 3-4 sentences).
-       - **Biography**:
-         - \`name\`: Full name.
-         - \`dates\`: Dates of birth and death (e.g., "1723-1790").
-         - \`description\`: Detailed biography paragraph (8-12 lines) on main academic contributions.
-         - \`wikipediaUrl\`: Working URL to the English Wikipedia page of the subject.
-       - **Epistemology**:
-         - \`title\`: Controversy title.
-         - \`content\`: Deeply academic prose discussion (150-250 words) detailing the controversy.
-   - **Quiz Pool Size and Display Limit (CRITICAL - NO GUESSING)**:
-     - For any \`Quiz\` component in this array, you MUST generate EXACTLY ${sectionQuizPoolCount} questions in its \`props.questions\` array.
-     - You MUST specify \`props.limit\`: ${sectionQuizDisplayLimit} in the \`props\` object.
-     - This guarantees the pool is larger than the visible slice for retry randomisation.
-
-=============================================================================
-⚠️ EVALUATION SCOPE & ALIGNMENT MANDATE ⚠️
-1. Section-Level/Mid-Lesson Evaluations (such as Quizzes, Essays, Audio, or any other interactive evaluations):
-   - For any interactive evaluation component (such as Quiz, EssayEvaluation, Audio evaluation, open questions, etc.) located inside the interactiveComponents array, the questions, prompts, or activities must EXCLUSIVELY cover the concepts taught in the specific section it is anchored in (sectionAnchor). Do NOT include questions, prompts, or topics covering other sections or parts of the lesson.
-2. Lesson finalEvaluation (at the end of a lesson):
-   - The lesson's finalEvaluation (whether structured as a Quiz, EssayEvaluation, Audio, or other format) must comprehensively cover the concepts of the ENTIRE lesson.
-3. Terminal Course finalEvaluation (for the final evaluation lesson at the end of the course):
-   - The terminal course final evaluation (where isTerminalEvaluation is true) must comprehensively cover concepts and learning objectives from ALL lessons in the entire course. It is permitted to technically incorporate, adapt, or build upon questions, prompts, and case studies from previous lessons to build this final unified evaluation.
-=============================================================================
-
----
-
-### 3. OUTPUT FORMAT
-- Return ONLY a valid JSON object matching the \`lessonWidgetsSchema\` schema.
-- Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
-- Ensure all string values are fully written in "${targetLang.toUpperCase()}".
-`;
-
-      // Export Architect Prompt & Schema
-      saveDraftRevision(`prompt_stage2_architect_${item.slug}.md`, widgetsPrompt);
-      saveDraftRevision(`agent3_widgets_schema.json`, JSON.stringify(dynamicSchema, null, 2));
-
-      let parsedWidgets: any = null;
-      let widgetsApproved = false;
-      let widgetsIteration = 0;
-      const maxWidgetsIterations = 5;
-
-      let widgetsJsonStr = await callAIEngine(widgetsPrompt, dynamicSchema, 0.1, undefined, undefined, false, 'widget_placement');
-      let wTruncated = (lastCallFinishReason === 'MAX_TOKENS');
-      let combinedWidgets = widgetsJsonStr;
-      let wContinuationCount = 0;
-
-      while (wTruncated && wContinuationCount < 3) {
-        wContinuationCount++;
-        await appendTaskLog(`[AI GENERATOR] Truncation detected during widgets JSON generation (Continuation #${wContinuationCount}). Fetching continuation...`);
-        const overlapSnippet = combinedWidgets.slice(-1500);
-        const continuationPrompt = `You are the curriculum architect (Agent 3B). Your previous JSON output was cut off due to strict token length limits.
-We need you to continue generating the widgets JSON from exactly where it was truncated.
-
-Here is the end of your previous output:
-"""
-... ${overlapSnippet}
-"""
-
-Please resume writing the JSON from exactly the last character of the text above.
-- Do NOT write any conversational intros or explanations. Start writing immediately from the continuation point.
-- Do NOT repeat any of the text above.
-- Continue the JSON properties, array items, and brackets seamlessly.
-- Make sure to cover all remaining interactive components, glossary terms, and references.
-- Do NOT wrap your output in markdown code blocks.`;
-
-        const continuationText = await callAIEngine(continuationPrompt, null, 0.1, undefined, undefined, false, 'widget_placement');
-        combinedWidgets = combinedWidgets.trim() + "\n" + continuationText.trim();
-        wTruncated = (lastCallFinishReason === 'MAX_TOKENS');
-      }
-
-      lessonStats.widgetsAttempts++;
-      saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_1.json`, combinedWidgets);
-
-      let cleanWidgetsJson = combinedWidgets.replace(/```json/gi, '').replace(/```/gi, '').trim();
-
-      // Pre-flight validation / auto-repair loop
-      let parseSuccess = false;
-      let preflightAttempts = 0;
-      const maxPreflightAttempts = 2;
-      let currentWidgetsJsonStr = cleanWidgetsJson;
-
-      while (!parseSuccess && preflightAttempts <= maxPreflightAttempts) {
-        try {
-          parsedWidgets = safeJsonParse(currentWidgetsJsonStr, 'WFTA Stage 2 Widgets Parsing');
-          parseSuccess = true;
-        } catch (err: any) {
-          if (err instanceof StructuralJsonError || err instanceof SyntaxError || err.message.includes('JSON')) {
+        while (!parseSuccess && preflightAttempts <= maxPreflightAttempts) {
+          try {
+            parsed = safeJsonParse(currentJsonStr, `Widget Block ${blockName} Parsing`);
+            parseSuccess = true;
+          } catch (err: any) {
             preflightAttempts++;
             if (preflightAttempts > maxPreflightAttempts) {
-              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 2] Pre-flight JSON parsing failed after ${maxPreflightAttempts} repair attempts. Propagating error.`);
+              await appendTaskLog(`[AI GENERATOR] Pre-flight JSON parsing failed for ${blockName} after ${maxPreflightAttempts} repair attempts. Propagating error.`);
               throw err;
             }
-            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 2] Pre-flight JSON parsing failed: ${err.message}. Retrying local syntax repair (Attempt ${preflightAttempts}/${maxPreflightAttempts})...`);
-            
+            await appendTaskLog(`[AI GENERATOR] Pre-flight JSON parsing failed for ${blockName}: ${err.message}. Retrying local syntax repair (Attempt ${preflightAttempts}/${maxPreflightAttempts})...`);
+
             const preflightRepairPrompt = `You are a precise JSON syntax repair assistant.
 The JSON output below has syntax errors (such as missing brackets, unescaped quotes, trailing commas, or incomplete properties) and cannot be parsed.
 Your task is to fix the syntax errors and return ONLY the completely valid, parseable JSON object matching the required schema.
@@ -4340,373 +3981,503 @@ Your task is to fix the syntax errors and return ONLY the completely valid, pars
 ${err.message}
 
 ### MALFORMED JSON TO REPAIR:
-\`\`\`json
-${currentWidgetsJsonStr}
-\`\`\`
+\\\`\\\`\\\`json
+${currentJsonStr}
+\\\`\\\`\\\`
 
-Return ONLY the corrected and valid JSON response. Do NOT include any explanations, markdown headers, or natural language notes. Do NOT wrap your response in markdown code blocks (\`\`\`).`;
+Return ONLY the corrected and valid JSON response. Do NOT wrap your response in markdown code blocks.`;
 
-            const repairedJsonStr = await callAIEngine(preflightRepairPrompt, dynamicSchema, 0.1, undefined, undefined, false, 'widget_placement');
-            currentWidgetsJsonStr = repairedJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-            saveDraftRevision(`draft_stage2_widgets_${item.slug}_preflight_repair_${preflightAttempts}.json`, currentWidgetsJsonStr);
-          } else {
-            throw err;
+            const repairedJsonStr = await callAIEngine(preflightRepairPrompt, blockSchema, 0.1, undefined, undefined, false, 'widget_placement');
+            currentJsonStr = repairedJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
           }
         }
+        return parsed;
+      }
+
+      let parsedWidgets: any = {
+        prerequisites: { items: [] },
+        diagnosticQuiz: { question: '', options: [], correctIndex: 0, targetSectionId: '', sectionTitle: '' },
+        learningObjectives: { knowledge: [], skills: [], attitudes: [] },
+        interactiveComponents: [],
+        conclusionSummary: '',
+        whatsNext: '',
+        goingFurther: '',
+        finalEvaluation: null,
+        glossary: [],
+        references: []
+      };
+
+      // --- Block 1: Structure Widgets ---
+      let block1Approved = false;
+      let block1Iteration = 0;
+      const maxBlock1Iterations = 3;
+      let block1Feedback = '';
+      let block1Parsed: any = null;
+
+      const block1Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+Your task is to design the JSON object for the introductory widgets of the lesson:
+Course: "${correctedCourseName}"
+Level: "${getDescriptiveLevelForPrompt(levelInput)}"
+Lesson Title: "${item.title}"
+Language: "${targetLang.toUpperCase()}"
+
+You must define the following JSON properties:
+1. "prerequisites": List of 2-3 required concepts/lessons before taking this lesson.
+2. "diagnosticQuiz": A single high-quality MCQ diagnostic question to check if the student has the prerequisites.
+3. "learningObjectives": Knowledge, skills, and attitudes (3 items each) using Bloom's Taxonomy verbs (Analyze, Evaluate, Create for university level).
+
+Return ONLY a valid JSON object matching this schema:
+\\\`\\\`\\\`json
+{
+  "prerequisites": {
+    "items": [
+      { "title": "string", "slug": "string", "level": "string", "subject": "string" }
+    ]
+  },
+  "diagnosticQuiz": {
+    "question": "string",
+    "options": ["string"],
+    "correctIndex": integer,
+    "targetSectionId": "string",
+    "sectionTitle": "string"
+  },
+  "learningObjectives": {
+    "knowledge": ["string"],
+    "skills": ["string"],
+    "attitudes": ["string"]
+  }
+}
+\\\`\\\`\\\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+      while (!block1Approved && block1Iteration < maxBlock1Iterations) {
+        block1Iteration++;
+        lessonStats.widgetsAttempts++;
+        await appendTaskLog(`[AI GENERATOR] Generating Widget Block 1 (Attempt #${block1Iteration})...`);
+
+        let block1PromptWithFeedback = block1Prompt;
+        if (block1Feedback) {
+          block1PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block1Feedback}"\nPlease fix these issues and regenerate.`;
+        }
+
+        try {
+          block1Parsed = await generateAndParseWidgetBlock(block1PromptWithFeedback, widgetBlock1Schema, 'Block 1 Structure');
+        } catch (e) {
+          await appendTaskLog(`[AI GENERATOR] Widget Block 1 failed to parse. Retrying...`);
+          continue;
+        }
+
+        // Critique block 1
+        await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 1...`);
+        const block1CriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 1:
+${JSON.stringify(block1Parsed, null, 2)}
+
+Check:
+1. Prerequisites are realistic.
+2. DiagnosticQuiz index is correct.
+3. LearningObjectives use Bloom's Taxonomy verbs (Analyze, Evaluate, Create for L1/L2/L3/Master levels).
+
+Return ONLY a valid JSON object matching widgetBlockAuditSchema:
+\\\`\\\`\\\`json
+{
+  "approved": boolean,
+  "critique": "detailed feedback explaining what to fix, or empty if approved"
+}
+\\\`\\\`\\\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+        saveDraftRevision(`prompt_stage2_widgets_block1_${item.slug}_iter${block1Iteration}.md`, block1PromptWithFeedback);
+        if (block1Parsed) {
+          saveDraftRevision(`draft_stage2_widgets_block1_${item.slug}_iter${block1Iteration}.json`, JSON.stringify(block1Parsed, null, 2));
+        }
+        saveDraftRevision(`prompt_stage2_widgets_block1_critique_${item.slug}_iter${block1Iteration}.md`, block1CriticPrompt);
+
+        const criticJsonStr = await callAIEngine(block1CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
+        saveDraftRevision(`critique_stage2_widgets_block1_${item.slug}_iter${block1Iteration}.json`, criticJsonStr);
+        const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
+        let auditResult = { approved: true, critique: '' };
+        try {
+          auditResult = safeJsonParse(cleanCritic, 'Widget Block 1 Audit Parsing');
+        } catch (e) {
+          console.warn(`[AI GENERATOR] Failed to parse Block 1 critique:`, e);
+        }
+
+        if (auditResult.approved || isTerminalEvaluation) {
+          await appendTaskLog(`[AI GENERATOR] Widget Block 1 approved by Critique Agent!`);
+          block1Approved = true;
+        } else {
+          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 1 REJECTED. Critique: "${auditResult.critique}".`);
+          lessonStats.widgetsRejections++;
+          block1Feedback = auditResult.critique;
+        }
+      }
+
+      if (block1Parsed) {
+        parsedWidgets.prerequisites = block1Parsed.prerequisites;
+        parsedWidgets.diagnosticQuiz = block1Parsed.diagnosticQuiz;
+        parsedWidgets.learningObjectives = block1Parsed.learningObjectives;
+      }
+
+      // --- Block 2: Narrative / Interactive Components ---
+      let block2Approved = false;
+      let block2Iteration = 0;
+      const maxBlock2Iterations = 3;
+      let block2Feedback = '';
+      let block2Parsed: any = null;
+
+      const activeCustomAnchors = activeAnchors.filter(a => !['prerequisites', 'diagnosticQuiz', 'learningObjectives', 'conclusionSummary', 'whatsNext', 'goingFurther', 'finalEvaluation', 'references'].includes(a.type));
+
+      if (activeCustomAnchors.length === 0 || isTerminalEvaluation) {
+        await appendTaskLog(`[AI GENERATOR] No custom narrative widget anchors found. Skipping Widget Block 2.`);
+        block2Approved = true;
+      } else {
+        const block2Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+Your task is to design the JSON object for the interactive components of the lesson.
+
+The narrative text contains the following custom widget anchors that you MUST define:
+${activeCustomAnchors.map(a => `- Anchor: [[WIDGET:${a.type}:${a.id}${a.topic ? `:${a.topic}` : ''}]] (Type: "${a.type}", ID: "${a.id}", Topic: "${a.topic || ''}")`).join('\n')}
+
+---
+
+### CATALOG AND GUIDELINES:
+${dynamicCatalogList}
+
+You must define the "interactiveComponents" array containing one object for each anchor list above.
+For each component:
+- "id": Must match the ID from the anchor.
+- "componentType": Must match the Type from the anchor.
+- "sectionAnchor": The markdown heading "## Section Name" where this widget is placed in the narrative.
+- "props": The specific properties required for the widget type (Biography: name, dates, description, wikipediaUrl; Citation: quote, author, source, year, commentary; Image: description, alt, caption, searchQuery; etc.).
+
+Return ONLY a valid JSON object matching this schema:
+\\\`\\\`\\\`json
+{
+  "interactiveComponents": [
+    {
+      "id": "string",
+      "componentType": "string",
+      "sectionAnchor": "string",
+      "props": {}
+    }
+  ]
+}
+\\\`\\\`\\\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+        while (!block2Approved && block2Iteration < maxBlock2Iterations) {
+          block2Iteration++;
+          lessonStats.widgetsAttempts++;
+          await appendTaskLog(`[AI GENERATOR] Generating Widget Block 2 (Attempt #${block2Iteration})...`);
+
+          let block2PromptWithFeedback = block2Prompt;
+          if (block2Feedback) {
+            block2PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block2Feedback}"\nPlease fix these issues and regenerate.`;
+          }
+
+          try {
+            block2Parsed = await generateAndParseWidgetBlock(block2PromptWithFeedback, widgetBlock2Schema, 'Block 2 Interactive');
+          } catch (e) {
+            await appendTaskLog(`[AI GENERATOR] Widget Block 2 failed to parse. Retrying...`);
+            continue;
+          }
+
+          // Critique block 2
+          await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 2...`);
+          const block2CriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 2:
+${JSON.stringify(block2Parsed, null, 2)}
+
+Ensure:
+1. Every anchor specified in the prompt is mapped.
+2. Captions and descriptions have no sequential figure prefixes like "Figure 1:".
+3. Biography component details (dates, Wikipedia link) are correct.
+
+Return ONLY a valid JSON object matching widgetBlockAuditSchema:
+\\\`\\\`\\\`json
+{
+  "approved": boolean,
+  "critique": "detailed feedback explaining what to fix, or empty if approved"
+}
+\\\`\\\`\\\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+          saveDraftRevision(`prompt_stage2_widgets_block2_${item.slug}_iter${block2Iteration}.md`, block2PromptWithFeedback);
+          if (block2Parsed) {
+            saveDraftRevision(`draft_stage2_widgets_block2_${item.slug}_iter${block2Iteration}.json`, JSON.stringify(block2Parsed, null, 2));
+          }
+          saveDraftRevision(`prompt_stage2_widgets_block2_critique_${item.slug}_iter${block2Iteration}.md`, block2CriticPrompt);
+
+          const criticJsonStr = await callAIEngine(block2CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
+          saveDraftRevision(`critique_stage2_widgets_block2_${item.slug}_iter${block2Iteration}.json`, criticJsonStr);
+          const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
+          let auditResult = { approved: true, critique: '' };
+          try {
+            auditResult = safeJsonParse(cleanCritic, 'Widget Block 2 Audit Parsing');
+          } catch (e) {
+            console.warn(`[AI GENERATOR] Failed to parse Block 2 critique:`, e);
+          }
+
+          if (auditResult.approved) {
+            await appendTaskLog(`[AI GENERATOR] Widget Block 2 approved by Critique Agent!`);
+            block2Approved = true;
+          } else {
+            await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 2 REJECTED. Critique: "${auditResult.critique}".`);
+            lessonStats.widgetsRejections++;
+            block2Feedback = auditResult.critique;
+          }
+        }
+      }
+
+      if (block2Parsed && Array.isArray(block2Parsed.interactiveComponents)) {
+        parsedWidgets.interactiveComponents = block2Parsed.interactiveComponents;
+      }
+
+      // --- Block 3: Conclusion, What's Next & Glossary ---
+      let block3Approved = false;
+      let block3Iteration = 0;
+      const maxBlock3Iterations = 3;
+      let block3Feedback = '';
+      let block3Parsed: any = null;
+
+      const block3Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+Your task is to design the JSON object for the conclusion, glossary, and transition widgets of the lesson:
+Course: "${correctedCourseName}"
+Level: "${getDescriptiveLevelForPrompt(levelInput)}"
+Lesson Title: "${item.title}"
+Language: "${targetLang.toUpperCase()}"
+
+You must define the following JSON properties:
+1. "conclusionSummary": A detailed text summarizing the key takeaways of this lesson (at least 5 sentences).
+2. "whatsNext": A text showing the link/transition to the next lesson.
+3. "goingFurther": Additional links or resources (with titles and URLs).
+4. "glossary": An array of at least 3-4 key technical terms with detailed definitions.
+
+Return ONLY a valid JSON object matching this schema:
+\\\`\\\`\\\`json
+{
+  "conclusionSummary": "string",
+  "whatsNext": "string",
+  "goingFurther": "string",
+  "glossary": [
+    { "term": "string", "definition": "string" }
+  ]
+}
+\\\`\\\`\\\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+      while (!block3Approved && block3Iteration < maxBlock3Iterations) {
+        block3Iteration++;
+        lessonStats.widgetsAttempts++;
+        await appendTaskLog(`[AI GENERATOR] Generating Widget Block 3 (Attempt #${block3Iteration})...`);
+
+        let block3PromptWithFeedback = block3Prompt;
+        if (block3Feedback) {
+          block3PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block3Feedback}"\nPlease fix these issues and regenerate.`;
+        }
+
+        try {
+          block3Parsed = await generateAndParseWidgetBlock(block3PromptWithFeedback, widgetBlock3Schema, 'Block 3 Conclusion & Glossary');
+        } catch (e) {
+          await appendTaskLog(`[AI GENERATOR] Widget Block 3 failed to parse. Retrying...`);
+          continue;
+        }
+
+        // Critique block 3
+        await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 3...`);
+        const block3CriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 3:
+${JSON.stringify(block3Parsed, null, 2)}
+
+Ensure:
+1. Glossary and conclusion summary are scientifically/academically accurate.
+2. The language is strictly in ${targetLang.toUpperCase()}.
+
+Return ONLY a valid JSON object matching widgetBlockAuditSchema:
+\\\`\\\`\\\`json
+{
+  "approved": boolean,
+  "critique": "detailed feedback explaining what to fix, or empty if approved"
+}
+\\\`\\\`\\\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+        saveDraftRevision(`prompt_stage2_widgets_block3_${item.slug}_iter${block3Iteration}.md`, block3PromptWithFeedback);
+        if (block3Parsed) {
+          saveDraftRevision(`draft_stage2_widgets_block3_${item.slug}_iter${block3Iteration}.json`, JSON.stringify(block3Parsed, null, 2));
+        }
+        saveDraftRevision(`prompt_stage2_widgets_block3_critique${item.slug}_iter${block3Iteration}.md`, block3CriticPrompt);
+
+        const criticJsonStr = await callAIEngine(block3CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
+        saveDraftRevision(`critique_stage2_widgets_block3${item.slug}_iter${block3Iteration}.json`, criticJsonStr);
+
+        const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
+        let auditResult = { approved: true, critique: '' };
+        try {
+          auditResult = safeJsonParse(cleanCritic, 'Widget Block 3 Audit Parsing');
+        } catch (e) {
+          console.warn(`[AI GENERATOR] Failed to parse Block 3 critique:`, e);
+        }
+
+        if (auditResult.approved || isTerminalEvaluation) {
+          await appendTaskLog(`[AI GENERATOR] Widget Block 3 approved by Critique Agent!`);
+          block3Approved = true;
+        } else {
+          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 3 REJECTED. Critique: "${auditResult.critique}".`);
+          lessonStats.widgetsRejections++;
+          block3Feedback = auditResult.critique;
+        }
+      }
+
+      if (block3Parsed) {
+        parsedWidgets.conclusionSummary = block3Parsed.conclusionSummary;
+        parsedWidgets.whatsNext = block3Parsed.whatsNext;
+        parsedWidgets.goingFurther = block3Parsed.goingFurther;
+        parsedWidgets.glossary = block3Parsed.glossary;
+      }
+
+
+      // --- Block 4: Evaluation & Bibliography References ---
+      let block4Approved = false;
+      let block4Iteration = 0;
+      const maxBlock4Iterations = 3;
+      let block4Feedback = '';
+      let block4Parsed: any = null;
+
+      const block4Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+Your task is to design the JSON object for the final evaluation quiz and reference widgets of the lesson:
+Course: "${correctedCourseName}"
+Level: "${getDescriptiveLevelForPrompt(levelInput)}"
+Lesson Title: "${item.title}"
+Language: "${targetLang.toUpperCase()}"
+Citation Style: "${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}"
+
+You must define the following JSON properties:
+1. "finalEvaluation": ${isTerminalEvaluation ? 'A comprehensive course-level final exam. Provide a Quiz containing exactly 15 questions covering the entire course.' : 'A lesson-level final quiz. Provide a Quiz containing 5-10 questions covering this lesson.'}
+2. "references": An array of 3-5 authoritative academic bibliography entries in the requested citation style.
+
+Return ONLY a valid JSON object matching this schema:
+\\\`\\\`\\\`json
+{
+  "finalEvaluation": {
+    "questions": [
+      {
+        "question": "string",
+        "options": ["string"],
+        "correctIndex": integer,
+        "explanation": "string"
+      }
+    ]
+  },
+  "references": ["string"]
+}
+\\\`\\\`\\\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+      while (!block4Approved && block4Iteration < maxBlock4Iterations) {
+        block4Iteration++;
+        lessonStats.widgetsAttempts++;
+        await appendTaskLog(`[AI GENERATOR] Generating Widget Block 4 (Attempt #${block4Iteration})...`);
+
+        let block4PromptWithFeedback = block4Prompt;
+        if (block4Feedback) {
+          block4PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block4Feedback}"\nPlease fix these issues and regenerate.`;
+        }
+
+        try {
+          block4Parsed = await generateAndParseWidgetBlock(block4PromptWithFeedback, widgetBlock4Schema, 'Block 4 Evaluation & References');
+        } catch (e) {
+          await appendTaskLog(`[AI GENERATOR] Widget Block 4 failed to parse. Retrying...`);
+          continue;
+        }
+
+        // Critique block 4
+        await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 4...`);
+        const block4CriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
+${JSON.stringify(block4Parsed, null, 2)}
+
+Ensure:
+1. Bibliography entries are valid academic citations.
+2. Quizzes are mathematically/scientifically accurate.
+3. No HTML or custom Hover-Card tags inside quiz strings.
+
+Return ONLY a valid JSON object matching widgetBlockAuditSchema:
+\\\`\\\`\\\`json
+{
+  "approved": boolean,
+  "critique": "detailed feedback explaining what to fix, or empty if approved"
+}
+\\\`\\\`\\\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+        saveDraftRevision(`prompt_stage2_widgets_block4_${item.slug}_iter${block4Iteration}.md`, block4PromptWithFeedback);
+        if (block4Parsed) {
+          saveDraftRevision(`draft_stage2_widgets_block4_${item.slug}_iter${block4Iteration}.json`, JSON.stringify(block4Parsed, null, 2));
+        }
+        saveDraftRevision(`prompt_stage2_widgets_block4_critique${item.slug}_iter${block4Iteration}.md`, block4CriticPrompt);
+
+        const criticJsonStr = await callAIEngine(block4CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
+        saveDraftRevision(`critique_stage2_widgets_block4${item.slug}_iter${block4Iteration}.json`, criticJsonStr);
+
+        const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
+        let auditResult = { approved: true, critique: '' };
+        try {
+          auditResult = safeJsonParse(cleanCritic, 'Widget Block 4 Audit Parsing');
+        } catch (e) {
+          console.warn(`[AI GENERATOR] Failed to parse Block 4 critique:`, e);
+        }
+
+        if (auditResult.approved || isTerminalEvaluation) {
+          await appendTaskLog(`[AI GENERATOR] Widget Block 4 approved by Critique Agent!`);
+          block4Approved = true;
+        } else {
+          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 4 REJECTED. Critique: "${auditResult.critique}".`);
+          lessonStats.widgetsRejections++;
+          block4Feedback = auditResult.critique;
+        }
+      }
+
+      if (block4Parsed) {
+        parsedWidgets.finalEvaluation = block4Parsed.finalEvaluation;
+        parsedWidgets.references = block4Parsed.references;
+      }
+      // --- Programmatic Curation-First budget & normalization ---
+      const dbCatalogKeys = Object.keys(prunedCatalog);
+      if (parsedWidgets && Array.isArray(parsedWidgets.interactiveComponents)) {
+        let databaseWidgetsInThisLesson = 0;
+        parsedWidgets.interactiveComponents = parsedWidgets.interactiveComponents.filter((comp: any) => {
+          if (!comp || !comp.componentType) return false;
+
+          const matchedKey = dbCatalogKeys.find(
+            key => key.toLowerCase() === comp.componentType.toLowerCase() || key.toLowerCase() === comp.id?.toLowerCase()
+          );
+
+          if (matchedKey) {
+            const noPropsWidgets = new Set(['StructureViewer3D', 'QuantumOrbitalExplorer', 'DynamicSimulation', 'ChemicalStoichiometry', 'BasicMathExplorer']);
+            const isDatabaseCurated = noPropsWidgets.has(matchedKey);
+
+            const isDuplicate = usedDatabaseWidgetIds.has(matchedKey);
+            const isOverBudget = (usedDatabaseWidgetIds.size + databaseWidgetsInThisLesson) >= 2;
+
+            if (isDatabaseCurated && (isDuplicate || isOverBudget)) {
+              console.log(`[WIDGET CURATION] Filtered out database widget "${matchedKey}" (Duplicate: ${isDuplicate}, OverBudget: ${isOverBudget})`);
+              return false;
+            }
+
+            comp.componentType = matchedKey;
+            if (isDatabaseCurated) {
+              comp.id = matchedKey;
+              comp.props = {};
+              databaseWidgetsInThisLesson++;
+              usedDatabaseWidgetIds.add(matchedKey);
+            }
+            appendTaskLog(`[WIDGET CURATION] Selected and approved widget: "${matchedKey}" (Database Curated: ${isDatabaseCurated})`);
+            return true;
+          }
+
+          return true;
+        });
       }
 
       parsedWidgets = await validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
 
-      while (!widgetsApproved && widgetsIteration < maxWidgetsIterations) {
-        widgetsIteration++;
-        await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Reviewing widgets JSON (Attempt ${widgetsIteration}/${maxWidgetsIterations})...`);
-
-        // --- Programmatic Pre-verifier 2: Curation-First budget & normalization ---
-        const dbCatalogKeys = Object.keys(prunedCatalog);
-        if (parsedWidgets && Array.isArray(parsedWidgets.interactiveComponents)) {
-          let databaseWidgetsInThisLesson = 0;
-          parsedWidgets.interactiveComponents = parsedWidgets.interactiveComponents.filter((comp: any) => {
-            if (!comp || !comp.componentType) return false;
-
-            const matchedKey = dbCatalogKeys.find(
-              key => key.toLowerCase() === comp.componentType.toLowerCase() || key.toLowerCase() === comp.id?.toLowerCase()
-            );
-
-            if (matchedKey) {
-              const noPropsWidgets = new Set(['StructureViewer3D', 'QuantumOrbitalExplorer', 'DynamicSimulation', 'ChemicalStoichiometry', 'BasicMathExplorer']);
-              const isDatabaseCurated = noPropsWidgets.has(matchedKey);
-
-              const isDuplicate = usedDatabaseWidgetIds.has(matchedKey);
-              const isOverBudget = (usedDatabaseWidgetIds.size + databaseWidgetsInThisLesson) >= 2;
-
-              if (isDatabaseCurated && (isDuplicate || isOverBudget)) {
-                console.log(`[WIDGET CURATION] Filtered out database widget "${matchedKey}" (Duplicate: ${isDuplicate}, OverBudget: ${isOverBudget})`);
-                return false;
-              }
-
-              comp.componentType = matchedKey;
-              if (isDatabaseCurated) {
-                comp.id = matchedKey;
-                comp.props = {};
-                databaseWidgetsInThisLesson++;
-                usedDatabaseWidgetIds.add(matchedKey);
-              }
-              appendTaskLog(`[WIDGET CURATION] Selected and approved widget: "${matchedKey}" (Database Curated: ${isDatabaseCurated})`);
-              return true;
-            }
-
-            return true;
-          });
-        }
-
-        // Stage 4B Critic check
-        const widgetsCriticPrompt = `# 🔬 Agent 4B: Widgets Critic Prompt (Stage 4B)
-
-You are the Widgets Critic Agent (Agent 4B). Your job is to strictly review the generated academic lesson widgets JSON to ensure it complies perfectly with our "Pedagogical Rigor", "Curation-First Matchmaker", and "Data Integrity" constraints before the content is programmatically stitched.
-
----
-
-### METADATA
-- **Course Name**: "${correctedCourseName}"
-- **Academic Level**: "${getDescriptiveLevelForPrompt(levelInput)}"
-- **Lesson Title**: "${item.title}"
-- **Target Language**: "${targetLang.toUpperCase()}"
-- **Course Discipline**: "${courseContext.discipline || 'General'}"
-- **Citation Style**: "${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}"
-
----
-
-### INPUT WIDGETS JSON TO AUDIT
-Review the generated widgets JSON structure:
-\`\`\`json
-${JSON.stringify(parsedWidgets, null, 2)}
-\`\`\`
-
-### INPUT APPROVED NARRATIVE DRAFT (FOR REFERENCE)
-Verify that all anchors and citations match the approved text perfectly:
----
-${approvedNarrativeText}
----
-
----
-
-### CORE CHECKPOINTS
-You must audit the widgets JSON against the following 6 critical checkpoints:
-
-1. **Perfect Semantic & Anchor Alignment**:
-   - **STRICT REJECTION**: You MUST verify that every custom widget anchor in the narrative draft (e.g. \`[[WIDGET:Type:ID:Topic]]\` or \`[[WIDGET:ID]]\`) has a corresponding object in the \`interactiveComponents\` array.
-   - Map:
-     - \`id\` -> matches the \`ID\` part of the anchor.
-     - \`componentType\` -> matches the \`Type\` part of the anchor (e.g., "Image", "Audio", "Video", "Biography", "Citation", "Epistemology", or custom widgets).
-     - \`sectionAnchor\` -> matches the section heading title in the narrative draft where the anchor is placed.
-   - **STRICT PROPERTIES AUDIT**: Verify that \`props\` contains the fully resolved fields based on the component type:
-     - **Image**: Must have \`description\`, \`alt\`, \`caption\` (detailed italicized explanation of the figure's relevance), and \`searchQuery\` (highly canonical 1 to 3 search words or keywords like "Claudio Monteverdi", "Larynx humain", etc. extracted directly from the detailed description). Do NOT allow blank or placeholder descriptions, captions, or searchQuery. STRICTLY REJECT if description, alt, caption, or searchQuery are lazy copy-pastes of the chapter's heading or parent section title, if they contain manual figure prefixes or labels (such as "Figure 1:", "Figure :", "Figure %d:", "Figure -", etc.), or if they contain relative/local image links or filenames (such as "./media/image.png" or "/images/photo.jpg").
-     - **Audio**: Must have \`title\` and optional \`description\` (narration details, pronunciation guide).
-     - **Video**: Must have \`title\` and optionally \`url\` or \`id\` if specified.
-     - **Citation**: Must have \`quote\`, \`author\`, \`source\`, \`year\`, and \`commentary\` (an academic paragraph explaining the quote's importance). Reject if commentary is generic or blank.
-     - **Biography**: Must have \`name\`, \`dates\`, \`description\` (8-12 lines of biography detailing main contributions), and \`wikipediaUrl\` (working direct link to English Wikipedia page).
-     - **Epistemology**: Must have \`title\` and \`content\` (detailed discussion of controversy/debate, 150-250 words).
-   - Reject if any extra/undeclared anchors exist, or if any placed anchors are missing from the JSON, or if any of the properties above contain default placeholder texts.
-
-
-   - Verify that any database-curated widgets (like \`FunctionPlotter\`, \`CodeSandbox\`, \`DataChart\`, etc.) have their \`props\` set to exactly \`{}\` (empty object).
-   - Verify that the number of database-curated widgets in this lesson does not exceed the remaining budget: **${remainingBudget}**.
-   - Verify that no database-curated widget used in this lesson has already been used earlier in the course: **${alreadyUsedList}**.
-
-3. **Bloom's Taxonomy Verbs (Objectives & Diagnostics)**:
-   - For University levels, check that the \`learningObjectives\` under \`knowledge\`, \`skills\`, and \`attitudes\` utilize the Revised Bloom's Taxonomy verbs:
-     - **FR (French)**: Analyser, Évaluer, Créer.
-     - **EN (English)** or other languages: Analyze, Evaluate, Create.
-   - Reject if simplistic or passive verbs (like "comprendre", "connaître", "understand", "know") are used for higher education levels.
-
-4. **MCQ and Diagnostic Correctness & Flat-Prop Format**:
-   - Audit the \`diagnosticQuiz\` and \`finalEvaluation\` (if MCQ). Check that the question is academically robust, options are diverse, and the \`correctIndex\` is mathematically/scientifically accurate (0-indexed).
-   - Verify that MCQ questions do NOT use nested markdown structures or custom Hover-Card tags inside options or question strings.
-   - For \`finalEvaluation\` MCQ quiz, verify that the props conform to the **Flat-Prop Quiz Format**:
-     - Array of questions with \`question\`, \`options\`, \`correctIndex\`, and \`explanation\`.
-
-5. **Glossary Rigor**:
-   - Verify that the \`glossary\` contains at least 3 high-quality key academic terms defined in "${targetLang.toUpperCase()}".
-   - Definitions must be clear, concise, and academically accurate.
-
-6. **Academic Bibliography & Citation Style**:
-   - Verify that the \`references\` array contains 3 to 5 real, authoritative academic works (books, journal articles, landmark papers) formatted strictly in **${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}**.
-   - Asterisks for italics (like \`*Book Title*\`) are forbidden inside JSON strings—titles must use quotes or French guillemets.
-   - Ensure that the inline citations inside the approved narrative (e.g. \`[1](#ref-1)\`) map 1-to-1 to their correct index in this array (i.e. \`references[0]\` is citation \`[1]\`, \`references[1]\` is citation \`[2]\`).
-
-7. **Grade-Level Tailoring Matrix**:
-   - Verify that interactive widgets/sandboxes align strictly with the target academic level "${getDescriptiveLevelForPrompt(levelInput)}":
-     - Primary / Middle School: High visual focus, simplified sliders, gamified challenges, visual metaphors, zero complex algebra symbols.
-     - High School: Balanced equations and visual models, preset configs matching standard curriculum formulas.
-     - University / Higher Education: Full scientific controls, rigorous mathematical formulas, analytical overlays, data export capability.
-8. **Biography Component Integrity**:
-   - **STRICT REJECTION**: Verify that all Biography components inside interactiveComponents have name, description, and wikipediaUrl defined with meaningful, accurate, and non-generic content.
-   - Reject if any biography attributes are missing, empty, or use default/placeholder text like "Scientifique / Auteur", "Biographie détaillée à venir.", or default URLs like "https://wikipedia.org". If so, set approved to false and critique exactly what is missing.
-9. **Evaluation Scope and Integrity Check**:
-   - **STRICT REJECTION**: Verify that every Section Evaluation (such as a Quiz, EssayEvaluation, Audio evaluation, or other interactive evaluation inside interactiveComponents) exclusively covers concepts of the specific section it is anchored in (sectionAnchor). Do NOT allow questions or prompts that reference concepts from other sections.
-   - Verify that the lesson's finalEvaluation (Quiz, EssayEvaluation, Audio, etc.) comprehensively covers the concepts of the ENTIRE lesson.
-   - Verify that the terminal course finalEvaluation (when isTerminalEvaluation is true) comprehensively covers concepts from ALL lessons of the entire course.
-   - Verify that all quizzes have their questions pool size and display limit matching exactly the requested limits.
-
----
-
-### OUTPUT FORMAT
-You must return ONLY a valid JSON object matching the \`widgetsAuditSchema\` with the following keys:
-- **\`approved\`**: boolean (true if the ENTIRE widgets JSON complies perfectly with all checkpoints; false if there are any violations).
-- **\`isGlobalRevision\`**: boolean (true ONLY if the errors are widespread, systemic, or if structural keys are missing, requiring a complete full-JSON regeneration; false if the errors are localized and can be repaired component-by-component. You MUST prefer false and use localized critiques for standard/localized errors. Do NOT trigger a global rewrite for standard localized errors).
-- **\`globalCritique\`**: string (high-level or global feedback. Leave empty if approved).
-- **\`widgets\`**: array of objects, one for each checked key/widget in the JSON. Each item must contain key, approved, and critique. [CRITICAL] If isGlobalRevision is true, you MUST leave this array empty (\`[]\`) or omit it entirely to avoid running out of output tokens and causing truncation. Required when isGlobalRevision is false. Each item must contain:
-  - **\`key\`**: string (the unique identifier/path of the widget or property block, e.g., "diagnosticQuiz", "references", "interactiveComponents:my_plot").
-  - **\`approved\`**: boolean (true if this specific component is perfect; false if it has errors).
-  - **\`critique\`**: string (specific, actionable feedback on how to fix this individual component. Leave empty if approved).
-
-Do NOT wrap your JSON response in markdown code blocks (\`\`\`).
-`;
-
-        const widgetsAuditStr = await callAIEngine(widgetsCriticPrompt, widgetsAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
-        const cleanWidgetsAudit = widgetsAuditStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-        const widgetsAudit = safeJsonParse(cleanWidgetsAudit, 'Widgets Critic Audit');
-
-        if (isTerminalEvaluation || (widgetsAudit && widgetsAudit.approved === true)) {
-          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Widgets JSON APPROVED ${isTerminalEvaluation ? '(Terminal Evaluation Bypass)' : `on attempt ${widgetsIteration}`}!`);
-          widgetsApproved = true;
-        } else {
-          const isGlobalWidgets = widgetsIteration === 1 && !!widgetsAudit?.isGlobalRevision; // Allow global rewrite on round 1, then force localized repair to converge
-          const globalCritiqueText = widgetsAudit?.globalCritique || '';
-          const criticWidgetsList: { key: string; approved: boolean; critique: string }[] = widgetsAudit?.widgets || [];
-
-          const critiqueText = isGlobalWidgets
-            ? globalCritiqueText
-            : (criticWidgetsList.filter(w => !w.approved).map(w => `[${w.key}]: ${w.critique}`).join(' | ') || 'Invalid response from widgets critic.');
-
-          await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Widgets JSON REJECTED (${isGlobalWidgets ? 'GLOBAL rewrite' : 'LOCALIZED repair'}). Critique: ${critiqueText}`);
-          lessonStats.widgetsRejections++;
-          saveDraftRevision(`critique_stage4b_widgets_${item.slug}_attempt_${widgetsIteration}.json`, widgetsAuditStr);
-
-          if (widgetsIteration >= maxWidgetsIterations) {
-            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Max widgets critique loops reached. Moving forward with current widgets.`);
-            break;
-          }
-
-          if (isGlobalWidgets) {
-            // === GLOBAL REWRITE PATH (FALLBACK) ===
-            const widgetsRefinerPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
-The widgets critic (Agent 4B) has rejected your previously generated widgets JSON with a GLOBAL critique requiring a full rewrite.
-You MUST now rewrite and fully correct the JSON object based on their feedback, ensuring perfect semantic alignment with the narrative, correct schema fields, and strict budget compliance.
-
-⚠️ CRITICAL REMINDER: You MUST maintain absolute data safety to prevent MDX parser crashes:
-- Ensure that interactive component JSON attributes (such as "props") do NOT contain raw javascript arrow functions, backticks (\`), or complex unescaped double quotes.
-- Keep MCQ options as simple, plain text strings. Never place markdown list items (- or *) or HTML tags inside of quiz "options" or "question" strings.
-
-### GRADE-LEVEL TAILORING MATRIX FOR INTERACTIVE SANDBOXES
-You must ensure that interactive widgets/sandboxes align strictly with the target academic level "${getDescriptiveLevelForPrompt(levelInput)}":
-- **Primary / Middle School (Primary/Maternelle, foundation_1, foundation_2, secondary_1)**:
-  Focus on high visual emphasis, gamified challenges, simplified sliders, zero complex algebra symbols. Use visual metaphors (e.g., sharing pizza slices for fractions, balancing scales for basic equations, coloring elements).
-- **High School (secondary_2, preuni_1, preuni_2, preuni_3)**:
-  Balanced representation of equations alongside visual models. Interactive variables mapping to standard physics/math formulas. Use presets aligned with official curricula (e.g., cell division phases, basic Cartesian graphs, ideal gas law, Nernst potentials).
-- **University / Higher Education (L1, L2, L3, M1, M2, beginner, intermediate, advanced, expert)**:
-  Full scientific controls, rigorous mathematical formulas, multiple overlays, analytical grids, data export (JSON/CSV). Use sandbox exploration of full wave functions, GHK multi-ion equations, multi-variable simulations, derivative/integral solvers.
-
-GLOBAL CRITIQUE FROM AGENT 4B:
-"${globalCritiqueText}"
-
-PREVIOUS WIDGETS JSON:
-\`\`\`json
-${JSON.stringify(parsedWidgets, null, 2)}
-\`\`\`
-
-INPUT APPROVED NARRATIVE DRAFT:
----
-${approvedNarrativeText}
----
-
-Generate the complete, updated, fully-fledged widgets JSON conforming strictly to the requested schema. Do NOT wrap your JSON response in markdown code blocks.`;
-
-            saveDraftRevision(`prompt_stage2_refiner_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRefinerPrompt);
-
-            const dynamicSchemaGlobal = getDynamicWidgetsSchema(approvedNarrativeText);
-            const refinedWidgetsStr = await callAIEngine(widgetsRefinerPrompt, dynamicSchemaGlobal, 0.1, undefined, undefined, false, 'widget_placement');
-            lessonStats.widgetsAttempts++;
-            saveDraftRevision(`draft_stage2_widgets_${item.slug}_attempt_${widgetsIteration + 1}.json`, refinedWidgetsStr);
-
-            try {
-              const cleanRefinedWidgets = refinedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-              const newlyParsed = safeJsonParse(cleanRefinedWidgets, 'WFTA Stage 2 Widgets Refinement');
-              parsedWidgets = await validateAndFixWidgets(newlyParsed, courseContext.discipline || correctedCourseName, targetLang);
-              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Successfully parsed globally refined widgets JSON.`);
-            } catch (jsonErr: any) {
-              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] ⚠️ Global widgets refinement parsing failed (${jsonErr.message}). Falling back to the previous widgets JSON version to prevent crash.`);
-            }
-          } else {
-            // === LOCALIZED COMPONENT-BY-COMPONENT REPAIR PATH ===
-            const rejectedWidgets = criticWidgetsList.filter(w => !w.approved);
-            await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Localized repair for ${rejectedWidgets.length} widget(s): ${rejectedWidgets.map(w => `"${w.key}"`).join(', ')}`);
-
-            const rejectedWidgetsData: { key: string; critique: string; currentValue: any; }[] = [];
-
-            for (const rw of rejectedWidgets) {
-              const key = rw.key;
-              let currentValue: any = null;
-
-              if (key.startsWith('interactiveComponents:')) {
-                const compId = key.substring('interactiveComponents:'.length);
-                if (parsedWidgets && Array.isArray(parsedWidgets.interactiveComponents)) {
-                  currentValue = parsedWidgets.interactiveComponents.find((c: any) => c && (c.id === compId || c.componentType === compId));
-                }
-              } else {
-                currentValue = parsedWidgets ? parsedWidgets[key] : null;
-              }
-
-              rejectedWidgetsData.push({
-                key,
-                critique: rw.critique,
-                currentValue
-              });
-            }
-
-            const repairSchemasStr = getSchemasForRejectedKeys(rejectedWidgets.map(w => w.key), lessonWidgetsSchema);
-
-            const widgetsRepairPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
-We need to repair specific component keys of the generated widgets JSON for the lesson "${item.title}" that were rejected by the Widgets Critic (Agent 4B).
-
-⚠️ CRITICAL REMINDER FOR MDX COMPLIANCE:
-- Do NOT use raw javascript arrow functions, backticks (\`), or complex unescaped double quotes inside interactive component properties (such as "props").
-- Keep MCQ options as simple, plain text strings. Never place markdown list items (- or *) or HTML tags inside of quiz "options" or "question" strings.
-
-CONTEXT:
-Course: "${correctedCourseName}" | Level: "${getDescriptiveLevelForPrompt(levelInput)}" | Language: "${targetLang.toUpperCase()}"
-
-REJECTED WIDGETS DATA:
-${rejectedWidgetsData.map((rw, idx) => `
---- REJECTED WIDGET ${idx + 1} ---
-Key: "${rw.key}"
-Critique from Agent 4B:
-  "${rw.critique}"
-Current JSON Value:
-\`\`\`json
-${JSON.stringify(rw.currentValue, null, 2)}
-\`\`\`
-----------------------------------
-`).join('\n')}
-
-### STRICT JSON SCHEMAS FOR REJECTED WIDGETS:
-\`\`\`json
-${repairSchemasStr}
-\`\`\`
-
-INSTRUCTIONS:
-1. Repair each rejected widget key to fully resolve its critique.
-2. Return a SINGLE JSON object containing ONLY the repaired keys as its top-level properties (or for "interactiveComponents", return the repaired component object).
-3. Format of output JSON:
-   For top-level keys like "diagnosticQuiz", the output JSON should have:
-   {
-     "diagnosticQuiz": { ... repaired object ... }
-   }
-   For "interactiveComponents:compId" keys, return the repaired component object under the component's key, like:
-   {
-     "interactiveComponents:compId": { ... repaired component object, including id, componentType, sectionAnchor, props, etc. ... }
-   }
-
-Do NOT wrap your JSON response in markdown code blocks (\`\`\`json or \`\`\`).`;
-
-            saveDraftRevision(`prompt_stage2_repair_${item.slug}_attempt_${widgetsIteration + 1}.md`, widgetsRepairPrompt);
-
-            const repairedWidgetsStr = await callAIEngine(widgetsRepairPrompt, null, 0.1, undefined, undefined, false, 'widget_placement');
-            lessonStats.widgetsAttempts++;
-            saveDraftRevision(`draft_stage2_widgets_repair_${item.slug}_attempt_${widgetsIteration + 1}.json`, repairedWidgetsStr);
-
-            let repairedWidgetsJson: any = null;
-            try {
-              const cleanRepairedWidgets = repairedWidgetsStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-              repairedWidgetsJson = safeJsonParse(cleanRepairedWidgets, 'Widgets Local Repair Parsing');
-            } catch (jsonErr: any) {
-              await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] ⚠️ Localized widgets repair parsing failed (${jsonErr.message}). Skipping this repair iteration to prevent crash.`);
-            }
-
-            if (repairedWidgetsJson) {
-              if (Array.isArray(repairedWidgetsJson.interactiveComponents)) {
-                for (const repComp of repairedWidgetsJson.interactiveComponents) {
-                  if (repComp && repComp.id) {
-                    const idx = parsedWidgets.interactiveComponents.findIndex((c: any) => c && c.id === repComp.id);
-                    if (idx !== -1) {
-                      parsedWidgets.interactiveComponents[idx] = repComp;
-                    } else {
-                      parsedWidgets.interactiveComponents.push(repComp);
-                    }
-                  }
-                }
-              }
-
-              for (const rw of rejectedWidgetsData) {
-                const key = rw.key;
-                if (key.startsWith('interactiveComponents:')) {
-                  const compId = key.substring('interactiveComponents:'.length);
-                  const repairedComp = repairedWidgetsJson[key] || repairedWidgetsJson[compId];
-                  if (repairedComp && parsedWidgets && Array.isArray(parsedWidgets.interactiveComponents)) {
-                    const idx = parsedWidgets.interactiveComponents.findIndex((c: any) => c && (c.id === compId || c.componentType === compId));
-                    if (idx !== -1) {
-                      parsedWidgets.interactiveComponents[idx] = repairedComp;
-                      await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Merged repaired component for key "${key}"`);
-                    } else {
-                      parsedWidgets.interactiveComponents.push(repairedComp);
-                      await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Added repaired component for key "${key}"`);
-                    }
-                  }
-                } else {
-                  if (repairedWidgetsJson[key] !== undefined) {
-                    parsedWidgets[key] = repairedWidgetsJson[key];
-                    await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 4B] Merged repaired top-level property for key "${key}"`);
-                  }
-                }
-              }
-            }
-
-            parsedWidgets = await validateAndFixWidgets(parsedWidgets, courseContext.discipline || correctedCourseName, targetLang);
-          }
-        }
-      }
-
-      // ───────────────────────────────────────────────────────────────
       // [STAGE 3] DETERMINISTIC STITCHING ENGINE
       // ───────────────────────────────────────────────────────────────
       await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 3] Stitching narrative and widgets programmatically...`);

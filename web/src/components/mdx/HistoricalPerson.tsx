@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useWikiCascade } from '@/hooks/useWikiCascade';
 import * as Popover from '@radix-ui/react-popover';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
@@ -497,12 +496,12 @@ const parseYears = (str: string): number[] => {
 
 const getPersonCentury = (
   props: EntityLinkProps,
-  wiki: any,
+  description: string | null,
   isFr: boolean
 ): string | null => {
   if (props.century) return props.century;
   
-  const combinedText = `${props.dates || ''} ${props.lifespan || ''} ${props.era || ''} ${wiki.description || ''} ${wiki.summary || ''}`;
+  const combinedText = `${props.dates || ''} ${props.lifespan || ''} ${props.era || ''} ${description || ''}`;
   const extracted = extractCenturyText(combinedText, isFr);
   if (extracted) return extracted;
 
@@ -627,23 +626,10 @@ export const EntityLink = ({
     queryOriginalLang = parsedWiki.lang;
   }
 
-  const resolvedType = type || 'entity';
-
-  // 5-stage Wikipedia cascade (shared hook)
-  const wiki = useWikiCascade(
-    queryName,
-    activeLang,
-    queryOriginalLang,
-    !!(!queryName || !activeLang),
-    resolvedType
-  );
-
-  const fallbackUrl = wiki.exists === false
-    ? `https://${langCode}.wikipedia.org/w/index.php?search=${encodeURIComponent(queryName)}`
-    : `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(queryName.replace(/ /g, '_'))}`;
-  const resolvedWikiUrl = wiki.url || fallbackUrl;
+  const fallbackUrl = `https://${langCode}.wikipedia.org/w/index.php?search=${encodeURIComponent(queryName)}`;
+  const resolvedWikiUrl = propUrl || propHref || fallbackUrl;
   const resolvedExternalUrl = propUrl || propHref;
-  const resolvedSummary = wiki.summary || description;
+  const resolvedSummary = description || '';
   const formattedSummary = formatSummaryText(resolvedSummary);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -667,13 +653,14 @@ export const EntityLink = ({
   };
 
   const isFr = activeLang.toLowerCase().trim() === 'fr';
+  const resolvedType = type || 'entity';
 
-  const metaInfo = extractEntityMetadata(resolvedType, wiki.description, wiki.summary, isFr);
+  const metaInfo = extractEntityMetadata(resolvedType, description || null, description || null, isFr);
 
   // Compute rightLabel for context display
   let rightLabel: string | null = null;
   if (resolvedType === 'person') {
-    rightLabel = getPersonCentury({ name, children, type, description, century, lifespan, dates, creation, era, unresolved }, wiki, isFr);
+    rightLabel = getPersonCentury({ name, children, type, description, century, lifespan, dates, creation, era, unresolved }, description || null, isFr);
     if (!rightLabel) {
       rightLabel = dates || lifespan || null;
     }
@@ -814,7 +801,7 @@ export const EntityLink = ({
               <p className="text-sm text-slate-300 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-800">
                 &ldquo;{formattedSummary}&rdquo;
               </p>
-            ) : wiki.exists === false ? (
+            ) : !description ? (
               <p className="text-sm text-slate-400 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-650">
                 {t.error}
               </p>
