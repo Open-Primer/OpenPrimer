@@ -467,10 +467,25 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
     setIsEditingAdminName(false);
   };
 
+  // Auth helper — mirrors the pattern used in AchievementsTab
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        return { 'Authorization': `Bearer ${session.access_token}` };
+      }
+    } catch (err) {
+      console.warn('[WIDGETS AUTH] Failed to retrieve session token:', err);
+    }
+    return {};
+  };
+
   const loadWidgets = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/admin/widgets');
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch('/api/admin/widgets', { headers: authHeaders });
       const data = await res.json();
       if (data.success) {
         setWidgets(data.widgets);
@@ -496,10 +511,11 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
   // Sync locks periodically (polling locks state every 15 seconds)
   useEffect(() => {
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       if (!isExecuting && !isSavingMetadata) {
         // Silently refresh widget details to update locks
-        fetch('/api/admin/widgets')
+        const authHeaders = await getAuthHeaders();
+        fetch('/api/admin/widgets', { headers: authHeaders })
           .then(res => res.json())
           .then(data => {
             if (data.success) {
@@ -600,9 +616,13 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   const acquireLock = async (widgetIdToLock: string): Promise<boolean> => {
     if (!adminId) return false;
     try {
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/admin/widgets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...authHeaders
+        },
         body: JSON.stringify({
           action: 'lock',
           widgetId: widgetIdToLock,
@@ -619,9 +639,13 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
   const releaseLock = async (widgetIdToUnlock: string, force: boolean = false): Promise<boolean> => {
     try {
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/admin/widgets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...authHeaders
+        },
         body: JSON.stringify({
           action: 'unlock',
           widgetId: widgetIdToUnlock,
@@ -706,9 +730,13 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
         finalLevelFR = tLevel;
       }
 
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/admin/widgets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...authHeaders
+        },
         body: JSON.stringify({
           widgetId: selectedWidget.id,
           adminId,
@@ -746,9 +774,13 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
     if (!adminId) return;
     try {
       setLoading(true);
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/admin/widgets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...authHeaders
+        },
         body: JSON.stringify({
           action: 'validate',
           widgetId,
@@ -776,9 +808,13 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
     if (!adminId) return;
     try {
       setLoading(true);
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/admin/widgets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...authHeaders
+        },
         body: JSON.stringify({
           action: 'rollback',
           widgetId,
@@ -890,9 +926,13 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
         return;
       }
 
+      const authHeaders = await getAuthHeaders();
       const response = await fetch('/api/admin/widgets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...authHeaders
+        },
         body: JSON.stringify({
           widgetId: widgetIdClean,
           prompt: newWidgetPrompt,
@@ -935,7 +975,8 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
         // Reload lists and focus on the new widget
         setLoading(true);
-        const refRes = await fetch('/api/admin/widgets');
+        const refAuthHeaders = await getAuthHeaders();
+        const refRes = await fetch('/api/admin/widgets', { headers: refAuthHeaders });
         const refData = await refRes.json();
         if (refData.success) {
           setWidgets(refData.widgets);
@@ -974,9 +1015,13 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       const stepTimer2 = setTimeout(() => setCurrentStep(3), 5000); 
       const stepTimer3 = setTimeout(() => setCurrentStep(4), 7000); 
 
+      const authHeaders = await getAuthHeaders();
       const response = await fetch('/api/admin/widgets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...authHeaders
+        },
         body: JSON.stringify({
           widgetId: selectedWidget.id,
           prompt: prompt,
