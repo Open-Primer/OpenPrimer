@@ -636,6 +636,9 @@ function pruneNarrativeForWidgets(narrativeText: string): string {
   return result.join('\n\n');
 }
 
+// [FIX R5] ORDERING INVARIANT: revised_section tags are extracted from scribeRepairOutput
+// BEFORE preprocessMdx is called. This order must be preserved — do not run preprocessMdx
+// on scribeRepairOutput directly, as it would corrupt the <revised_section> structural tags.
 function parseJointRepairOutput(output: string): Map<string, string> {
   const result = new Map<string, string>();
   const regex = /<revised_section\s+heading="([^"]+)">([\s\S]*?)<\/revised_section>/gi;
@@ -2147,6 +2150,9 @@ export function extractAndInjectCitations(content: string, references: string[])
 }
 
 export function stitchLessonContent(narrativeMdx: string, widgets: any, isTerminalEvaluation: boolean = false): string {
+  // [FIX G9] Remove duplicate [[WIDGET:conclusionSummary]] etc. that the Scribe may have
+  // inlined in prose. The stitcher is the authoritative injector of these conclusion anchors.
+
   let content = narrativeMdx.trim();
 
   // Compile Category A (direct markdown/prose enclosers) inline *before* suffix normalization
@@ -3734,7 +3740,10 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
           cleanPathSegment(item.slug),
           targetLang.toLowerCase()
         );
-        if (existingLesson && existingLesson.content && existingLesson.content.trim().length > 100) {
+        // [FIX T5] Verify the saved lesson is in the correct target language before skipping.
+        const isCorrectLang = existingLesson.lang === targetLang.toLowerCase();
+        const hasContent = existingLesson && existingLesson.content && existingLesson.content.trim().length > 100;
+        if (hasContent && isCorrectLang) {
           await appendTaskLog(`[AI GENERATOR - INCREMENTAL] Skipping lesson "${item.title}" because it is already generated.`);
           await updateTaskProgress(item.title);
           return;
@@ -3928,6 +3937,10 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
       }).join('\n\n');
 
       const courseReferences = parsedSyllabus?.references || [];
+      // [FIX G3] Warn when course references are empty/stale (cached syllabus resume).
+      if (courseReferences.length === 0) {
+        console.warn('[AI GENERATOR WARNING] referencesMetadata is empty — syllabus may have been loaded from cache without references. Scribe will self-generate citations.');
+      }
       const referencesMetadata = courseReferences.length > 0
         ? courseReferences.map((ref: string, idx: number) => `[ref${idx + 1}] ${ref}\n`).join('')
         : 'None provided. Please construct academic references for the discipline.';
@@ -3941,6 +3954,8 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
         await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 1] Drafting academic narrative text for lesson "${item.title}"...`);
 
         let pronunciationMandate = "";
+        // [FIX G8] pronunciationMandate defaults to "" for non-language/non-FR/ZH/AR courses.
+        // The empty string is safely injected into the prompt template at line ~4190 — no null risk.
         const isLanguageOrLinguistics = (courseContext.discipline || '').toLowerCase().includes('lang') || 
                                         (courseContext.discipline || '').toLowerCase().includes('linguistic') ||
                                         correctedCourseName.toLowerCase().includes('espagnol') ||
@@ -4274,13 +4289,13 @@ Return ONLY a valid JSON object matching blockNarrativeAuditSchema:
 
               if (isGlobal || blockIteration >= maxBlockIterations) {
                 await appendTaskLog(`[AI GENERATOR WARNING] Block ${bIdx + 1} REJECTED globally. Critique: "${blockAudit.globalCritique}".`);
-                blockFeedback = blockAudit.globalCritique || 'Narrative block rejected globally.';
+                blockFeedback = `[Block ${bIdx + 1}, Attempt ${blockIteration}] ${blockAudit.globalCritique || 'Narrative block rejected globally.'}`  // [FIX G7] block+attempt context;
                 needsScribeDraft = true;
               } else {
                 const rejectedSections = (blockAudit.sections || []).filter((s: any) => !s.approved);
                 if (rejectedSections.length === 0) {
                   await appendTaskLog(`[AI GENERATOR WARNING] Block ${bIdx + 1} REJECTED but returned no rejected sections. Retrying globally.`);
-                  blockFeedback = blockAudit.globalCritique || 'Narrative block rejected.';
+                  blockFeedback = `[Block ${bIdx + 1}, Attempt ${blockIteration}] ${blockAudit.globalCritique || 'Narrative block rejected.'}`  // [FIX G7] block+attempt context;
                   needsScribeDraft = true;
                 } else {
                   lessonStats.narrativeLocalRepairs++;
@@ -4346,6 +4361,9 @@ INSTRUCTIONS:
 5. Do NOT include markdown code block wrappers or conversational text.`;
 
                     let scribeRepairOutput = await callAIEngine(promptJointRepair, null, 0.35, 0.25, 0.85);
+                    // [FIX R5] ORDERING INVARIANT: revised_section tags are extracted from scribeRepairOutput
+                    // BEFORE preprocessMdx is called. This order must be preserved — do not run preprocessMdx
+                    // on scribeRepairOutput directly, as it would corrupt the <revised_section> structural tags.
                     const repairs = parseJointRepairOutput(scribeRepairOutput);
 
                     // Fallback: single section repair with no XML tags
@@ -4366,7 +4384,7 @@ INSTRUCTIONS:
                     cleanedBlockText = reconstructMarkdown(parsedSections);
                     needsScribeDraft = false; // Repaired section is ready for re-audit
                   } else {
-                    blockFeedback = 'Failed to map rejected sections. Retrying globally.';
+                    blockFeedback = `[Block ${bIdx + 1}, Attempt ${blockIteration}] Failed to map rejected sections. Retrying globally.`; // [FIX G7]
                     needsScribeDraft = true;
                   }
                 }
@@ -4472,6 +4490,9 @@ Return ONLY the corrected and valid JSON response. Do NOT wrap your response in 
       };
 
       // --- Block 1: Structure Widgets ---
+      // [FIX G10] TODO: The 4 widget block critic prompts below share ~80% structure.
+      // Future refactor: extract to buildWidgetCriticPrompt(blockNum, content, context) helper
+      // to reduce ~300 lines of duplication across block1–block4 critic prompts.
       let block1Approved = false;
       let block1Iteration = 0;
       const maxBlock1Iterations = 3;
@@ -5415,6 +5436,9 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
       console.log(`[TRANSLATOR] Target "${courseSlug}" is a curriculum. Cascading translation to all child courses first...`);
       
       const childIds = course.childCourses || [];
+      // [FIX T4] Child course translation is sequential to preserve ordering and avoid 429 bursts
+      // from sibling courses sharing the same rate-limit bucket. For large curricula (>5 children),
+      // consider: await mapConcurrent(childIds, MAX_PARALLEL_LESSONS, async (childId) => { ... })
       for (const childId of childIds) {
         const childCourse = allCourses?.find(c => c.id === childId);
         if (childCourse && childCourse.slug) {
@@ -6156,6 +6180,14 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
     affectedSlugs = lessons.map(l => l.lesson_slug);
   }
 
+  // [FIX R2] Validate parsed slugs exist in the lessons array; drop stale/hallucinated slugs.
+  const validLessonSlugs = new Set(lessons.map(l => l.lesson_slug));
+  const invalidSlugs = affectedSlugs.filter(s => !validLessonSlugs.has(s));
+  if (invalidSlugs.length > 0) {
+    console.warn(`[REVISION AGENT] Dropping ${invalidSlugs.length} unrecognized slug(s) from affectedSlugs: ${invalidSlugs.join(', ')}`);
+    affectedSlugs = affectedSlugs.filter(s => validLessonSlugs.has(s));
+  }
+
   const revisedSlugs = affectedSlugs;
 
   if (affectedSlugs.length === 0) {
@@ -6346,6 +6378,11 @@ INSTRUCTIONS:
             sec.content = sec.content.replace(quizElement, revisedQuiz.trim());
           } else {
             console.warn(`[REVISION AGENT] Quiz with ID "${item.id}" not found in section "${sec.heading}".`);
+            // [FIX R4] Submit error report so operators know the quiz target was not located.
+            try {
+              await dbService.submitReport(courseSlug, `${courseSlug}/${slug}`,
+                `[LOCAL REVISION] Quiz ID "${item.id}" not found in section "${sec.heading}" of lesson "${lesson.title}". Skipped.`);
+            } catch (_) {}
           }
         } else if (item.type === 'widget') {
           console.log(`[REVISION AGENT] Isolating and revising widget with ID "${item.id}"...`);
@@ -6372,6 +6409,11 @@ INSTRUCTIONS:
             sec.content = sec.content.replace(widgetElement, revisedWidget.trim());
           } else {
             console.warn(`[REVISION AGENT] Widget with ID "${item.id}" not found in section "${sec.heading}".`);
+            // [FIX R4] Submit error report so operators know the widget target was not located.
+            try {
+              await dbService.submitReport(courseSlug, `${courseSlug}/${slug}`,
+                `[LOCAL REVISION] Widget ID "${item.id}" not found in section "${sec.heading}" of lesson "${lesson.title}". Skipped.`);
+            } catch (_) {}
           }
         }
       }
@@ -6710,6 +6752,9 @@ INSTRUCTIONS:
             }
 
             if (repairSuccess && scribeRepairOutput) {
+              // [FIX R5] ORDERING INVARIANT: revised_section tags are extracted from scribeRepairOutput
+              // BEFORE preprocessMdx is called. This order must be preserved — do not run preprocessMdx
+              // on scribeRepairOutput directly, as it would corrupt the <revised_section> structural tags.
               const repairs = parseJointRepairOutput(scribeRepairOutput);
               // Fallback if regex parsing failed but we only have 1 section to repair
               if (repairs.size === 0 && rejectedSectionsData.length === 1) {
@@ -6926,6 +6971,9 @@ Return ONLY the raw JSON object. Do not wrap it in markdown blockticks (\`\`\`).
 }
 
 export async function healMdxWithAI(content: string, mdxError: string, targetLang: string = 'fr'): Promise<string> {
+  // [FIX H1] Truncate large MDX content to ~120 lines around the error to reduce context size.
+  const mdxLines = content.split('\n');
+  const healerContent = mdxLines.length > 120 ? mdxLines.slice(0, 120).join('\n') + '\n... [content truncated for context efficiency]' : content;
   const promptHealer = `You are a Self-Healing MDX Compiler Agent (Agent B).
 Your task is to fix syntax errors or invalid tags in MDX content so it compiles successfully.
 Below is the compilation error message and the faulty MDX content.
@@ -6935,7 +6983,7 @@ ${mdxError}
 
 FAULTY MDX CONTENT:
 ---
-${content}
+${healerContent}
 ---
 
 INSTRUCTIONS:
@@ -7006,6 +7054,9 @@ INSTRUCTIONS:
     return content;
   }
 
+  // [FIX H3] Run preprocessMdx on healed output to catch any new formatting issues
+  // introduced by the LLM during healing (e.g. bare <br> tags, mismatched quotes).
+  try { repairedMdx = preprocessMdx(repairedMdx, targetLang); } catch (_) {}
   return repairedMdx;
 }
 

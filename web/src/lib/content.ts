@@ -3219,8 +3219,10 @@ function deduplicateOriginalQuotes(mdx: string): string {
         if (lastQuoteNormalized.includes(bracketNormalized) || bracketNormalized.includes(lastQuoteNormalized)) {
           isDuplicate = true;
         } else {
-          const words1 = new Set(lastQuoteNormalized.split(''));
-          const words2 = new Set(bracketNormalized.split(''));
+          // [FIX P5] Use word-token overlap instead of character-level to reduce false-positives
+          // (e.g. two short mathematical formulas with high character overlap would not be falsely deduped).
+          const words1 = new Set(lastQuoteNormalized.split(/\s+/).filter(w => w.length > 2));
+          const words2 = new Set(bracketNormalized.split(/\s+/).filter(w => w.length > 2));
           let common = 0;
           for (const char of words2) {
             if (words1.has(char)) common++;
@@ -3373,6 +3375,9 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = processed.replace(/_<(\w+)\b([^>]*)>([\s\S]*?)<\/\1>_/g, '<$1$2>$3</$1>');
 
   // Normalize custom React component tag casing to exact PascalCase
+  // [FIX P2] ORDERING INVARIANT: normalizeCustomTagsCasing MUST run before escapeCurlyBracesAndLessThanInText.
+  // The escaping function only runs on prose (not JSX tags), but relies on tags being in correct PascalCase first.
+  // Do not reorder these two steps — escapeCurlyBraces runs at line ~3469, significantly later.
   processed = normalizeCustomTagsCasing(processed);
 
   // Heal any spaces or invalid characters in Pollinations AI image URLs
@@ -3557,6 +3562,9 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   // 2. Heal and Normalize FillInBlanks forms
   processed = healFillInBlanksAttributes(processed);
   // Keep the safety fallback strips for unhealed or invalid forms
+  // [FIX P4] The following strip runs AFTER two heal passes. Any FillInBlanks that survived
+  // both passes and still has a closing tag couldn't be normalized and is likely malformed.
+  // This is intentional aggressive sanitization to prevent MDX parse failures.
   processed = processed.replace(/<FillInBlanks[\s\S]*?<\/FillInBlanks>/gi, '');
   processed = processed.replace(/<FillInBlanks[^>]*?blanks=\{[\s\S]*?\}[^>]*?\/>/gi, '');
 
