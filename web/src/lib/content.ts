@@ -549,7 +549,8 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
 
         const isSummative = !!(meta?.summative === true || meta?.summative === 'true' || manualMeta?.summative === 'true' || manualMeta?.summative === true);
         const processedContent = preprocessMdx(repairedBody, lang, isSummative, lessonSlug, dbLesson.order);
-        const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, lang);
+        const { resolvedContent } = await resolvePrecompiledAnchors(processedContent, lang);
+        const enriched = await enrichGlossaryWithWikipediaLinks(resolvedContent, lang);
         return {
           meta: {
             title: dbLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -599,7 +600,8 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
 
         const isSummative = !!(meta?.summative === true || meta?.summative === 'true' || manualMeta?.summative === 'true' || manualMeta?.summative === true);
         const processedContent = preprocessMdx(repairedBody, fallbackLesson.lang || lang, isSummative, lessonSlug, fallbackLesson.order);
-        const enriched = await enrichGlossaryWithWikipediaLinks(processedContent, fallbackLesson.lang || lang);
+        const { resolvedContent } = await resolvePrecompiledAnchors(processedContent, fallbackLesson.lang || lang);
+        const enriched = await enrichGlossaryWithWikipediaLinks(resolvedContent, fallbackLesson.lang || lang);
         return {
           meta: {
             title: fallbackLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -1091,7 +1093,7 @@ function stripJsxComments(mdx: string): string {
 
 function healEmptyExpressionAttributes(mdx: string): string {
   // Matches any custom or HTML tag (e.g. <TagName ...>) and replaces any empty attribute={...}
-  return mdx.replace(/(<[A-Za-z][A-Za-z0-9.]*\b)([^>]*)>/g, (tagMatch, tagStart, attributesPart) => {
+  return mdx.replace(/(<[A-Za-z][A-Za-z0-9._-]*\b)([^>]*)>/g, (tagMatch, tagStart, attributesPart) => {
     let fixed = attributesPart;
     // 1. Boolean attributes: correct, isCorrect, isFinal, isSummative
     fixed = fixed.replace(/\b(correct|isCorrect|isFinal|isSummative)=\{\s*\}/gi, '$1={false}');
@@ -1903,7 +1905,7 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
 function sanitizeAmpersandInJsxAttributes(mdx: string): string {
   // Match any opening/self-closing custom or HTML tag (e.g. <TagName ...>)
   // then parse and replace bare ampersands inside all its quoted attribute values.
-  return mdx.replace(/(<[A-Za-z][A-Za-z0-9.]*\b)([^>]*)>/g, (tagMatch, tagStart, attributesPart) => {
+  return mdx.replace(/(<[A-Za-z][A-Za-z0-9._-]*\b)([^>]*)>/g, (tagMatch, tagStart, attributesPart) => {
     const replacedAttrs = attributesPart
       .replace(/([\w:-]+=")([^"]*?)(")/g, (attrMatch: string, open: string, value: string, close: string) => {
         const fixedValue = value.replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
@@ -2706,7 +2708,7 @@ function sanitizeQuotesInComponentTags(mdx: string): string {
 
 function sanitizeSmartQuotesInTags(mdx: string): string {
   // Replace curly/smart double quotes and single quotes with standard straight ones only inside tags
-  return mdx.replace(/(<[A-Za-z][A-Za-z0-9.]*\b[^>]*>)/g, (tag) => {
+  return mdx.replace(/(<[A-Za-z][A-Za-z0-9._-]*\b[^>]*>)/g, (tag) => {
     return tag
       .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
       .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'");
@@ -3014,7 +3016,7 @@ function escapeRegex(str: string): string {
 function healFrenchTypography(text: string): string {
   // 1. Extract all JSX tags to protect them from conversion
   const jsxTags: string[] = [];
-  const tagRegex = /<(\/?)([A-Za-z][A-Za-z0-9.]*)\b((?:[^'">`«»]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|«(?:[^»\\]|\\.)*»)*?)(\/?)>/g;
+  const tagRegex = /<(\/?)([A-Za-z][A-Za-z0-9._-]*)\b((?:[^'">`«»]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|«(?:[^»\\]|\\.)*»)*?)(\/?)>/g;
   
   let processed = text.replace(tagRegex, (match) => {
     jsxTags.push(match);
@@ -3166,7 +3168,7 @@ function deduplicateOriginalQuotes(mdx: string): string {
     const line = lines[i];
     
     // Skip component/JSX lines to avoid corrupting array/object attributes (like keyMissions={[...]})
-    if (/<[A-Z][A-Za-z0-9.]*\b/.test(line) || /<\/[A-Za-z0-9.-]+>/.test(line) || /^\s*\/>/.test(line)) {
+    if (/<[A-Z][A-Za-z0-9._-]*\b/.test(line) || /<\/[A-Za-z0-9._-]+>/.test(line) || /^\s*\/>/.test(line)) {
       result.push(line);
       continue;
     }
@@ -3646,7 +3648,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
   // Protect all JSX tags from having their "Figure X" text replaced with links
   const jsxTags: string[] = [];
-  processed = processed.replace(/<(\/?)([A-Za-z][A-Za-z0-9.]*)\b((?:[^'">`«»]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|«(?:[^»\\]|\\.)*»)*?)(\/?)>/g, (match) => {
+  processed = processed.replace(/<(\/?)([A-Za-z][A-Za-z0-9._-]*)\b((?:[^'">`«»]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|«(?:[^»\\]|\\.)*»)*?)(\/?)>/g, (match) => {
     jsxTags.push(match);
     return `___JSX_TAG_PLACEHOLDER_${jsxTags.length - 1}___`;
   });
@@ -4446,14 +4448,14 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
   });
 
   // Step 1: Replace all closing custom JSX tags
-  processed = processed.replace(/<\/([A-Z][A-Za-z0-9.]*)>/g, (match, tagName) => {
+  processed = processed.replace(/<\/([A-Z][A-Za-z0-9._-]*)>/g, (match, tagName) => {
     const placeholder = `__JSX_CLOSE_${tagName}_${currentId++}__`;
     registry[placeholder] = { type: 'close', tagName, original: match };
     return placeholder;
   });
 
   // Step 2: Replace all opening or self-closing custom JSX tags
-  const tagRegex = /<([A-Z][A-Za-z0-9.]*)\b((?:[^'">`«»]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|«(?:[^»\\]|\\.)*»)*?)(\/?>)/g;
+  const tagRegex = /<([A-Z][A-Za-z0-9._-]*)\b((?:[^'">`«»]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|«(?:[^»\\]|\\.)*»)*?)(\/?>)/g;
   processed = processed.replace(tagRegex, (match, tagName, attrsStr, tagEnd) => {
     const isSelfClosing = tagEnd.trim() === '/>';
     const attrs = parseAttributes(attrsStr);
