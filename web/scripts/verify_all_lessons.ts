@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
-import { preprocessMdx } from '../src/lib/content';
+import { preprocessMdx, resolvePrecompiledAnchors, rehypeMdxSanitizer } from '../src/lib/content';
 import { serialize } from 'next-mdx-remote/serialize';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
@@ -118,12 +118,13 @@ async function run() {
     const { meta, body: cleanBody } = parseAndStripFrontmatter(cleanedContent);
     const isSummative = !!(meta?.summative === true || meta?.summative === 'true');
     const processedContent = preprocessMdx(cleanBody, lesson.lang || 'en', isSummative, lesson.lesson_slug);
+    const { resolvedContent } = await resolvePrecompiledAnchors(processedContent, lesson.lang || 'en');
 
     try {
-      await serialize(processedContent, {
+      await serialize(resolvedContent, {
         mdxOptions: {
           remarkPlugins: [remarkMath, remarkGfm],
-          rehypePlugins: [rehypeKatex],
+          rehypePlugins: [rehypeKatex, rehypeMdxSanitizer(lesson.lang || 'en')],
           format: 'mdx',
         },
       });

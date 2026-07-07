@@ -1,7 +1,7 @@
 import { dbService } from './db';
 import { supabase, supabaseAdmin } from './supabase';
 import { callVertexAI, isVertexConfigured, recordMetrics, compressPromptText } from './vertex-client';
-import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation } from './content';
+import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation, resolvePrecompiledAnchors, rehypeMdxSanitizer } from './content';
 import { resolveAndPersistMedia } from './media-resolver';
 import { cleanPathSegment } from './translations';
 import { TASK_MODELS } from './ai-config';
@@ -7550,15 +7550,16 @@ function stripJsxComments(mdx: string): string {
 async function validateMdxContent(content: string, lang: string = 'fr'): Promise<{ success: boolean; error?: string }> {
   const cleanedContent = preprocessMdx(content, lang);
   try {
+    const { resolvedContent } = await resolvePrecompiledAnchors(cleanedContent, lang);
     const { serialize } = await import('next-mdx-remote/serialize');
     const remarkMath = (await import('remark-math')).default;
     const remarkGfm = (await import('remark-gfm')).default;
     const rehypeKatex = (await import('rehype-katex')).default;
     
-    await serialize(cleanedContent, {
+    await serialize(resolvedContent, {
       mdxOptions: {
         remarkPlugins: [remarkMath, remarkGfm],
-        rehypePlugins: [rehypeKatex],
+        rehypePlugins: [rehypeKatex, rehypeMdxSanitizer(lang)],
         format: 'mdx',
       },
     });

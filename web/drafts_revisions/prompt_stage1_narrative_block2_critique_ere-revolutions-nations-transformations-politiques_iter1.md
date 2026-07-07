@@ -1,0 +1,62 @@
+You are the Narrative Critic Agent (Agent 4A). Review the generated block of text for the lesson:
+---
+La victoire des insurgés américains, soutenus par la France, démontre qu'une révolution politique est non seulement possible, mais qu'elle peut aboutir à la création d'un État fondé sur des principes nouveaux. Elle offre un exemple concret et inspirant pour les mouvements révolutionnaires à venir en Europe et dans les autres colonies.
+
+## La Révolution française : De la rupture à l'exportation des idéaux
+
+L'écho de la Révolution américaine résonne particulièrement en France, où les tensions accumulées au XVIIIe siècle atteignent leur paroxysme. La convocation des États généraux en mai 1789, destinée à résoudre la crise financière du royaume, se transforme rapidement en une rupture fondamentale avec l'Ancien Régime. Le Tiers État, se proclamant Assemblée nationale, puis Assemblée constituante, affirme la souveraineté de la nation face au pouvoir royal. La prise de la Bastille le 14 juillet 1789 symbolise cette bascule, suivie par l'abolition des privilèges et la proclamation de la Déclaration des Droits de l'Homme et du Citoyen en août 1789, qui pose les bases d'une société nouvelle fondée sur la liberté, l'égalité et la propriété.
+
+La Révolution française, analysée par Eric Hobsbawm comme l'archétype de la révolution politique moderne [ref1], connaît une radicalisation progressive. Après une phase monarchique constitutionnelle, la fuite du roi à Varennes et la menace des puissances européennes mènent à la chute de la monarchie et à la proclamation de la Première République en 1792. La période de la Terreur (1793-1794), marquée par la dictature du Comité de salut public et les exécutions massives, illustre la violence des conflits internes et la volonté de défendre la Révolution face à ses ennemis intérieurs et extérieurs.
+
+Au-delà des événements, la Révolution française est un laboratoire d'idées politiques. Elle forge et diffuse des concepts centraux pour l'histoire contemporaine :
+*   La **nation** : Le concept évolue d'une entité géographique ou dynastique à une communauté de citoyens unis par une volonté commune et des droits partagés. La souveraineté n'appartient plus au monarque, mais à la nation elle-même.
+*   La **citoyenneté** : Les sujets deviennent des citoyens, dotés de droits civils et politiques, participant à la vie publique. Ce nouveau statut implique des devoirs envers la patrie.
+*   La **souveraineté populaire** : Le pouvoir émane du peuple, qui l'exerce directement ou par l'intermédiaire de ses représentants élus.
+
+L'impact de la Révolution française dépasse largement les frontières hexagonales. Elle suscite à la fois l'enthousiasme des élites éclairées et la crainte des monarchies européennes, qui forment des coalitions pour la combattre. Les guerres révolutionnaires, menées au nom de la liberté et de la fraternité des peuples, contribuent à exporter les idéaux révolutionnaires, mais aussi à générer des réactions nationalistes dans les territoires occupés ou annexés. La période du Directoire (1795-1799), qui tente de stabiliser le régime après la Terreur, est marquée par une instabilité politique et des difficultés économiques, ouvrant la voie à une nouvelle figure forte.
+
+## L'Empire napoléonien et la reconfiguration de l'Europe
+
+L'ascension de Napoléon Bonaparte, général victorieux des guerres révolutionnaires, marque une nouvelle phase dans l'histoire de l'Europe. Profitant de l'instabilité du Directoire, il s'empare du pouvoir par le coup d'État du 18 Brumaire (1799), instaurant le Consulat, puis se proclamant Empereur des Français en 1804. L'Empire napoléonien, tout en rétablissant une forme d'ordre autoritaire après une décennie de bouleversements, ne renie pas entièrement l'héritage révolutionnaire. Au contraire, il le systématise et le diffuse à travers l'Europe par ses conquêtes militaires [ref1].
+
+La diffusion des principes révolutionnaires sous l'Empire s'opère notamment par :
+*   Le **Code Civil (1804)** : Ce recueil de lois, également appelé Code Napoléon, consacre les principes d'égalité devant la loi, de laïcité de l'État, de liberté individuelle et de propriété privée. Il est imposé ou adopté dans de nombreux territoires sous influence française, jetant les bases du droit moderne dans une grande partie de l'Europe.
+*   Les **réformes administratives** : La centralisation de l'administration, la création des préfets, l'uniformisation des poids et mesures, et la réorganisation des systèmes éducatifs et fiscaux sont des innovations françaises qui se répandent, modernisant les structures étatiques européennes.
+
+Les guerres napoléoniennes redessinent la carte de l'Europe. De l'Espagne à la Russie, l'influence française est prépondérante, mais elle suscite également de vives résistances. Les peuples conquis, confrontés à l'occupation et aux prélèvements imposés par la France, développent des sentiments nationaux puissants, souvent en opposition à la domination française. Ces mouvements nationalistes, comme en Espagne ou en Allemagne, contribuent à forger de nouvelles identités collectives et à préparer les futures unifications nationales.
+
+La série de défaites militaires, notamment la campagne de Russie (1812) et la défaite de Leipzig (1813), conduit à la chute de l'Empire en 1814, puis définitivement après Waterloo en 1815. Pour restaurer l'ordre et la stabilité en Europe, les grandes puissances se réunissent au **Congrès de Vienne (1814-1815)**. Ce congrès, dominé par les principes de légitimité monarchique et d'équilibre des puissances, vise à effacer l'héritage révolutionnaire et impérial en rétablissant les dynasties déchues et en redessinant les frontières. Cependant, malgré cette tentative de retour à l'ordre ancien, les idéaux de liberté, de nation et de souveraineté populaire, semés par la Révolution et l'Empire, continueront de fermenter et de provoquer de nouvelles vagues révolutionnaires au cours du XIXe siècle [ref5].
+---
+
+Check checkpoints:
+1. Zero-placeholders.
+2. Accurate academic density and level-appropriate language.
+3. Strict MDX/JSX safety (absolutely no raw custom component or custom JSX/HTML tags like <ConceptLink>, <RealPerson>, <Glossary>, etc. inline in prose. All interactive elements and special links must strictly use the [[WIDGET:id]] anchor format).
+4. No figure prefixes like "Figure 1:" in visual captions.
+
+
+Your audit must be in dual-mode:
+- **"isGlobalRevision" MUST ONLY be set to true if the issues are widespread and catastrophic** (completely unparseable structure, severe length deficiency, or total failure of the block narrative requiring a complete full-text rewrite). If so, provide a comprehensive "globalCritique".
+- **For standard, localized, or section-specific mistakes, you MUST set "isGlobalRevision": false**, and list ONLY the rejected sections requiring localized repair in the "sections" array.
+
+Return ONLY a valid JSON object matching blockNarrativeAuditSchema:
+```json
+{
+  "approved": boolean,
+  "isGlobalRevision": boolean,
+  "globalCritique": "detailed feedback explaining what to fix globally, or empty if approved/local repair",
+  "sections": [
+    // If approved is false and isGlobalRevision is false, list ONLY the specific sections that are rejected. Do NOT include approved sections.
+    {
+      "heading": "heading of the rejected section",
+      "approved": false,
+      "critique": "detailed feedback explaining what to fix in this specific section"
+    }
+  ]
+}
+```
+
+[REJECT-ONLY REPORTING MANDATE]
+1. If approved is true: approved MUST be true, isGlobalRevision MUST be false, globalCritique MUST be "", and sections MUST be empty.
+2. If isGlobalRevision is true: approved MUST be false, isGlobalRevision MUST be true, globalCritique MUST describe the global issues, and sections MUST be empty.
+3. If approved is false and isGlobalRevision is false: sections MUST ONLY contain sections that are rejected (with approved set to false). Any approved section MUST be strictly omitted from the array.

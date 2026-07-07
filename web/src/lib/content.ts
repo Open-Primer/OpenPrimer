@@ -3013,13 +3013,35 @@ function escapeRegex(str: string): string {
   return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
+function forceAscii(str: string): string {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\u00A0\u202F]/g, ' ')
+    .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036«»“”]/g, '"')
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035‘’]/g, "'")
+    .replace(/[^\x00-\x7F]/g, '');
+}
+
 function healFrenchTypography(text: string): string {
   // 1. Extract all JSX tags to protect them from conversion
   const jsxTags: string[] = [];
   const tagRegex = /<(\/?)([A-Za-z][A-Za-z0-9._-]*)\b((?:[^'">`«»]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|«(?:[^»\\]|\\.)*»)*?)(\/?)>/g;
   
-  let processed = text.replace(tagRegex, (match) => {
-    jsxTags.push(match);
+  let processed = text.replace(tagRegex, (match, closeSlash, tagName, attributesPart, selfCloseSlash) => {
+    let sanitizedAttributes = attributesPart || '';
+    const attrValueRegex = /(\b[A-Za-z0-9_.-]+\s*=\s*)(?:"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'|«([^»\\]*(?:\\.[^»\\]*)*)»|“([^”\\]*(?:\\.[^”\\]*)*)”)/g;
+    sanitizedAttributes = sanitizedAttributes.replace(attrValueRegex, (attrMatch: string, prefix: string, doubleVal: string | undefined, singleVal: string | undefined, guillemetVal: string | undefined, smartVal: string | undefined) => {
+      const val = doubleVal !== undefined ? doubleVal :
+                  singleVal !== undefined ? singleVal :
+                  guillemetVal !== undefined ? guillemetVal :
+                  smartVal !== undefined ? smartVal : '';
+      const cleanVal = forceAscii(val);
+      const quote = singleVal !== undefined ? "'" : '"';
+      return `${prefix}${quote}${cleanVal}${quote}`;
+    });
+    const sanitizedTag = `<${closeSlash || ''}${tagName}${sanitizedAttributes}${selfCloseSlash || ''}>`;
+    jsxTags.push(sanitizedTag);
     return `___JSX_TAG_PLACEHOLDER_${jsxTags.length - 1}___`;
   });
 
@@ -4506,7 +4528,7 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
       'GestaltInteractive', 'GestaltLab', 'PreCodeInterceptor'
     ];
 
-    if (selfClosingIsolated.includes(tagName) || (isSelfClosing && !['FillInBlanks', 'Glossary', 'EssayEvaluation', 'HistoricalPerson', 'Artwork', 'Option', 'Question', 'DiagnosticQuiz'].includes(tagName))) {
+    if (selfClosingIsolated.includes(tagName) || (isSelfClosing && !['FillInBlanks', 'Glossary', 'EssayEvaluation', 'HistoricalPerson', 'Artwork', 'Option', 'Question', 'DiagnosticQuiz', 'Summary'].includes(tagName))) {
       const placeholder = `__JSX_SELF_${tagName}_${placeholderId}__`;
       registry[placeholder] = { type: 'self', tagName, original: match };
       return placeholder;
@@ -4551,7 +4573,28 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
       return `${placeholder} ${text} __JSX_END_${placeholderId}__`;
     }
 
-    if (tagName === 'Question' || tagName === 'DiagnosticQuiz') {
+    if (tagName === 'Summary') {
+      const itemsString = attrs.itemsString || '';
+      const placeholder = `__JSX_ATTR_Summary_${placeholderId}__`;
+      registry[placeholder] = { type: 'attr_summary', tagName, attrs, original: match };
+      return `${placeholder} ${itemsString} __JSX_END_${placeholderId}__`;
+    }
+
+    if (tagName === 'DiagnosticQuiz') {
+      let qKey = 'q';
+      if (attrs.questionText) qKey = 'questionText';
+      else if (attrs.text) qKey = 'text';
+      else if (attrs.question) qKey = 'question';
+
+      const q = attrs[qKey] || '';
+      const options = attrs.options || '';
+      const sectionTitle = attrs.sectionTitle || '';
+      const placeholder = `__JSX_ATTR_DiagnosticQuiz_${placeholderId}__`;
+      registry[placeholder] = { type: 'attr_diagnostic_quiz', tagName, qKey, attrs, original: match, isSelfClosing };
+      return `${placeholder} ${q} ||| ${options} ||| ${sectionTitle} __JSX_END_${placeholderId}__`;
+    }
+
+    if (tagName === 'Question') {
       let qKey = 'q';
       if (attrs.questionText) qKey = 'questionText';
       else if (attrs.text) qKey = 'text';
@@ -4755,6 +4798,57 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         }
         const expAttr = explanation ? ` explanation="${explanation}"` : '';
         const restoredTag = `<${entry.tagName} ${qKey}="${q}"${expAttr}${attrsStr}${entry.isSelfClosing ? ' /' : ''}>`;
+        processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
+      } else {
+        processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
+      }
+    } else if (entry.type === 'attr_summary') {
+      const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
+      const match = new RegExp(regexStr, 'i').exec(processed);
+      if (match) {
+        const itemsString = match[1].trim() || entry.attrs.itemsString || '';
+        let attrsStr = '';
+        for (const [k, v] of Object.entries(entry.attrs)) {
+          if (k !== 'itemsString') {
+            attrsStr += formatAttribute(k, v);
+          }
+        }
+        const restoredTag = `<Summary itemsString="${itemsString}"${attrsStr} />`;
+        processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
+      } else {
+        processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
+      }
+    } else if (entry.type === 'attr_diagnostic_quiz') {
+      const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
+      const match = new RegExp(regexStr, 'i').exec(processed);
+      if (match) {
+        const contentToParse = match[1].trim();
+        const parts = contentToParse.split('|||').map(p => p.trim());
+        const n = parts.length;
+        
+        let q = entry.attrs[entry.qKey || 'q'] || '';
+        let options = entry.attrs.options || '';
+        let sectionTitle = entry.attrs.sectionTitle || '';
+        
+        if (n >= 3) {
+          q = parts[0];
+          sectionTitle = parts[n - 1];
+          options = parts.slice(1, n - 1).join('|||');
+        } else if (n === 2) {
+          q = parts[0];
+          options = parts[1];
+        } else if (n === 1 && parts[0]) {
+          q = parts[0];
+        }
+        
+        let attrsStr = '';
+        for (const [k, v] of Object.entries(entry.attrs)) {
+          if (k !== 'q' && k !== 'questionText' && k !== 'text' && k !== 'question' && k !== 'options' && k !== 'sectionTitle') {
+            attrsStr += formatAttribute(k, v);
+          }
+        }
+        const qKey = entry.qKey || 'q';
+        const restoredTag = `<DiagnosticQuiz ${qKey}="${q}" options="${options}" sectionTitle="${sectionTitle}"${attrsStr} />`;
         processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
       } else {
         processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
@@ -5558,4 +5652,78 @@ export async function resolvePrecompiledAnchors(
   return { resolvedContent, unresolvedAnchors };
 }
 
+export function rehypeMdxSanitizer(lang: string = 'en') {
+  const whitelistedComponents = new Set([
+    'Alert', 'Biography', 'CustomFigure', 'Visual', 'VisualMedia', 'Image', 'Quiz', 'Question', 'Option',
+    'Glossary', 'Video', 'AudioPlayer', 'Audio', 'PronunciationSandbox', 'SandboxPrononciation',
+    'Explanation', 'Solution', 'KeyConcept', 'Instruction', 'Shape', 'FillInBlanks', 'FillInBlanks.Input',
+    'FillInBlanksQuestion', 'MetaNote', 'SolvedProblem', 'Summary', 'SelfEval', 'SelfAssessment',
+    'RealPerson', 'HistoricalPerson', 'PersonnageHistorique', 'FictionalCharacter', 'PersonnageFictif',
+    'Location', 'Place', 'ConceptLink', 'ConceptLien', 'TheoremLink', 'TheoremeLien', 'ThéorèmeLien',
+    'InstitutionLink', 'InstitutionLien', 'Event', 'HistoricalEventLink', 'EvenementHistorique',
+    'ÉvénementHistorique', 'EntityLink', 'Artwork', 'WebsiteLink', 'ProjectLink', 'SiteWeb', 'ProjetLien',
+    'SpeciesLink', 'SpeciesLien', 'EspeceLien', 'EspèceLien', 'OrganismeLien', 'ChemicalLink',
+    'ChemicalLien', 'MoleculesLien', 'MoleculeLien', 'ChimieLien', 'CelestialLink', 'CelestialLien',
+    'CorpsCeleste', 'CorpsCéleste', 'AstroLien', 'EssayEvaluation', 'OralEvaluation', 'EvaluationOrale',
+    'Prerequisites', 'Epistemology', 'DiagnosticQuiz', 'ExternalSandbox', 'References', 'Mermaid',
+    'FunctionPlotter', 'InteractiveDiagram', 'ComparisonSlider', 'CodeSandbox', 'SolvedExercise',
+    'UnsolvedExercise', 'GestaltInteractive', 'GestaltLab', 'DataChart', 'StructureViewer3D',
+    'QuantumOrbitalExplorer', 'ExplorateurOrbitalesQuantiques', 'DynamicSimulation', 'GoingFurther',
+    'GoingFurtherItem', 'FunctionManipulator', 'ManipulateurFonction', 'ExplorateurFonctions'
+  ]);
 
+  function forceAsciiLocal(str: string): string {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\u00A0\u202F]/g, ' ')
+      .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036«»“”]/g, '"')
+      .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035‘’]/g, "'")
+      .replace(/[^\x00-\x7F]/g, '');
+  }
+
+  function traverse(node: any) {
+    if (!node) return;
+
+    if (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') {
+      if (!whitelistedComponents.has(node.name)) {
+        console.warn(`[Rehype Sanitizer] Found non-whitelisted legacy tag: <${node.name}>. Converting to standard HTML container.`);
+        if (node.type === 'mdxJsxFlowElement') {
+          node.type = 'element';
+          node.tagName = 'div';
+        } else {
+          node.type = 'element';
+          node.tagName = 'span';
+        }
+        node.properties = {};
+        delete node.name;
+        delete node.attributes;
+      } else {
+        if (node.attributes && Array.isArray(node.attributes)) {
+          for (const attr of node.attributes) {
+            if (attr.type === 'mdxJsxAttribute' && typeof attr.value === 'string') {
+              let val = attr.value;
+              val = val.replace(/[\u00A0\u202F]/g, ' ');
+              val = val.replace(/[\u201C\u201D\u201E\u201F\u2033\u2036«»“”]/g, '"');
+              val = val.replace(/[\u2018\u2019\u201A\u201B\u2032\u2035‘’]/g, "'");
+              if (lang.toLowerCase() === 'fr') {
+                val = forceAsciiLocal(val);
+              }
+              attr.value = val;
+            }
+          }
+        }
+      }
+    }
+
+    if (node.children && Array.isArray(node.children)) {
+      for (const child of node.children) {
+        traverse(child);
+      }
+    }
+  }
+
+  return (tree: any) => {
+    traverse(tree);
+  };
+}

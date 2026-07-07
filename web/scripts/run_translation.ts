@@ -13,26 +13,43 @@ if (fs.existsSync(envPath)) {
   });
 }
 
+// Also check root .env.local
+const rootEnvPath = path.join(process.cwd(), '.env.local');
+if (fs.existsSync(rootEnvPath)) {
+  const envContent = fs.readFileSync(rootEnvPath, 'utf-8');
+  envContent.split('\n').forEach(line => {
+    const match = line.match(/^\s*([\w_]+)\s*=\s*(.*)\s*$/);
+    if (match) {
+      process.env[match[1]] = match[2].trim();
+    }
+  });
+}
+
 // 2. Set NODE_ENV to production to force dbService to use Supabase instead of LocalStorage fallback
 (process.env as any).NODE_ENV = 'production';
 process.env.CLI_WORKER = 'true';
 
 async function main() {
-  const courseSlug = "introduction-to-quantum-computing";
-  const targetLang = "fr";
+  const courseSlug = "Introduction_a_la_sociologie_contemporaine";
+  const languages = ["es", "en"];
 
-  console.log(`🚀 Starting translation of course "${courseSlug}" to [${targetLang}] in PRODUCTION mode...`);
-  
-  try {
-    // Dynamically import ai.ts to guarantee process.env is fully populated first
-    const { translateCourseContent } = await import('./src/lib/ai');
-    
-    await translateCourseContent(courseSlug, targetLang);
-    console.log(`✅ Course translation to [${targetLang}] complete!`);
-  } catch (error) {
-    console.error("❌ Translation failed:", error);
-    process.exit(1);
+  // Dynamically import ai.ts to guarantee process.env is fully populated first
+  const { translateCourseContent } = await import('../src/lib/ai');
+
+  for (const targetLang of languages) {
+    console.log(`🚀 Starting translation of course "${courseSlug}" to [${targetLang}] in PRODUCTION mode...`);
+    try {
+      await translateCourseContent(courseSlug, targetLang);
+      console.log(`✅ Course translation to [${targetLang}] complete!`);
+    } catch (error) {
+      console.error(`❌ Translation of course "${courseSlug}" to [${targetLang}] failed:`, error);
+    }
   }
 }
 
-main();
+main().then(() => {
+  console.log("🎉 All translation runs finished!");
+}).catch(err => {
+  console.error("Critical error in translation script:", err);
+});
+

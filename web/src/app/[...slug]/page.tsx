@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { getPageContent, getNavigationTree, getFirstAvailableLanguage, NavItem } from '@/lib/content';
+import { getPageContent, getNavigationTree, getFirstAvailableLanguage, NavItem, rehypeMdxSanitizer } from '@/lib/content';
 import { serialize } from 'next-mdx-remote/serialize';
 import { notFound, redirect, unstable_rethrow } from 'next/navigation';
 import { cookies } from 'next/headers';
@@ -238,7 +238,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     const mdxSource = await serialize(pageData.content, {
       mdxOptions: {
         remarkPlugins: [remarkMath, remarkGfm],
-        rehypePlugins: [rehypeKatex],
+        rehypePlugins: [rehypeKatex, rehypeMdxSanitizer(lang)],
         format: 'mdx',
       },
     });

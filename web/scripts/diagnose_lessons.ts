@@ -1,9 +1,29 @@
-import { serialize } from 'next-mdx-remote/serialize';
-import remarkMath from 'remark-math';
-import remarkGfm from 'remark-gfm';
-import rehypeKatex from 'rehype-katex';
-import { preprocessMdx } from '../src/lib/content';
-import { supabase } from '../src/lib/supabase';
+import * as fs from 'fs';
+import * as path from 'path';
+
+// Load .env.local from web/scripts/
+const envPath = path.join(__dirname, '.env.local');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf-8');
+  envContent.split('\n').forEach(line => {
+    const match = line.match(/^\s*([\w_]+)\s*=\s*(.*)\s*$/);
+    if (match) {
+      process.env[match[1]] = match[2].trim();
+    }
+  });
+}
+
+// Also check root .env.local
+const rootEnvPath = path.join(process.cwd(), '.env.local');
+if (fs.existsSync(rootEnvPath)) {
+  const envContent = fs.readFileSync(rootEnvPath, 'utf-8');
+  envContent.split('\n').forEach(line => {
+    const match = line.match(/^\s*([\w_]+)\s*=\s*(.*)\s*$/);
+    if (match) {
+      process.env[match[1]] = match[2].trim();
+    }
+  });
+}
 
 function stripOuterCodeFences(content: string): string {
   if (!content) return '';
@@ -79,6 +99,13 @@ function parseAndStripFrontmatter(content: string) {
 async function main() {
   console.log("Starting MDX compilation diagnostics for all lessons...");
   
+  const { serialize } = await import('next-mdx-remote/serialize');
+  const remarkMath = (await import('remark-math')).default;
+  const remarkGfm = (await import('remark-gfm')).default;
+  const rehypeKatex = (await import('rehype-katex')).default;
+  const { preprocessMdx, resolvePrecompiledAnchors, rehypeMdxSanitizer } = await import('../src/lib/content');
+  const { supabase } = await import('../src/lib/supabase');
+  
   const { data: lessons, error } = await supabase
     .from('lessons')
     .select('id, course_slug, lesson_slug, title, lang, content');
@@ -98,10 +125,12 @@ async function main() {
     const { meta, body: cleanBody } = parseAndStripFrontmatter(cleanedContent);
     const isSummative = !!(meta?.summative === true || meta?.summative === 'true');
     
-    // Run preprocessor
+    // Run preprocessor and anchor resolution
     let preprocessed: string;
     try {
-      preprocessed = preprocessMdx(cleanBody, lesson.lang, isSummative, lesson.lesson_slug);
+      const processed = preprocessMdx(cleanBody, lesson.lang, isSummative, lesson.lesson_slug);
+      const { resolvedContent } = await resolvePrecompiledAnchors(processed, lesson.lang);
+      preprocessed = resolvedContent;
     } catch (prepErr: any) {
       console.error(`❌ Preprocessor failed for ${lesson.lesson_slug}:`, prepErr.message);
       failedCount++;
@@ -113,7 +142,7 @@ async function main() {
       await serialize(preprocessed, {
         mdxOptions: {
           remarkPlugins: [remarkMath, remarkGfm],
-          rehypePlugins: [rehypeKatex],
+          rehypePlugins: [rehypeKatex, rehypeMdxSanitizer(lesson.lang)],
           format: 'mdx',
         },
       });
