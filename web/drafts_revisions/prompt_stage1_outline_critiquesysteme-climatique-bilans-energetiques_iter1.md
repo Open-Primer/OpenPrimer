@@ -3,23 +3,23 @@ You are the Outline Critic Agent (Agent 2). Review this JIT lesson plan:
   "sections": [
     {
       "heading": "## Introduction au système climatique terrestre",
-      "description": "Présenter le système climatique comme un ensemble complexe d'interactions entre l'atmosphère, l'hydrosphère, la cryosphère, la lithosphère et la biosphère. Introduire l'importance des bilans énergétiques et de la composition atmosphérique pour comprendre le climat de la Terre et ses variations."
+      "description": "Présenter le système climatique comme un ensemble complexe d'interactions, définir ses composantes principales (atmosphère, hydrosphère, cryosphère, lithosphère, biosphère) et introduire l'importance des bilans énergétiques et de la composition atmosphérique pour sa régulation. Énoncer les objectifs du cours."
     },
     {
-      "heading": "## Le bilan énergétique terrestre: flux et transferts",
-      "description": "Expliquer les sources d'énergie (principalement solaire) et les mécanismes de son absorption, réflexion et émission par la Terre. Détailler les concepts d'albédo, de rayonnement solaire incident, de rayonnement terrestre émis et de flux de chaleur latente et sensible. Mettre l'accent sur l'équilibre radiatif global."
+      "heading": "## Les bilans énergétiques du système Terre-atmosphère",
+      "description": "Expliquer les sources d'énergie (rayonnement solaire), les mécanismes d'absorption, de réflexion (albédo) et d'émission (rayonnement terrestre). Détailler le bilan radiatif global de la Terre et les flux d'énergie (sensible, latente) entre la surface et l'atmosphère. Inclure des aspects quantitatifs et les lois physiques fondamentales (Stefan-Boltzmann, Wien)."
     },
     {
-      "heading": "## Composition atmosphérique et rôle des gaz à effet de serre",
-      "description": "Décrire la composition majeure de l'atmosphère terrestre. Identifier les principaux gaz à effet de serre (GES) naturels et anthropiques (vapeur d'eau, CO2, CH4, N2O, O3, CFCs) et expliquer leur capacité à absorber et réémettre le rayonnement infrarouge. Quantifier leur contribution relative à l'effet de serre naturel."
+      "heading": "## Composition et structure de l'atmosphère: rôle des gaz à effet de serre",
+      "description": "Décrire la composition chimique de l'atmosphère terrestre (gaz permanents et variables) et sa structure verticale. Se concentrer sur les principaux gaz à effet de serre (vapeur d'eau, CO2, CH4, N2O, O3) : leurs sources, puits, cycles biogéochimiques et leur capacité d'absorption du rayonnement infrarouge."
     },
     {
-      "heading": "## Modélisation simplifiée de l'effet de serre",
-      "description": "Présenter des modèles conceptuels ou simplifiés (par exemple, le modèle de corps noir ou un modèle à une couche) pour illustrer le mécanisme de l'effet de serre et calculer une température d'équilibre théorique de la Terre avec et sans atmosphère. Discuter des limites de ces modèles simplifiés."
+      "heading": "## L'effet de serre naturel et sa modélisation simplifiée",
+      "description": "Expliquer le mécanisme de l'effet de serre naturel et son rôle fondamental dans le maintien d'une température propice à la vie. Présenter des modèles simplifiés (ex: modèle à une couche) pour illustrer quantitativement comment les gaz à effet de serre piègent la chaleur et influencent la température de surface de la planète."
     },
     {
-      "heading": "## Conclusion: Synthèse et perspectives",
-      "description": "Récapituler les points clés abordés concernant les bilans énergétiques et la composition atmosphérique. Souligner l'interdépendance de ces éléments dans la régulation du climat terrestre. Ouvrir sur les enjeux actuels du changement climatique et l'importance de ces concepts pour les études futures."
+      "heading": "## Conclusion: Dynamique du système climatique et enjeux futurs",
+      "description": "Récapituler les points clés abordés (bilans énergétiques, rôle des GES, effet de serre). Souligner l'interconnexion des processus et l'importance de comprendre ces mécanismes pour appréhender les changements climatiques actuels et futurs. Ouvrir sur les implications des perturbations anthropiques et les perspectives de recherche."
     }
   ]
 }

@@ -2,19 +2,29 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 3:
 {
   "conclusionSummary": {
     "items": [
-      "Ce cours a mis en lumière la complexité du système climatique terrestre, un ensemble dynamique d'interactions entre l'atmosphère, les océans, la cryosphère, la biosphère et la lithosphère.",
-      "Nous avons exploré le bilan énergétique de la Terre, soulignant l'importance de l'équilibre entre le rayonnement solaire entrant et le rayonnement terrestre sortant pour maintenir une température planétaire stable.",
-      "La composition atmosphérique, en particulier la présence des gaz à effet de serre, a été identifiée comme un facteur clé régulant la température de surface via l'effet de serre naturel.",
-      "Les perturbations de ce bilan énergétique et de cette composition atmosphérique, qu'elles soient d'origine naturelle ou anthropique, ont des implications profondes sur le climat global.",
-      "Comprendre ces mécanismes fondamentaux est essentiel pour appréhender les défis actuels et futurs liés au changement climatique et pour développer des stratégies d'adaptation et d'atténuation efficaces."
+      "Le système climatique terrestre est un ensemble complexe et dynamique, résultant des interactions entre l'atmosphère, l'hydrosphère, la cryosphère, la lithosphère et la biosphère.",
+      "Le bilan énergétique de la Terre, qui équilibre l'énergie solaire reçue et l'énergie réémise vers l'espace, est le moteur fondamental de notre climat et détermine la température moyenne de la planète.",
+      "La composition atmosphérique, en particulier la concentration des gaz à effet de serre, joue un rôle prépondérant dans la régulation thermique de la Terre en piégeant une partie du rayonnement infrarouge.",
+      "L'albédo des différentes surfaces terrestres (glace, océans, forêts) influence directement la quantité d'énergie solaire absorbée ou réfléchie, impactant ainsi le bilan énergétique global.",
+      "Comprendre ces mécanismes est essentiel pour appréhender les causes et les conséquences des changements climatiques actuels, souvent liés à des perturbations anthropiques de ce bilan naturel."
     ]
   },
   "whatsNext": {
     "steps": [
       {
-        "title": "Variabilité climatique et changement climatique",
-        "description": "La prochaine leçon approfondira les causes naturelles et anthropiques de la variabilité et du changement climatique, en examinant les indicateurs, les modèles et les impacts observés à l'échelle mondiale.",
-        "slug": "variabilite-climatique-changement-climatique"
+        "title": "Explorer les forçages radiatifs",
+        "description": "Approfondir la compréhension des facteurs naturels et anthropiques qui modifient le bilan énergétique terrestre et influencent le climat.",
+        "slug": "forcages-radiatifs-climatiques"
+      },
+      {
+        "title": "Analyser les boucles de rétroaction climatique",
+        "description": "Étudier comment les changements initiaux dans le système climatique peuvent être amplifiés ou atténués par des processus internes complexes.",
+        "slug": "boucles-retroaction-climatique"
+      },
+      {
+        "title": "Introduction aux modèles climatiques",
+        "description": "Découvrir comment les scientifiques utilisent des modèles numériques pour simuler le climat passé, présent et futur de la Terre.",
+        "slug": "introduction-modeles-climatiques"
       }
     ]
   },
@@ -23,43 +33,43 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 3:
       {
         "title": "Climatologie",
         "type": "book",
-        "description": "Un ouvrage de référence couvrant les principes fondamentaux de la climatologie, y compris les bilans énergétiques, la composition atmosphérique et les grands systèmes climatiques.",
+        "description": "Un ouvrage de référence pour comprendre les bases de la climatologie, incluant les bilans énergétiques, la dynamique atmosphérique et les grands types de climats.",
         "author": "Pierre Pagney, Jean-Pierre Chabin",
-        "url": "https://www.armand-colin.com/climatologie-9782200616335",
-        "year": "2017"
+        "year": "2002"
       },
       {
-        "title": "Rapports d'évaluation du GIEC (Groupe d'experts intergouvernemental sur l'évolution du climat)",
+        "title": "Rapports d'évaluation du GIEC (IPCC)",
         "type": "website",
-        "description": "Site officiel du GIEC, offrant des rapports scientifiques exhaustifs sur l'état des connaissances concernant le changement climatique, ses causes, ses impacts et les options de réponse.",
-        "url": "https://www.ipcc.ch/languages/french/"
+        "description": "Source incontournable d'informations scientifiques sur le changement climatique, ses causes, ses impacts et les options d'atténuation, basées sur les dernières recherches.",
+        "author": "Groupe d'experts intergouvernemental sur l'évolution du climat",
+        "url": "https://www.ipcc.ch/reports/"
       },
       {
-        "title": "Le bilan radiatif de la Terre",
+        "title": "The Earth's Energy Budget",
         "type": "article",
-        "description": "Un article scientifique ou de vulgarisation détaillant les composantes du bilan radiatif terrestre et son rôle crucial dans la régulation du climat planétaire.",
-        "author": "CNRS ou Météo-France (ex: dossier thématique)",
-        "url": "https://www.cnrs.fr/fr/cnrsinfo/le-bilan-energetique-de-la-terre-un-equilibre-fragile",
-        "year": "2020"
+        "description": "Un article scientifique clé détaillant les composants et les mesures du bilan énergétique global de la Terre, essentiel pour la modélisation climatique.",
+        "author": "Kevin E. Trenberth, John T. Fasullo, Jeffrey Kiehl",
+        "url": "https://journals.ametsoc.org/view/journals/bams/90/3/2008bams2634_1.xml",
+        "year": "2009"
       }
     ]
   },
   "glossary": [
     {
-      "term": "Bilan énergétique terrestre",
-      "definition": "Équilibre entre l'énergie solaire reçue par la Terre et l'énergie réémise vers l'espace sous forme de rayonnement infrarouge. Cet équilibre détermine la température moyenne de la planète."
+      "term": "Bilan Énergétique Terrestre",
+      "definition": "La comptabilité de l'énergie solaire reçue par la Terre, de l'énergie réfléchie et de l'énergie réémise sous forme de rayonnement infrarouge, qui détermine la température moyenne de la planète et sa stabilité thermique."
     },
     {
-      "term": "Effet de serre",
-      "definition": "Phénomène naturel par lequel certains gaz présents dans l'atmosphère (gaz à effet de serre) retiennent une partie du rayonnement infrarouge émis par la surface terrestre, réchauffant ainsi l'atmosphère et la surface."
-    },
-    {
-      "term": "Gaz à effet de serre (GES)",
-      "definition": "Composants gazeux de l'atmosphère, naturels ou anthropiques, qui absorbent et émettent le rayonnement infrarouge, contribuant ainsi à l'effet de serre. Les principaux GES sont la vapeur d'eau, le dioxyde de carbone, le méthane et l'oxyde nitreux."
+      "term": "Effet de Serre",
+      "definition": "Phénomène naturel par lequel certains gaz présents dans l'atmosphère (gaz à effet de serre) absorbent et réémettent le rayonnement infrarouge terrestre, piégeant ainsi la chaleur et réchauffant la surface de la Terre, la rendant habitable."
     },
     {
       "term": "Albédo",
-      "definition": "Mesure de la réflectivité d'une surface ou d'un corps. Il représente la fraction du rayonnement solaire incident qui est réfléchie sans être absorbée. L'albédo de la Terre varie en fonction des surfaces (glace, océans, forêts, etc.) et joue un rôle important dans le bilan énergétique."
+      "definition": "Mesure de la réflectivité d'une surface ou d'un corps. Il représente la fraction du rayonnement solaire incident qui est réfléchie sans être absorbée. Une surface claire (neige, glace) a un albédo élevé, tandis qu'une surface sombre (océan, forêt) a un albédo faible."
+    },
+    {
+      "term": "Gaz à Effet de Serre (GES)",
+      "definition": "Composants gazeux de l'atmosphère, naturels ou anthropiques, qui absorbent et émettent le rayonnement infrarouge, contribuant à l'effet de serre. Les principaux GES sont la vapeur d'eau (H2O), le dioxyde de carbone (CO2), le méthane (CH4) et l'oxyde nitreux (N2O)."
     }
   ]
 }

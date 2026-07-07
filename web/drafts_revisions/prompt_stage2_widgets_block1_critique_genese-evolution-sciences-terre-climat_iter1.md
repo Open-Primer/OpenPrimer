@@ -13,36 +13,42 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 1:
         "slug": "introduction-climatologie",
         "level": "University Year 2 / Bachelor 2nd Year (L2)",
         "subject": "Climatologie"
+      },
+      {
+        "title": "Épistémologie des sciences",
+        "slug": "epistemologie-sciences",
+        "level": "University Year 2 / Bachelor 2nd Year (L2)",
+        "subject": "Philosophie des sciences"
       }
     ]
   },
   "diagnosticQuiz": {
-    "question": "Quelle théorie scientifique majeure a révolutionné notre compréhension de la dynamique terrestre au 20e siècle, influençant profondément les études géologiques et climatiques?",
+    "question": "Quelle théorie majeure a unifié la compréhension de la dynamique terrestre au 20e siècle, expliquant des phénomènes comme la dérive des continents et l'expansion des fonds océaniques?",
     "options": [
-      "La théorie de la relativité générale",
+      "La théorie de la dérive des continents",
       "La théorie de la tectonique des plaques",
-      "La théorie de l'évolution par sélection naturelle",
-      "La théorie du Big Bang"
+      "La théorie des cycles de Milankovitch",
+      "La théorie de l'isostasie"
     ],
     "correctIndex": 1,
     "targetSectionId": "introduction-historique",
-    "sectionTitle": "Introduction historique aux sciences de la Terre et du climat"
+    "sectionTitle": "Introduction historique aux sciences de la Terre"
   },
   "learningObjectives": {
     "knowledge": [
-      "Analyser les principales étapes et les figures marquantes de l'évolution des sciences de la Terre et du climat.",
-      "Évaluer l'influence des contextes socio-historiques sur le développement des théories géoscientifiques et climatiques.",
-      "Distinguer les contributions fondamentales des différentes disciplines (géologie, océanographie, météorologie) à la compréhension globale du système Terre."
+      "Analyser les étapes clés de l'évolution des théories géoscientifiques et climatologiques.",
+      "Évaluer l'impact des découvertes majeures sur la compréhension actuelle des systèmes Terre-climat.",
+      "Formuler une chronologie des paradigmes dominants en sciences de la Terre et du climat."
     ],
     "skills": [
-      "Développer une pensée critique face aux récits historiques des découvertes scientifiques en géosciences.",
-      "Appliquer des cadres d'analyse historique pour comprendre la genèse des concepts actuels en climatologie et géologie.",
-      "Concevoir des schémas illustrant les interrelations entre les grandes théories des sciences de la Terre et du climat."
+      "Interpréter des documents historiques et scientifiques relatifs au développement des sciences de la Terre et du climat.",
+      "Structurer une argumentation sur l'interdépendance entre les avancées technologiques et les découvertes scientifiques en géosciences.",
+      "Communiquer oralement et par écrit les concepts fondamentaux et les figures marquantes de l'histoire des sciences de la Terre et du climat."
     ],
     "attitudes": [
-      "Apprécier la démarche scientifique et son évolution dans le temps pour aborder les défis environnementaux contemporains.",
-      "Développer une ouverture d'esprit face aux changements de paradigmes scientifiques et à l'incertitude inhérente à la recherche.",
-      "Reconnaître l'importance de la collaboration interdisciplinaire dans l'avancement des connaissances sur le système Terre."
+      "Apprécier la démarche scientifique et son rôle dans la construction des connaissances en géosciences.",
+      "Développer un esprit critique face aux informations scientifiques et historiques concernant l'évolution des sciences.",
+      "Adopter une perspective interdisciplinaire pour comprendre la complexité des systèmes Terre-climat."
     ]
   }
 }

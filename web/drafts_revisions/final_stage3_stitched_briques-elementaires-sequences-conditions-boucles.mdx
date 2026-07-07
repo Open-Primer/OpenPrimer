@@ -12,7 +12,7 @@ order: 2
   Afficher &quot;Vrai&quot;
 Sinon
   Afficher &quot;Faux&quot;
-Fin Si«  options= »Vrai|||Faux|||Erreur de syntaxe|||Indéterminé«  correctIndex= »0«  targetSectionId= »introduction-sequences«  sectionTitle= »Introduction aux Séquences«  />
+Fin Si" options="Vrai|||Faux|||Erreur de syntaxe|||Indéterminé" correctIndex="0" targetSectionId="introduction-sequences" sectionTitle="Introduction aux Sequences" />
 
 
 ## Introduction aux structures de contrôle
@@ -461,33 +461,33 @@ En conclusion, les séquences, conditions et boucles ne sont pas de simples outi
 
 <Summary itemsString="Dans cette leçon, nous avons exploré les fondements de la pensée algorithmique, essentiels à toute programmation.|||Nous avons appris que les algorithmes sont des suites d'instructions claires et ordonnées permettant de résoudre un problème.|||Les trois briques élémentaires que sont les séquences, les conditions et les boucles constituent l'ossature de tout programme informatique.|||Les séquences définissent l'ordre d'exécution, les conditions permettent la prise de décision basée sur des critères, et les boucles offrent la capacité de répéter des blocs d'instructions efficacement.|||Maîtriser ces concepts est la première étape cruciale pour concevoir des solutions logicielles robustes, efficaces et bien structurées." />
 
-<WhatsNext itemsBase64="W10=" />
+<WhatsNext itemsBase64="W3sidGl0bGUiOiJJbnRyb2R1Y3Rpb24gYSBsJ2FsZ29yaXRobWlxdWUiLCJkZXNjcmlwdGlvbiI6IlVuIG91dnJhZ2UgY2xhc3NpcXVlIHBvdXIgZGVidXRlciBlbiBhbGdvcml0aG1pcXVlLCBjb3V2cmFudCBsZXMgYmFzZXMgZXQgbGVzIHN0cnVjdHVyZXMgZGUgY29udHJvbGUgYXZlYyBkZSBub21icmV1eCBleGVtcGxlcy4iLCJzbHVnIjoiaW50cm9kdWN0aW9uLWEtbC1hbGdvcml0aG1pcXVlIiwic3ViamVjdCI6IiIsImxldmVsIjoiIn1d" />
 ## Auto-évaluation
 
 <Quiz durationLimit={900}>
-    <Question q="Quelle est la caractéristique principale d'une séquence d'instructions en algorithmique ?" explanation="Une séquence d'instructions est un bloc d'opérations exécutées l'une après l'autre, dans l'ordre où elles sont écrites.">
-  <Option text="Les instructions sont exécutées dans un ordre aléatoire." correct={false} />
-  <Option text="Les instructions sont exécutées de manière conditionnelle." correct={false} />
-  <Option text="Les instructions sont exécutées séquentiellement, de la première à la dernière." correct={true} />
-  <Option text="Les instructions peuvent être répétées indéfiniment." correct={false} />
+    <Question q="Quelle est la caracteristique principale d'une sequence d'instructions en algorithmique ?" explanation="Une sequence d'instructions est un bloc d'operations executees l'une apres l'autre, dans l'ordre ou elles sont ecrites.">
+  <Option text="Les instructions sont executees dans un ordre aleatoire." correct={false} />
+  <Option text="Les instructions sont executees de maniere conditionnelle." correct={false} />
+  <Option text="Les instructions sont executees sequentiellement, de la premiere a la derniere." correct={true} />
+  <Option text="Les instructions peuvent etre repetees indefiniment." correct={false} />
 </Question>
-    <Question q="Quel est le rôle d'une structure conditionnelle (par exemple, SI...ALORS...SINON) ?" explanation="Les structures conditionnelles permettent de contrôler le flux d'exécution d'un algorithme en fonction de la véracité d'une ou plusieurs conditions.">
-  <Option text="Répéter un bloc d'instructions plusieurs fois." correct={false} />
-  <Option text="Exécuter un bloc d'instructions uniquement si une certaine condition est vraie." correct={true} />
-  <Option text="Définir une nouvelle variable." correct={false} />
-  <Option text="Afficher un message à l'utilisateur." correct={false} />
+    <Question q="Quel est le role d'une structure conditionnelle (par exemple, SI...ALORS...SINON) ?" explanation="Les structures conditionnelles permettent de controler le flux d'execution d'un algorithme en fonction de la veracite d'une ou plusieurs conditions.">
+  <Option text="Repeter un bloc d'instructions plusieurs fois." correct={false} />
+  <Option text="Executer un bloc d'instructions uniquement si une certaine condition est vraie." correct={true} />
+  <Option text="Definir une nouvelle variable." correct={false} />
+  <Option text="Afficher un message a l'utilisateur." correct={false} />
 </Question>
-    <Question q="Dans l'expression logique (A ET B) OU C, si A est VRAI, B est FAUX et C est VRAI, quelle est la valeur de l'expression ?" explanation="(VRAI ET FAUX) donne FAUX. FAUX OU VRAI donne VRAI. L'opérateur ET est prioritaire sur OU.">
+    <Question q="Dans l'expression logique (A ET B) OU C, si A est VRAI, B est FAUX et C est VRAI, quelle est la valeur de l'expression ?" explanation="(VRAI ET FAUX) donne FAUX. FAUX OU VRAI donne VRAI. L'operateur ET est prioritaire sur OU.">
   <Option text="VRAI" correct={true} />
   <Option text="FAUX" correct={false} />
 </Question>
-    <Question q="Quelle est la différence fondamentale entre une boucle TANT QUE et une boucle POUR ?" explanation="La boucle POUR (for) est généralement utilisée lorsque le nombre d'itérations est connu ou peut être déterminé au début de la boucle. La boucle TANT QUE (while) est utilisée lorsque le nombre d'itérations est inconnu et dépend d'une condition qui peut changer pendant l'exécution.">
-  <Option text="TANT QUE est utilisée pour un nombre d'itérations connu à l'avance, POUR pour un nombre inconnu." correct={false} />
-  <Option text="TANT QUE est utilisée pour un nombre d'itérations inconnu à l'avance, POUR pour un nombre connu." correct={true} />
-  <Option text="TANT QUE exécute toujours au moins une fois, POUR peut ne jamais s'exécuter." correct={false} />
-  <Option text="Il n'y a pas de différence fondamentale, elles sont interchangeables." correct={false} />
+    <Question q="Quelle est la difference fondamentale entre une boucle TANT QUE et une boucle POUR ?" explanation="La boucle POUR (for) est generalement utilisee lorsque le nombre d'iterations est connu ou peut etre determine au debut de la boucle. La boucle TANT QUE (while) est utilisee lorsque le nombre d'iterations est inconnu et depend d'une condition qui peut changer pendant l'execution.">
+  <Option text="TANT QUE est utilisee pour un nombre d'iterations connu a l'avance, POUR pour un nombre inconnu." correct={false} />
+  <Option text="TANT QUE est utilisee pour un nombre d'iterations inconnu a l'avance, POUR pour un nombre connu." correct={true} />
+  <Option text="TANT QUE execute toujours au moins une fois, POUR peut ne jamais s'executer." correct={false} />
+  <Option text="Il n'y a pas de difference fondamentale, elles sont interchangeables." correct={false} />
 </Question>
-    <Question q="Considérez l'algorithme suivant :
+    <Question q="Considerez l'algorithme suivant :
 VARIABLE i : ENTIER
 DEBUT
     i <- 0
@@ -496,13 +496,13 @@ DEBUT
         i <- i + 1
     FIN TANT QUE
 FIN
-Combien de fois le mot &quot;Bonjour&quot; sera-t-il affiché ?" explanation="La variable i prendra successivement les valeurs 0, 1, 2. Pour i=3, la condition i < 3 devient fausse et la boucle s'arrête. Donc, &quot;Bonjour&quot; est affiché 3 fois.">
+Combien de fois le mot &quot;Bonjour&quot; sera-t-il affiche ?" explanation="La variable i prendra successivement les valeurs 0, 1, 2. Pour i=3, la condition i < 3 devient fausse et la boucle s'arrete. Donc, &quot;Bonjour&quot; est affiche 3 fois.">
   <Option text="0 fois" correct={false} />
   <Option text="1 fois" correct={false} />
   <Option text="3 fois" correct={true} />
-  <Option text="Une infinité de fois" correct={false} />
+  <Option text="Une infinite de fois" correct={false} />
 </Question>
-    <Question q="Quel est le résultat de l'algorithme suivant ?
+    <Question q="Quel est le resultat de l'algorithme suivant ?
 VARIABLE x : ENTIER
 DEBUT
     x <- 10
@@ -513,25 +513,25 @@ DEBUT
         x &lt;- x - 1
     FIN SI
     AFFICHER x
-FIN » explanation=« x est initialisé à 10. La condition x > 5 (10 > 5) est vraie. Donc, x devient 10 + 2 = 12. L'algorithme affiche 12. »>
+FIN" explanation="x est initialise a 10. La condition x > 5 (10 > 5) est vraie. Donc, x devient 10 + 2 = 12. L'algorithme affiche 12.">
   <Option text="9" correct={false} />
   <Option text="10" correct={false} />
   <Option text="11" correct={false} />
   <Option text="12" correct={true} />
 </Question>
-    <Question q="Une boucle infinie se produit lorsque :" explanation="Une boucle infinie est une boucle dont la condition de continuation reste toujours vraie, ou dont la condition d'arrêt ne devient jamais fausse, empêchant ainsi le programme de progresser au-delà de cette boucle.">
+    <Question q="Une boucle infinie se produit lorsque :" explanation="Une boucle infinie est une boucle dont la condition de continuation reste toujours vraie, ou dont la condition d'arret ne devient jamais fausse, empechant ainsi le programme de progresser au-dela de cette boucle.">
   <Option text="La condition de sortie de la boucle est toujours vraie." correct={false} />
   <Option text="La condition de sortie de la boucle n'est jamais atteinte ou ne devient jamais fausse." correct={true} />
   <Option text="La boucle contient trop d'instructions." correct={false} />
-  <Option text="La variable de contrôle de la boucle est initialisée à zéro." correct={false} />
+  <Option text="La variable de controle de la boucle est initialisee a zero." correct={false} />
 </Question>
-    <Question q="Quel est le rôle de l'opérateur d'affectation (<- ou =) en algorithmique ?" explanation="L'opérateur d'affectation permet de stocker une valeur (résultat d'une expression, constante, autre variable) dans une variable.">
+    <Question q="Quel est le role de l'operateur d'affectation (<- ou =) en algorithmique ?" explanation="L'operateur d'affectation permet de stocker une valeur (resultat d'une expression, constante, autre variable) dans une variable.">
   <Option text="Comparer deux valeurs." correct={false} />
-  <Option text="Déclarer une nouvelle variable." correct={false} />
-  <Option text="Attribuer une valeur à une variable." correct={true} />
-  <Option text="Exécuter une fonction." correct={false} />
+  <Option text="Declarer une nouvelle variable." correct={false} />
+  <Option text="Attribuer une valeur a une variable." correct={true} />
+  <Option text="Executer une fonction." correct={false} />
 </Question>
-    <Question q="Considérez l'algorithme :
+    <Question q="Considerez l'algorithme :
 VARIABLE compteur : ENTIER
 DEBUT
     compteur <- 0
@@ -540,17 +540,17 @@ DEBUT
     FIN POUR
     AFFICHER compteur
 FIN
-Quelle valeur sera affichée pour compteur ?" explanation="La boucle POUR i DE 1 A 5 s'exécute 5 fois (pour i=1, 2, 3, 4, 5). À chaque itération, compteur est incrémenté de 1. Donc, compteur passera de 0 à 5.">
+Quelle valeur sera affichee pour compteur ?" explanation="La boucle POUR i DE 1 A 5 s'execute 5 fois (pour i=1, 2, 3, 4, 5). A chaque iteration, compteur est incremente de 1. Donc, compteur passera de 0 a 5.">
   <Option text="0" correct={false} />
   <Option text="1" correct={false} />
   <Option text="5" correct={true} />
   <Option text="6" correct={false} />
 </Question>
-    <Question q="Si un algorithme contient une structure SI imbriquée dans une autre structure SI, comment les conditions sont-elles évaluées ?" explanation="Pour qu'un bloc d'instructions dans un SI imbriqué soit exécuté, la condition du SI externe doit d'abord être vraie, puis la condition du SI interne doit également être vraie.">
-  <Option text="Seule la condition la plus interne est évaluée." correct={false} />
-  <Option text="Les deux conditions doivent être vraies pour que le bloc d'instructions interne soit exécuté." correct={true} />
-  <Option text="Les conditions sont évaluées en parallèle." correct={false} />
-  <Option text="Seule la condition la plus externe est évaluée." correct={false} />
+    <Question q="Si un algorithme contient une structure SI imbriquee dans une autre structure SI, comment les conditions sont-elles evaluees ?" explanation="Pour qu'un bloc d'instructions dans un SI imbrique soit execute, la condition du SI externe doit d'abord etre vraie, puis la condition du SI interne doit egalement etre vraie.">
+  <Option text="Seule la condition la plus interne est evaluee." correct={false} />
+  <Option text="Les deux conditions doivent etre vraies pour que le bloc d'instructions interne soit execute." correct={true} />
+  <Option text="Les conditions sont evaluees en parallele." correct={false} />
+  <Option text="Seule la condition la plus externe est evaluee." correct={false} />
 </Question>
 </Quiz>
 
@@ -570,5 +570,5 @@ Quelle valeur sera affichée pour compteur ?" explanation="La boucle POUR i DE 1
 
 ### Références
 
-<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiUHJvZmVzc2V1ciBBbGdvLiAyMDIwLiDCqyBMZXMgYmFzZXMgZGUgbCdhbGdvcml0aG1pcXVlOiBTw6lxdWVuY2VzLCBjb25kaXRpb25zLCBib3VjbGVzIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Qcm9mZXNzZXVyJTIwQWxnbyUyMCUyMkxlcyUyMGJhc2VzJTIwZGUlMjBsJ2FsZ29yaXRobWlxdWUlMjIlMjAyMDIwIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX1d" />
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiQnJhc3NhcmQsIEdpbGxlcywgZXQgUGF1bCBCcmF0bGV5LiAyMDAyLiBBbGdvcml0aG1pcXVlOiBDb25jZXB0aW9uIGV0IGFuYWx5c2UuIDJlIMOpZC4gTW9udHLDqWFsOiBQcmVzc2VzIEludGVybmF0aW9uYWxlcyBQb2x5dGVjaG5pcXVlLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1CcmFzc2FyZCUyMCUyMkFsZ29yaXRobWlxdWUlMjIlMjAyMDAyIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjIsInRleHQiOiJDb3JtZW4sIFRob21hcyBILiwgQ2hhcmxlcyBFLiBMZWlzZXJzb24sIFJvbmFsZCBMLiBSaXZlc3QsIGV0IENsaWZmb3JkIFN0ZWluLiAyMDEwLiBBbGdvcml0aG1pcXVlLiAzZSDDqWQuIFBhcmlzOiBEdW5vZC4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Q29ybWVuJTIwJTIyTGVpc2Vyc29uJTIyJTIwMjAxMCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjozLCJ0ZXh0IjoiRG93ZWssIEdpbGxlcy4gMjAwMi4gTGEgbG9naXF1ZS4gUGFyaXM6IEZsYW1tYXJpb24uIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPURvd2VrJTIwJTIyUGFyaXMlMjIlMjAyMDAyIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjQsInRleHQiOiJNZXllciwgQmVydHJhbmQuIDE5OTQuIENvbmNlcHRpb24gZXQgcHJvZ3JhbW1hdGlvbiBvcmllbnTDqWVzIG9iamV0LiBQYXJpczogRXlyb2xsZXMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPU1leWVyJTIwJTIyQ29uY2VwdGlvbiUyMGV0JTIwcHJvZ3JhbW1hdGlvbiUyMG9yaWVudCVDMyVBOWVzJTIwb2JqZXQlMjIlMjAxOTk0Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjUsInRleHQiOiJTZWRnZXdpY2ssIFJvYmVydCwgZXQgS2V2aW4gV2F5bmUuIDIwMTEuIEFsZ29yaXRobWVzIGVuIEphdmEuIFBhcmlzOiBQZWFyc29uIEVkdWNhdGlvbiBGcmFuY2UuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVNlZGdld2ljayUyMCUyMlNlZGdld2ljayUyMiUyMDIwMTEiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6NiwidGV4dCI6IldpcnRoLCBOaWtsYXVzLiAxOTg3LiBBbGdvcml0aG1lcyBldCBzdHJ1Y3R1cmVzIGRlIGRvbm7DqWVzLiBQYXJpczogRXlyb2xsZXMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVdpcnRoJTIwJTIyQWxnb3JpdGhtZXMlMjBldCUyMHN0cnVjdHVyZXMlMjBkZSUyMGRvbm4lQzMlQTllcyUyMiUyMDE5ODciLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6NywidGV4dCI6IkFobywgQWxmcmVkIFYuLCBKb2huIEUuIEhvcGNyb2Z0LCBldCBKZWZmcmV5IEQuIFVsbG1hbi4gMTk4Ny4gU3RydWN0dXJlcyBkZSBkb25uw6llcyBldCBhbGdvcml0aG1lcy4gUGFyaXM6IEludGVyRWRpdGlvbnMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUFobyUyMCUyMkhvcGNyb2Z0JTIyJTIwMTk4NyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo4LCJ0ZXh0IjoiSmVhbi1NaWNoZWwgTMOpcnkuIDIwMTguIMKrIEludHJvZHVjdGlvbiDDoCBsJ2FsZ29yaXRobWlxdWUgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUplYW4tTWljaGVsJTIwTCVDMyVBOXJ5JTIwJTIySW50cm9kdWN0aW9uJTIwJUMzJUEwJTIwbCdhbGdvcml0aG1pcXVlJTIyJTIwMjAxOCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo5LCJ0ZXh0IjoiT3BlbkNsYXNzcm9vbXMuIDIwMjMuIMKrIEFwcHJlbmV6IMOgIHByb2dyYW1tZXIgZW4gUHl0aG9uIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1PcGVuQ2xhc3Nyb29tcyUyMCUyMkFwcHJlbmV6JTIwJUMzJUEwJTIwcHJvZ3JhbW1lciUyMGVuJTIwUHl0aG9uJTIyJTIwMjAyMyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxMCwidGV4dCI6IlByb2Zlc3NldXIgQWxnby4gMjAyMC4gwqsgTGVzIGJhc2VzIGRlIGwnYWxnb3JpdGhtaXF1ZTogU8OpcXVlbmNlcywgY29uZGl0aW9ucywgYm91Y2xlcyDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9UHJvZmVzc2V1ciUyMEFsZ28lMjAlMjJMZXMlMjBiYXNlcyUyMGRlJTIwbCdhbGdvcml0aG1pcXVlJTIyJTIwMjAyMCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9XQ==" />
 

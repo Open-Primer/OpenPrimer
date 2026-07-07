@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { cleanPathSegment } from '../src/lib/translations';
 
 // 1. Manually parse .env.local to ensure environment variables are present in process.env BEFORE any static imports are evaluated
 const envPath = path.join(__dirname, '.env.local');
@@ -30,7 +31,7 @@ if (fs.existsSync(rootEnvPath)) {
 process.env.CLI_WORKER = 'true';
 
 async function main() {
-  const courseSlug = "Introduction_a_la_sociologie_contemporaine";
+  const courseSlug = cleanPathSegment("Introduction_a_la_sociologie_contemporaine");
   const languages = ["es", "en"];
 
   // Dynamically import ai.ts to guarantee process.env is fully populated first

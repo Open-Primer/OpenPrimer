@@ -41,7 +41,7 @@ async function main() {
     name: "Histoire Contemporaine",
     level: "L1",
     subject: "History",
-    slug: "Histoire_Contemporaine"
+    slug: "histoire_contemporaine"
   };
 
   console.log(`\n======================================================`);

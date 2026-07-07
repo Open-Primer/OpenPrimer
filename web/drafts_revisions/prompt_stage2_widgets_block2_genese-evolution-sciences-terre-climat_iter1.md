@@ -2,31 +2,38 @@ You are a world-class educational curriculum architect and JSON data validator (
 Your task is to design the JSON object for the interactive components of the lesson.
 
 The narrative text contains the following custom widget anchors that you MUST define:
-- Anchor: [[WIDGET:ConceptLink:changement_climatique:changement climatique]] (Type: "ConceptLink", ID: "changement_climatique", Topic: "changement climatique")
+- Anchor: [[WIDGET:ConceptLink:geographie_physique:géographie physique]] (Type: "ConceptLink", ID: "geographie_physique", Topic: "géographie physique")
+- Anchor: [[WIDGET:ConceptLink:climatologie:climatologie]] (Type: "ConceptLink", ID: "climatologie", Topic: "climatologie")
+- Anchor: [[WIDGET:Glossary:epistemologie:épistémologie]] (Type: "Glossary", ID: "epistemologie", Topic: "épistémologie")
+- Anchor: [[WIDGET:RealPerson:thales:Thalès de Milet]] (Type: "RealPerson", ID: "thales", Topic: "Thalès de Milet")
+- Anchor: [[WIDGET:RealPerson:anaximandre:Anaximandre]] (Type: "RealPerson", ID: "anaximandre", Topic: "Anaximandre")
+- Anchor: [[WIDGET:RealPerson:herodote:Hérodote]] (Type: "RealPerson", ID: "herodote", Topic: "Hérodote")
 - Anchor: [[WIDGET:RealPerson:aristote:Aristote]] (Type: "RealPerson", ID: "aristote", Topic: "Aristote")
-- Anchor: [[WIDGET:RealPerson:strabon:Strabon]] (Type: "RealPerson", ID: "strabon", Topic: "Strabon")
-- Anchor: [[WIDGET:Mermaid:timeline_geologie_paradigmes]] (Type: "Mermaid", ID: "timeline_geologie_paradigmes", Topic: "")
-- Anchor: [[WIDGET:ConceptLink:uniformitarisme:uniformitarisme]] (Type: "ConceptLink", ID: "uniformitarisme", Topic: "uniformitarisme")
+- Anchor: [[WIDGET:HistoricalAnecdote:aristote_meteorologica]] (Type: "HistoricalAnecdote", ID: "aristote_meteorologica", Topic: "")
+- Anchor: [[WIDGET:Image:ancient_chinese_seismograph]] (Type: "Image", ID: "ancient_chinese_seismograph", Topic: "")
+- Anchor: [[WIDGET:Mermaid:timeline_ancient_medieval_geo_clima]] (Type: "Mermaid", ID: "timeline_ancient_medieval_geo_clima", Topic: "")
+- Anchor: [[WIDGET:Mermaid:scientific_revolution_timeline]] (Type: "Mermaid", ID: "scientific_revolution_timeline", Topic: "")
+- Anchor: [[WIDGET:RealPerson:buffon:Georges-Louis Leclerc, Comte de Buffon]] (Type: "RealPerson", ID: "buffon", Topic: "Georges-Louis Leclerc, Comte de Buffon")
+- Anchor: [[WIDGET:RealPerson:humboldt:Alexander von Humboldt]] (Type: "RealPerson", ID: "humboldt", Topic: "Alexander von Humboldt")
+- Anchor: [[WIDGET:Image:humboldt_isotherms]] (Type: "Image", ID: "humboldt_isotherms", Topic: "")
+- Anchor: [[WIDGET:HistoricalAnecdote:humboldt_chimborazo]] (Type: "HistoricalAnecdote", ID: "humboldt_chimborazo", Topic: "")
+- Anchor: [[WIDGET:RealPerson:lyell:Charles Lyell]] (Type: "RealPerson", ID: "lyell", Topic: "Charles Lyell")
+- Anchor: [[WIDGET:ConceptLink:uniformitarianism:Uniformitarianisme]] (Type: "ConceptLink", ID: "uniformitarianism", Topic: "Uniformitarianisme")
+- Anchor: [[WIDGET:Glossary:geomorphology:Géomorphologie]] (Type: "Glossary", ID: "geomorphology", Topic: "Géomorphologie")
+- Anchor: [[WIDGET:ConceptLink:plate_tectonics:Tectonique des plaques]] (Type: "ConceptLink", ID: "plate_tectonics", Topic: "Tectonique des plaques")
+- Anchor: [[WIDGET:BrilliantIdea:interconnected_earth]] (Type: "BrilliantIdea", ID: "interconnected_earth", Topic: "")
+- Anchor: [[WIDGET:InteractiveDiagram:earth_system_components]] (Type: "InteractiveDiagram", ID: "earth_system_components", Topic: "")
+- Anchor: [[WIDGET:DataChart:global_temp_anomaly]] (Type: "DataChart", ID: "global_temp_anomaly", Topic: "")
+- Anchor: [[WIDGET:Video:earth_system_overview]] (Type: "Video", ID: "earth_system_overview", Topic: "")
+- Anchor: [[WIDGET:ComparisonSlider:climate_map_evolution]] (Type: "ComparisonSlider", ID: "climate_map_evolution", Topic: "")
+- Anchor: [[WIDGET:Quiz:climate_change_concepts]] (Type: "Quiz", ID: "climate_change_concepts", Topic: "")
+- Anchor: [[WIDGET:UnsolvedExercise:climate_data_analysis]] (Type: "UnsolvedExercise", ID: "climate_data_analysis", Topic: "")
+- Anchor: [[WIDGET:RealPerson:aristote:Aristote]] (Type: "RealPerson", ID: "aristote", Topic: "Aristote")
 - Anchor: [[WIDGET:RealPerson:james_hutton:James Hutton]] (Type: "RealPerson", ID: "james_hutton", Topic: "James Hutton")
 - Anchor: [[WIDGET:RealPerson:charles_lyell:Charles Lyell]] (Type: "RealPerson", ID: "charles_lyell", Topic: "Charles Lyell")
-- Anchor: [[WIDGET:Glossary:geomorphologie:géomorphologie]] (Type: "Glossary", ID: "geomorphologie", Topic: "géomorphologie")
-- Anchor: [[WIDGET:RealPerson:edmond_halley:Edmond Halley]] (Type: "RealPerson", ID: "edmond_halley", Topic: "Edmond Halley")
-- Anchor: [[WIDGET:RealPerson:george_hadley:George Hadley]] (Type: "RealPerson", ID: "george_hadley", Topic: "George Hadley")
-- Anchor: [[WIDGET:ConceptLink:circulation_atmospherique:circulation atmosphérique]] (Type: "ConceptLink", ID: "circulation_atmospherique", Topic: "circulation atmosphérique")
-- Anchor: [[WIDGET:Mermaid:timeline_climatologie_milestones]] (Type: "Mermaid", ID: "timeline_climatologie_milestones", Topic: "")
-- Anchor: [[WIDGET:ConceptLink:temps_geologique:temps géologique]] (Type: "ConceptLink", ID: "temps_geologique", Topic: "temps géologique")
-- Anchor: [[WIDGET:ConceptLink:derives_continents:dérive des continents]] (Type: "ConceptLink", ID: "derives_continents", Topic: "dérive des continents")
-- Anchor: [[WIDGET:RealPerson:alfred_wegener:Alfred Wegener]] (Type: "RealPerson", ID: "alfred_wegener", Topic: "Alfred Wegener")
-- Anchor: [[WIDGET:ConceptLink:effet_de_serre:effet de serre]] (Type: "ConceptLink", ID: "effet_de_serre", Topic: "effet de serre")
-- Anchor: [[WIDGET:RealPerson:svante_arrhenius:Svante Arrhenius]] (Type: "RealPerson", ID: "svante_arrhenius", Topic: "Svante Arrhenius")
-- Anchor: [[WIDGET:RealPerson:wladimir_koppen:Wladimir Köppen]] (Type: "RealPerson", ID: "wladimir_koppen", Topic: "Wladimir Köppen")
-- Anchor: [[WIDGET:Glossary:isotherme:isothermes]] (Type: "Glossary", ID: "isotherme", Topic: "isothermes")
 - Anchor: [[WIDGET:RealPerson:alexander_von_humboldt:Alexander von Humboldt]] (Type: "RealPerson", ID: "alexander_von_humboldt", Topic: "Alexander von Humboldt")
-- Anchor: [[WIDGET:ConceptLink:uniformitarisme:uniformitarisme]] (Type: "ConceptLink", ID: "uniformitarisme", Topic: "uniformitarisme")
-- Anchor: [[WIDGET:Mermaid:evolution_sciences_terre_climat]] (Type: "Mermaid", ID: "evolution_sciences_terre_climat", Topic: "")
-- Anchor: [[WIDGET:ConceptLink:anthropocene:Anthropocène]] (Type: "ConceptLink", ID: "anthropocene", Topic: "Anthropocène")
-- Anchor: [[WIDGET:Glossary:teledetection:télédétection]] (Type: "Glossary", ID: "teledetection", Topic: "télédétection")
-- Anchor: [[WIDGET:Image:earth_observation_satellite]] (Type: "Image", ID: "earth_observation_satellite", Topic: "")
+- Anchor: [[WIDGET:Block:evolution_sciences_terre_climat_resume:Résumé des étapes clés]] (Type: "Block", ID: "evolution_sciences_terre_climat_resume", Topic: "Résumé des étapes clés")
+- Anchor: [[WIDGET:Block:defis_futurs_terre_climat:Défis et Perspectives]] (Type: "Block", ID: "defis_futurs_terre_climat", Topic: "Défis et Perspectives")
 
 ---
 
@@ -86,6 +93,13 @@ The narrative text contains the following custom widget anchors that you MUST de
 12. "Glossary":
    - "term": (string) Glossary vocabulary term.
    - "definition": (string) Detailed vocabulary definition (2-4 sentences).
+13. "HistoricalAnecdote":
+   - "title": (string) Historical anecdote title.
+   - "date": (string, optional) Lifespan, period, or date of the anecdote.
+   - "content": (string) Interesting detailed narrative (4-8 sentences).
+14. "BrilliantIdea":
+   - "title": (string, optional) Idea title/theme.
+   - "content": (string) Key insight, tip, rule of thumb, or summary (3-6 sentences).
 
 You must define the "interactiveComponents" array containing one object for each anchor listed above.
 For each component:

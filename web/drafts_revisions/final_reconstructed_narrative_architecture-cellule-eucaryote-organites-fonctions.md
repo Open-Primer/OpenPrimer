@@ -79,13 +79,13 @@ Au-delà du système endomembranaire, d'autres organites jouent des rôles cruci
 
 ### Les Mitochondries : Centrales Énergétiques de la Cellule
 
-Les mitochondries sont des organites semi-autonomes, souvent décrits comme les « centrales énergétiques » de la cellule eucaryote. Elles sont responsables de la respiration cellulaire, un processus qui convertit l'énergie des nutriments en adénosine triphosphate (ATP), la principale monnaie énergétique de la cellule <sup id="cite-1" class="scroll-mt-24"><a href="#ref-1">[1]</a></sup>, <sup id="cite-6" class="scroll-mt-24"><a href="#ref-6">[6]</a></sup>.
+Les mitochondries sont des organites semi-autonomes, souvent décrits comme les « centrales énergétiques » de la cellule eucaryote. Elles sont responsables de la respiration cellulaire, un processus qui convertit l'énergie des nutriments en adénosine triphosphate (ATP), la principale monnaie énergétique de la cellule [[WIDGET:Citation:1]], [[WIDGET:Citation:6]].
 
 **Structure :** Une mitochondrie est délimitée par deux membranes distinctes :
 *   **Membrane externe :** Lisse et perméable à de petites molécules grâce à des porines.
 *   **Membrane interne :** Hautement plissée, formant des replis appelés **crêtes mitochondriales**. Cette membrane est imperméable et contient les protéines de la chaîne de transport d'électrons et l'ATP synthase.
 *   **Espace intermembranaire :** Situé entre les deux membranes.
-*   **Matrice mitochondriale :** L'espace interne délimité par la membrane interne. Elle contient des enzymes du cycle de Krebs, des ribosomes, de l'ADN mitochondrial circulaire et des ARN de transfert <sup id="cite-2" class="scroll-mt-24"><a href="#ref-2">[2]</a></sup>.
+*   **Matrice mitochondriale :** L'espace interne délimité par la membrane interne. Elle contient des enzymes du cycle de Krebs, des ribosomes, de l'ADN mitochondrial circulaire et des ARN de transfert [[WIDGET:Citation:2]].
 
 [[WIDGET:image-mitochondria-structure]]
 *Structure schématique d'une mitochondrie, mettant en évidence ses deux membranes et les crêtes mitochondriales.*
@@ -93,17 +93,17 @@ Les mitochondries sont des organites semi-autonomes, souvent décrits comme les 
 **Fonction :** La fonction principale des mitochondries est la production d'ATP par la respiration cellulaire. Ce processus se déroule en plusieurs étapes :
 1.  **Glycolyse (dans le cytoplasme) :** Dégradation du glucose en pyruvate.
 2.  **Cycle de Krebs (dans la matrice) :** Oxydation du pyruvate, produisant des transporteurs d'électrons réduits (NADH et FADH₂).
-3.  **Phosphorylation oxydative (sur la membrane interne) :** Les électrons des NADH et FADH₂ sont transférés le long de la chaîne de transport d'électrons, créant un gradient de protons. L'ATP synthase utilise ce gradient pour produire de grandes quantités d'ATP <sup><a href="#ref-6">[6]</a></sup>.
+3.  **Phosphorylation oxydative (sur la membrane interne) :** Les électrons des NADH et FADH₂ sont transférés le long de la chaîne de transport d'électrons, créant un gradient de protons. L'ATP synthase utilise ce gradient pour produire de grandes quantités d'ATP [[WIDGET:Citation:6]].
 
 ### Les Lysosomes : Recyclage et Dégradation Cellulaire
 
-Les lysosomes sont des organites sphériques, délimités par une simple membrane, dont la fonction principale est la dégradation et le recyclage des macromolécules cellulaires. Ils sont considérés comme le « système digestif » de la cellule <sup><a href="#ref-1">[1]</a></sup>.
+Les lysosomes sont des organites sphériques, délimités par une simple membrane, dont la fonction principale est la dégradation et le recyclage des macromolécules cellulaires. Ils sont considérés comme le « système digestif » de la cellule [[WIDGET:Citation:1]].
 
-**Morphologie et Contenu :** L'intérieur des lysosomes est caractérisé par un environnement fortement acide (pH environ 4,5-5,0), maintenu par une pompe à protons (H⁺) située dans leur membrane. Cette acidité est optimale pour l'activité des nombreuses **hydrolases acides** qu'ils contiennent (protéases, lipases, nucléases, glycosidases, etc.) <sup><a href="#ref-2">[2]</a></sup>.
+**Morphologie et Contenu :** L'intérieur des lysosomes est caractérisé par un environnement fortement acide (pH environ 4,5-5,0), maintenu par une pompe à protons (H⁺) située dans leur membrane. Cette acidité est optimale pour l'activité des nombreuses **hydrolases acides** qu'ils contiennent (protéases, lipases, nucléases, glycosidases, etc.) [[WIDGET:Citation:2]].
 
 **Rôle :** Les lysosomes interviennent dans plusieurs processus cataboliques :
 *   **Phagocytose :** Digestion de particules étrangères ou de débris cellulaires ingérés par endocytose.
-*   **Autophagie :** Dégradation et recyclage des composants cellulaires endommagés ou obsolètes (ex: organites vieillissants). Ce processus est crucial pour le renouvellement cellulaire et l'adaptation aux conditions de stress <sup><a href="#ref-1">[1]</a></sup>.
+*   **Autophagie :** Dégradation et recyclage des composants cellulaires endommagés ou obsolètes (ex: organites vieillissants). Ce processus est crucial pour le renouvellement cellulaire et l'adaptation aux conditions de stress [[WIDGET:Citation:1]].
 *   **Crénophagie :** Dégradation de molécules endogènes (protéines, lipides) issues du métabolisme cellulaire.
 
 ### Les Peroxysomes : Oxydation et Détoxification
@@ -111,12 +111,12 @@ Les lysosomes sont des organites sphériques, délimités par une simple membran
 Les peroxysomes sont de petits organites vésiculaires, également délimités par une simple membrane, qui jouent un rôle clé dans les réactions d'oxydation et la détoxification cellulaire.
 
 **Fonction :**
-*   **Oxydation des acides gras :** Ils sont le site de la bêta-oxydation des acides gras à très longue chaîne, un processus qui raccourcit ces acides gras avant qu'ils ne soient transférés aux mitochondries pour une oxydation complète <sup><a href="#ref-2">[2]</a></sup>.
-*   **Détoxification :** Les peroxysomes contiennent des enzymes comme la catalase et la peroxydase, qui catalysent des réactions d'oxydation produisant du peroxyde d'hydrogène (H₂O₂), un composé toxique. La catalase décompose ensuite rapidement le H₂O₂ en eau et en oxygène, protégeant ainsi la cellule des dommages oxydatifs <sup><a href="#ref-1">[1]</a></sup>. Ils sont particulièrement abondants dans les cellules hépatiques et rénales, où ils participent à la détoxification de l'alcool et d'autres substances nocives.
+*   **Oxydation des acides gras :** Ils sont le site de la bêta-oxydation des acides gras à très longue chaîne, un processus qui raccourcit ces acides gras avant qu'ils ne soient transférés aux mitochondries pour une oxydation complète [[WIDGET:Citation:2]].
+*   **Détoxification :** Les peroxysomes contiennent des enzymes comme la catalase et la peroxydase, qui catalysent des réactions d'oxydation produisant du peroxyde d'hydrogène (H₂O₂), un composé toxique. La catalase décompose ensuite rapidement le H₂O₂ en eau et en oxygène, protégeant ainsi la cellule des dommages oxydatifs [[WIDGET:Citation:1]]. Ils sont particulièrement abondants dans les cellules hépatiques et rénales, où ils participent à la détoxification de l'alcool et d'autres substances nocives.
 
 ## Le Cytosquelette et la Spécificité Eucaryote face aux Procaryotes
 
-Le cytosquelette est un réseau dynamique de filaments protéiques qui s'étend dans tout le cytoplasme des cellules eucaryotes. Il est essentiel pour le maintien de la forme cellulaire, le mouvement, le transport intracellulaire et la division cellulaire <sup><a href="#ref-1">[1]</a></sup>, <sup><a href="#ref-2">[2]</a></sup>.
+Le cytosquelette est un réseau dynamique de filaments protéiques qui s'étend dans tout le cytoplasme des cellules eucaryotes. Il est essentiel pour le maintien de la forme cellulaire, le mouvement, le transport intracellulaire et la division cellulaire [[WIDGET:Citation:1]], [[WIDGET:Citation:2]].
 
 ### Les Trois Composants du Cytosquelette
 
@@ -126,7 +126,7 @@ Le cytosquelette est un réseau dynamique de filaments protéiques qui s'étend 
         *   Maintien de la forme cellulaire et de la rigidité.
         *   Formation du fuseau mitotique lors de la division cellulaire.
         *   Constituants des cils et des flagelles, permettant le mouvement cellulaire ou le déplacement de fluides.
-        *   Voies de transport pour les organites et les vésicules, grâce à des protéines motrices comme la kinésine et la dynéine <sup><a href="#ref-1">[1]</a></sup>.
+        *   Voies de transport pour les organites et les vésicules, grâce à des protéines motrices comme la kinésine et la dynéine [[WIDGET:Citation:1]].
 
 2.  **Les Filaments d'Actine (ou Microfilaments) :**
     *   **Structure :** Ce sont les plus fins, composés de monomères d'actine globulaire qui polymérisent en deux brins hélicoïdaux. Ils sont également très dynamiques.
@@ -134,18 +134,18 @@ Le cytosquelette est un réseau dynamique de filaments protéiques qui s'étend 
         *   Maintien de la forme cellulaire, notamment au niveau de la membrane plasmique.
         *   Mouvement cellulaire (ex: locomotion amiboïde, formation de lamellipodes et de filopodes).
         *   Contraction musculaire (en association avec la myosine).
-        *   Cytokinèse (formation de l'anneau contractile) <sup><a href="#ref-2">[2]</a></sup>.
+        *   Cytokinèse (formation de l'anneau contractile) [[WIDGET:Citation:2]].
 
 3.  **Les Filaments Intermédiaires :**
     *   **Structure :** Leur diamètre est intermédiaire entre celui des microtubules et des filaments d'actine. Ils sont composés de diverses protéines fibreuses (ex: kératines dans les cellules épithéliales, vimentine dans les fibroblastes, lamines dans le noyau). Contrairement aux microtubules et aux filaments d'actine, ils sont très stables et moins dynamiques.
     *   **Rôles :**
         *   Fournissent un soutien mécanique et une résistance à la tension à la cellule.
         *   Ancrent les organites et le noyau en place.
-        *   Participent à la formation des jonctions cellulaires <sup><a href="#ref-1">[1]</a></sup>.
+        *   Participent à la formation des jonctions cellulaires [[WIDGET:Citation:1]].
 
 ### Comparaison Eucaryote vs. Procaryote : Une Question de Compartimentation
 
-La distinction fondamentale entre les cellules eucaryotes et procaryotes réside dans leur niveau d'organisation interne, en particulier la présence ou l'absence de compartimentation membranaire. Cette différence a des implications majeures sur leur taille, leur complexité et leurs capacités métaboliques <sup id="cite-3" class="scroll-mt-24"><a href="#ref-3">[3]</a></sup>, <sup id="cite-4" class="scroll-mt-24"><a href="#ref-4">[4]</a></sup>.
+La distinction fondamentale entre les cellules eucaryotes et procaryotes réside dans leur niveau d'organisation interne, en particulier la présence ou l'absence de compartimentation membranaire. Cette différence a des implications majeures sur leur taille, leur complexité et leurs capacités métaboliques [[WIDGET:Citation:3]], [[WIDGET:Citation:4]].
 
 | Caractéristique             | Cellule Procaryote (ex: Bactéries, Archées) | Cellule Eucaryote (ex: Animaux, Plantes, Champignons) |
 | :-------------------------- | :------------------------------------------ | :---------------------------------------------------- |
@@ -161,7 +161,7 @@ La distinction fondamentale entre les cellules eucaryotes et procaryotes réside
 | **Organisation cellulaire** | Unicellulaire                               | Unicellulaire ou multicellulaire                      |
 | **Paroi cellulaire**        | Présente (peptidoglycane chez les bactéries)| Présente chez les plantes (cellulose) et champignons (chitine), absente chez les animaux |
 
-La compartimentation des cellules eucaryotes, avec leurs organites spécialisés, permet une division du travail et une optimisation des processus biochimiques. Chaque organite fournit un environnement spécifique (pH, enzymes) pour des réactions particulières, augmentant ainsi l'efficacité et la complexité métabolique de la cellule. Cette organisation est une caractéristique clé qui distingue la vie eucaryote de la vie procaryote <sup id="cite-5" class="scroll-mt-24"><a href="#ref-5">[5]</a></sup>.
+La compartimentation des cellules eucaryotes, avec leurs organites spécialisés, permet une division du travail et une optimisation des processus biochimiques. Chaque organite fournit un environnement spécifique (pH, enzymes) pour des réactions particulières, augmentant ainsi l'efficacité et la complexité métabolique de la cellule. Cette organisation est une caractéristique clé qui distingue la vie eucaryote de la vie procaryote [[WIDGET:Citation:5]].
 
 ## Conclusion
 Cette exploration de l'architecture cellulaire eucaryote a révélé un univers d'une complexité et d'une organisation remarquables. Nous avons parcouru les rôles distincts du noyau, gardien du matériel génétique, du réticulum endoplasmique et de l'appareil de Golgi, usines de synthèse et de modification des protéines et lipides, des mitochondries, centrales énergétiques de la cellule, et des lysosomes et peroxysomes, centres de recyclage et de détoxification. Le cytosquelette, quant à lui, assure la structure, le mouvement et le transport intracellulaire. Il est crucial de comprendre que ces organites ne fonctionnent pas de manière isolée. Au contraire, ils sont interconnectés par un réseau dynamique de membranes et de flux vésiculaires, formant un système intégré où chaque composant dépend des autres pour accomplir ses fonctions spécifiques et maintenir l'homéostasie cellulaire. Par exemple, la synthèse d'une protéine commence souvent dans le réticulum endoplasmique, se poursuit par sa maturation dans l'appareil de Golgi, avant d'être acheminée vers sa destination finale, qu'il s'agisse d'une autre organite, de la membrane plasmique ou de l'extérieur de la cellule.

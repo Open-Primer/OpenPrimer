@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import matter from '../../../../lib/matter';
 import { pushToGitHub, deleteFromGitHub } from '../../../../lib/github';
+import { cleanPathSegment } from '../../../../lib/translations';
 
 // Initialize Supabase admin client (with safe mock fallbacks for build time compilation)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
@@ -148,11 +149,11 @@ export async function POST(req: NextRequest) {
     for (const file of Array.from(removedFiles)) {
       const parts = file.replace('content/', '').split('/');
       if (parts.length >= 4) {
-        const courseSlug = parts[2];
+        const courseSlug = cleanPathSegment(parts[2]);
         const fileName = parts[parts.length - 1];
         const matches = fileName.match(/^(.*?)\.([a-z]{2})\.mdx$/i);
         if (matches) {
-          const lessonSlug = matches[1];
+          const lessonSlug = cleanPathSegment(matches[1]);
           const lang = matches[2].toLowerCase();
 
           console.log(`🗑️ Deleting lesson "${lessonSlug}" (${lang}) from database...`);
@@ -161,7 +162,7 @@ export async function POST(req: NextRequest) {
             .delete()
             .match({ course_slug: courseSlug, lesson_slug: lessonSlug, lang: lang });
 
-          modifiedCourseSlugs.add(courseSlug.toLowerCase());
+          modifiedCourseSlugs.add(courseSlug);
         }
       }
     }
@@ -171,11 +172,11 @@ export async function POST(req: NextRequest) {
     for (const file of activeChanges) {
       const parts = file.replace('content/', '').split('/');
       if (parts.length >= 4) {
-        const courseSlug = parts[2];
+        const courseSlug = cleanPathSegment(parts[2]);
         const fileName = parts[parts.length - 1];
         const matches = fileName.match(/^(.*?)\.([a-z]{2})\.mdx$/i);
         if (matches) {
-          const lessonSlug = matches[1];
+          const lessonSlug = cleanPathSegment(matches[1]);
           const lang = matches[2].toLowerCase();
 
           // Fetch raw contents from GitHub
@@ -261,7 +262,7 @@ export async function POST(req: NextRequest) {
             console.error(`🚨 Supabase sync failed for ${file}:`, error.message);
           } else {
             console.log(`✅ Successfully synced lesson "${lessonSlug}" (${lang}).`);
-            modifiedCourseSlugs.add(courseSlug.toLowerCase());
+            modifiedCourseSlugs.add(courseSlug);
           }
         }
       }

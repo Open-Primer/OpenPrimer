@@ -5,50 +5,50 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 1:
       {
         "title": "Principes fondamentaux de la physique de l'atmosphère",
         "slug": "principes-physique-atmosphere",
-        "level": "L2",
+        "level": "University Year 2 / Bachelor 2nd Year (L2)",
+        "subject": "Géographie physique"
+      },
+      {
+        "title": "Composition et structure de l'atmosphère",
+        "slug": "composition-structure-atmosphere",
+        "level": "University Year 2 / Bachelor 2nd Year (L2)",
         "subject": "Climatologie"
       },
       {
-        "title": "Introduction à la météorologie et au climat",
-        "slug": "introduction-meteorologie-climat",
-        "level": "L1",
-        "subject": "Climatologie"
-      },
-      {
-        "title": "Géographie physique générale",
-        "slug": "geographie-physique-generale",
-        "level": "L1",
-        "subject": "Géographie"
+        "title": "Transferts d'énergie et rayonnement",
+        "slug": "transferts-energie-rayonnement",
+        "level": "University Year 2 / Bachelor 2nd Year (L2)",
+        "subject": "Physique"
       }
     ]
   },
   "diagnosticQuiz": {
-    "question": "Quel est le principal mécanisme par lequel la Terre perd de l'énergie vers l'espace, contribuant ainsi à son bilan énergétique?",
+    "question": "Quel est le principal gaz à effet de serre d'origine anthropique responsable de l'absorption du rayonnement infrarouge terrestre dans l'atmosphère?",
     "options": [
-      "Absorption du rayonnement solaire",
-      "Réflexion du rayonnement solaire",
-      "Émission de rayonnement infrarouge terrestre",
-      "Convection atmosphérique"
+      "Vapeur d'eau (H2O)",
+      "Méthane (CH4)",
+      "Dioxyde de carbone (CO2)",
+      "Protoxyde d'azote (N2O)"
     ],
     "correctIndex": 2,
-    "targetSectionId": "section-bilan-energetique",
-    "sectionTitle": "Le bilan énergétique terrestre"
+    "targetSectionId": "composition-atmospherique-gaz-effet-serre",
+    "sectionTitle": "Composition atmosphérique et gaz à effet de serre"
   },
   "learningObjectives": {
     "knowledge": [
-      "Analyser les composantes du bilan énergétique terrestre et leurs interactions.",
-      "Évaluer l'impact des gaz à effet de serre sur la composition atmosphérique et le forçage radiatif.",
-      "Créer des schémas conceptuels illustrant les cycles biogéochimiques majeurs liés au système climatique."
+      "Analyser les composantes et les flux du bilan énergétique terrestre.",
+      "Évaluer l'impact des variations de la composition atmosphérique sur le climat.",
+      "Expliquer les principes physiques régissant le transfert radiatif dans l'atmosphère."
     ],
     "skills": [
-      "Analyser des données climatiques pour identifier les tendances et les anomalies du bilan énergétique.",
-      "Évaluer la pertinence de différents modèles climatiques pour simuler les changements de composition atmosphérique.",
-      "Créer des arguments étayés sur les mécanismes de régulation du climat basés sur les bilans énergétiques."
+      "Interpréter des diagrammes de flux énergétiques et des profils atmosphériques.",
+      "Appliquer des modèles simplifiés pour estimer l'effet de serre.",
+      "Évaluer la pertinence de différentes sources de données sur la composition atmosphérique."
     ],
     "attitudes": [
-      "Développer une pensée critique face aux informations sur les changements climatiques et leurs causes.",
-      "Adopter une approche rigoureuse dans l'interprétation des données scientifiques relatives au système climatique.",
-      "Reconnaître l'interdépendance des processus physiques et chimiques dans la dynamique du système terrestre."
+      "Développer une approche critique face aux informations sur le changement climatique.",
+      "Reconnaître la complexité et l'interdépendance des éléments du système climatique.",
+      "S'engager dans une réflexion éthique sur les responsabilités individuelles et collectives face aux enjeux climatiques."
     ]
   }
 }

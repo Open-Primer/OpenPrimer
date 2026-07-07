@@ -232,7 +232,7 @@ test.describe('LTI 1.3 Integration Suite', () => {
 
     test('UI Verification: should render export button and display the premium modal with descriptions', async ({ page }) => {
       // Navigate directly to a valid seeded course page
-      await page.goto(`${BASE_URL}/secondary_2/Histoire/Revolution_francaise/annee-1789-rupture-fondatrice`);
+      await page.goto(`${BASE_URL}/l1/histoire/histoire_contemporaine/sources-temps-present-histoire-contemporaine`);
       
       // Check if Export button exists and click it
       const exportBtn = page.locator('#export-menu-button');

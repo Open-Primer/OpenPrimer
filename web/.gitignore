@@ -75,3 +75,6 @@ saved_cloud_run_url.txt
 # local next build/test output
 /dist/
 /.debug-mdx/
+/playwright-report/
+/test-results/
+

@@ -1,81 +1,219 @@
 You are the Narrative Critic Agent (Agent 4A). Review the generated block of text for the lesson:
 ---
-## Composition atmosphérique et rôle des gaz à effet de serre
+## Composition et structure de l'atmosphère: rôle des gaz à effet de serre
 
-L'atmosphère terrestre est une enveloppe gazeuse essentielle à la vie, dont la composition détermine en grande partie le climat de notre planète. Elle est principalement constituée d'azote (N₂), qui représente environ 78% de son volume, et d'oxygène (O₂), qui en constitue environ 21% [ref2]. Ces deux gaz diatomiques sont relativement transparents au rayonnement infrarouge terrestre et ne contribuent pas directement à l'effet de serre. Le 1% restant est composé d'une multitude de gaz traces, parmi lesquels certains jouent un rôle fondamental dans la régulation thermique de la Terre : les gaz à effet de serre (GES).
+L'atmosphère terrestre, cette enveloppe gazeuse dynamique qui entoure notre planète, est bien plus qu'un simple mélange d'air. Sa composition chimique et sa structure verticale sont des déterminants fondamentaux du climat, régulant le bilan énergétique de la Terre et permettant l'existence de la vie telle que nous la connaissons. Après avoir exploré les flux d'énergie radiatifs et non radiatifs, il est impératif de comprendre comment cette composition atmosphérique interagit avec ces flux, en particulier via le rôle crucial des [[WIDGET:Glossary:gaz_effet_serre:gaz à effet de serre]] (GES).
 
-Les gaz à effet de serre sont des molécules polyatomiques capables d'absorber et de réémettre le [[WIDGET:Glossary:rayonnement_infrarouge:rayonnement infrarouge]] (IR) émis par la surface terrestre. Cette propriété est due à leur structure moléculaire qui leur permet d'entrer en vibration à des fréquences correspondant à celles du rayonnement IR. En absorbant ce rayonnement, ils piègent une partie de la chaleur dans l'atmosphère, réchauffant ainsi la planète. Ce phénomène naturel est crucial pour maintenir une température propice à la vie [ref5].
+### 1. Composition chimique de l'atmosphère
 
-Les principaux gaz à effet de serre, qu'ils soient d'origine naturelle ou anthropique, incluent :
+L'atmosphère est un mélange complexe de gaz, de particules solides et liquides en suspension (aérosols). On distingue généralement les gaz permanents, dont la concentration varie peu, et les gaz variables, dont la proportion peut fluctuer considérablement dans le temps et l'espace, mais qui jouent un rôle disproportionné dans les processus climatiques.
 
-*   **Vapeur d'eau (H₂O)** : C'est le GES le plus abondant et le plus puissant à l'état naturel, contribuant à environ 60-70% de l'effet de serre naturel. Sa concentration varie fortement selon la température et l'humidité de l'air, agissant comme une rétroaction positive dans le système climatique [ref1].
-*   **Dioxyde de carbone (CO₂) **: Bien que moins abondant que la vapeur d'eau, le CO₂ est le principal contributeur anthropique à l'intensification de l'effet de serre. Il est émis naturellement par la respiration, la décomposition organique et les éruptions volcaniques, mais ses concentrations ont considérablement augmenté depuis l'ère industrielle en raison de la combustion des énergies fossiles et de la déforestation. Il contribue à environ 20-25% de l'effet de serre naturel [ref6].
-*   **Méthane (CH₄)** : Un GES beaucoup plus puissant que le CO₂ par molécule, mais présent en concentrations moindres. Il est produit par des processus naturels (zones humides, termites) et anthropiques (agriculture, élevage, exploitation des combustibles fossiles).
-*   **Protoxyde d'azote (N₂O)** : Également un GES puissant, émis par les sols, les océans et les activités agricoles (engrais azotés) ainsi que certains processus industriels.
-*   **Ozone (O₃)** : Présent dans la stratosphère où il protège de l'UV, et dans la troposphère où il agit comme un GES et un polluant.
-*   **Chlorofluorocarbones (CFCs)** et autres halocarbures : Ces gaz sont entièrement d'origine anthropique, utilisés autrefois comme réfrigérants et propulseurs. Bien que leur production soit largement réglementée par le Protocole de Montréal, ils sont extrêmement puissants et persistants dans l'atmosphère [ref6].
+#### a) Gaz permanents
 
-La contribution relative de ces gaz à l'effet de serre naturel est dominée par la vapeur d'eau, suivie du dioxyde de carbone. Les autres gaz jouent un rôle plus modeste dans l'effet naturel, mais leur augmentation due aux activités humaines a des conséquences significatives sur le réchauffement climatique actuel [ref6].
+Ces gaz constituent l'essentiel de la masse atmosphérique et sont caractérisés par une concentration relativement stable jusqu'à environ 80 km d'altitude.
+*   **Azote (N₂):** Représentant environ 78,08% du volume de l'air sec, l'azote est un gaz inerte pour la plupart des processus atmosphériques et climatiques directs. Il est cependant essentiel aux cycles biogéochimiques terrestres, notamment le cycle de l'azote, et sa présence dilue l'oxygène, modérant ainsi les réactions d'oxydation.
+*   **Oxygène (O₂):** Constituant environ 20,95% de l'air sec, l'oxygène est vital pour la respiration des organismes aérobies et pour les processus de combustion. Sa concentration est maintenue par la photosynthèse.
+*   **Argon (Ar):** Gaz rare, il représente environ 0,93% de l'air sec. Comme l'azote, il est chimiquement inerte et n'a pas d'impact direct sur le climat.
 
-[[WIDGET:Image:ghg_absorption_spectrum]]
-*Spectre d'absorption des principaux gaz à effet de serre, illustrant leur capacité à piéger le rayonnement infrarouge terrestre.*
+Ces gaz permanents, bien que majoritaires, n'absorbent que très peu le rayonnement infrarouge terrestre et ne contribuent donc pas directement à l'effet de serre.
 
-## Modélisation simplifiée de l'effet de serre
+#### b) Gaz variables
 
-Pour comprendre l'ampleur de l'effet de serre, il est utile de recourir à des modèles simplifiés qui permettent de calculer une température d'équilibre théorique de la Terre. Ces modèles, bien que rudimentaires, illustrent les principes fondamentaux de l'équilibre énergétique planétaire.
+Malgré leurs concentrations souvent faibles, ces gaz sont d'une importance capitale pour le système climatique en raison de leur capacité à absorber et réémettre le rayonnement infrarouge.
 
-### Modèle de corps noir (Terre sans atmosphère)
+*   **Vapeur d'eau (H₂O):** C'est le gaz à effet de serre naturel le plus abondant et le plus puissant. Sa concentration varie considérablement, de moins de 0,1% dans les régions polaires froides et sèches à près de 4% dans les régions tropicales humides.
+    *   **Sources:** Principalement l'évaporation des océans, des lacs, des rivières et l'évapotranspiration des plantes [ref1].
+    *   **Puits:** Condensation et précipitation (pluie, neige).
+    *   **Cycle:** Le cycle de l'eau est rapide, avec un temps de résidence atmosphérique de quelques jours seulement. La vapeur d'eau joue un rôle clé dans le cycle hydrologique et dans le transport de chaleur latente. Elle est également un puissant agent de rétroaction positive: une augmentation de la température de l'air permet à l'atmosphère de retenir plus de vapeur d'eau, ce qui amplifie l'effet de serre initial.
+    *   **Capacité d'absorption IR:** La molécule d'eau possède de multiples modes de vibration et de rotation qui lui permettent d'absorber efficacement le rayonnement infrarouge sur un large spectre de longueurs d'onde.
 
-Le modèle le plus simple considère la Terre comme un [[WIDGET:ConceptLink:corps_noir:corps noir]] parfait en équilibre radiatif avec le Soleil, sans atmosphère. Dans ce scénario, la Terre absorbe le rayonnement solaire et émet son propre rayonnement infrarouge vers l'espace. L'équilibre est atteint lorsque l'énergie absorbée est égale à l'énergie émise.
+*   **Dioxyde de carbone (CO₂):** Bien que sa concentration soit bien inférieure à celle de la vapeur d'eau (actuellement autour de 420 parties par million en volume, ppmv), le CO₂ est le principal contributeur anthropique à l'effet de serre renforcé.
+    *   **Sources naturelles:** Respiration des organismes vivants, décomposition de la matière organique, éruptions volcaniques, échanges océan-atmosphère.
+    *   **Sources anthropiques:** Combustion des combustibles fossiles (charbon, pétrole, gaz naturel), déforestation, production de ciment [ref6].
+    *   **Puits naturels:** Photosynthèse par les plantes terrestres et le phytoplancton marin, absorption par les océans (formation d'acide carbonique), altération des roches silicatées.
+    *   **[[WIDGET:ConceptLink:cycle_carbone:Cycle du carbone]]:** Le CO₂ est au cœur du cycle biogéochimique du carbone, qui implique des échanges entre l'atmosphère, les océans, la biosphère terrestre et la lithosphère. Ce cycle est complexe et lent, ce qui confère au CO₂ une longue durée de vie atmosphérique (des décennies à des siècles pour une partie des émissions).
+    *   **Capacité d'absorption IR:** La molécule de CO₂ absorbe le rayonnement infrarouge principalement dans des bandes spécifiques, notamment autour de 4,3 µm et 15 µm. Cette dernière bande est particulièrement importante car elle se situe dans la "fenêtre atmosphérique" où l'atmosphère serait autrement transparente au rayonnement terrestre.
 
-L'énergie solaire absorbée par la Terre est donnée par :
-$E_{abs} = S_0 (1 - \alpha) \pi R^2$
-où $S_0$ est la constante solaire (environ 1361 W/m²), $\alpha$ est l'albédo planétaire (environ 0.3 pour la Terre), et $R$ est le rayon de la Terre.
+*   **Méthane (CH₄):** C'est un gaz à effet de serre beaucoup plus puissant que le CO₂ par molécule, bien que sa concentration soit bien plus faible (environ 1,9 ppmv). Son potentiel de réchauffement global (PRG) sur 100 ans est environ 28 fois supérieur à celui du CO₂ [ref6].
+    *   **Sources naturelles:** Zones humides (marais, rizières), processus de digestion des ruminants sauvages, termites, feux de forêt, dégel du pergélisol.
+    *   **Sources anthropiques:** Agriculture (élevage de ruminants, rizières), extraction et transport de combustibles fossiles (fuites de gaz naturel), décharges, combustion de biomasse.
+    *   **Puits:** Réactions chimiques dans l'atmosphère (oxydation par le radical hydroxyle OH), absorption par les sols.
+    *   **Cycle:** Le CH₄ a une durée de vie atmosphérique relativement courte (environ 12 ans) comparée au CO₂, mais son impact radiatif immédiat est très élevé.
+    *   **Capacité d'absorption IR:** Le CH₄ absorbe fortement le rayonnement infrarouge dans des bandes distinctes, notamment autour de 7,6 µm, contribuant significativement à l'effet de serre.
 
-L'énergie émise par la Terre, en tant que corps noir, est donnée par la loi de Stefan-Boltzmann :
-$E_{émis} = \sigma T_e^4 \times 4 \pi R^2$
-où $\sigma$ est la constante de Stefan-Boltzmann (5.67 x 10⁻⁸ W/m²K⁴) et $T_e$ est la température d'équilibre effective de la Terre.
+*   **Protoxyde d'azote (N₂O):** Également connu sous le nom de "gaz hilarant", sa concentration est faible (environ 0,33 ppmv) mais son PRG sur 100 ans est environ 265 fois supérieur à celui du CO₂ [ref6].
+    *   **Sources naturelles:** Processus microbiens dans les sols et les océans (dénitrification et nitrification).
+    *   **Sources anthropiques:** Utilisation d'engrais azotés en agriculture, processus industriels (production d'acide nitrique), combustion de biomasse.
+    *   **Puits:** Photolyse dans la stratosphère (destruction par le rayonnement UV), réactions chimiques avec l'oxygène atomique.
+    *   **Cycle:** Le N₂O a une longue durée de vie atmosphérique (environ 121 ans).
+    *   **Capacité d'absorption IR:** Le N₂O absorbe le rayonnement infrarouge dans des bandes autour de 4,5 µm et 7,8 µm.
 
-En égalisant ces deux expressions ($E_{abs} = E_{émis}$), on obtient la température d'équilibre :
-$S_0 (1 - \alpha) \pi R^2 = \sigma T_e^4 \times 4 \pi R^2$
-$T_e^4 = \frac{S_0 (1 - \alpha)}{4 \sigma}$
-En substituant les valeurs, on trouve une température d'équilibre $T_e$ d'environ 255 K, soit -18°C. Ce calcul, déjà évoqué, confirme que sans atmosphère, la Terre serait une planète gelée, incapable d'abriter la vie telle que nous la connaissons [ref5]. Ce concept a été exploré par des pionniers comme [[WIDGET:RealPerson:joseph_fourier:Joseph Fourier]] au début du XIXe siècle.
+*   **Ozone (O₃):** L'ozone a un rôle dual dans l'atmosphère.
+    *   **Ozone stratosphérique:** Essentiel pour absorber le rayonnement ultraviolet solaire nocif (couche d'ozone). Il est aussi un GES naturel.
+    *   **Ozone troposphérique:** Un polluant atmosphérique et un GES puissant.
+    *   **Sources:**
+        *   Stratosphérique: Formation naturelle par l'action du rayonnement UV sur l'oxygène moléculaire (O₂).
+        *   Troposphérique: Formation par des réactions photochimiques impliquant des oxydes d'azote (NOx) et des composés organiques volatils (COV) émis par les activités humaines.
+    *   **Puits:** Réactions chimiques dans l'atmosphère, dépôt à la surface.
+    *   **Cycle:** La durée de vie de l'ozone est très variable, de quelques jours à quelques semaines dans la troposphère, à des mois dans la stratosphère.
+    *   **Capacité d'absorption IR:** L'ozone absorbe fortement le rayonnement infrarouge autour de 9,6 µm, une bande située dans la fenêtre atmosphérique, ce qui en fait un GES efficace.
 
-### Modèle à une couche atmosphérique
+*   **Autres gaz à effet de serre:** Les halocarbures (CFC, HCFC, HFC) sont des gaz synthétiques extrêmement puissants, bien que leurs concentrations soient très faibles. Ils ont un PRG des milliers de fois supérieur à celui du CO₂ et contribuent également à la destruction de l'ozone stratosphérique.
 
-Pour illustrer l'effet de serre, on peut introduire une atmosphère simplifiée, représentée par une seule couche opaque au rayonnement infrarouge terrestre mais transparente au rayonnement solaire.
+[[WIDGET:DataChart:ghg_radiative_forcing]]
+Contribution radiative des principaux gaz à effet de serre anthropiques depuis l'ère préindustrielle. Le dioxyde de carbone est le principal contributeur, mais le méthane et le protoxyde d'azote ont des potentiels de réchauffement global par molécule bien supérieurs.
 
-[[WIDGET:Mermaid:one_layer_model]]
-*Diagramme conceptuel du modèle à une couche atmosphérique, montrant les flux de rayonnement solaire et infrarouge entre le Soleil, l'atmosphère et la surface terrestre.*
+### 2. Structure verticale de l'atmosphère
 
-Dans ce modèle, la couche atmosphérique absorbe tout le rayonnement IR émis par la surface terrestre et le réémet à parts égales vers l'espace et vers la surface. En établissant les bilans énergétiques pour la surface et pour l'atmosphère, on peut calculer une nouvelle température d'équilibre pour la surface terrestre ($T_s$) et pour l'atmosphère ($T_a$).
+La température, la pression et la composition de l'atmosphère varient considérablement avec l'altitude, définissant des couches distinctes. Cette structure verticale influence la circulation atmosphérique et la distribution des gaz à effet de serre.
 
-1.  **Bilan énergétique de la surface terrestre :**
-    La surface absorbe le rayonnement solaire ($S_0 (1-\alpha)/4$) et le rayonnement IR de l'atmosphère ($\sigma T_a^4$). Elle émet du rayonnement IR ($\sigma T_s^4$).
-    $S_0 (1 - \alpha)/4 + \sigma T_a^4 = \sigma T_s^4$
+*   **Troposphère:** C'est la couche la plus basse, s'étendant du sol jusqu'à une altitude moyenne de 8-15 km (variable selon la latitude et la saison).
+    *   **Caractéristiques:** La température diminue avec l'altitude (environ 6,5°C par km), c'est là que se produisent la quasi-totalité des phénomènes météorologiques (nuages, précipitations, vents) et où se concentre la majeure partie de la vapeur d'eau et des aérosols. La pression diminue rapidement avec l'altitude.
+    *   **Rôle climatique:** Contient la majorité des gaz à effet de serre qui piègent la chaleur près de la surface.
 
-2.  **Bilan énergétique de la couche atmosphérique :**
-    L'atmosphère absorbe le rayonnement IR de la surface ($\sigma T_s^4$). Elle émet du rayonnement IR vers l'espace ($\sigma T_a^4$) et vers la surface ($\sigma T_a^4$).
-    $\sigma T_s^4 = 2 \sigma T_a^4$
-    D'où $T_s^4 = 2 T_a^4$, ou $T_a = T_s / (2)^{1/4}$.
+*   **Stratosphère:** S'étend de la tropopause (limite supérieure de la troposphère) jusqu'à environ 50 km d'altitude.
+    *   **Caractéristiques:** La température augmente avec l'altitude, atteignant un maximum à la stratopause (environ 0°C). Cette inversion de température est due à l'absorption du rayonnement ultraviolet solaire par la couche d'ozone (O₃), située principalement entre 15 et 35 km.
+    *   **Rôle climatique:** La couche d'ozone protège la vie sur Terre des UV nocifs. L'ozone stratosphérique est également un GES.
 
-En substituant $T_a^4$ dans l'équation de la surface :
-$S_0 (1 - \alpha)/4 + \sigma (T_s^4 / 2) = \sigma T_s^4$
-$S_0 (1 - \alpha)/4 = \sigma T_s^4 - \sigma T_s^4 / 2$
-$S_0 (1 - \alpha)/4 = \sigma T_s^4 / 2$
-$T_s^4 = \frac{S_0 (1 - \alpha)}{2 \sigma}$
+*   **Mésosphère:** S'étend de la stratopause à environ 85 km d'altitude.
+    *   **Caractéristiques:** La température diminue à nouveau avec l'altitude, atteignant les valeurs les plus froides de l'atmosphère (jusqu'à -90°C) à la mésopause. C'est dans cette couche que la plupart des météores se consument.
 
-En utilisant les mêmes valeurs, on obtient une température de surface $T_s$ d'environ 303 K, soit +30°C. Ce résultat est bien supérieur à la température observée (environ +15°C), mais il démontre clairement comment la présence d'une atmosphère opaque à l'IR augmente significativement la température de surface par rapport au modèle sans atmosphère.
+*   **Thermosphère:** S'étend de la mésopause jusqu'à environ 600 km d'altitude.
+    *   **Caractéristiques:** La température augmente très fortement avec l'altitude, pouvant atteindre plus de 1000°C, en raison de l'absorption du rayonnement solaire de haute énergie (UV extrêmes et rayons X) par les rares molécules d'oxygène et d'azote. Cependant, la densité de l'air est extrêmement faible, de sorte que la chaleur ressentie serait minime. C'est le siège des aurores polaires.
 
-### Limites des modèles simplifiés
+*   **Exosphère:** La couche la plus externe, où les molécules de gaz s'échappent progressivement vers l'espace.
 
-Ces modèles, bien que pédagogiques, présentent des limites importantes [ref1] :
-*   **Simplification de l'atmosphère** : L'atmosphère réelle n'est pas une simple couche opaque. Elle est composée de multiples couches avec des propriétés optiques différentes, et les gaz à effet de serre n'absorbent pas uniformément toutes les longueurs d'onde infrarouges.
-*   **Absence de convection et de chaleur latente** : Les modèles radiatifs purs ignorent les transferts d'énergie par convection et les flux de chaleur latente (évaporation, condensation), qui jouent un rôle majeur dans la redistribution de la chaleur et la régulation de la température atmosphérique.
-*   **Homogénéité** : Ils supposent une température uniforme sur toute la planète, ignorant les variations géographiques et saisonnières.
-*   **Absence de nuages** : Les nuages ont un double rôle : ils réfléchissent le rayonnement solaire (effet refroidissant) et absorbent/réémettent le rayonnement IR (effet réchauffant), un aspect complexe non pris en compte ici.
+[[WIDGET:Mermaid:atmospheric_layers]]
+mermaid
+graph TD
+    A[Exosphère] --> B[Thermosphère];
+    B --> C[Mésosphère];
+    C --> D[Stratosphère];
+    D --> E[Troposphère];
 
-Malgré ces simplifications, ces modèles sont des outils conceptuels précieux pour appréhender le mécanisme fondamental de l'effet de serre et l'importance de l'atmosphère dans la régulation thermique de la Terre. Des modèles climatiques plus sophistiqués, intégrant la dynamique atmosphérique et océanique, la circulation des fluides, les cycles biogéochimiques et les interactions complexes entre les différentes composantes du système terrestre, sont nécessaires pour des prévisions climatiques précises [ref6].
+    subgraph Caractéristiques
+        E -- Température diminue --> F[Phénomènes météo, GES, Vapeur d'eau];
+        D -- Température augmente --> G[Couche d'Ozone, Absorption UV];
+        C -- Température diminue --> H[Météores, Plus froid];
+        B -- Température augmente --> I[Aurores polaires, Faible densité];
+        A -- Molécules s'échappent --> J[Limite de l'atmosphère];
+    end
+
+Structure verticale de l'atmosphère terrestre, montrant les principales couches et leurs caractéristiques thermiques et fonctionnelles.
+
+L'interaction entre la composition et la structure est essentielle. Les GES sont principalement concentrés dans la troposphère, où ils peuvent efficacement absorber le rayonnement infrarouge émis par la surface terrestre, créant ainsi l'effet de serre.
+
+### 3. Capacité d'absorption du rayonnement infrarouge par les GES
+
+La capacité des gaz à effet de serre à absorber le rayonnement infrarouge (IR) est due à leur structure moléculaire. Les molécules composées de trois atomes ou plus (comme H₂O, CO₂, N₂O, CH₄, O₃) ou de deux atomes différents (comme CO) possèdent des modes de vibration et de rotation qui peuvent être excités par l'énergie des photons IR. Lorsque ces molécules absorbent un photon IR, elles passent à un état vibratoire ou rotationnel d'énergie supérieure. Elles réémettent ensuite cette énergie sous forme de photons IR dans toutes les directions, y compris vers la surface terrestre.
+
+En revanche, les molécules diatomiques symétriques comme N₂ et O₂ n'ont pas de modes vibratoires ou rotationnels qui interagissent avec le rayonnement IR terrestre, ce qui explique leur transparence à ce type de rayonnement.
+
+La découverte de cette propriété remonte au XIXe siècle, notamment grâce aux travaux de [[WIDGET:RealPerson:tyndall:John Tyndall]] qui, dans les années 1860, a démontré expérimentalement que la vapeur d'eau et le dioxyde de carbone étaient de puissants absorbeurs de chaleur radiante, contrairement à l'azote et à l'oxygène [ref1]. Plus tard, [[WIDGET:RealPerson:arrhenius:Svante Arrhenius]] a quantifié l'impact d'une variation de CO₂ sur la température terrestre.
+
+La force avec laquelle un gaz absorbe le rayonnement IR est quantifiée par son potentiel de réchauffement global (PRG), qui compare l'impact radiatif d'une masse donnée d'un gaz à effet de serre à celui d'une masse équivalente de CO₂ sur une période donnée (généralement 100 ans). Ce concept est crucial pour évaluer l'impact relatif des différentes émissions anthropiques [ref6].
+
+## L'effet de serre naturel et sa modélisation simplifiée
+
+L'effet de serre est un phénomène naturel et fondamental qui régule la température de la surface terrestre, la rendant habitable. Sans lui, notre planète serait une sphère gelée et inhospitalière.
+
+### 1. Mécanisme de l'effet de serre naturel
+
+Le mécanisme de l'effet de serre peut être décrit en plusieurs étapes clés [ref2, ref4]:
+
+1.  **Rayonnement solaire entrant:** Le Soleil émet principalement un rayonnement de courte longueur d'onde (visible et ultraviolet), auquel l'atmosphère est largement transparente (à l'exception de l'absorption UV par l'ozone et la diffusion). Une partie de ce rayonnement est réfléchie vers l'espace par les nuages, les aérosols et la surface terrestre (albédo), mais la majeure partie est absorbée par la surface de la Terre.
+2.  **Réchauffement de la surface terrestre:** L'absorption du rayonnement solaire réchauffe la surface terrestre (sols, océans, végétation).
+3.  **Émission de rayonnement terrestre:** Conformément à la loi de Stefan-Boltzmann, la surface terrestre réchauffée émet à son tour de l'énergie sous forme de rayonnement infrarouge (IR), de plus longue longueur d'onde, vers l'atmosphère et l'espace.
+4.  **Absorption par les gaz à effet de serre:** Les gaz à effet de serre (vapeur d'eau, CO₂, CH₄, N₂O, O₃, etc.) présents dans l'atmosphère absorbent une grande partie de ce rayonnement infrarouge émis par la surface.
+5.  **Réémission du rayonnement IR:** Après avoir absorbé l'énergie, les molécules de GES réémettent ce rayonnement infrarouge dans toutes les directions: une partie s'échappe vers l'espace, mais une part significative est réémise vers la surface terrestre.
+6.  **Réchauffement additionnel de la surface:** Ce rayonnement infrarouge réémis vers le bas par les GES est absorbé par la surface terrestre, ce qui entraîne un réchauffement supplémentaire de celle-ci. C'est ce processus de "piégeage" de la chaleur qui est appelé effet de serre.
+
+Ce cycle continu d'absorption et de réémission maintient la température moyenne de la Terre à environ +15°C. Sans l'effet de serre naturel, la température moyenne de la surface terrestre serait d'environ -18°C, ce qui est bien trop froid pour permettre l'existence de l'eau liquide à grande échelle et, par conséquent, la vie telle que nous la connaissons. L'effet de serre est donc un régulateur thermique essentiel.
+
+### 2. Modélisation simplifiée de l'effet de serre
+
+Pour comprendre quantitativement comment les gaz à effet de serre influencent la température de surface, des modèles simplifiés peuvent être utilisés. Le modèle à une couche atmosphérique est un exemple classique qui permet d'illustrer les principes fondamentaux.
+
+#### a) Le modèle à une couche atmosphérique
+
+Ce modèle conceptuel considère la Terre et son atmosphère comme un système simplifié, permettant de dériver la température de surface en fonction de la présence d'une couche atmosphérique absorbante.
+
+**Hypothèses du modèle:**
+1.  **La Terre est un corps noir parfait (ou [[WIDGET:Glossary:corps_noir:corps gris]] avec une émissivité ε=1):** Elle absorbe tout le rayonnement incident et émet le maximum de rayonnement pour sa température.
+2.  **L'atmosphère est une couche unique et isotherme:** Elle a une température uniforme (T_a).
+3.  **L'atmosphère est transparente au rayonnement solaire (ondes courtes):** Le rayonnement solaire traverse l'atmosphère sans être absorbé par celle-ci.
+4.  **L'atmosphère est opaque au rayonnement infrarouge terrestre (ondes longues):** Elle absorbe tout le rayonnement IR émis par la surface terrestre et émet elle-même du rayonnement IR vers le haut et vers le bas. Pour une version plus réaliste, on peut introduire une émissivité atmosphérique (ε_a) inférieure à 1.
+
+**Bilan énergétique:**
+Nous considérons l'équilibre énergétique à trois niveaux:
+*   **Au sommet de l'atmosphère (TOA - Top Of Atmosphere):** Le rayonnement solaire absorbé doit être égal au rayonnement IR émis vers l'espace.
+*   **Au niveau de la couche atmosphérique:** La couche atmosphérique doit être en équilibre radiatif.
+*   **À la surface terrestre:** La surface doit être en équilibre radiatif.
+
+**Dérivation conceptuelle (sans les équations complètes ici, mais en expliquant la logique):**
+
+1.  **Équilibre au sommet de l'atmosphère (TOA):**
+    Le rayonnement solaire incident moyen sur la Terre est S/4 (où S est la constante solaire, environ 1361 W/m², et le facteur 1/4 vient de la répartition sur la surface d'une sphère). Si l'on tient compte de l'albédo (α) de la Terre (environ 0,3), le rayonnement solaire absorbé par le système Terre-atmosphère est S/4 * (1 - α).
+    Ce rayonnement absorbé doit être compensé par le rayonnement infrarouge émis vers l'espace par le système. Dans notre modèle simplifié, ce rayonnement est émis par la couche atmosphérique (vers le haut) et par la surface terrestre (si l'atmosphère n'est pas totalement opaque).
+    Si l'atmosphère est totalement opaque (émissivité ε_a = 1), alors le rayonnement émis vers l'espace provient uniquement de la couche atmosphérique. Par la loi de Stefan-Boltzmann (σT⁴), on a:
+    S/4 * (1 - α) = σT_a⁴
+    où T_a est la température de la couche atmosphérique. On peut en déduire T_a.
+
+2.  **Équilibre de la couche atmosphérique:**
+    La couche atmosphérique absorbe le rayonnement IR émis par la surface terrestre (σT_s⁴, où T_s est la température de surface).
+    Elle émet du rayonnement IR dans deux directions: vers l'espace (σT_a⁴) et vers la surface terrestre (σT_a⁴).
+    Donc, à l'équilibre:
+    Absorption par l'atmosphère = Émission par l'atmosphère
+    σT_s⁴ = σT_a⁴ + σT_a⁴ = 2σT_a⁴
+    Ce qui implique T_s⁴ = 2T_a⁴.
+
+3.  **Équilibre à la surface terrestre:**
+    La surface terrestre reçoit le rayonnement solaire absorbé (S/4 * (1 - α)) et le rayonnement IR descendant de l'atmosphère (σT_a⁴).
+    Elle émet du rayonnement IR vers l'atmosphère (σT_s⁴).
+    Donc, à l'équilibre:
+    Rayonnement reçu par la surface = Rayonnement émis par la surface
+    S/4 * (1 - α) + σT_a⁴ = σT_s⁴
+
+En combinant ces équations, on peut résoudre pour T_s.
+De l'équation TOA: T_a⁴ = S/4σ * (1 - α).
+En substituant T_a⁴ dans l'équation de la surface:
+S/4 * (1 - α) + σ [S/4σ * (1 - α)] = σT_s⁴
+S/4 * (1 - α) + S/4 * (1 - α) = σT_s⁴
+2 * S/4 * (1 - α) = σT_s⁴
+S/2 * (1 - α) = σT_s⁴
+
+En utilisant les valeurs S = 1361 W/m², α = 0,3 et σ = 5,67 x 10⁻⁸ W/(m²K⁴):
+T_s⁴ = [1361 / 2 * (1 - 0,3)] / (5,67 x 10⁻⁸)
+T_s⁴ = [680,5 * 0,7] / (5,67 x 10⁻⁸)
+T_s⁴ = 476,35 / (5,67 x 10⁻⁸)
+T_s⁴ ≈ 8,40 x 10⁹
+T_s ≈ (8,40 x 10⁹)^(1/4) ≈ 303 K
+
+303 K correspond à environ **+30°C**.
+
+Ce résultat est supérieur à la température moyenne observée de +15°C. La raison de cette surestimation est que le modèle est trop simplifié: l'atmosphère n'est pas totalement opaque à l'IR (il existe une "fenêtre atmosphérique"), elle n'est pas isotherme, et les transferts de chaleur non radiatifs (flux sensible et latent) ne sont pas pris en compte. Cependant, ce modèle illustre clairement que la présence d'une atmosphère absorbant l'IR augmente significativement la température de surface par rapport à un corps sans atmosphère.
+
+#### b) Cas sans atmosphère (référence)
+
+Si la Terre n'avait pas d'atmosphère, le rayonnement IR serait émis directement par la surface vers l'espace. L'équilibre radiatif serait alors:
+S/4 * (1 - α) = σT_s⁴
+T_s⁴ = [S/4 * (1 - α)] / σ
+T_s⁴ = [1361 / 4 * (1 - 0,3)] / (5,67 x 10⁻⁸)
+T_s⁴ = [340,25 * 0,7] / (5,67 x 10⁻⁸)
+T_s⁴ = 238,175 / (5,67 x 10⁻⁸)
+T_s⁴ ≈ 4,20 x 10⁹
+T_s ≈ (4,20 x 10⁹)^(1/4) ≈ 254 K
+
+254 K correspond à environ **-19°C**.
+
+La comparaison entre -19°C (sans atmosphère) et +30°C (avec une atmosphère simplifiée) démontre de manière quantitative l'importance fondamentale de l'effet de serre pour le maintien d'une température propice à la vie. La différence de près de 50°C est attribuée à la capacité des gaz à effet de serre à piéger la chaleur.
+
+[[WIDGET:Image:one_layer_model_diagram]]
+Diagramme schématique du modèle à une couche atmosphérique, illustrant les flux de rayonnement solaire (ondes courtes) et terrestre (ondes longues) entre le Soleil, la surface terrestre et la couche atmosphérique. Les flèches indiquent l'absorption et l'émission de rayonnement.
+
+#### c) Influence des gaz à effet de serre sur la température de surface
+
+Dans le cadre de ce modèle simplifié, une augmentation de la concentration des gaz à effet de serre peut être représentée par une augmentation de l'émissivité (opacité) de la couche atmosphérique au rayonnement infrarouge
 ---
 
 Check checkpoints:
@@ -83,7 +221,10 @@ Check checkpoints:
 2. Accurate academic density and level-appropriate language.
 3. Strict MDX/JSX safety (absolutely no raw custom component or custom JSX/HTML tags like <ConceptLink>, <RealPerson>, <Glossary>, etc. inline in prose. All interactive elements and special links must strictly use the [[WIDGET:id]] anchor format).
 4. No figure prefixes like "Figure 1:" in visual captions.
-5. Presence of pedagogical widgets: Check that the block contains at least 2-3 inline hover-cards (ConceptLink, Glossary, RealPerson) and at least 1-2 block widgets (Image, Mermaid, ComparisonSlider, InteractiveDiagram, DataChart, Video) as anchors. If completely missing, reject the block.
+5. Presence of pedagogical widgets: Check that the block contains:
+   - At least 3 inline hover-cards (ConceptLink, Glossary, RealPerson, etc.) as anchors.
+   - At least 2 block widgets (Image, Mermaid, ComparisonSlider, InteractiveDiagram, DataChart, Video, HistoricalAnecdote, BrilliantIdea, etc.) as anchors.
+   - If any mandated widget types (HistoricalAnecdote, Quiz, Image, Mermaid, SolvedExercise, UnsolvedExercise, DataChart) are missing or any discouraged widget types () are overused, point it out and reject the block if they are not respected.
 
 
 Your audit must be in dual-mode:

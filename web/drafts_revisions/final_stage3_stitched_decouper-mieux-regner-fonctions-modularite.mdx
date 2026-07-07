@@ -11,7 +11,7 @@ order: 4
  5 alors
     x = x + 2
 fin si
-afficher x«  options= »10|||12|||Erreur|||Indéfini«  correctIndex= »1«  targetSectionId= »introduction-fonctions«  sectionTitle= »Introduction aux fonctions«  />
+afficher x" options="10|||12|||Erreur|||Indéfini" correctIndex="1" targetSectionId="introduction-fonctions" sectionTitle="Introduction aux fonctions" />
 
 
 ## Introduction: Pourquoi découper pour mieux régner?
@@ -624,68 +624,68 @@ La maîtrise de l'art du découpage, c'est-à-dire la capacité à identifier, c
 
 <Summary itemsString="Ce cours a mis en lumière l'importance capitale de la décomposition des problèmes complexes en sous-problèmes plus gérables, une approche fondamentale en algorithmique.|||Nous avons exploré le concept de fonctions et de procédures, des blocs de code autonomes qui encapsulent une tâche spécifique, favorisant ainsi la clarté et l'organisation du programme.|||La modularité, principe clé abordé, permet non seulement une meilleure lisibilité et maintenance du code, mais aussi une réutilisation efficace des composants, réduisant la redondance et les erreurs.|||L'utilisation judicieuse des paramètrès et des valeurs de retour a été présentée comme essentielle pour la communication entre les différentes parties d'un programme, rendant les fonctions flexibles et adaptables.|||En maîtrisant ces concepts, vous êtes désormais capable de concevoir des algorithmes plus robustes, plus faciles à déboguer et à faire évoluer, posant les bases d'une programmation structurée et efficace." />
 
-<WhatsNext itemsBase64="W10=" />
+<WhatsNext itemsBase64="W3sidGl0bGUiOiJBbGdvcml0aG1pcXVlIGV0IHByb2dyYW1tYXRpb24gZW4gUHl0aG9uIiwiZGVzY3JpcHRpb24iOiJVbiBvdXZyYWdlIGRlIHJlZmVyZW5jZSBwb3VyIGxlcyBkZWJ1dGFudHMgZW4gYWxnb3JpdGhtaXF1ZSBldCBwcm9ncmFtbWF0aW9uLCBjb3V2cmFudCBsZXMgYmFzZXMgZGVzIGZvbmN0aW9ucyBldCBkZSBsYSBtb2R1bGFyaXRlIGF2ZWMgZGVzIGV4ZW1wbGVzIHByYXRpcXVlcy4iLCJzbHVnIjoiYWxnb3JpdGhtaXF1ZS1ldC1wcm9ncmFtbWF0aW9uLWVuLXB5dGhvbiIsInN1YmplY3QiOiIiLCJsZXZlbCI6IiJ9XQ==" />
 ## Auto-évaluation
 
 <Quiz durationLimit={900}>
-    <Question q="Qu'est-ce qu'une fonction en programmation ?" explanation="Une fonction est une séquence d'instructions regroupées pour accomplir une tâche précise, favorisant la réutilisation du code et la modularité.">
-  <Option text="Un type de variable pour stocker des données." correct={false} />
-  <Option text="Un bloc de code réutilisable qui effectue une tâche spécifique." correct={true} />
-  <Option text="Une instruction de boucle pour répéter des actions." correct={false} />
+    <Question q="Qu'est-ce qu'une fonction en programmation ?" explanation="Une fonction est une sequence d'instructions regroupees pour accomplir une tache précise, favorisant la reutilisation du code et la modularite.">
+  <Option text="Un type de variable pour stocker des donnees." correct={false} />
+  <Option text="Un bloc de code reutilisable qui effectue une tache specifique." correct={true} />
+  <Option text="Une instruction de boucle pour repeter des actions." correct={false} />
   <Option text="Un commentaire dans le code pour expliquer son fonctionnement." correct={false} />
 </Question>
-    <Question q="Quel est l'un des principaux avantages de la modularité en programmation ?" explanation="La modularité permet de diviser un programme en petites unités indépendantes, ce qui simplifie la compréhension, la modification et la correction des erreurs, ainsi que la collaboration.">
+    <Question q="Quel est l'un des principaux avantages de la modularite en programmation ?" explanation="La modularite permet de diviser un programme en petites unites independantes, ce qui simplifie la comprehension, la modification et la correction des erreurs, ainsi que la collaboration.">
   <Option text="Rendre le code plus long et complexe." correct={false} />
-  <Option text="Diminuer la lisibilité du code." correct={false} />
-  <Option text="Faciliter la maintenance, le débogage et la réutilisation du code." correct={true} />
-  <Option text="Augmenter le temps d'exécution du programme." correct={false} />
+  <Option text="Diminuer la lisibilite du code." correct={false} />
+  <Option text="Faciliter la maintenance, le debogage et la reutilisation du code." correct={true} />
+  <Option text="Augmenter le temps d'execution du programme." correct={false} />
 </Question>
-    <Question q="Dans l'appel de fonction `calculerSomme(a, b)`, que représentent `a` et `b` ?" explanation="Les arguments (ou paramètrès effectifs) sont les valeurs passées à une fonction lors de son appel, tandis que les paramètrès formels sont les variables définies dans la signature de la fonction pour recevoir ces valeurs.">
+    <Question q="Dans l'appel de fonction `calculerSomme(a, b)`, que representent `a` et `b` ?" explanation="Les arguments (ou parametres effectifs) sont les valeurs passees a une fonction lors de son appel, tandis que les parametres formels sont les variables definies dans la signature de la fonction pour recevoir ces valeurs.">
   <Option text="Les variables globales." correct={false} />
-  <Option text="Les paramètrès formels." correct={false} />
-  <Option text="Les arguments (ou paramètrès effectifs)." correct={true} />
+  <Option text="Les parametres formels." correct={false} />
+  <Option text="Les arguments (ou parametres effectifs)." correct={true} />
   <Option text="Les valeurs de retour de la fonction." correct={false} />
 </Question>
-    <Question q="Une fonction doit-elle toujours retourner une valeur ?" explanation="Non, certaines fonctions (souvent appelées procédures ou routines) effectuent des actions sans produire de résultat direct à retourner, comme afficher un message ou modifier l'état d'un objet. Elles peuvent retourner 'void' ou rien du tout.">
+    <Question q="Une fonction doit-elle toujours retourner une valeur ?" explanation="Non, certaines fonctions (souvent appelees procedures ou routines) effectuent des actions sans produire de resultat direct a retourner, comme afficher un message ou modifier l'etat d'un objet. Elles peuvent retourner 'void' ou rien du tout.">
   <Option text="Oui, toujours, c'est obligatoire." correct={false} />
-  <Option text="Non, cela dépend de la tâche qu'elle effectue." correct={true} />
-  <Option text="Seulement si elle prend des paramètrès." correct={false} />
-  <Option text="Seulement si elle est appelée depuis la fonction principale." correct={false} />
+  <Option text="Non, cela depend de la tache qu'elle effectue." correct={true} />
+  <Option text="Seulement si elle prend des parametres." correct={false} />
+  <Option text="Seulement si elle est appelee depuis la fonction principale." correct={false} />
 </Question>
-    <Question q="Qu'est-ce qu'une variable locale à une fonction ?" explanation="Une variable locale n'existe et n'est accessible qu'à l'intérieur du bloc de code (la fonction) où elle a été définie. Sa durée de vie est limitée à l'exécution de cette fonction.">
-  <Option text="Une variable accessible depuis n'importe où dans le programme." correct={false} />
-  <Option text="Une variable dont la portée est limitée à la fonction où elle est déclarée." correct={true} />
+    <Question q="Qu'est-ce qu'une variable locale a une fonction ?" explanation="Une variable locale n'existe et n'est accessible qu'a l'interieur du bloc de code (la fonction) ou elle a ete definie. Sa duree de vie est limitee a l'execution de cette fonction.">
+  <Option text="Une variable accessible depuis n'importe ou dans le programme." correct={false} />
+  <Option text="Une variable dont la portee est limitee a la fonction ou elle est declaree." correct={true} />
   <Option text="Une variable qui conserve sa valeur entre les appels de fonction." correct={false} />
-  <Option text="Une variable partagée entre toutes les fonctions du programme." correct={false} />
+  <Option text="Une variable partagee entre toutes les fonctions du programme." correct={false} />
 </Question>
-    <Question q="Le principe de 'décomposition fonctionnelle' consiste à :" explanation="La décomposition fonctionnelle est une stratégie de conception qui vise à simplifier un problème complexe en le subdivisant en sous-problèmes plus petits et gérables, chacun pouvant être résolu par une fonction ou un module indépendant.">
-  <Option text="Écrire tout le code dans une seule fonction principale pour plus de simplicité." correct={false} />
-  <Option text="Diviser un problème complexe en sous-problèmes plus petits et gérables, chacun résolu par une fonction." correct={true} />
-  <Option text="Utiliser uniquement des variables globales pour faciliter l'accès aux données." correct={false} />
-  <Option text="Ignorer la réutilisation du code pour des raisons de performance." correct={false} />
+    <Question q="Le principe de 'decomposition fonctionnelle' consiste a :" explanation="La decomposition fonctionnelle est une strategie de conception qui vise a simplifier un probleme complexe en le subdivisant en sous-problemes plus petits et gerables, chacun pouvant etre resolu par une fonction ou un module independant.">
+  <Option text="Ecrire tout le code dans une seule fonction principale pour plus de simplicite." correct={false} />
+  <Option text="Diviser un probleme complexe en sous-problemes plus petits et gerables, chacun resolu par une fonction." correct={true} />
+  <Option text="Utiliser uniquement des variables globales pour faciliter l'acces aux donnees." correct={false} />
+  <Option text="Ignorer la reutilisation du code pour des raisons de performance." correct={false} />
 </Question>
-    <Question q="Comment les fonctions contribuent-elles à la réutilisabilité du code ?" explanation="Une fois qu'une fonction est définie, elle peut être appelée plusieurs fois dans le même programme ou même dans d'autres programmes, évitant ainsi la duplication de code et rendant le développement plus efficace.">
-  <Option text="En forçant la réécriture du même code plusieurs fois pour des raisons de sécurité." correct={false} />
-  <Option text="En permettant d'appeler le même bloc de code depuis différents endroits du programme." correct={true} />
-  <Option text="En rendant le code plus difficile à comprendre, ce qui décourage la copie." correct={false} />
+    <Question q="Comment les fonctions contribuent-elles a la reutilisabilite du code ?" explanation="Une fois qu'une fonction est definie, elle peut etre appelee plusieurs fois dans le meme programme ou meme dans d'autres programmes, evitant ainsi la duplication de code et rendant le developpement plus efficace.">
+  <Option text="En forcant la reecriture du meme code plusieurs fois pour des raisons de securite." correct={false} />
+  <Option text="En permettant d'appeler le meme bloc de code depuis differents endroits du programme." correct={true} />
+  <Option text="En rendant le code plus difficile a comprendre, ce qui decourage la copie." correct={false} />
   <Option text="En limitant l'utilisation des variables, ce qui simplifie le code." correct={false} />
 </Question>
-    <Question q="Qu'est-ce qu'un 'effet de bord' (side effect) d'une fonction ?" explanation="Un effet de bord se produit lorsqu'une fonction modifie un état observable en dehors de sa portée locale, comme la modification d'une variable globale, l'écriture dans un fichier, l'affichage sur la console ou la modification d'une structure de données passée par référence.">
+    <Question q="Qu'est-ce qu'un 'effet de bord' (side effect) d'une fonction ?" explanation="Un effet de bord se produit lorsqu'une fonction modifie un etat observable en dehors de sa portee locale, comme la modification d'une variable globale, l'ecriture dans un fichier, l'affichage sur la console ou la modification d'une structure de donnees passee par reference.">
   <Option text="Le retour d'une valeur par la fonction." correct={false} />
-  <Option text="Une modification de l'état du programme en dehors de la fonction (ex: modification d'une variable globale, affichage à l'écran)." correct={true} />
-  <Option text="Une erreur de compilation qui empêche le programme de s'exécuter." correct={false} />
-  <Option text="L'appel d'une autre fonction à l'intérieur de la fonction courante." correct={false} />
+  <Option text="Une modification de l'etat du programme en dehors de la fonction (ex: modification d'une variable globale, affichage a l'ecran)." correct={true} />
+  <Option text="Une erreur de compilation qui empeche le programme de s'executer." correct={false} />
+  <Option text="L'appel d'une autre fonction a l'interieur de la fonction courante." correct={false} />
 </Question>
-    <Question q="Comparé à un programme monolithique (tout dans un seul bloc), un programme modulaire est généralement :" explanation="La division en modules rend le code plus gérable, chaque module pouvant être testé, développé et débogué indépendamment, ce qui facilite la compréhension et la maintenance globale du système.">
-  <Option text="Plus difficile à tester et à déboguer." correct={false} />
-  <Option text="Plus facile à comprendre et à maintenir." correct={true} />
-  <Option text="Plus rapide à développer initialement pour des projets complexes." correct={false} />
-  <Option text="Moins performant en exécution en raison des appels de fonctions supplémentaires." correct={false} />
+    <Question q="Compare a un programme monolithique (tout dans un seul bloc), un programme modulaire est generalement :" explanation="La division en modules rend le code plus gerable, chaque module pouvant etre teste, developpe et debogue independamment, ce qui facilite la comprehension et la maintenance globale du système.">
+  <Option text="Plus difficile a tester et a deboguer." correct={false} />
+  <Option text="Plus facile a comprendre et a maintenir." correct={true} />
+  <Option text="Plus rapide a developper initialement pour des projets complexes." correct={false} />
+  <Option text="Moins performant en execution en raison des appels de fonctions supplementaires." correct={false} />
 </Question>
-    <Question q="Si une fonction reçoit une copie de la valeur d'une variable (passage par valeur), que se passe-t-il si la fonction modifie cette valeur ?" explanation="En passage par valeur, la fonction travaille sur une copie de l'argument. Toute modification de cette copie n'affecte pas la variable originale en dehors de la fonction, car elles sont indépendantes.">
-  <Option text="La variable originale est également modifiée." correct={false} />
-  <Option text="Seule la copie à l'intérieur de la fonction est modifiée, la variable originale reste inchangée." correct={true} />
-  <Option text="Le programme génère une erreur de compilation." correct={false} />
+    <Question q="Si une fonction recoit une copie de la valeur d'une variable (passage par valeur), que se passe-t-il si la fonction modifie cette valeur ?" explanation="En passage par valeur, la fonction travaille sur une copie de l'argument. Toute modification de cette copie n'affecte pas la variable originale en dehors de la fonction, car elles sont independantes.">
+  <Option text="La variable originale est egalement modifiee." correct={false} />
+  <Option text="Seule la copie a l'interieur de la fonction est modifiee, la variable originale reste inchangee." correct={true} />
+  <Option text="Le programme genere une erreur de compilation." correct={false} />
   <Option text="La fonction ne peut pas modifier la valeur car elle est en lecture seule." correct={false} />
 </Question>
 </Quiz>
@@ -706,5 +706,5 @@ La maîtrise de l'art du découpage, c'est-à-dire la capacité à identifier, c
 
 ### Références
 
-<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiQ29tcHV0ZXJwaGlsZSAoc291cy10aXRyZXMgZnJhbsOnYWlzIGRpc3BvbmlibGVzKS4gwqsgQ29tcHJlbmRyZSBsZXMgZm9uY3Rpb25zIDogdW5lIGludHJvZHVjdGlvbiB2aXN1ZWxsZSDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Q29tcHV0ZXJwaGlsZSUyMCUyMkNvbXByZW5kcmUlMjBsZXMlMjBmb25jdGlvbnMlMjIiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfV0=" />
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiS251dGgsIERvbmFsZCBFLiAxOTk3LiBUaGUgQXJ0IG9mIENvbXB1dGVyIFByb2dyYW1taW5nLCBWb2x1bWUgMTogRnVuZGFtZW50YWwgQWxnb3JpdGhtcy4gM3JkIGVkLiBSZWFkaW5nLCBNQTogQWRkaXNvbi1XZXNsZXkuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUtudXRoJTIwJTIyVGhlJTIwQXJ0JTIwb2YlMjBDb21wdXRlciUyMFByb2dyYW1taW5nJTIyJTIwMTk5NyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyLCJ0ZXh0IjoiUHJlc3NtYW4sIFJvZ2VyIFMuLCBhbmQgQnJ1Y2UgUi4gTWF4aW0uIDIwMjAuIFNvZnR3YXJlIEVuZ2luZWVyaW5nOiBBIFByYWN0aXRpb25lcidzIEFwcHJvYWNoLiA5dGggZWQuIE5ldyBZb3JrOiBNY0dyYXctSGlsbCBFZHVjYXRpb24uIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVByZXNzbWFuJTIwJTIyUHJlc3NtYW4lMjIlMjAyMDIwIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjMsInRleHQiOiJEZWl0ZWwsIFBhdWwsIGFuZCBIYXJ2ZXkgRGVpdGVsLiAyMDE4LiBDKysgSG93IHRvIFByb2dyYW0uIDEwdGggZWQuIEJvc3RvbjogUGVhcnNvbi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9RGVpdGVsJTIwJTIyRGVpdGVsJTIyJTIwMjAxOCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo0LCJ0ZXh0IjoiQ29ybWVuLCBUaG9tYXMgSC4sIENoYXJsZXMgRS4gTGVpc2Vyc29uLCBSb25hbGQgTC4gUml2ZXN0LCBhbmQgQ2xpZmZvcmQgU3RlaW4uIDIwMDkuIEludHJvZHVjdGlvbiB0byBBbGdvcml0aG1zLiAzcmQgZWQuIENhbWJyaWRnZSwgTUE6IE1JVCBQcmVzcy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Q29ybWVuJTIwJTIyTGVpc2Vyc29uJTIyJTIwMjAwOSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo1LCJ0ZXh0IjoiRGlqa3N0cmEsIEVkc2dlciBXLiAxOTc2LiBBIERpc2NpcGxpbmUgb2YgUHJvZ3JhbW1pbmcuIEVuZ2xld29vZCBDbGlmZnMsIE5KOiBQcmVudGljZS1IYWxsLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1EaWprc3RyYSUyMCUyMkVuZ2xld29vZCUyMENsaWZmcyUyMiUyMDE5NzYiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6NiwidGV4dCI6IldpcnRoLCBOaWtsYXVzLiAxOTc2LiBBbGdvcml0aG1zICsgRGF0YSBTdHJ1Y3R1cmVzID0gUHJvZ3JhbXMuIEVuZ2xld29vZCBDbGlmZnMsIE5KOiBQcmVudGljZS1IYWxsLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1XaXJ0aCUyMCUyMkFsZ29yaXRobXMlMjAlMkIlMjBEYXRhJTIwU3RydWN0dXJlcyUyMCUzRCUyMFByb2dyYW1zJTIyJTIwMTk3NiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo3LCJ0ZXh0IjoiR2lsbGVzIERvd2VrLiAyMDE5LiDCqyBBbGdvcml0aG1pcXVlIGV0IHByb2dyYW1tYXRpb24gZW4gUHl0aG9uIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1HaWxsZXMlMjBEb3dlayUyMCUyMkFsZ29yaXRobWlxdWUlMjBldCUyMHByb2dyYW1tYXRpb24lMjBlbiUyMFB5dGhvbiUyMiUyMDIwMTkiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6OCwidGV4dCI6Ik9wZW5DbGFzc3Jvb21zLiDCqyBMZXMgZm9uY3Rpb25zIGVuIHByb2dyYW1tYXRpb24gwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPU9wZW5DbGFzc3Jvb21zJTIwJTIyTGVzJTIwZm9uY3Rpb25zJTIwZW4lMjBwcm9ncmFtbWF0aW9uJTIyIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjksInRleHQiOiJQcm9ncmFtbWV6IS4gwqsgTGEgbW9kdWxhcml0w6kgZW4gcHJvZ3JhbW1hdGlvbiDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9UHJvZ3JhbW1leiElMjAlMjJMYSUyMG1vZHVsYXJpdCVDMyVBOSUyMGVuJTIwcHJvZ3JhbW1hdGlvbiUyMiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxMCwidGV4dCI6IkNvbXB1dGVycGhpbGUgKHNvdXMtdGl0cmVzIGZyYW7Dp2FpcyBkaXNwb25pYmxlcykuIMKrIENvbXByZW5kcmUgbGVzIGZvbmN0aW9ucyA6IHVuZSBpbnRyb2R1Y3Rpb24gdmlzdWVsbGUgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUNvbXB1dGVycGhpbGUlMjAlMjJDb21wcmVuZHJlJTIwbGVzJTIwZm9uY3Rpb25zJTIyIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX1d" />
 

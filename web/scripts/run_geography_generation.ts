@@ -23,8 +23,8 @@ if (fs.existsSync(envPath)) {
   process.exit(1);
 }
 
-// 2. Set environment variables to run a controlled generation (2 lessons + final evaluation)
-process.env.LIMIT_LESSONS = '2';
+// 2. Set environment variables to run a controlled generation
+// process.env.LIMIT_LESSONS = '2';
 process.env.CLI_WORKER = 'true';
 process.env.DEBUG = 'true';
 
@@ -41,7 +41,7 @@ async function main() {
     name: "Géographie physique et climatologie",
     level: "L3",
     subject: "Geography",
-    slug: "Geographie_physique_et_climatologie"
+    slug: "geographie_physique_et_climatologie"
   };
 
   console.log(`\n======================================================`);

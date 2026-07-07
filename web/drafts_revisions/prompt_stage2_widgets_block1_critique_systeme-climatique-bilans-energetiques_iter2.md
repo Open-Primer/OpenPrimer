@@ -3,52 +3,52 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 1:
   "prerequisites": {
     "items": [
       {
-        "title": "Principes de base de la thermodynamique",
-        "slug": "thermodynamique-base",
-        "level": "L2",
-        "subject": "Physique"
-      },
-      {
-        "title": "Structure et composition de l'atmosphère",
-        "slug": "structure-composition-atmosphere",
-        "level": "L1",
+        "title": "Introduction à la climatologie",
+        "slug": "introduction-climatologie",
+        "level": "University Year 2 / Bachelor 2nd Year (L2)",
         "subject": "Géographie physique"
       },
       {
-        "title": "Rayonnement électromagnétique et interactions matière",
-        "slug": "rayonnement-electromagnetique",
-        "level": "L2",
+        "title": "Principes de la physique de l'atmosphère",
+        "slug": "principes-physique-atmosphere",
+        "level": "University Year 2 / Bachelor 2nd Year (L2)",
+        "subject": "Physique"
+      },
+      {
+        "title": "Transferts d'énergie et rayonnement",
+        "slug": "transferts-energie-rayonnement",
+        "level": "University Year 2 / Bachelor 2nd Year (L2)",
         "subject": "Physique"
       }
     ]
   },
   "diagnosticQuiz": {
-    "question": "Quel est le principal mécanisme par lequel les gaz à effet de serre contribuent au réchauffement de l'atmosphère terrestre?",
+    "question": "Quel est le principal mécanisme par lequel la Terre perd de l'énergie vers l'espace, contribuant ainsi à l'équilibre thermique global?",
     "options": [
-      "Absorber le rayonnement solaire direct.",
-      "Réfléchir le rayonnement ultraviolet.",
-      "Absorber et réémettre le rayonnement infrarouge terrestre.",
-      "Augmenter la vitesse des vents atmosphériques."
+      "Absorption du rayonnement solaire par l'atmosphère",
+      "Réflexion du rayonnement solaire par les nuages et la surface (albédo)",
+      "Émission de rayonnement infrarouge par la surface terrestre et l'atmosphère",
+      "Convection de chaleur de la surface vers l'atmosphère supérieure"
     ],
     "correctIndex": 2,
-    "targetSectionId": "introduction-bilan-energetique",
-    "sectionTitle": "Introduction au bilan énergétique terrestre"
+    "targetSectionId": "bilans-energetiques-terrestres",
+    "sectionTitle": "Les bilans énergétiques de la Terre"
   },
   "learningObjectives": {
     "knowledge": [
-      "Analyser les composantes du bilan énergétique terrestre et leurs interactions.",
-      "Évaluer l'impact des gaz à effet de serre sur le système climatique global.",
-      "Créer des schémas conceptuels représentant les cycles biogéochimiques majeurs influençant la composition atmosphérique."
+      "Analyser les mécanismes complexes des bilans énergétiques terrestres.",
+      "Évaluer l'impact des variations de la composition atmosphérique sur le climat global.",
+      "Concevoir des schémas conceptuels représentant les interactions entre les sous-systèmes climatiques."
     ],
     "skills": [
-      "Analyser des données climatiques complexes pour identifier les tendances du bilan radiatif et les anomalies thermiques.",
-      "Évaluer la pertinence et les limites de différents modèles climatiques pour simuler les interactions atmosphériques.",
-      "Créer des arguments étayés sur les mécanismes de régulation naturelle et anthropique du climat."
+      "Analyser des données climatiques complexes pour identifier les contributions des différents gaz à effet de serre.",
+      "Évaluer la pertinence des modèles climatiques actuels pour prédire les changements futurs des bilans énergétiques.",
+      "Élaborer des stratégies de modélisation simplifiées pour simuler des processus atmosphériques clés."
     ],
     "attitudes": [
-      "Évaluer de manière critique les implications éthiques et sociétales des changements climatiques.",
-      "Analyser la complexité des interactions entre les activités humaines et le système climatique pour formuler des jugements éclairés.",
-      "Créer des propositions argumentées pour une gestion durable des ressources atmosphériques, en intégrant les dimensions scientifiques et éthiques."
+      "Évaluer de manière critique les sources d'information concernant le changement climatique et ses causes.",
+      "Analyser l'importance de la collaboration interdisciplinaire pour aborder les défis climatiques.",
+      "Développer une approche proactive face aux enjeux environnementaux liés au système climatique."
     ]
   }
 }

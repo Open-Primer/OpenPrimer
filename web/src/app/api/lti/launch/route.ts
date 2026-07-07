@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
+import { cleanPathSegment } from '@/lib/translations';
 
 export async function POST(request: Request) {
   try {
@@ -223,7 +224,7 @@ export async function POST(request: Request) {
     // Auto-enroll checking
     const pathParts = redirectPath.split('/').filter(Boolean);
     if (pathParts.length >= 3) {
-      const courseSlug = pathParts[2];
+      const courseSlug = cleanPathSegment(pathParts[2]);
       const { data: course } = await supabaseAdmin
         .from('courses')
         .select('id, is_curriculum, child_courses')

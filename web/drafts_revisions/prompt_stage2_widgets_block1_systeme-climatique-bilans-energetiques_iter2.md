@@ -35,7 +35,7 @@ Return ONLY a valid JSON object matching this schema:
 Do NOT wrap your JSON response in markdown code blocks.
 
 🚨 PREVIOUS CRITIQUE:
-"The learning objectives in the 'attitudes' section do not consistently use higher-order Bloom's Taxonomy verbs such as 'Analyze', 'Evaluate', or 'Create'. Verbs like 'Développer', 'Adopter', and 'Reconnaître' are either not direct Bloom's verbs or represent lower cognitive levels than expected for advanced learning objectives.
+"Some learning objectives do not use higher-order Bloom's Taxonomy verbs (Analyze, Evaluate, Create) as required for L1/L2/L3/Master levels.
 Detailed errors:
-- Field "learningObjectives": The 'attitudes' section contains verbs that do not align with the specified higher-order Bloom's Taxonomy levels (Analyze, Evaluate, Create). Specifically, 'Développer', 'Adopter', and 'Reconnaître' should be revised to reflect more advanced cognitive processes."
+- Field "learningObjectives": The verbs 'Expliquer' (Knowledge), 'Interpréter' (Skills), 'Appliquer' (Skills), and 'Reconnaître' (Attitudes) are from lower levels of Bloom's Taxonomy (Understanding/Applying/Remembering) and do not meet the requirement for higher-order verbs (Analyze, Evaluate, Create) for L2 content. Please revise these objectives to use verbs that reflect higher cognitive complexity appropriate for the specified university level."
 Please fix these issues and regenerate.

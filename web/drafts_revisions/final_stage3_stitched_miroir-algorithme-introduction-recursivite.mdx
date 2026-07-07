@@ -8,7 +8,7 @@ order: 5
 
 <Prerequisites itemsBase64="W3sidGl0bGUiOiJGb25jdGlvbnMgZXQgUHJvY8OpZHVyZXMiLCJzbHVnIjoiZm9uY3Rpb25zLXByb2NlZHVyZXMiLCJsZXZlbCI6IkwxIiwic3ViamVjdCI6IkFsZ29yaXRobWlxdWUifSx7InRpdGxlIjoiU3RydWN0dXJlcyBkZSBDb250csO0bGUgKEJvdWNsZXMgZXQgQ29uZGl0aW9ucykiLCJzbHVnIjoic3RydWN0dXJlcy1jb250cm9sZSIsImxldmVsIjoiTDEiLCJzdWJqZWN0IjoiQWxnb3JpdGhtaXF1ZSJ9LHsidGl0bGUiOiJWYXJpYWJsZXMgZXQgVHlwZXMgZGUgRG9ubsOpZXMiLCJzbHVnIjoidmFyaWFibGVzLXR5cGVzLWRvbm5lZXMiLCJsZXZlbCI6IkwxIiwic3ViamVjdCI6IkFsZ29yaXRobWlxdWUifV0=" />
 
-<DiagnosticQuiz question="Considérez la fonction suivante qui calcule la factorielle d'un nombre entier positif n:
+<DiagnosticQuiz question="Considerez la fonction suivante qui calcule la factorielle d'un nombre entier positif n:
 
 fonction factorielle(n):
   si n == 0 alors
@@ -16,8 +16,7 @@ fonction factorielle(n):
   sinon
     retourner n * factorielle(n-1)
 
-Quel est le résultat de l'appel `factorielle(3)` ?" options="3|||6|||9|||12" correctIndex="1" targetSectionId="introduction-recursivite" sectionTitle="Introduction à la récursivité" />
-
+Quel est le resultat de l'appel `factorielle(3)` ?" options="3|||6|||9|||12" correctIndex="1" targetSectionId="introduction-recursivite" sectionTitle="Introduction a la recursivite" />
 
 
 ## Introduction: Le miroir de l'algorithme
@@ -499,69 +498,69 @@ Pour véritablement « maîtriser le miroir » de l'algorithme, la pratique es
 
 <Summary itemsString="La récursivité est une technique de programmation fondamentale où une fonction s'appelle elle-même pour résoudre un problème en le décomposant en sous-problèmes plus petits de même nature.|||Elle repose sur deux principes essentiels : le cas de base, qui définit la condition d'arrêt pour éviter une boucle infinie, et le pas récursif, qui réduit le problème à une instance plus simple.|||La compréhension du fonctionnement de la pile d'appels est cruciale pour visualiser l'exécution des fonctions récursives et gérer les ressources mémoire.|||Bien que la récursivité puisse offrir des solutions élégantes et concises, elle peut parfois être moins performante ou consommer plus de mémoire que son équivalent itératif.|||La maîtrise de la récursivité est indispensable pour aborder des algorithmes complexes et des structures de données comme les arbres et les graphes, ouvrant la voie à des concepts avancés en informatique.|||Elle est particulièrement adaptée aux problèmes qui présentent une structure auto-similaire, permettant une expression naturelle de leur solution." />
 
-<WhatsNext itemsBase64="W10=" />
+<WhatsNext itemsBase64="W3sidGl0bGUiOiJTdHJ1Y3R1cmUgZXQgaW50ZXJwcmV0YXRpb24gZGVzIHByb2dyYW1tZXMgaW5mb3JtYXRpcXVlcyIsImRlc2NyaXB0aW9uIjoiVW4gb3V2cmFnZSBmb25kYW1lbnRhbCBxdWkgZXhwbG9yZSBsZXMgY29uY2VwdHMgZGUgcHJvZ3JhbW1hdGlvbiwgeSBjb21wcmlzIGxhIHJlY3Vyc2l2aXRlLCBkZSBtYW5pZXJlIGFwcHJvZm9uZGllIGV0IGVsZWdhbnRlLCBzb3V2ZW50IHV0aWxpc2UgZGFucyBsZXMgY291cnMgdW5pdmVyc2l0YWlyZXMuIiwic2x1ZyI6InN0cnVjdHVyZS1ldC1pbnRlcnByZXRhdGlvbi1kZXMtcHJvZ3JhbW1lcy1pbmZvcm1hdGlxdWVzIiwic3ViamVjdCI6IiIsImxldmVsIjoiIn1d" />
 ## Auto-évaluation
 
 <Quiz durationLimit={600}>
-    <Question q="Qu'est-ce que la récursivité en programmation ?" explanation="La récursivité est une technique où une fonction s'appelle elle-même pour résoudre un problème, en le décomposant en sous-problèmes plus petits de même nature.">
-  <Option text="Une fonction qui ne s'appelle jamais elle-même." correct={false} />
-  <Option text="Une fonction qui s'appelle elle-même pour résoudre un problème en le décomposant en sous-problèmes similaires." correct={true} />
-  <Option text="Une boucle infinie sans condition d'arrêt." correct={false} />
-  <Option text="Une technique de programmation qui utilise uniquement des boucles itératives." correct={false} />
+    <Question q="Qu'est-ce que la recursivite en programmation ?" explanation="La recursivite est une technique ou une fonction s'appelle elle-meme pour resoudre un probleme, en le decomposant en sous-problemes plus petits de meme nature.">
+  <Option text="Une fonction qui ne s'appelle jamais elle-meme." correct={false} />
+  <Option text="Une fonction qui s'appelle elle-meme pour resoudre un probleme en le decomposant en sous-problemes similaires." correct={true} />
+  <Option text="Une boucle infinie sans condition d'arret." correct={false} />
+  <Option text="Une technique de programmation qui utilise uniquement des boucles iteratives." correct={false} />
 </Question>
-    <Question q="Quels sont les deux éléments fondamentaux d'une fonction récursive ?" explanation="Toute fonction récursive doit avoir un cas de base (condition d'arrêt) et un pas récursif (appel de la fonction sur un problème plus petit).">
+    <Question q="Quels sont les deux éléments fondamentaux d'une fonction recursive ?" explanation="Toute fonction recursive doit avoir un cas de base (condition d'arret) et un pas recursif (appel de la fonction sur un probleme plus petit).">
   <Option text="Une variable globale et une boucle 'for'." correct={false} />
-  <Option text="Un cas de base et un pas récursif." correct={true} />
+  <Option text="Un cas de base et un pas recursif." correct={true} />
   <Option text="Une condition 'if-else' et un pointeur." correct={false} />
-  <Option text="Une structure de données et un algorithme de tri." correct={false} />
+  <Option text="Une structure de donnees et un algorithme de tri." correct={false} />
 </Question>
-    <Question q="Pourquoi le cas de base est-il crucial dans une fonction récursive ?" explanation="Le cas de base est la condition d'arrêt qui empêche la fonction de s'appeler indéfiniment, évitant ainsi une boucle infinie et un débordement de pile.">
-  <Option text="Il améliore la performance de la fonction." correct={false} />
-  <Option text="Il définit la condition d'arrêt et empêche la récursion infinie." correct={true} />
-  <Option text="Il permet de gérer les erreurs de compilation." correct={false} />
+    <Question q="Pourquoi le cas de base est-il crucial dans une fonction recursive ?" explanation="Le cas de base est la condition d'arret qui empeche la fonction de s'appeler indefiniment, evitant ainsi une boucle infinie et un debordement de pile.">
+  <Option text="Il ameliore la performance de la fonction." correct={false} />
+  <Option text="Il definit la condition d'arret et empeche la recursion infinie." correct={true} />
+  <Option text="Il permet de gerer les erreurs de compilation." correct={false} />
   <Option text="Il initialise les variables locales de la fonction." correct={false} />
 </Question>
-    <Question q="Considérons la fonction factorielle récursive. Quel est son cas de base ?" explanation="La factorielle de 0 est définie comme 1. C'est le point où la récursion s'arrête et commence à retourner des valeurs.">
+    <Question q="Considerons la fonction factorielle recursive. Quel est son cas de base ?" explanation="La factorielle de 0 est definie comme 1. C'est le point ou la recursion s'arrete et commence a retourner des valeurs.">
   <Option text="factorielle(n) si n est un nombre pair." correct={false} />
   <Option text="factorielle(0) = 1." correct={true} />
   <Option text="factorielle(1) = 0." correct={false} />
-  <Option text="factorielle(n) si n est un nombre négatif." correct={false} />
+  <Option text="factorielle(n) si n est un nombre negatif." correct={false} />
 </Question>
-    <Question q="Quel est l'un des principaux avantages de l'utilisation de la récursivité ?" explanation="Pour certains problèmes (comme les traversées d'arbres ou les algorithmes de division et conquête), la récursivité peut rendre le code plus concis, élégant et facile à comprendre.">
-  <Option text="Elle garantit toujours une meilleure performance que l'itération." correct={false} />
-  <Option text="Elle réduit la consommation de mémoire de la pile d'appels." correct={false} />
-  <Option text="Elle peut rendre le code plus élégant et plus facile à lire pour certains problèmes." correct={true} />
-  <Option text="Elle élimine le besoin de cas de base." correct={false} />
+    <Question q="Quel est l'un des principaux avantages de l'utilisation de la recursivite ?" explanation="Pour certains problemes (comme les traversees d'arbres ou les algorithmes de division et conquete), la recursivite peut rendre le code plus concis, elegant et facile a comprendre.">
+  <Option text="Elle garantit toujours une meilleure performance que l'iteration." correct={false} />
+  <Option text="Elle reduit la consommation de memoire de la pile d'appels." correct={false} />
+  <Option text="Elle peut rendre le code plus elegant et plus facile a lire pour certains problemes." correct={true} />
+  <Option text="Elle elimine le besoin de cas de base." correct={false} />
 </Question>
-    <Question q="Quel est un inconvénient majeur de la récursivité par rapport à l'itération ?" explanation="Chaque appel de fonction récursive ajoute une nouvelle trame à la pile d'appels. Si la profondeur de récursion est trop grande, cela peut entraîner un débordement de pile (stack overflow) et une consommation de mémoire plus élevée.">
-  <Option text="Elle est toujours plus rapide à exécuter." correct={false} />
-  <Option text="Elle peut entraîner un débordement de pile (stack overflow) pour des problèmes de grande taille." correct={true} />
-  <Option text="Elle est plus difficile à déboguer que les boucles." correct={false} />
-  <Option text="Elle ne peut pas résoudre tous les problèmes que l'itération peut résoudre." correct={false} />
+    <Question q="Quel est un inconvenient majeur de la recursivite par rapport a l'iteration ?" explanation="Chaque appel de fonction recursive ajoute une nouvelle trame a la pile d'appels. Si la profondeur de recursion est trop grande, cela peut entrainer un debordement de pile (stack overflow) et une consommation de memoire plus elevee.">
+  <Option text="Elle est toujours plus rapide a executer." correct={false} />
+  <Option text="Elle peut entrainer un debordement de pile (stack overflow) pour des problemes de grande taille." correct={true} />
+  <Option text="Elle est plus difficile a deboguer que les boucles." correct={false} />
+  <Option text="Elle ne peut pas resoudre tous les problemes que l'iteration peut resoudre." correct={false} />
 </Question>
-    <Question q="Dans quel scénario la récursivité est-elle souvent une approche naturelle et élégante ?" explanation="Les problèmes qui peuvent être naturellement décomposés en sous-problèmes de même type, comme la traversée de structures de données arborescentes ou graphiques, sont souvent bien adaptés à une solution récursive.">
-  <Option text="Calculs simples et répétitifs comme la somme d'une série." correct={false} />
-  <Option text="Opérations sur des structures de données linéaires comme des tableaux." correct={false} />
-  <Option text="Problèmes impliquant des structures de données récursives comme les arbres ou les graphes." correct={true} />
-  <Option text="Gestion de bases de données relationnelles." correct={false} />
+    <Question q="Dans quel scenario la recursivite est-elle souvent une approche naturelle et elegante ?" explanation="Les problemes qui peuvent etre naturellement decomposes en sous-problemes de meme type, comme la traversee de structures de donnees arborescentes ou graphiques, sont souvent bien adaptes a une solution recursive.">
+  <Option text="Calculs simples et repetitifs comme la somme d'une serie." correct={false} />
+  <Option text="Operations sur des structures de donnees lineaires comme des tableaux." correct={false} />
+  <Option text="Problemes impliquant des structures de donnees recursives comme les arbres ou les graphes." correct={true} />
+  <Option text="Gestion de bases de donnees relationnelles." correct={false} />
 </Question>
-    <Question q="Qu'est-ce que la récursion terminale (tail recursion) ?" explanation="La récursion terminale est une forme de récursion où l'appel récursif est la dernière opération effectuée par la fonction. Certains compilateurs peuvent optimiser cela en le transformant en itération, évitant ainsi le débordement de pile.">
-  <Option text="Une récursion qui ne possède pas de cas de base." correct={false} />
-  <Option text="Une récursion où l'appel récursif est la dernière opération effectuée par la fonction." correct={true} />
-  <Option text="Une récursion qui utilise une structure de données de type file (queue)." correct={false} />
-  <Option text="Une récursion qui se termine toujours après un nombre fixe d'appels." correct={false} />
+    <Question q="Qu'est-ce que la recursion terminale (tail recursion) ?" explanation="La recursion terminale est une forme de recursion ou l'appel recursif est la derniere operation effectuee par la fonction. Certains compilateurs peuvent optimiser cela en le transformant en iteration, evitant ainsi le debordement de pile.">
+  <Option text="Une recursion qui ne possede pas de cas de base." correct={false} />
+  <Option text="Une recursion ou l'appel recursif est la derniere operation effectuee par la fonction." correct={true} />
+  <Option text="Une recursion qui utilise une structure de donnees de type file (queue)." correct={false} />
+  <Option text="Une recursion qui se termine toujours apres un nombre fixe d'appels." correct={false} />
 </Question>
-    <Question q="Comment la pile d'appels (call stack) est-elle affectée par les appels de fonctions récursives ?" explanation="Chaque appel de fonction récursive ajoute une nouvelle trame (stack frame) à la pile d'appels pour stocker les variables locales et l'adresse de retour. Cela peut consommer beaucoup de mémoire et potentiellement causer un débordement de pile.">
-  <Option text="La pile d'appels n'est pas utilisée par les fonctions récursives." correct={false} />
-  <Option text="Chaque appel récursif ajoute une nouvelle trame à la pile d'appels." correct={true} />
-  <Option text="La pile d'appels est vidée à chaque appel récursif." correct={false} />
-  <Option text="La pile d'appels est uniquement utilisée pour les fonctions itératives." correct={false} />
+    <Question q="Comment la pile d'appels (call stack) est-elle affectee par les appels de fonctions recursives ?" explanation="Chaque appel de fonction recursive ajoute une nouvelle trame (stack frame) a la pile d'appels pour stocker les variables locales et l'adresse de retour. Cela peut consommer beaucoup de memoire et potentiellement causer un debordement de pile.">
+  <Option text="La pile d'appels n'est pas utilisee par les fonctions recursives." correct={false} />
+  <Option text="Chaque appel recursif ajoute une nouvelle trame a la pile d'appels." correct={true} />
+  <Option text="La pile d'appels est videe a chaque appel recursif." correct={false} />
+  <Option text="La pile d'appels est uniquement utilisee pour les fonctions iteratives." correct={false} />
 </Question>
-    <Question q="Quelle est la principale différence conceptuelle entre une solution itérative et une solution récursive pour un même problème ?" explanation="L'itération utilise des boucles pour répéter des instructions, tandis que la récursion résout un problème en le décomposant en sous-problèmes identiques et en s'appelant elle-même jusqu'à atteindre un cas de base.">
-  <Option text="L'itération est toujours plus rapide que la récursion." correct={false} />
-  <Option text="L'itération utilise des boucles, tandis que la récursion utilise des appels de fonction à elle-même." correct={true} />
-  <Option text="La récursion ne peut pas résoudre les problèmes que l'itération peut résoudre." correct={false} />
-  <Option text="L'itération nécessite un cas de base, contrairement à la récursion." correct={false} />
+    <Question q="Quelle est la principale difference conceptuelle entre une solution iterative et une solution recursive pour un meme probleme ?" explanation="L'iteration utilise des boucles pour repeter des instructions, tandis que la recursion resout un probleme en le decomposant en sous-problemes identiques et en s'appelant elle-meme jusqu'a atteindre un cas de base.">
+  <Option text="L'iteration est toujours plus rapide que la recursion." correct={false} />
+  <Option text="L'iteration utilise des boucles, tandis que la recursion utilise des appels de fonction a elle-meme." correct={true} />
+  <Option text="La recursion ne peut pas resoudre les problemes que l'iteration peut resoudre." correct={false} />
+  <Option text="L'iteration necessite un cas de base, contrairement a la recursion." correct={false} />
 </Question>
 </Quiz>
 
@@ -581,5 +580,5 @@ Pour véritablement « maîtriser le miroir » de l'algorithme, la pratique es
 
 ### Références
 
-<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiV2lraXBlZGlhLiBOL0EuIMKrIFLDqWN1cnNpdml0w6kgZW4gUHJvZ3JhbW1hdGlvbiDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9V2lraXBlZGlhJTIwTiUyRkElMjAlMjJSJUMzJUE5Y3Vyc2l2aXQlQzMlQTklMjBlbiUyMFByb2dyYW1tYXRpb24lMjIiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfV0=" />
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiQ29ybWVuLCBUaG9tYXMgSC4sIENoYXJsZXMgRS4gTGVpc2Vyc29uLCBSb25hbGQgTC4gUml2ZXN0LCBhbmQgQ2xpZmZvcmQgU3RlaW4uIDIwMjIuIMKrIEludHJvZHVjdGlvbiB0byBBbGdvcml0aG1zIMK7LiA0dGggZWQuIENhbWJyaWRnZSwgTUE6IE1JVCBQcmVzcy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Q29ybWVuJTIwJTIySW50cm9kdWN0aW9uJTIwdG8lMjBBbGdvcml0aG1zJTIyJTIwMjAyMiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyLCJ0ZXh0IjoiU2VkZ2V3aWNrLCBSb2JlcnQsIGFuZCBLZXZpbiBXYXluZS4gMjAxMS4gwqsgQWxnb3JpdGhtcyDCuy4gNHRoIGVkLiBVcHBlciBTYWRkbGUgUml2ZXIsIE5KOiBBZGRpc29uLVdlc2xleSBQcm9mZXNzaW9uYWwuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVNlZGdld2ljayUyMCUyMkFsZ29yaXRobXMlMjIlMjAyMDExIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjMsInRleHQiOiJXaXJ0aCwgTmlrbGF1cy4gMTk3Ni4gwqsgQWxnb3JpdGhtcyArIERhdGEgU3RydWN0dXJlcyA9IFByb2dyYW1zIMK7LiBFbmdsZXdvb2QgQ2xpZmZzLCBOSjogUHJlbnRpY2UtSGFsbC4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9V2lydGglMjAlMjJBbGdvcml0aG1zJTIwJTJCJTIwRGF0YSUyMFN0cnVjdHVyZXMlMjAlM0QlMjBQcm9ncmFtcyUyMiUyMDE5NzYiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6NCwidGV4dCI6IktudXRoLCBEb25hbGQgRS4gMTk5Ny4gwqsgVGhlIEFydCBvZiBDb21wdXRlciBQcm9ncmFtbWluZywgVm9sLiAxOiBGdW5kYW1lbnRhbCBBbGdvcml0aG1zIMK7LiAzcmQgZWQuIFJlYWRpbmcsIE1BOiBBZGRpc29uLVdlc2xleS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPUtudXRoJTIwJTIyVGhlJTIwQXJ0JTIwb2YlMjBDb21wdXRlciUyMFByb2dyYW1taW5nJTIyJTIwMTk5NyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjUsInRleHQiOiJBaG8sIEFsZnJlZCBWLiwgSm9obiBFLiBIb3Bjcm9mdCwgYW5kIEplZmZyZXkgRC4gVWxsbWFuLiAxOTgzLiDCqyBEYXRhIFN0cnVjdHVyZXMgYW5kIEFsZ29yaXRobXMgwrsuIFJlYWRpbmcsIE1BOiBBZGRpc29uLVdlc2xleS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9QWhvJTIwJTIyRGF0YSUyMFN0cnVjdHVyZXMlMjBhbmQlMjBBbGdvcml0aG1zJTIyJTIwMTk4MyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo2LCJ0ZXh0IjoiR29vZHJpY2gsIE1pY2hhZWwgVC4sIFJvYmVydG8gVGFtYXNzaWEsIGFuZCBNaWNoYWVsIEguIEdvbGR3YXNzZXIuIDIwMTMuIMKrIERhdGEgU3RydWN0dXJlcyBhbmQgQWxnb3JpdGhtcyBpbiBQeXRob24gwrsuIEhvYm9rZW4sIE5KOiBKb2huIFdpbGV5ICZhbXA7IFNvbnMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUdvb2RyaWNoJTIwJTIyRGF0YSUyMFN0cnVjdHVyZXMlMjBhbmQlMjBBbGdvcml0aG1zJTIwaW4lMjBQeXRob24lMjIlMjAyMDEzIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjcsInRleHQiOiJIYXJvbGQgQWJlbHNvbiwgR2VyYWxkIEpheSBTdXNzbWFuLCBKdWxpZSBTdXNzbWFuLiAxOTg0LiDCqyBTdHJ1Y3R1cmUgZXQgaW50ZXJwcsOpdGF0aW9uIGRlcyBwcm9ncmFtbWVzIGluZm9ybWF0aXF1ZXMgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUhhcm9sZCUyMEFiZWxzb24lMjAlMjJTdHJ1Y3R1cmUlMjBldCUyMGludGVycHIlQzMlQTl0YXRpb24lMjBkZXMlMjBwcm9ncmFtbWVzJTIwaW5mb3JtYXRpcXVlcyUyMiUyMDE5ODQiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6OCwidGV4dCI6IkdyYXZlbiAtIETDqXZlbG9wcGVtZW50LiAyMDE4LiDCqyBMYSByw6ljdXJzaXZpdMOpIGV4cGxpcXXDqWUgc2ltcGxlbWVudCDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9R3JhdmVuJTIwRCVDMyVBOXZlbG9wcGVtZW50JTIwJTIyTGElMjByJUMzJUE5Y3Vyc2l2aXQlQzMlQTklMjBleHBsaXF1JUMzJUE5ZSUyMHNpbXBsZW1lbnQlMjIlMjAyMDE4Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjksInRleHQiOiJXaWtpcGVkaWEuIE4vQS4gwqsgUsOpY3Vyc2l2aXTDqSBlbiBQcm9ncmFtbWF0aW9uIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1XaWtpcGVkaWElMjBOJTJGQSUyMCUyMlIlQzMlQTljdXJzaXZpdCVDMyVBOSUyMGVuJTIwUHJvZ3JhbW1hdGlvbiUyMiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9XQ==" />
 

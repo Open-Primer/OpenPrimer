@@ -964,7 +964,7 @@ export default function AdminCurriculumPage() {
       const lowerTitle = title.toLowerCase();
 
       // Check if course already exists in catalog, refused backlog, or pipeline queue
-      const isCourse = courses.some(c => c.title.toLowerCase() === lowerTitle || c.slug.toLowerCase() === lowerTitle.replace(/ /g, '_'));
+      const isCourse = courses.some(c => c.title.toLowerCase() === lowerTitle || c.slug === cleanPathSegment(title));
       const isRefused = refusedCourses.some(rc => rc.name.toLowerCase() === lowerTitle);
       const isInQueue = queue.some(t => t.title.toLowerCase() === lowerTitle);
 
@@ -1106,7 +1106,7 @@ export default function AdminCurriculumPage() {
       // Find if this query corresponds to an existing course in another language
       const matchingCourse = courses.find(c => 
         c.title.toLowerCase() === query || 
-        c.slug.toLowerCase() === query.replace(/ /g, '_')
+        c.slug === cleanPathSegment(h.query)
       );
 
       if (matchingCourse) {
@@ -2196,7 +2196,7 @@ export default function AdminCurriculumPage() {
       }
 
       // Find the corresponding course object to check Version Governance
-      const course = courses.find(c => c.slug === f.courseId || String(c.id) === f.courseId || c.title.toLowerCase().replace(/ /g, '_') === f.courseId.toLowerCase());
+      const course = courses.find(c => c.slug === cleanPathSegment(f.courseId) || String(c.id) === f.courseId || cleanPathSegment(c.title) === cleanPathSegment(f.courseId));
       if (course) {
         // Governance: If this feedback item was created BEFORE the last_revision_date, skip it!
         if (course.last_revision_date && new Date(f.timestamp).getTime() < new Date(course.last_revision_date).getTime()) {
@@ -2231,7 +2231,7 @@ export default function AdminCurriculumPage() {
     const list: any[] = [];
 
     Object.values(groups).forEach(g => {
-      const course = courses.find(c => c.slug === g.courseId || String(c.id) === g.courseId || c.title.toLowerCase().replace(/ /g, '_') === g.courseId.toLowerCase());
+      const course = courses.find(c => c.slug === cleanPathSegment(g.courseId) || String(c.id) === g.courseId || cleanPathSegment(c.title) === cleanPathSegment(g.courseId));
       if (!course) return;
 
       // Check if this specific course + chapter proposal is already in the Refused Backlog

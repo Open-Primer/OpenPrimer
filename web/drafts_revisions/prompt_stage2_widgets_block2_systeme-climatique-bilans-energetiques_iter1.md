@@ -2,23 +2,29 @@ You are a world-class educational curriculum architect and JSON data validator (
 Your task is to design the JSON object for the interactive components of the lesson.
 
 The narrative text contains the following custom widget anchors that you MUST define:
-- Anchor: [[WIDGET:ConceptLink:systeme_climatique:système climatique]] (Type: "ConceptLink", ID: "systeme_climatique", Topic: "système climatique")
-- Anchor: [[WIDGET:RealPerson:giec:GIEC]] (Type: "RealPerson", ID: "giec", Topic: "GIEC")
+- Anchor: [[WIDGET:Glossary:systeme_climatique:système climatique]] (Type: "Glossary", ID: "systeme_climatique", Topic: "système climatique")
 - Anchor: [[WIDGET:Mermaid:climate_system_components]] (Type: "Mermaid", ID: "climate_system_components", Topic: "")
-- Anchor: [[WIDGET:ConceptLink:rayonnement_solaire:rayonnement solaire]] (Type: "ConceptLink", ID: "rayonnement_solaire", Topic: "rayonnement solaire")
-- Anchor: [[WIDGET:Glossary:albedo:albédo]] (Type: "Glossary", ID: "albedo", Topic: "albédo")
-- Anchor: [[WIDGET:Glossary:effet_de_serre:effet de serre]] (Type: "Glossary", ID: "effet_de_serre", Topic: "effet de serre")
+- Anchor: [[WIDGET:Glossary:rayonnement_electromagnetique:rayonnement électromagnétique]] (Type: "Glossary", ID: "rayonnement_electromagnetique", Topic: "rayonnement électromagnétique")
+- Anchor: [[WIDGET:ConceptLink:loi_de_wien:loi de Wien]] (Type: "ConceptLink", ID: "loi_de_wien", Topic: "loi de Wien")
+- Anchor: [[WIDGET:ConceptLink:albedo:albédo]] (Type: "ConceptLink", ID: "albedo", Topic: "albédo")
+- Anchor: [[WIDGET:RealPerson:stefan_boltzmann:Josef Stefan et Ludwig Boltzmann]] (Type: "RealPerson", ID: "stefan_boltzmann", Topic: "Josef Stefan et Ludwig Boltzmann")
 - Anchor: [[WIDGET:Image:earth_energy_balance]] (Type: "Image", ID: "earth_energy_balance", Topic: "")
-- Anchor: [[WIDGET:Glossary:ges:gaz à effet de serre]] (Type: "Glossary", ID: "ges", Topic: "gaz à effet de serre")
-- Anchor: [[WIDGET:Mermaid:atmospheric_composition_chart]] (Type: "Mermaid", ID: "atmospheric_composition_chart", Topic: "")
-- Anchor: [[WIDGET:Glossary:corps_noir:corps noir]] (Type: "Glossary", ID: "corps_noir", Topic: "corps noir")
-- Anchor: [[WIDGET:ConceptLink:loi_stefan_boltzmann:loi de Stefan-Boltzmann]] (Type: "ConceptLink", ID: "loi_stefan_boltzmann", Topic: "loi de Stefan-Boltzmann")
-- Anchor: [[WIDGET:Mermaid:one_layer_model_diagram]] (Type: "Mermaid", ID: "one_layer_model_diagram", Topic: "")
-- Anchor: [[WIDGET:ConceptLink:bilan_energetique:bilan énergétique]] (Type: "ConceptLink", ID: "bilan_energetique", Topic: "bilan énergétique")
-- Anchor: [[WIDGET:ConceptLink:composition_atmospherique:composition atmosphérique]] (Type: "ConceptLink", ID: "composition_atmospherique", Topic: "composition atmosphérique")
-- Anchor: [[WIDGET:Glossary:gaz_effet_serre:gaz à effet de serre]] (Type: "Glossary", ID: "gaz_effet_serre", Topic: "gaz à effet de serre")
-- Anchor: [[WIDGET:ConceptLink:changement_climatique:changement climatique]] (Type: "ConceptLink", ID: "changement_climatique", Topic: "changement climatique")
-- Anchor: [[WIDGET:Mermaid:climate_system_interdependence]] (Type: "Mermaid", ID: "climate_system_interdependence", Topic: "")
+- Anchor: [[WIDGET:ConceptLink:cycle_carbone:cycle du carbone]] (Type: "ConceptLink", ID: "cycle_carbone", Topic: "cycle du carbone")
+- Anchor: [[WIDGET:Glossary:prg:potentiel de réchauffement global (PRG)]] (Type: "Glossary", ID: "prg", Topic: "potentiel de réchauffement global (PRG)")
+- Anchor: [[WIDGET:Mermaid:ghg_cycles_diagram]] (Type: "Mermaid", ID: "ghg_cycles_diagram", Topic: "")
+- Anchor: [[WIDGET:ConceptLink:couche_ozone:couche d'ozone]] (Type: "ConceptLink", ID: "couche_ozone", Topic: "couche d'ozone")
+- Anchor: [[WIDGET:Image:atmospheric_layers_diagram]] (Type: "Image", ID: "atmospheric_layers_diagram", Topic: "")
+- Anchor: [[WIDGET:Glossary:effet_serre:effet de serre]] (Type: "Glossary", ID: "effet_serre", Topic: "effet de serre")
+- Anchor: [[WIDGET:ConceptLink:effet_serre_renforce:effet de serre renforcé]] (Type: "ConceptLink", ID: "effet_serre_renforce", Topic: "effet de serre renforcé")
+- Anchor: [[WIDGET:HistoricalAnecdote:fourier_tyndall]] (Type: "HistoricalAnecdote", ID: "fourier_tyndall", Topic: "")
+- Anchor: [[WIDGET:RealPerson:joseph_fourier:Joseph Fourier]] (Type: "RealPerson", ID: "joseph_fourier", Topic: "Joseph Fourier")
+- Anchor: [[WIDGET:RealPerson:john_tyndall:John Tyndall]] (Type: "RealPerson", ID: "john_tyndall", Topic: "John Tyndall")
+- Anchor: [[WIDGET:SolvedExercise:one_layer_model_calculation]] (Type: "SolvedExercise", ID: "one_layer_model_calculation", Topic: "")
+- Anchor: [[WIDGET:ConceptLink:albedo_planetaire:albédo planétaire]] (Type: "ConceptLink", ID: "albedo_planetaire", Topic: "albédo planétaire")
+- Anchor: [[WIDGET:Glossary:effet_de_serre:effet de serre]] (Type: "Glossary", ID: "effet_de_serre", Topic: "effet de serre")
+- Anchor: [[WIDGET:Mermaid:climate_system_interconnections]] (Type: "Mermaid", ID: "climate_system_interconnections", Topic: "")
+- Anchor: [[WIDGET:RealPerson:giec:GIEC]] (Type: "RealPerson", ID: "giec", Topic: "GIEC")
+- Anchor: [[WIDGET:Quiz:conclusion_quiz_climate_system]] (Type: "Quiz", ID: "conclusion_quiz_climate_system", Topic: "")
 
 ---
 
@@ -78,6 +84,13 @@ The narrative text contains the following custom widget anchors that you MUST de
 12. "Glossary":
    - "term": (string) Glossary vocabulary term.
    - "definition": (string) Detailed vocabulary definition (2-4 sentences).
+13. "HistoricalAnecdote":
+   - "title": (string) Historical anecdote title.
+   - "date": (string, optional) Lifespan, period, or date of the anecdote.
+   - "content": (string) Interesting detailed narrative (4-8 sentences).
+14. "BrilliantIdea":
+   - "title": (string, optional) Idea title/theme.
+   - "content": (string) Key insight, tip, rule of thumb, or summary (3-6 sentences).
 
 You must define the "interactiveComponents" array containing one object for each anchor listed above.
 For each component:

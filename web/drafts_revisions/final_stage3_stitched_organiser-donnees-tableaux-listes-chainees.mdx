@@ -8,8 +8,7 @@ order: 3
 
 <Prerequisites itemsBase64="W3sidGl0bGUiOiJWYXJpYWJsZXMgZXQgdHlwZXMgZGUgZG9ubsOpZXMiLCJzbHVnIjoidmFyaWFibGVzLWV0LXR5cGVzLWRlLWRvbm5lZXMiLCJsZXZlbCI6IkwxIiwic3ViamVjdCI6IkFsZ29yaXRobWlxdWUifSx7InRpdGxlIjoiU3RydWN0dXJlcyBkZSBjb250csO0bGUgKGJvdWNsZXMsIGNvbmRpdGlvbnMpIiwic2x1ZyI6InN0cnVjdHVyZXMtZGUtY29udHJvbGUtYm91Y2xlcy1jb25kaXRpb25zIiwibGV2ZWwiOiJMMSIsInN1YmplY3QiOiJBbGdvcml0aG1pcXVlIn0seyJ0aXRsZSI6Ik5vdGlvbnMgZGUgbcOpbW9pcmUgZXQgZCdhZHJlc3NhZ2UiLCJzbHVnIjoibm90aW9ucy1kZS1tZW1vaXJlLWV0LWRhZHJlc3NhZ2UiLCJsZXZlbCI6IkwxIiwic3ViamVjdCI6IkluZm9ybWF0aXF1ZSJ9XQ==" />
 
-<DiagnosticQuiz question="Quelle structure de données est la plus appropriée pour stocker une collection d'éléments de même type dont la taille peut varier dynamiquement pendant l'exécution du programme, sans nécessiter de réallocation complète à chaque ajout/suppression ?" options="Un tableau statique|||Une variable simple|||Une liste chaînée|||Une constante" correctIndex="2" targetSectionId="introduction-aux-structures-dynamiques" sectionTitle="Introduction aux structures de données dynamiques" />
-
+<DiagnosticQuiz question="Quelle structure de donnees est la plus appropriee pour stocker une collection d'éléments de meme type dont la taille peut varier dynamiquement pendant l'execution du programme, sans necessiter de reallocation complete a chaque ajout/suppression ?" options="Un tableau statique|||Une variable simple|||Une liste chaînée|||Une constante" correctIndex="2" targetSectionId="introduction-aux-structures-dynamiques" sectionTitle="Introduction aux structures de donnees dynamiques" />
 
 
 ## Introduction aux Structures de Données Linéaires
@@ -460,65 +459,65 @@ Cette exploration des tableaux et des listes chaînées n'est que le début de n
 ## Auto-évaluation
 
 <Quiz durationLimit={600}>
-    <Question q="Quelle est la principale différence en termes d'accès aux éléments entre un tableau (array) et une liste chaînée (linked list) ?" explanation="Les tableaux permettent un accès direct à n'importe quel élément via son index, tandis que les listes chaînées nécessitent de parcourir la liste depuis le début pour atteindre un élément spécifique.">
-  <Option text="Accès séquentiel pour les deux." correct={false} />
-  <Option text="Accès direct (aléatoire) pour les tableaux, séquentiel pour les listes chaînées." correct={true} />
-  <Option text="Accès direct pour les listes chaînées, séquentiel pour les tableaux." correct={false} />
-  <Option text="Accès direct pour les deux." correct={false} />
+    <Question q="Quelle est la principale difference en termes d'acces aux éléments entre un tableau (array) et une liste chainee (linked list) ?" explanation="Les tableaux permettent un acces direct a n'importe quel élément via son index, tandis que les listes chainees necessitent de parcourir la liste depuis le debut pour atteindre un élément specifique.">
+  <Option text="Acces sequentiel pour les deux." correct={false} />
+  <Option text="Acces direct (aleatoire) pour les tableaux, sequentiel pour les listes chainees." correct={true} />
+  <Option text="Acces direct pour les listes chainees, sequentiel pour les tableaux." correct={false} />
+  <Option text="Acces direct pour les deux." correct={false} />
 </Question>
-    <Question q="Quelle structure de données est généralement plus efficace pour les opérations d'insertion ou de suppression d'éléments au milieu de la collection ?" explanation="Dans un tableau, l'insertion ou la suppression au milieu nécessite de décaler tous les éléments suivants, ce qui est coûteux (O(n)). Dans une liste chaînée, il suffit de modifier quelques pointeurs (O(1)) une fois l'emplacement trouvé (O(n) pour trouver l'emplacement).">
+    <Question q="Quelle structure de donnees est generalement plus efficace pour les operations d'insertion ou de suppression d'éléments au milieu de la collection ?" explanation="Dans un tableau, l'insertion ou la suppression au milieu necessite de decaler tous les éléments suivants, ce qui est couteux (O(n)). Dans une liste chainee, il suffit de modifier quelques pointeurs (O(1)) une fois l'emplacement trouve (O(n) pour trouver l'emplacement).">
   <Option text="Les tableaux." correct={false} />
-  <Option text="Les listes chaînées." correct={true} />
-  <Option text="Les deux sont également efficaces." correct={false} />
-  <Option text="Cela dépend de la taille de la collection." correct={false} />
+  <Option text="Les listes chainees." correct={true} />
+  <Option text="Les deux sont egalement efficaces." correct={false} />
+  <Option text="Cela depend de la taille de la collection." correct={false} />
 </Question>
-    <Question q="Comment la mémoire est-elle typiquement allouée pour un tableau par rapport à une liste chaînée ?" explanation="Un tableau est un bloc de mémoire contigu, tandis qu'une liste chaînée est composée de nœuds dispersés en mémoire, liés par des pointeurs.">
-  <Option text="Les deux allouent de la mémoire de manière contiguë." correct={false} />
-  <Option text="Les tableaux allouent de la mémoire de manière contiguë, les listes chaînées de manière non contiguë." correct={true} />
-  <Option text="Les listes chaînées allouent de la mémoire de manière contiguë, les tableaux de manière non contiguë." correct={false} />
-  <Option text="La mémoire est allouée dynamiquement pour les deux." correct={false} />
+    <Question q="Comment la memoire est-elle typiquement allouee pour un tableau par rapport a une liste chainee ?" explanation="Un tableau est un bloc de memoire contigu, tandis qu'une liste chainee est composee de nuds disperses en memoire, lies par des pointeurs.">
+  <Option text="Les deux allouent de la memoire de maniere contigue." correct={false} />
+  <Option text="Les tableaux allouent de la memoire de maniere contigue, les listes chainees de maniere non contigue." correct={true} />
+  <Option text="Les listes chainees allouent de la memoire de maniere contigue, les tableaux de maniere non contigue." correct={false} />
+  <Option text="La memoire est allouee dynamiquement pour les deux." correct={false} />
 </Question>
-    <Question q="Quelle affirmation est vraie concernant la taille des tableaux et des listes chaînées ?" explanation="La taille d'un tableau est généralement définie à sa création et ne peut pas être facilement modifiée. Les listes chaînées peuvent croître ou décroître dynamiquement en ajoutant ou supprimant des nœuds.">
-  <Option text="Les tableaux ont une taille fixe, les listes chaînées ont une taille dynamique." correct={true} />
-  <Option text="Les listes chaînées ont une taille fixe, les tableaux ont une taille dynamique." correct={false} />
+    <Question q="Quelle affirmation est vraie concernant la taille des tableaux et des listes chainees ?" explanation="La taille d'un tableau est generalement definie a sa creation et ne peut pas etre facilement modifiee. Les listes chainees peuvent croitre ou decroitre dynamiquement en ajoutant ou supprimant des nuds.">
+  <Option text="Les tableaux ont une taille fixe, les listes chainees ont une taille dynamique." correct={true} />
+  <Option text="Les listes chainees ont une taille fixe, les tableaux ont une taille dynamique." correct={false} />
   <Option text="Les deux ont une taille fixe." correct={false} />
   <Option text="Les deux ont une taille dynamique." correct={false} />
 </Question>
-    <Question q="Quelle structure de données a un coût mémoire supplémentaire par élément pour stocker des pointeurs ?" explanation="Chaque nœud d'une liste chaînée contient non seulement la donnée, mais aussi un ou plusieurs pointeurs vers le(s) nœud(s) suivant(s) (et précédent(s) pour les listes doublement chaînées), ce qui représente un surcoût mémoire par rapport à un tableau qui ne stocke que les données.">
+    <Question q="Quelle structure de donnees a un cout memoire supplementaire par élément pour stocker des pointeurs ?" explanation="Chaque nud d'une liste chainee contient non seulement la donnee, mais aussi un ou plusieurs pointeurs vers le(s) nud(s) suivant(s) (et precedent(s) pour les listes doublement chainees), ce qui represente un surcout memoire par rapport a un tableau qui ne stocke que les donnees.">
   <Option text="Les tableaux." correct={false} />
-  <Option text="Les listes chaînées." correct={true} />
+  <Option text="Les listes chainees." correct={true} />
   <Option text="Les deux." correct={false} />
   <Option text="Aucune des deux." correct={false} />
 </Question>
-    <Question q="Dans une liste doublement chaînée, chaque nœud contient des pointeurs vers quels autres nœuds ?" explanation="Une liste doublement chaînée permet de parcourir la liste dans les deux sens (avant et arrière) car chaque nœud a un pointeur vers le suivant et un pointeur vers le précédent.">
-  <Option text="Uniquement le nœud suivant." correct={false} />
-  <Option text="Uniquement le nœud précédent." correct={false} />
-  <Option text="Le nœud suivant et le nœud précédent." correct={true} />
-  <Option text="Le premier et le dernier nœud de la liste." correct={false} />
+    <Question q="Dans une liste doublement chainee, chaque nud contient des pointeurs vers quels autres nuds ?" explanation="Une liste doublement chainee permet de parcourir la liste dans les deux sens (avant et arriere) car chaque nud a un pointeur vers le suivant et un pointeur vers le precedent.">
+  <Option text="Uniquement le nud suivant." correct={false} />
+  <Option text="Uniquement le nud precedent." correct={false} />
+  <Option text="Le nud suivant et le nud precedent." correct={true} />
+  <Option text="Le premier et le dernier nud de la liste." correct={false} />
 </Question>
-    <Question q="Pour implémenter une file d'attente (queue) où les insertions se font à la fin et les suppressions au début, quelle structure de données est la plus appropriée pour une performance optimale ?" explanation="Une liste chaînée simple permet des insertions en O(1) à la fin (si on maintient un pointeur vers la queue) et des suppressions en O(1) au début, ce qui est idéal pour une file d'attente. Un tableau dynamique peut être efficace mais les opérations de redimensionnement peuvent être coûteuses.">
+    <Question q="Pour implementer une file d'attente (queue) ou les insertions se font à la fin et les suppressions au debut, quelle structure de donnees est la plus appropriee pour une performance optimale ?" explanation="Une liste chainee simple permet des insertions en O(1) à la fin (si on maintient un pointeur vers la queue) et des suppressions en O(1) au debut, ce qui est ideal pour une file d'attente. Un tableau dynamique peut etre efficace mais les operations de redimensionnement peuvent etre couteuses.">
   <Option text="Un tableau statique." correct={false} />
   <Option text="Un tableau dynamique (redimensionnable)." correct={false} />
-  <Option text="Une liste chaînée simple." correct={true} />
-  <Option text="Une liste doublement chaînée." correct={false} />
+  <Option text="Une liste chainee simple." correct={true} />
+  <Option text="Une liste doublement chainee." correct={false} />
 </Question>
-    <Question q="Quelle est la complexité temporelle pour accéder à un élément arbitraire dans un tableau par son index ?" explanation="L'accès à un élément dans un tableau par son index est une opération à temps constant, car l'adresse mémoire de l'élément peut être calculée directement.">
+    <Question q="Quelle est la complexite temporelle pour acceder a un élément arbitraire dans un tableau par son index ?" explanation="L'acces a un élément dans un tableau par son index est une operation a temps constant, car l'adresse memoire de l'élément peut etre calculee directement.">
   <Option text="O(n)" correct={false} />
   <Option text="O(log n)" correct={false} />
   <Option text="O(1)" correct={true} />
   <Option text="O(n log n)" correct={false} />
 </Question>
-    <Question q="Dans quel scénario l'utilisation d'un tableau est-elle généralement préférable à celle d'une liste chaînée ?" explanation="Les tableaux excellent pour l'accès direct (O(1)) et sont plus efficaces en mémoire si la taille est connue et fixe, car ils n'ont pas le surcoût des pointeurs.">
-  <Option text="Lorsque le nombre d'éléments est très variable et que les insertions/suppressions sont fréquentes." correct={false} />
-  <Option text="Lorsque l'accès aléatoire aux éléments est fréquent et que la taille de la collection est relativement fixe." correct={true} />
-  <Option text="Lorsque la mémoire disponible est très limitée et que chaque octet compte." correct={false} />
+    <Question q="Dans quel scenario l'utilisation d'un tableau est-elle generalement preferable a celle d'une liste chainee ?" explanation="Les tableaux excellent pour l'acces direct (O(1)) et sont plus efficaces en memoire si la taille est connue et fixe, car ils n'ont pas le surcout des pointeurs.">
+  <Option text="Lorsque le nombre d'éléments est très variable et que les insertions/suppressions sont frequentes." correct={false} />
+  <Option text="Lorsque l'acces aleatoire aux éléments est frequent et que la taille de la collection est relativement fixe." correct={true} />
+  <Option text="Lorsque la memoire disponible est très limitee et que chaque octet compte." correct={false} />
   <Option text="Lorsque l'ordre des éléments n'a pas d'importance." correct={false} />
 </Question>
-    <Question q="Dans quel scénario l'utilisation d'une liste chaînée est-elle généralement préférable à celle d'un tableau ?" explanation="Les listes chaînées sont plus performantes pour les insertions et suppressions car elles ne nécessitent pas de décalage d'éléments.">
-  <Option text="Lorsque les données doivent être stockées de manière contiguë en mémoire." correct={false} />
-  <Option text="Lorsque les opérations de recherche par index sont primordiales." correct={false} />
-  <Option text="Lorsque les insertions et suppressions fréquentes sont nécessaires, surtout au milieu de la collection." correct={true} />
-  <Option text="Lorsque la taille maximale de la collection est connue à l'avance et ne change pas." correct={false} />
+    <Question q="Dans quel scenario l'utilisation d'une liste chainee est-elle generalement preferable a celle d'un tableau ?" explanation="Les listes chainees sont plus performantes pour les insertions et suppressions car elles ne necessitent pas de decalage d'éléments.">
+  <Option text="Lorsque les donnees doivent etre stockees de maniere contigue en memoire." correct={false} />
+  <Option text="Lorsque les operations de recherche par index sont primordiales." correct={false} />
+  <Option text="Lorsque les insertions et suppressions frequentes sont necessaires, surtout au milieu de la collection." correct={true} />
+  <Option text="Lorsque la taille maximale de la collection est connue a l'avance et ne change pas." correct={false} />
 </Question>
 </Quiz>
 
@@ -526,5 +525,5 @@ Cette exploration des tableaux et des listes chaînées n'est que le début de n
 
 ### Références
 
-<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiQWhvLCBBbGZyZWQgVi4sIEpvaG4gRS4gSG9wY3JvZnQsIGFuZCBKZWZmcmV5IEQuIFVsbG1hbi4gMTk4My4gRGF0YSBTdHJ1Y3R1cmVzIGFuZCBBbGdvcml0aG1zLiBSZWFkaW5nLCBNQTogQWRkaXNvbi1XZXNsZXkuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUFobyUyMCUyMkhvcGNyb2Z0JTIyJTIwMTk4MyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9XQ==" />
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiQ29ybWVuLCBUaG9tYXMgSC4sIENoYXJsZXMgRS4gTGVpc2Vyc29uLCBSb25hbGQgTC4gUml2ZXN0LCBhbmQgQ2xpZmZvcmQgU3RlaW4uIDIwMDkuIEludHJvZHVjdGlvbiB0byBBbGdvcml0aG1zLiAzcmQgZWQuIENhbWJyaWRnZSwgTUE6IE1JVCBQcmVzcy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Q29ybWVuJTIwJTIyTGVpc2Vyc29uJTIyJTIwMjAwOSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyLCJ0ZXh0IjoiU2VkZ2V3aWNrLCBSb2JlcnQsIGFuZCBLZXZpbiBXYXluZS4gMjAxMS4gQWxnb3JpdGhtcy4gNHRoIGVkLiBCb3N0b246IEFkZGlzb24tV2VzbGV5LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1TZWRnZXdpY2slMjAlMjJTZWRnZXdpY2slMjIlMjAyMDExIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjMsInRleHQiOiJLbnV0aCwgRG9uYWxkIEUuIDE5OTcuIFRoZSBBcnQgb2YgQ29tcHV0ZXIgUHJvZ3JhbW1pbmcsIFZvbC4gMTogRnVuZGFtZW50YWwgQWxnb3JpdGhtcy4gM3JkIGVkLiBSZWFkaW5nLCBNQTogQWRkaXNvbi1XZXNsZXkuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1LbnV0aCUyMCUyMlRoZSUyMEFydCUyMG9mJTIwQ29tcHV0ZXIlMjBQcm9ncmFtbWluZyUyMiUyMDE5OTciLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo0LCJ0ZXh0IjoiR29vZHJpY2gsIE1pY2hhZWwgVC4sIFJvYmVydG8gVGFtYXNzaWEsIGFuZCBNaWNoYWVsIEguIEdvbGR3YXNzZXIuIDIwMTQuIERhdGEgU3RydWN0dXJlcyBhbmQgQWxnb3JpdGhtcyBpbiBKYXZhLiA2dGggZWQuIEhvYm9rZW4sIE5KOiBKb2huIFdpbGV5ICZhbXA7IFNvbnMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUdvb2RyaWNoJTIwMjAxNCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo1LCJ0ZXh0IjoiV2lydGgsIE5pa2xhdXMuIDE5ODYuIEFsZ29yaXRobXMgJmFtcDsgRGF0YSBTdHJ1Y3R1cmVzLiBFbmdsZXdvb2QgQ2xpZmZzLCBOSjogUHJlbnRpY2UtSGFsbC4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9V2lydGglMjAlMjJFbmdsZXdvb2QlMjBDbGlmZnMlMjIlMjAxOTg2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjYsInRleHQiOiJBaG8sIEFsZnJlZCBWLiwgSm9obiBFLiBIb3Bjcm9mdCwgYW5kIEplZmZyZXkgRC4gVWxsbWFuLiAxOTgzLiBEYXRhIFN0cnVjdHVyZXMgYW5kIEFsZ29yaXRobXMuIFJlYWRpbmcsIE1BOiBBZGRpc29uLVdlc2xleS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9QWhvJTIwJTIySG9wY3JvZnQlMjIlMjAxOTgzIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX1d" />
 

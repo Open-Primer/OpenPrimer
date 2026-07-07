@@ -5,133 +5,155 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
     "props": {
       "questions": [
         {
-          "q": "Quel est le principal moteur du système climatique terrestre?",
-          "explanation": "L'énergie solaire est la source d'énergie quasi exclusive qui alimente le système climatique terrestre, déterminant les températures et les mouvements atmosphériques et océaniques.",
+          "q": "Quel est le principe fondamental du bilan énergétique global de la Terre à long terme?",
+          "explanation": "À l'échelle planétaire et sur de longues périodes, le système climatique terrestre est en équilibre radiatif, ce qui signifie que l'énergie solaire absorbée est compensée par l'énergie thermique réémise vers l'espace.",
           "options": [
             {
-              "text": "Énergie géothermique",
+              "text": "L'énergie entrante est supérieure à l'énergie sortante.",
               "correct": false
             },
             {
-              "text": "Énergie solaire",
+              "text": "L'énergie entrante est égale à l'énergie sortante.",
               "correct": true
             },
             {
-              "text": "Énergie marémotrice",
+              "text": "L'énergie entrante est inférieure à l'énergie sortante.",
               "correct": false
             },
             {
-              "text": "Énergie éolienne",
+              "text": "Le bilan énergétique varie aléatoirement sans tendance.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Quel est le rôle principal de l'effet de serre naturel dans le système climatique terrestre?",
+          "explanation": "L'effet de serre naturel, dû à la présence de gaz comme la vapeur d'eau et le dioxyde de carbone, piège une partie du rayonnement thermique terrestre, réchauffant ainsi la surface de la planète et la rendant propice à la vie.",
+          "options": [
+            {
+              "text": "Refroidir la surface de la Terre en réfléchissant le rayonnement solaire.",
+              "correct": false
+            },
+            {
+              "text": "Maintenir une température moyenne habitable sur Terre.",
+              "correct": true
+            },
+            {
+              "text": "Augmenter l'albédo planétaire.",
+              "correct": false
+            },
+            {
+              "text": "Bloquer complètement le rayonnement ultraviolet.",
               "correct": false
             }
           ]
         },
         {
           "q": "Quels sont les deux gaz les plus abondants dans l'atmosphère terrestre sèche?",
-          "explanation": "L'atmosphère terrestre est composée d'environ 78% d'azote (N2) et 21% d'oxygène (O2), les autres gaz ne représentant qu'environ 1%.",
+          "explanation": "L'atmosphère terrestre sèche est composée d'environ 78% d'azote (N2) et 21% d'oxygène (O2). Les autres gaz sont présents en bien moindres quantités.",
           "options": [
             {
-              "text": "Oxygène et dioxyde de carbone",
+              "text": "Oxygène et dioxyde de carbone.",
               "correct": false
             },
             {
-              "text": "Azote et oxygène",
+              "text": "Azote et oxygène.",
               "correct": true
             },
             {
-              "text": "Argon et azote",
+              "text": "Argon et vapeur d'eau.",
               "correct": false
             },
             {
-              "text": "Vapeur d'eau et oxygène",
+              "text": "Méthane et protoxyde d'azote.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quel est le rôle principal des gaz à effet de serre dans le bilan énergétique terrestre?",
-          "explanation": "Les gaz à effet de serre (GES) absorbent et réémettent le rayonnement infrarouge terrestre, ce qui réchauffe la basse atmosphère et la surface de la Terre, un phénomène essentiel à la vie.",
+          "q": "Quelle est la principale différence entre le rayonnement solaire incident et le rayonnement terrestre émis par la surface de la Terre?",
+          "explanation": "Le Soleil, étant très chaud, émet un rayonnement de courte longueur d'onde (visible, UV). La Terre, plus froide, émet un rayonnement de longue longueur d'onde (infrarouge thermique).",
           "options": [
             {
-              "text": "Refléter toute l'énergie solaire incidente",
+              "text": "Le rayonnement solaire est à ondes longues, le rayonnement terrestre est à ondes courtes.",
               "correct": false
             },
             {
-              "text": "Absorber le rayonnement ultraviolet",
-              "correct": false
-            },
-            {
-              "text": "Piéger une partie du rayonnement infrarouge émis par la Terre",
+              "text": "Le rayonnement solaire est principalement visible et ultraviolet, le rayonnement terrestre est infrarouge.",
               "correct": true
             },
             {
-              "text": "Produire de l'oxygène",
+              "text": "Le rayonnement solaire est absorbé par l'ozone, le rayonnement terrestre est absorbé par l'oxygène.",
+              "correct": false
+            },
+            {
+              "text": "Le rayonnement solaire provient de la Terre, le rayonnement terrestre provient du Soleil.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Qu'est-ce que l'albédo terrestre?",
-          "explanation": "L'albédo est la mesure de la réflectivité d'une surface. Un albédo élevé signifie qu'une grande partie du rayonnement solaire est réfléchie, tandis qu'un albédo faible signifie qu'une grande partie est absorbée.",
+          "q": "Qu'est-ce que l'albédo planétaire?",
+          "explanation": "L'albédo est une mesure de la réflectivité d'une surface ou d'un corps. L'albédo planétaire représente la fraction du rayonnement solaire incident qui est réfléchie par la Terre (nuages, glace, surface claire) sans être absorbée.",
           "options": [
             {
-              "text": "La quantité de chaleur émise par la Terre",
+              "text": "La quantité de rayonnement solaire absorbée par la surface terrestre.",
               "correct": false
             },
             {
-              "text": "La proportion de rayonnement solaire absorbée par la Terre",
-              "correct": false
-            },
-            {
-              "text": "La proportion de rayonnement solaire réfléchie par la Terre",
+              "text": "La proportion de rayonnement solaire réfléchi par la Terre vers l'espace.",
               "correct": true
             },
             {
-              "text": "La température moyenne de la surface terrestre",
+              "text": "L'énergie thermique émise par la Terre.",
+              "correct": false
+            },
+            {
+              "text": "La capacité de l'atmosphère à piéger la chaleur.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Comment le forçage radiatif est-il défini dans le contexte du système climatique?",
-          "explanation": "Le forçage radiatif est une mesure de l'influence d'un facteur donné sur la modification du bilan énergétique Terre-atmosphère. Un forçage radiatif positif tend à réchauffer la surface, tandis qu'un forçage négatif tend à la refroidir.",
+          "q": "Parmi les gaz suivants, lequel n'est PAS un gaz à effet de serre majeur?",
+          "explanation": "L'azote (N2) et l'oxygène (O2) sont les gaz les plus abondants mais ne sont pas des gaz à effet de serre car ils n'absorbent pas significativement le rayonnement infrarouge thermique. Le CO2, CH4 et H2O sont de puissants gaz à effet de serre.",
           "options": [
             {
-              "text": "La quantité d'énergie solaire atteignant la surface terrestre",
+              "text": "Dioxyde de carbone (CO2).",
               "correct": false
             },
             {
-              "text": "Le changement net dans le bilan énergétique de la Terre dû à un facteur externe",
+              "text": "Méthane (CH4).",
+              "correct": false
+            },
+            {
+              "text": "Azote (N2).",
               "correct": true
             },
             {
-              "text": "La capacité de l'atmosphère à retenir la chaleur",
-              "correct": false
-            },
-            {
-              "text": "La vitesse à laquelle les océans absorbent le CO2",
+              "text": "Vapeur d'eau (H2O).",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quel est le rôle principal des océans dans le cycle global du carbone?",
-          "explanation": "Les océans absorbent une grande quantité de CO2 atmosphérique (puits) mais peuvent aussi en relâcher (source), jouant un rôle crucial dans la régulation de sa concentration atmosphérique.",
+          "q": "Dans quelle couche de l'atmosphère la majeure partie des phénomènes météorologiques se produisent-ils?",
+          "explanation": "La troposphère est la couche la plus basse de l'atmosphère, s'étendant du sol jusqu'à environ 8-15 km d'altitude. C'est là que se déroulent la plupart des phénomènes météorologiques (nuages, précipitations, vents).",
           "options": [
             {
-              "text": "Émettre principalement du méthane",
+              "text": "Stratosphère.",
               "correct": false
             },
             {
-              "text": "Agir comme un puits et une source de dioxyde de carbone",
+              "text": "Mésosphère.",
+              "correct": false
+            },
+            {
+              "text": "Troposphère.",
               "correct": true
             },
             {
-              "text": "Produire de l'oxygène par photosynthèse",
-              "correct": false
-            },
-            {
-              "text": "Refléter le rayonnement solaire",
+              "text": "Thermosphère.",
               "correct": false
             }
           ]
@@ -141,11 +163,10 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
     }
   },
   "references": [
-    "Barry, Roger G., and Richard J. Chorley. 2009. *Atmosphere, Weather and Climate*. 9th ed. London: Routledge.",
-    "Boucher, Olivier. 2017. *Le Climat: La Terre et les hommes*. Paris: Dunod.",
-    "IPCC (Intergovernmental Panel on Climate Change). 2021. *Climate Change 2021: The Physical Science Basis. Contribution of Working Group I to the Sixth Assessment Report of the Intergovernmental Panel on Climate Change*. Edited by V. Masson-Delmotte et al. Cambridge, UK and New York, NY, USA: Cambridge University Press.",
-    "Peixoto, José P., and Abraham H. Oort. 1992. *Physics of Climate*. New York: American Institute of Physics.",
-    "Wallace, John M., and Peter V. Hobbs. 2006. *Atmospheric Science: An Introductory Survey*. 2nd ed. Burlington, MA: Academic Press."
+    "Archer, David. 2012. Global Warming: Understanding the Forecast. 2nd ed. Hoboken, NJ: John Wiley & Sons.",
+    "Barry, Roger G., and Richard J. Chorley. 2009. Atmosphere, Weather and Climate. 9th ed. London: Routledge.",
+    "Kump, Lee R., James F. Kasting, and Robert G. Crane. 2010. The Earth System. 3rd ed. Upper Saddle River, NJ: Pearson Prentice Hall.",
+    "Peixoto, José P., and Abraham H. Oort. 1992. Physics of Climate. New York: American Institute of Physics."
   ]
 }
 

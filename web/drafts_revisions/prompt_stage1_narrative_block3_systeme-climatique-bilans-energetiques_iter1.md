@@ -4,8 +4,8 @@ Your task is to write a section of the academic MDX narrative content for the sp
 We are writing the lesson block-by-block.
 - This is Block 3 out of 3.
 - You MUST write the content for the following sections:
-* Heading: "## Conclusion: Synthèse et perspectives"
-  Instructions: "Récapituler les points clés abordés concernant les bilans énergétiques et la composition atmosphérique. Souligner l'interdépendance de ces éléments dans la régulation du climat terrestre. Ouvrir sur les enjeux actuels du changement climatique et l'importance de ces concepts pour les études futures."
+* Heading: "## Conclusion: Dynamique du système climatique et enjeux futurs"
+  Instructions: "Récapituler les points clés abordés (bilans énergétiques, rôle des GES, effet de serre). Souligner l'interconnexion des processus et l'importance de comprendre ces mécanismes pour appréhender les changements climatiques actuels et futurs. Ouvrir sur les implications des perturbations anthropiques et les perspectives de recherche."
 
 ---
 
@@ -15,6 +15,7 @@ We are writing the lesson block-by-block.
 - Lesson Title: "Le système climatique terrestre: bilans énergétiques et composition atmosphérique"
 - Discipline: "Géographie"
 - Target Language: "FR"
+- Target Word Count Range for this block: 2500 to 3500 words.
 - References available:
 [ref1] Barry, R.G. et Chorley, R.J. (2009). «Atmosphere, Weather and Climate». Routledge.
 [ref2] Strahler, A.N. et Strahler, A.H. (2006). «Introducing Physical Geography». John Wiley & Sons.
@@ -37,8 +38,11 @@ The following relevant media and database resources are available for this cours
 ### PEDAGOGICAL WIDGETS MANDATE (CRITICAL):
 To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
 You are REQUIRED to include:
-- At least 2-3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
-- At least 1-2 block widgets/media (using [[WIDGET:Image:id]], [[WIDGET:Mermaid:id]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], or [[WIDGET:Video:id]]) placed on separate blank lines.
+- At least 3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
+- At least 2 block widgets/media (using [[WIDGET:Image:id]], [[WIDGET:Mermaid:id]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], or [[WIDGET:Video:id]]) placed on separate blank lines.
+- MANDATED WIDGETS FOR THIS LEVEL (MUST USE AT LEAST ONE): HistoricalAnecdote, Quiz, Image, Mermaid, SolvedExercise, UnsolvedExercise, DataChart
+
+
 Choose from the following options:
 1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
 2. [[WIDGET:Image:unique_id]] - For relevant paintings, historical photos, maps, diagrams, or illustrations. (e.g. [[WIDGET:Image:prise_bastille]])
@@ -52,6 +56,8 @@ Choose from the following options:
 10. [[WIDGET:RealPerson:unique_id:Person Name]] - Inline hover-card highlight for any person mentioned. (e.g. "...alors que [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque...")
 11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
 12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
+13. [[WIDGET:HistoricalAnecdote:unique_id]] - For interesting historical anecdotes, fun facts, or real-life context.
+14. [[WIDGET:BrilliantIdea:unique_id]] - For key highlights, rules of thumb, or smart/brilliant insights.
 
 Please write them exactly in this anchor format [[WIDGET:Type:unique_id]] (or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
 
@@ -60,35 +66,46 @@ Please write them exactly in this anchor format [[WIDGET:Type:unique_id]] (or wi
 ### PREVIOUS TEXT (for transitions and context):
 Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
 """
-... o, la Terre absorbe le rayonnement solaire et émet son propre rayonnement infrarouge vers l'espace. La température d'équilibre peut être calculée en utilisant la [[WIDGET:ConceptLink:loi_stefan_boltzmann:loi de Stefan-Boltzmann]], qui relie la puissance rayonnée par un corps noir à sa température.
+...  du rayonnement infrarouge descendant de la couche atmosphérique. Elle émet du rayonnement infrarouge vers le haut.
 
-En supposant un albédo moyen de la Terre (environ 0,3) et une constante solaire (environ 1361 W/m²), la température d'équilibre théorique de la Terre sans atmosphère serait d'environ -18°C (255 K) [ref2]. Cette valeur est significativement inférieure à la température moyenne observée de +15°C, ce qui met en évidence l'importance de l'atmosphère et de l'effet de serre naturel.
+Énergie solaire absorbée par la surface + Énergie IR descendante de l'atmosphère = Énergie IR émise par la surface
+$(1-A)\frac{S_0}{4} + \sigma T_a^4 = \sigma T_s^4$
 
-### Modèle à une couche atmosphérique
+Substituons la valeur de $\sigma T_a^4$ de l'équation du TOA :
+$(1-A)\frac{S_0}{4} + (1-A)\frac{S_0}{4} = \sigma T_s^4$
+$2 \times (1-A)\frac{S_0}{4} = \sigma T_s^4$
+$2 \sigma T_a^4 = \sigma T_s^4$
+$T_s^4 = 2 T_a^4$
+$T_s = (2)^{1/4} T_a$
 
-Pour illustrer l'effet de serre, un modèle conceptuel plus élaboré est le modèle à une couche atmosphérique. Ce modèle simplifie l'atmosphère en une seule couche gazeuse qui est transparente au rayonnement solaire incident mais opaque au rayonnement infrarouge terrestre.
+En substituant $T_a = 255 \text{ K}$ :
+$T_s = (2)^{1/4} \times 255 \text{ K} \approx 1.189 \times 255 \text{ K} \approx 303 \text{ K}$ ou $30^\circ\text{C}$.
 
-Dans ce modèle, la surface terrestre absorbe le rayonnement solaire et émet du rayonnement infrarouge. La couche atmosphérique absorbe tout le rayonnement infrarouge émis par la surface et réémet à son tour du rayonnement infrarouge à la fois vers l'espace et vers la surface terrestre. Pour maintenir l'équilibre énergétique, la surface doit se réchauffer davantage pour compenser le rayonnement infrarouge réémis par l'atmosphère vers le bas. Ce modèle simple prédit une température de surface terrestre d'environ +30°C, ce qui est supérieur à la température observée.
+Ce résultat de 30°C est une surestimation de la température moyenne réelle de la Terre (environ 15°C). Cependant, il démontre clairement que la présence d'une atmosphère absorbante d'IR conduit à une température de surface significativement plus élevée (303 K) que la température radiative effective (255 K). La différence de 48°C (30°C - (-18°C)) illustre l'ampleur de l'effet de serre dans ce modèle simplifié.
 
-[[WIDGET:Mermaid:one_layer_model_diagram]]
-mermaid
-graph TD
-    A[Rayonnement Solaire Incident] --> B{Surface Terrestre}
-    B -- Rayonnement IR Émis --> C[Couche Atmosphérique (GES)]
-    C -- Rayonnement IR vers l'Espace --> D(Espace)
-    C -- Rayonnement IR vers la Surface --> B
-    B -- Chaleur Latente/Sensible --> C
+#### Limitations du modèle à une couche:
 
-*Diagramme conceptuel du modèle à une couche atmosphérique, illustrant les flux d'énergie et le rôle de la couche de gaz à effet de serre.*
+*   **Simplification de l'atmosphère**: Une seule couche ne représente pas la complexité de la structure verticale de l'atmosphère, ni les variations de concentration des GES.
+*   **Transparence/Opacité binaire**: L'atmosphère n'est pas parfaitement transparente au solaire ni parfaitement opaque à l'infrarouge. L'absorption dépend des longueurs d'onde et des concentrations des gaz.
+*   **Absence de transport d'énergie non radiatif**: Le modèle ignore les flux de chaleur sensible et latente, qui sont cruciaux dans le bilan énergétique réel.
+*   **Pas de nuages**: Les nuages ont un effet complexe, à la fois réfléchissant le rayonnement solaire (refroidissement) et absorbant/réémettant l'infrarouge (réchauffement).
+*   **Pas de rétroactions**: Le modèle ne prend pas en compte les rétroactions climatiques (ex: vapeur d'eau, albédo de la glace).
 
-### Limites des modèles simplifiés
+Malgré ces limitations, le modèle à une couche est un outil puissant pour illustrer le principe fondamental de l'effet de serre et la manière dont une atmosphère absorbante peut réchauffer la surface planétaire. Des modèles plus complexes, avec plusieurs couches atmosphériques et des propriétés radiatives plus réalistes, sont utilisés en climatologie pour des prévisions plus précises [ref6].
 
-Ces modèles, bien qu'utiles pour illustrer le principe de l'effet de serre, présentent des limites importantes :
-*   **Simplification excessive:** Ils ne tiennent pas compte de la structure verticale complexe de l'atmosphère, des variations de concentration des GES, de la présence de nuages, des transferts de chaleur par convection et évaporation, ni des cycles biogéochimiques [ref1].
-*   **Homogénéité:** Ils supposent une Terre et une atmosphère homogènes, sans variations géographiques ou saisonnières.
-*   **Absence de dynamique:** Ils ignorent les mouvements atmosphériques et océaniques qui redistribuent l'énergie.
+[[WIDGET:SolvedExercise:one_layer_model_calculation]]
+**Exercice Résolu: Calcul de la Température de Surface avec le Modèle à Une Couche**
 
-Malgré ces simplifications, ils démontrent clairement que la présence de gaz absorbant le rayonnement infrarouge dans l'atmosphère est indispensable pour maintenir la Terre à une température propice à la vie, et que toute modification de la concentration de ces gaz peut altérer cet équilibre thermique [ref6].
+**Question:** En utilisant le modèle à une couche pour l'effet de serre, calculez la température de surface d'une planète hypothétique avec les caractéristiques suivantes :
+*   Constante solaire ($S_0$) = 1000 W/m²
+*   Albédo planétaire ($A$) = 0.2
+*   Constante de Stefan-Boltzmann ($\sigma$) = 5.67 x 10⁻⁸ W/m²K⁴
+
+**Solution:**
+
+1.  **Calcul de la température de la couche atmosphérique ($T_a$)**:
+    L'équilibre radiatif au sommet de l'atmosphère est donné par :
+    $(
 """
 
 ---

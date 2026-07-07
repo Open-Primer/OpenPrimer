@@ -4,10 +4,10 @@ Your task is to write a section of the academic MDX narrative content for the sp
 We are writing the lesson block-by-block.
 - This is Block 1 out of 3.
 - You MUST write the content for the following sections:
-* Heading: "## Introduction: Contexte et enjeux de l'étude"
-  Instructions: "Présenter l'objectif du cours, l'importance de l'approche épistémologique et historique pour comprendre les sciences de la Terre et du climat, et la structure générale de la leçon."
-* Heading: "## Les fondements historiques des sciences de la Terre"
-  Instructions: "Explorer les origines de la géographie physique, de la géologie et de la géomorphologie, en mettant en lumière les premières observations, les théories pré-scientifiques et l'émergence des paradigmes fondateurs (catastrophisme, uniformitarisme)."
+* Heading: "## Introduction : Cadre épistémologique et historique"
+  Instructions: "Présenter l'objectif du cours : retracer la genèse et l'évolution des sciences de la Terre et du climat. Définir les concepts clés de géographie physique et de climatologie. Expliquer l'approche épistémologique et historique adoptée pour analyser les fondements de ces disciplines."
+* Heading: "## Des Premières Observations aux Savoirs Antiques et Médiévaux"
+  Instructions: "Explorer les premières tentatives d'explication des phénomènes terrestres et climatiques dans les civilisations antiques (Grèce, Rome, Chine, monde arabe). Mettre en lumière les contributions des penseurs majeurs et les limites des connaissances de l'époque, ainsi que la transmission et l'évolution de ces savoirs durant le Moyen Âge."
 
 ---
 
@@ -17,6 +17,7 @@ We are writing the lesson block-by-block.
 - Lesson Title: "Genèse et évolution des sciences de la Terre et du climat"
 - Discipline: "Géographie"
 - Target Language: "FR"
+- Target Word Count Range for this block: 2500 to 3500 words.
 - References available:
 [ref1] Barry, R.G. et Chorley, R.J. (2009). «Atmosphere, Weather and Climate». Routledge.
 [ref2] Strahler, A.N. et Strahler, A.H. (2006). «Introducing Physical Geography». John Wiley & Sons.
@@ -39,8 +40,11 @@ The following relevant media and database resources are available for this cours
 ### PEDAGOGICAL WIDGETS MANDATE (CRITICAL):
 To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
 You are REQUIRED to include:
-- At least 2-3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
-- At least 1-2 block widgets/media (using [[WIDGET:Image:id]], [[WIDGET:Mermaid:id]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], or [[WIDGET:Video:id]]) placed on separate blank lines.
+- At least 3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
+- At least 2 block widgets/media (using [[WIDGET:Image:id]], [[WIDGET:Mermaid:id]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], or [[WIDGET:Video:id]]) placed on separate blank lines.
+- MANDATED WIDGETS FOR THIS LEVEL (MUST USE AT LEAST ONE): HistoricalAnecdote, Quiz, Image, Mermaid, SolvedExercise, UnsolvedExercise, DataChart
+
+
 Choose from the following options:
 1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
 2. [[WIDGET:Image:unique_id]] - For relevant paintings, historical photos, maps, diagrams, or illustrations. (e.g. [[WIDGET:Image:prise_bastille]])
@@ -54,6 +58,8 @@ Choose from the following options:
 10. [[WIDGET:RealPerson:unique_id:Person Name]] - Inline hover-card highlight for any person mentioned. (e.g. "...alors que [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque...")
 11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
 12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
+13. [[WIDGET:HistoricalAnecdote:unique_id]] - For interesting historical anecdotes, fun facts, or real-life context.
+14. [[WIDGET:BrilliantIdea:unique_id]] - For key highlights, rules of thumb, or smart/brilliant insights.
 
 Please write them exactly in this anchor format [[WIDGET:Type:unique_id]] (or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
 
