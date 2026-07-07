@@ -3314,6 +3314,11 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   // Strip empty/self-closing blocks that crash the MDX compiler (like <CriticalThinking /> or <WhatsNext />)
   processed = processed.replace(/<(CriticalThinking|ScientificMethod|HistoricalAnecdote|HistoricalEvent|WhatsNext|DidYouKnow|BrilliantIdea|PointOfView|DebatScientifique|ScientificDebate|Epistemology)\s*\/?>/gi, '');
 
+  // 1.2 Sanitize prose placeholders (TODO, TBD, Lorem Ipsum, [Insert here], etc.)
+  processed = processed.replace(/^\s*(?:TODO|TBD|TBC|LOREM IPSUM|\[\s*(?:insert|insérer|a définir|à définir|placeholder|dummy)[^\]]*\]|(?:\.\.\.\s*){2,}|(?:___\s*){2,})\s*$/gim, '');
+  processed = processed.replace(/\bTODO\b:\s*.*$/gim, '');
+  processed = processed.replace(/\bLorem ipsum dolor sit amet,?\s*[\s\S]*?\b(?:laborum|dolor|elit)\b\.?/gi, '');
+
   // 1. Convert pseudo-Bloom tag names (like <Analyser> or <Évaluer>) into bold text
   const bloomVerbs = 'Analyser|Évaluer|Créer|Saisir|Comprendre|Appliquer|Déterminer|Identifier|Expliquer|Distinguer|Mettre|Réaliser|Concevoir|Synthétiser|Sélectionner|Résoudre|Développer|Classer|Comparer|Discuter|Décrire|Définir|Démontrer|Illustrer|Analyze|Evaluate|Create|Understand|Apply|Determine|Identify|Explain|Distinguish|Implement|Design|Synthesize|Select|Solve|Develop|Classify|Compare|Discuss|Describe|Define|Demonstrate|Illustrate';
   const bloomRegex = new RegExp(`<(${bloomVerbs})\\b[^>]*?>([\\s\\S]*?)<\\/\\1>`, 'gi');
@@ -3584,6 +3589,14 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = processed.replace(/<Question\b[^>]*?\/>/gi, '');
   processed = processed.replace(/<Quiz\b[^>]*>(?:(?!<Question\b)[\s\S])*?<\/Quiz>/gi, '');
   processed = processed.replace(/<Quiz\b[^>]*?\/>/gi, '');
+  processed = processed.replace(/<Biography\b[^>]*?\/>/gi, '');
+  processed = processed.replace(/<Biography\b[^>]*>\s*<\/Biography>/gi, '');
+  processed = processed.replace(/<GoingFurther\b[^>]*>(?:\s*|<!--[\s\S]*?-->)<\/GoingFurther>/gi, '');
+  processed = processed.replace(/<GoingFurther\b[^>]*?\/>/gi, '');
+  processed = processed.replace(/<Glossary\b[^>]*>(?:\s*|<!--[\s\S]*?-->)<\/Glossary>/gi, '');
+  processed = processed.replace(/<Glossary\b[^>]*?\/>/gi, '');
+  processed = processed.replace(/<Prerequisites\b[^>]*>(?:\s*|<!--[\s\S]*?-->)<\/Prerequisites>/gi, '');
+  processed = processed.replace(/<Prerequisites\b[^>]*?\/>/gi, '');
 
   // 2b. Clean up empty/placeholder DiagnosticQuizzes
   processed = processed.replace(/<DiagnosticQuiz\b([^>]*?)(?:\/>|>([\s\S]*?)<\/DiagnosticQuiz>)/gi, (match, attrsStr) => {

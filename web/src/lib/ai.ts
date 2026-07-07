@@ -1473,7 +1473,21 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
 
   // 2. Diagnostic quiz validation
   if (widgets.diagnosticQuiz && typeof widgets.diagnosticQuiz === 'object') {
-    if (!Array.isArray(widgets.diagnosticQuiz.options) || widgets.diagnosticQuiz.options.length < 2) {
+    const isPlStr = (s: string) => {
+      if (!s) return true;
+      const trimS = String(s).trim();
+      return /placeholder|dummy|todo|tbd|tbc|lorem|ipsum|option/i.test(trimS) || /^[\[\(].*[\]\)]$/.test(trimS);
+    };
+
+    if (
+      !widgets.diagnosticQuiz.question ||
+      isPlStr(widgets.diagnosticQuiz.question) ||
+      !widgets.diagnosticQuiz.sectionTitle ||
+      isPlStr(widgets.diagnosticQuiz.sectionTitle) ||
+      !Array.isArray(widgets.diagnosticQuiz.options) ||
+      widgets.diagnosticQuiz.options.length < 2 ||
+      widgets.diagnosticQuiz.options.some((o: any) => isPlStr(o))
+    ) {
       widgets.diagnosticQuiz = null;
     } else {
       widgets.diagnosticQuiz.options = widgets.diagnosticQuiz.options.filter((o: any) => o && String(o).trim().length > 0);
@@ -1504,14 +1518,18 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
 
   // 3. Objectives KSA validation
   if (widgets.learningObjectives && typeof widgets.learningObjectives === 'object') {
+    const isPl = (x: any) => {
+      const s = String(x || '').trim();
+      return !s || /placeholder|dummy|todo|tbd|tbc|lorem|ipsum/i.test(s) || /^[\[\(].*[\]\)]$/.test(s);
+    };
     widgets.learningObjectives.knowledge = Array.isArray(widgets.learningObjectives.knowledge)
-      ? widgets.learningObjectives.knowledge.filter((x: any) => x && String(x).trim().length > 0)
+      ? widgets.learningObjectives.knowledge.filter((x: any) => !isPl(x))
       : [];
     widgets.learningObjectives.skills = Array.isArray(widgets.learningObjectives.skills)
-      ? widgets.learningObjectives.skills.filter((x: any) => x && String(x).trim().length > 0)
+      ? widgets.learningObjectives.skills.filter((x: any) => !isPl(x))
       : [];
     widgets.learningObjectives.attitudes = Array.isArray(widgets.learningObjectives.attitudes)
-      ? widgets.learningObjectives.attitudes.filter((x: any) => x && String(x).trim().length > 0)
+      ? widgets.learningObjectives.attitudes.filter((x: any) => !isPl(x))
       : [];
 
     // Translate learningObjectives fields if leaked
@@ -1542,12 +1560,12 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       }
       const props = comp.props || {};
       if (comp.componentType === "Biography") {
-        if (!props.name || /placeholder|dummy|todo|tbd/i.test(props.name)) {
+        if (!props.name || /placeholder|dummy|todo|tbd|tbc|lorem|ipsum/i.test(props.name) || /^[\[\(].*[\]\)]$/.test(props.name.trim())) {
           return false;
         }
       }
       if (comp.componentType === "Image") {
-        if (!props.description || /illustration|placeholder/i.test(props.description)) {
+        if (!props.description || /illustration|placeholder|dummy|todo|tbd|tbc|lorem|ipsum/i.test(props.description) || /^[\[\(].*[\]\)]$/.test(props.description.trim())) {
           return false;
         }
       }
@@ -1628,7 +1646,7 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       if (comp.componentType === "Biography") {
         let name = (props.name || "").trim();
         let description = (props.description || "").trim();
-        const isPlaceholder = !description || description.length < 20 || /placeholder|dummy|todo|tbd|biographie détaillée/i.test(description);
+        const isPlaceholder = !description || description.length < 20 || /placeholder|dummy|todo|tbd|tbc|lorem|ipsum|biographie détaillée/i.test(description) || /^[\[\(].*[\]\)]$/.test(description);
         
         if (name && isPlaceholder) {
           console.log(`[BIOGRAPHY VALIDATOR] Biography placeholder or empty description for "${name}". Healing via Wikipedia...`);
@@ -1678,7 +1696,31 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       // Check language leakage and translate
       if (comp.componentType === "Quiz") {
         if (Array.isArray(props.questions)) {
-          props.questions = props.questions.filter((q: any) => q && q.q && Array.isArray(q.options) && q.options.length >= 2);
+          props.questions = props.questions.filter((q: any) => {
+            if (!q || !q.q || !Array.isArray(q.options)) return false;
+            
+            // Exclude questions with placeholder questions
+            if (/placeholder|dummy|todo|tbd|tbc|lorem|ipsum/i.test(String(q.q)) || /^[\[\(].*[\]\)]$/.test(String(q.q).trim())) {
+              return false;
+            }
+
+            // Clean options: drop placeholder or empty options
+            q.options = q.options.filter((o: any) => {
+              if (!o || typeof o !== 'object') return false;
+              const txt = String(o.text || '').trim();
+              if (!txt) return false;
+              if (/placeholder|dummy|todo|tbd|tbc|lorem|ipsum|option/i.test(txt) || /^[\[\(].*[\]\)]$/.test(txt)) {
+                return false;
+              }
+              return true;
+            }).map((o: any) => {
+              o.correct = !!o.correct;
+              return o;
+            });
+
+            return q.options.length >= 2;
+          });
+
           for (const q of props.questions) {
             if (detectLanguageLeakage(q.q, lang)) {
               q.q = await translateText(q.q, lang);
@@ -1686,12 +1728,6 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
             if (detectLanguageLeakage(q.explanation, lang)) {
               q.explanation = await translateText(q.explanation, lang);
             }
-            q.options = q.options.map((o: any) => {
-              if (!o || typeof o !== 'object') return { text: "Option", correct: false };
-              if (!o.text) o.text = "Option";
-              o.correct = !!o.correct;
-              return o;
-            });
             for (const o of q.options) {
               if (detectLanguageLeakage(o.text, lang)) {
                 o.text = await translateText(o.text, lang);
@@ -1776,8 +1812,10 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       'youtube.com/watch?v=dqw4w9wgxcq', 'test.com', 'placeholder', 'fakeurl'
     ];
     widgets.goingFurther.items = widgets.goingFurther.items.filter((it: any) => {
-      if (!it || !it.title || !it.description || /placeholder|todo/i.test(it.description)) return false;
-      return true;
+      if (!it || !it.title || !it.description) return false;
+      const isPlTitle = /placeholder|todo|tbd|tbc|lorem|ipsum/i.test(it.title) || /^[\[\(].*[\]\)]$/.test(String(it.title).trim());
+      const isPlDesc = /placeholder|todo|tbd|tbc|lorem|ipsum/i.test(it.description) || /^[\[\(].*[\]\)]$/.test(String(it.description).trim());
+      return !isPlTitle && !isPlDesc;
     }).map((it: any) => {
       const title = String(it.title).trim();
       const type = ["book", "article", "video", "website", "research", "movie", "film"].includes(it.type) ? it.type : "website";
@@ -1844,16 +1882,25 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
 
     if (Array.isArray(qProps.questions)) {
       qProps.questions = qProps.questions.filter((q: any) => {
-        if (!q || typeof q !== 'object' || !q.q || !Array.isArray(q.options) || q.options.length < 2) return false;
-        if (/placeholder|question d'auto-évaluation|evaluation question/i.test(q.q)) return false;
-        return true;
+        if (!q || typeof q !== 'object' || !q.q || !Array.isArray(q.options)) return false;
+        if (/placeholder|dummy|todo|tbd|tbc|lorem|ipsum|question d'auto-évaluation|evaluation question/i.test(q.q) || /^[\[\(].*[\]\)]$/.test(String(q.q).trim())) return false;
+        
+        q.options = q.options.filter((o: any) => {
+          if (!o) return false;
+          const txt = String(o.text || o).trim();
+          if (!txt) return false;
+          if (/placeholder|dummy|todo|tbd|tbc|lorem|ipsum|option/i.test(txt) || /^[\[\(].*[\]\)]$/.test(txt)) {
+            return false;
+          }
+          return true;
+        }).map((o: any) => {
+          return { text: String(o.text || o).trim(), correct: !!o.correct };
+        });
+
+        return q.options.length >= 2;
       }).map((q: any) => {
         q.q = String(q.q).trim();
         q.explanation = q.explanation ? String(q.explanation).trim() : "";
-        q.options = q.options.map((o: any) => {
-          if (!o || typeof o !== 'object') return { text: "Option", correct: false };
-          return { text: String(o.text || o).trim(), correct: !!o.correct };
-        });
         if (!q.options.some((o: any) => o.correct)) {
           q.options[0].correct = true;
         }
@@ -1899,7 +1946,7 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
 
       const isCircular = term.toLowerCase() === definition.toLowerCase();
       const isShort = definition.length < 8;
-      const isPlaceholder = /placeholder|dummy|todo|tbd|a definir/i.test(definition);
+      const isPlaceholder = /placeholder|dummy|todo|tbd|tbc|lorem|ipsum|a definir|à définir/i.test(definition) || /placeholder|dummy|todo|tbd|tbc|lorem|ipsum|a definir|à définir/i.test(term) || /^[\[\(].*[\]\)]$/.test(term) || /^[\[\(].*[\]\)]$/.test(definition);
 
       const isWrongLanguage = (targetLang !== 'en') && (
         /\b(is a|are|refers to|the study of|of the|in the|and the|with the|is the|study of)\b/i.test(definition) ||
@@ -4475,6 +4522,7 @@ Check:
 1. Prerequisites are realistic.
 2. DiagnosticQuiz index is correct.
 3. LearningObjectives use Bloom's Taxonomy verbs (Analyze, Evaluate, Create for L1/L2/L3/Master levels).
+4. ZERO placeholders, draft markers (e.g. bracketed text like "[insert]"), or template values are allowed. Reject the block if any text or option contains placeholder words like "Option", "placeholder", "todo", "tbd", "tbc", "lorem", "ipsum" or empty strings. All text fields must be fully fleshed out and complete.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 \`\`\`json
@@ -4654,6 +4702,7 @@ Ensure:
 1. Every anchor specified in the prompt is mapped.
 2. Captions and descriptions have no sequential figure prefixes like "Figure 1:".
 3. Biography component details (dates, Wikipedia link) are correct.
+4. ZERO placeholders, draft markers, bracketed texts, or template values are present. Biographies, interactive elements, figures, and diagrams must be fully populated with real, high-quality, professional educational content in the target language. Absolutely no fake URLs, lorem ipsum text, or incomplete fields. Reject the block if any placeholder or skeletal text is detected.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 \`\`\`json
@@ -4768,6 +4817,7 @@ ${JSON.stringify(block3Parsed, null, 2)}
 Ensure:
 1. Glossary and conclusion summary are scientifically/academically accurate.
 2. The language is strictly in ${targetLang.toUpperCase()}.
+3. Absolutely ZERO placeholders, draft markers, TBDs, lorem ipsum text, or template values (like "your_youtube_id" or "placeholder") in the goingFurther, whatsNext, or glossary items. All fields must contain real, fully translated, complete information. Reject if any empty strings or dummy templates are used.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 \`\`\`json
@@ -4891,6 +4941,7 @@ Ensure:
 1. Bibliography entries are valid academic citations.
 2. Quizzes are mathematically/scientifically accurate.
 3. No HTML or custom Hover-Card tags inside quiz strings.
+4. Absolutely ZERO placeholders or generic filler text (like "Option A", "Option B", "Option", etc.) are allowed in the quiz questions or options. All questions and options must contain actual high-quality academic content in the target language. Reject if any question has dummy options.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 \`\`\`json
