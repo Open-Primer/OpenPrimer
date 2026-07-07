@@ -742,13 +742,14 @@ export const translateDisciplineQuery = (query: string, targetLang: string): str
 
 // Helper to clean path segments by removing accents, spaces, and special characters
 export const cleanPathSegment = (text: string): string => {
-  if (!text) return 'General';
+  if (!text) return 'general';
   return text
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // remove accents
     .replace(/[^a-zA-Z0-9_-]/g, "_") // replace non-alphanumeric/dash/underscore with underscore
     .replace(/_+/g, "_")             // collapse multiple underscores
-    .replace(/^_+|_+$/g, "");        // trim leading/trailing underscores
+    .replace(/^_+|_+$/g, "")         // trim leading/trailing underscores
+    .toLowerCase();
 };
 
 // Global in-memory cache for dynamically fetched translations

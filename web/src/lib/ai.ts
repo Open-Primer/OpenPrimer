@@ -509,6 +509,29 @@ const revisionAuditSchema = {
   required: ["approved", "isGlobalRevision", "globalCritique"]
 };
 
+const revisionQualificationSchema = {
+  type: "object",
+  properties: {
+    scope: { type: "string", description: "Must be 'global' if the overall lesson needs a full structural or narrative rewrite, or 'local' if edits are localized to specific sections, quizzes, or widgets." },
+    preCritique: { type: "string", description: "Pre-critique report explaining the diagnosed errors, points to moderate, and general guidelines." },
+    affectedItems: {
+      type: "array",
+      description: "List of items affected. If scope is local, list all sections, quizzes, or widgets that need correction. If scope is global, this array must be empty.",
+      items: {
+        type: "object",
+        properties: {
+          type: { type: "string", description: "Must be one of: 'section', 'quiz', 'widget'." },
+          id: { type: "string", description: "For quizzes/widgets, their specific ID (e.g. quiz_123, biography_456). For sections, their exact heading (e.g. ## Introduction)." },
+          heading: { type: "string", description: "For sections, their exact heading (e.g. ## Introduction). For quizzes/widgets, the heading of the section they reside in (or empty string)." },
+          feedback: { type: "string", description: "Detailed local instruction on what to revise for this specific item." }
+        },
+        required: ["type", "id", "heading", "feedback"]
+      }
+    }
+  },
+  required: ["scope", "preCritique", "affectedItems"]
+};
+
 interface MarkdownSection {
   heading: string;
   content: string;
@@ -2651,17 +2674,11 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     content = content.trim() + glossaryStr;
   }
 
-  // Convert [refN] citations in the narrative text to standard superscript links with back-links
-  const citedSet = new Set<number>();
+  // Convert [refN] citations in the narrative text to WFTA Citation widget anchors
   content = content.replace(/\[ref[-_]?\s*(\d+)\]/gi, (match, numStr) => {
     const num = parseInt(numStr, 10);
     if (num > 0 && num <= widgets.references.length) {
-      if (!citedSet.has(num)) {
-        citedSet.add(num);
-        return `<sup id="cite-${num}" class="scroll-mt-24"><a href="#ref-${num}">[${num}]</a></sup>`;
-      } else {
-        return `<sup><a href="#ref-${num}">[${num}]</a></sup>`;
-      }
+      return `[[WIDGET:Citation:${num}]]`;
     }
     return match;
   });
@@ -4098,13 +4115,13 @@ ${bIdx > 0 ? `Below is the text generated in the previous blocks. Do NOT repeat 
 ---
 
 ⚠️ CRITICAL MARKUP & XML/JSX COMPLIANCE RULES (MDX SAFETY MANDATE):
-1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, etc.) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors for all widgets, media, links, or elements.
+1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup>) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors for all widgets, media, links, or elements. For references/citations, you MUST exclusively use [[WIDGET:Citation:num]] (e.g. [[WIDGET:Citation:1]]) instead of any HTML/JSX markup or brackets.
 2. NO RAW HTML FOR LISTS. Use Markdown bullets/numbering.
 3. NO LITERAL CURLY BRACES in plain text. Wrap in LaTeX or backticks.
 4. NO STRAY import/export statements.
 5. NO WIDGET ANCHORS INSIDE LISTS OR TABLES. Place them on separate blank lines.
 6. Captions of images or Mermaid diagrams must NOT contain figure prefixes (like 'Figure 1:', 'Image A -'). CAPTIONS MUST ONLY contain the descriptive prose.
-7. ACADEMIC REFERENCES CITATION MANDATE: You MUST actively cite the references listed under "### GLOBAL CONTEXT:" (if any) throughout the prose. Cite them inline using the format [ref1], [ref2], etc., where [ref1] maps to the first reference in the Global Context list, [ref2] to the second, and so on. Do not define a bibliography section here; simply cite them inline in this format.
+7. ACADEMIC REFERENCES CITATION MANDATE: You MUST actively cite the references listed under "### GLOBAL CONTEXT:" (if any) throughout the prose. Cite them inline using the format [[WIDGET:Citation:1]], [[WIDGET:Citation:2]], etc., where [[WIDGET:Citation:1]] maps to the first reference in the Global Context list, [[WIDGET:Citation:2]] to the second, and so on. Absolute prohibition on raw HTML/JSX tags (like <sup> or <a>) or brackets (like [1], [ref1]) for citations in the text. Exclusively use [[WIDGET:Citation:id]] anchors. Do not define a bibliography section here; simply cite them inline in this format.
 ${pronunciationMandate}
 ${bIdx === blocks.length - 1 ? `8. Since this is the LAST block, you MUST end with the ## Conclusion section containing at least two comprehensive academic paragraphs, and all conclusion widgets in this exact order:
   [[WIDGET:conclusionSummary]]
@@ -4135,7 +4152,7 @@ ${cleanedBlockText}
 Check checkpoints:
 1. Zero-placeholders.
 2. Accurate academic density and level-appropriate language.
-3. Strict MDX/JSX safety (absolutely no raw custom component or custom JSX/HTML tags like <ConceptLink>, <RealPerson>, <Glossary>, etc. inline in prose. All interactive elements and special links must strictly use the [[WIDGET:id]] anchor format).
+3. Strict MDX/JSX safety (absolutely no raw custom component or custom JSX/HTML tags like <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup> inline in prose. All interactive elements and special links must strictly use the [[WIDGET:id]] anchor format. For citations/references, they MUST strictly use the [[WIDGET:Citation:num]] anchor format, e.g. [[WIDGET:Citation:1]]. Reject any block containing raw HTML citation tags or raw bracketed citation anchors like [ref1], [1] in text).
 4. No figure prefixes like "Figure 1:" in visual captions.
 5. Presence of pedagogical widgets: Check that the block contains at least 2-3 inline hover-cards (ConceptLink, Glossary, RealPerson) and at least 1-2 block widgets (Image, Mermaid, ComparisonSlider, InteractiveDiagram, DataChart, Video) as anchors. If completely missing, reject the block.
 ${bIdx === blocks.length - 1 ? `6. Valid ## Conclusion section with at least two paragraphs and the required conclusion widgets.` : ''}
@@ -4230,7 +4247,7 @@ Return ONLY a valid JSON object matching blockNarrativeAuditSchema:
 We need to repair specific sections of the lesson narrative "${item.title}" (Block ${bIdx + 1}) that were rejected by the Narrative Critic (Agent 4A).
 
 [CRITICAL] CRITICAL MDX COMPLIANCE:
-- Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, etc.) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors.
+- Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup>) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors. For references/citations, you MUST exclusively use [[WIDGET:Citation:num]] (e.g. [[WIDGET:Citation:1]]) instead of any HTML/JSX markup or brackets.
 - Do NOT use raw HTML tags; use standard Markdown instead.
 - Do NOT use literal curly braces { } in plain text.
 
@@ -4260,7 +4277,7 @@ INSTRUCTIONS:
 1. Repair each rejected section to fully resolve its critique.
 2. Wrap each repaired section in: <revised_section heading="HEADING_EXACTLY_AS_SHOWN">[your repaired content]</revised_section>
 3. Preserve all [[WIDGET:id]] anchors exactly as they are in the current content.
-4. ACADEMIC REFERENCES CITATION MANDATE: Ensure that all inline citations in the format [ref1], [ref2], etc. mapping to the available global references are strictly preserved or added where necessary to support the academic rigor of the content. Do not define a bibliography section here; simply cite them inline in this format.
+4. ACADEMIC REFERENCES CITATION MANDATE: Ensure that all inline citations in the format [[WIDGET:Citation:1]], [[WIDGET:Citation:2]], etc. mapping to the available global references are strictly preserved or added where necessary to support the academic rigor of the content. Absolute prohibition on raw HTML/JSX tags (like <sup> or <a>) or brackets (like [1], [ref1]) for citations in the text. Exclusively use [[WIDGET:Citation:id]] anchors. Do not define a bibliography section here; simply cite them inline in this format.
 5. Do NOT include markdown code block wrappers or conversational text.`;
 
                     let scribeRepairOutput = await callAIEngine(promptJointRepair, null, 0.35, 0.25, 0.85);
@@ -5158,7 +5175,159 @@ ${validatedMdx}`;
   }
 }
 
+async function performSectionBasedTranslation(
+  lesson: { title: string; content: string; lesson_slug: string },
+  targetLang: string,
+  apiKey: string | undefined | null
+): Promise<{ translatedMdx: string; transSuccess: boolean; transTitle: string }> {
+  const { content: isolatedContent, registry } = isolateJsxForTranslation(lesson.content);
+
+  // 1. Translate Title first to use as context
+  let transTitle = lesson.title;
+  try {
+    const promptTitle = `Translate the lesson title "${lesson.title}" to "${targetLang.toUpperCase()}". Return only the translated string.`;
+    let transTitleSuccess = false;
+    if (isVertexConfigured()) {
+      try {
+        const resTitle = await callVertexAI({
+          task: 'course_translation',
+          contents: [{ role: 'user', parts: [{ text: promptTitle }] }],
+          generationConfig: { temperature: 0.1 }
+        });
+        if (resTitle && resTitle.ok) {
+          const tJson = await resTitle.json();
+          transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
+          transTitleSuccess = true;
+        }
+      } catch (err) {
+        console.warn("[AI GENERATOR] Vertex title translation call failed:", err);
+      }
+    }
+    
+    if (!transTitleSuccess && apiKey) {
+      const startTime = Date.now();
+      try {
+        const compressedTitle = compressPromptText(promptTitle);
+        const resTitle = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: compressedTitle }] }]
+          })
+        });
+        if (resTitle.ok) {
+          const tJson = await resTitle.json();
+          transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
+          transTitleSuccess = true;
+          const durationMs = Date.now() - startTime;
+          const usage = tJson.usageMetadata || {};
+          const promptTokens = usage.promptTokenCount || 0;
+          const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+          await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedTitle);
+        }
+      } catch (err) {
+        console.error(`[AI GENERATOR] AI Studio title translation fetch exception:`, err);
+      }
+    }
+  } catch (e) {
+    console.warn(`[AI GENERATOR] Title translation failed:`, e);
+  }
+
+  // 2. Split isolated content into sections
+  const parsedSections = parseMarkdownSections(isolatedContent);
+  
+  // Translate sections in parallel
+  const translatedSections = await Promise.all(parsedSections.map(async (sec) => {
+    let translatedContent = sec.content;
+    const sectionToTranslate = sec.heading ? `${sec.heading}\n${sec.content}` : sec.content;
+    
+    if (sectionToTranslate.trim()) {
+      const promptTranslateSec = `You are a professional academic translator. Translate the following section of an academic MDX course lesson to target language code: "${targetLang.toUpperCase()}".
+Lesson Title: "${transTitle}"
+
+Rules:
+1. Preserve all markdown structure, custom blockquotes, headings (including the main ## heading at the start, if present), lists, and links.
+2. Keep all Math equations (wrapped in $ or $$) completely untouched.
+3. Do NOT translate technical code blocks. You will see placeholder tokens like __JSX_SELF_...__, __JSX_CLOSE_...__, __JSX_OPEN_...__, __JSX_ATTR_...__, __JSX_END_...__, and source attribution placeholders like __SRC_ATTR_PLACEHOLDER_...__. These placeholders protect the custom interactive components and figure source attributions from corruption. Do NOT translate or modify these placeholders or the '|||' separators. Preserve them EXACTLY as they are.
+4. Return ONLY the translated MDX content for this section. Do not include markdown code block wrappers (like \`\`\`md or \`\`\`mdx) or conversational intro/outro text.
+5. CRITICAL ACADEMIC INTEGRITY & CITATION RULES:
+   - Do NOT translate any bibliographic references, book/article/publication titles, author names, publishers, publication cities, or citation texts. These must remain exactly in their original language.
+   - Do NOT translate the "Source:" prefix or any associated bibliographic links/attributions in figures, captions, or text.
+   - In quote blocks (lines starting with '>'), do NOT translate the author name or the publication details following the '—' dash.
+   - Translate the quote content into the target course language, followed by its original version in brackets (e.g., \`[Original: "Original quote..."]\`) IF the target course language is different from the quote's original language.
+6. CRITICAL MDX COMPILER COMPLIANCE RULES:
+   - Absolutely NO orphaned JSX tags or unclosed tags.
+   - Never nest a custom component inside itself.
+   - Do NOT generate empty components without text or children.
+7. ZERO-COMMENTARY MANDATE: Do not add any conversational introduction or notes. Return ONLY the translated MDX section content.
+
+MDX SECTION CONTENT TO TRANSLATE:
+${sectionToTranslate}`;
+
+      let secSuccess = false;
+      if (isVertexConfigured()) {
+        try {
+          const resSec = await callVertexAI({
+            task: 'course_translation',
+            contents: [{ role: 'user', parts: [{ text: promptTranslateSec }] }],
+            generationConfig: { temperature: 0.1 }
+          });
+          if (resSec && resSec.ok) {
+            const resJson = await resSec.json();
+            translatedContent = resJson.candidates?.[0]?.content?.parts?.[0]?.text || sectionToTranslate;
+            secSuccess = true;
+          }
+        } catch (err) {
+          console.warn(`[AI GENERATOR] Vertex translation call failed for section:`, err);
+        }
+      }
+      
+      if (!secSuccess && apiKey) {
+        const startTime = Date.now();
+        try {
+          const compressedPrompt = compressPromptText(promptTranslateSec);
+          const resSec = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: compressedPrompt }] }]
+            })
+          });
+          if (resSec.ok) {
+            const resJson = await resSec.json();
+            translatedContent = resJson.candidates?.[0]?.content?.parts?.[0]?.text || sectionToTranslate;
+            secSuccess = true;
+            const durationMs = Date.now() - startTime;
+            const usage = resJson.usageMetadata || {};
+            const promptTokens = usage.promptTokenCount || 0;
+            const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+            await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedPrompt);
+          }
+        } catch (err) {
+          console.error(`[AI GENERATOR] AI Studio translation section fetch exception:`, err);
+        }
+      }
+    }
+
+    return {
+      heading: '',
+      content: translatedContent
+    };
+  }));
+
+  // Reconstruct and restore JSX
+  const reconstructedIsolatedMdx = reconstructMarkdown(translatedSections);
+  const translatedMdx = restoreJsxAfterTranslation(reconstructedIsolatedMdx, registry, targetLang);
+  
+  return {
+    translatedMdx,
+    transSuccess: !!translatedMdx,
+    transTitle
+  };
+}
+
 export async function translateCourseContent(courseSlug: string, targetLang: string, taskId?: string, lessonOffset: number = 0) {
+  courseSlug = cleanPathSegment(courseSlug);
   try {
     // 1. Check if the course is a curriculum
     const { data: allCourses } = await dbService.getAllCourses();
@@ -5256,93 +5425,10 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
             console.log(`[TRANSLATOR] Staggering translation of lesson "${lesson.title}" by ${delay / 1000}s...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             
-            const { content: isolatedContent, registry } = isolateJsxForTranslation(lesson.content);
-
-            const promptTranslate = `You are a professional academic translator. Translate the following academic MDX course content to target language code: "${targetLang.toUpperCase()}".
-Rules:
-1. Preserve all markdown structure, custom blockquotes, headings, lists, and links.
-2. Keep all Math equations (wrapped in $ or $) completely untouched.
-3. Do NOT translate technical code blocks. You will see placeholder tokens like __JSX_SELF_...__, __JSX_CLOSE_...__, __JSX_OPEN_...__, __JSX_ATTR_...__, __JSX_END_...__, and source attribution placeholders like __SRC_ATTR_PLACEHOLDER_...__. These placeholders protect the custom interactive components and figure source attributions from corruption. Do NOT translate or modify these placeholders or the '|||' separators. Preserve them EXACTLY as they are.
-4. Translate the title and return ONLY the translated MDX content. Do not include markdown code block wrappers.
-5. CRITICAL ACADEMIC INTEGRITY & CITATION RULES:
-   - Do NOT translate any bibliographic references, book/article/publication titles, author names, publishers, publication cities, or citation texts. These must remain exactly in their original language to preserve academic citation integrity.
-   - Do NOT translate the "Source:" prefix or any associated bibliographic links/attributions in figures, captions, or text.
-   - In quote blocks (lines starting with '>'), do NOT translate the author name or the publication details following the '—' dash.
-   - Translate the quote content into the target course language, followed by its original version in brackets (e.g., \`[Original: "Original quote..."]\`) IF the target course language is different from the quote's original language. If the target course language is the same as the quote's original language, only keep the original version (do NOT repeat it or wrap it in brackets). Never translate the original citation text in the brackets.
-6. CRITICAL MDX COMPILER COMPLIANCE RULES:
-   - Do NOT wrap the translated response in markdown code blocks (such as \`\`\`md or \`\`\`mdx). Return the raw MDX content directly.
-   - Absolutely NO orphaned JSX tags or unclosed tags.
-   - Never nest a custom component inside itself.
-   - Do NOT generate empty components without text or children.
-7. ZERO-COMMENTARY MANDATE: Do not add any conversational introduction, notes, or explanation (e.g. "Here is the translation:"). Return ONLY the translated MDX content.
-
-MDX CONTENT TO TRANSLATE:
-${isolatedContent}`;
-
-            if (process.env.DEBUG === 'true') {
-              saveDraftRevision(`prompt_translation_${lesson.lesson_slug}_${targetLang.toLowerCase()}.md`, promptTranslate);
-            }
-
-            let translatedMdx = '';
-            let transSuccess = false;
-
-            if (isVertexConfigured()) {
-              console.log(`[AI GENERATOR] Translating lesson "${lesson.title}" to ${targetLang} via Vertex AI (gemini-2.5-flash)...`);
-              try {
-                const res = await callVertexAI({
-                  task: 'course_translation',
-                  contents: [{ role: 'user', parts: [{ text: promptTranslate }] }],
-                  generationConfig: { temperature: 0.1 }
-                });
-
-                if (res && res.ok) {
-                  const resJson = await res.json();
-                  const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                  translatedMdx = restoreJsxAfterTranslation(rawText, registry, targetLang);
-                  transSuccess = true;
-                }
-              } catch (err) {
-                console.warn("[AI GENERATOR] Vertex translation call failed:", err);
-              }
-            }
-            
-            if (!transSuccess && apiKey) {
-              console.log(`[AI GENERATOR] Translating lesson "${lesson.title}" to ${targetLang} via AI Studio fallback (gemini-2.5-flash)...`);
-              const startTime = Date.now();
-              try {
-                const compressedPrompt = compressPromptText(promptTranslate);
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    contents: [{ parts: [{ text: compressedPrompt }] }]
-                  })
-                });
-                if (res.ok) {
-                  const resJson = await res.json();
-                  const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                  translatedMdx = restoreJsxAfterTranslation(rawText, registry, targetLang);
-                  transSuccess = true;
-
-                  const durationMs = Date.now() - startTime;
-                  const usage = resJson.usageMetadata || {};
-                  const promptTokens = usage.promptTokenCount || 0;
-                  const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-                  await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedPrompt);
-                }
-              } catch (err) {
-                console.error(`[AI GENERATOR] AI Studio translation fetch exception:`, err);
-              }
-            }
-
-            if (transSuccess && translatedMdx && process.env.DEBUG === 'true') {
-              saveDraftRevision(`draft_translation_${lesson.lesson_slug}_${targetLang.toLowerCase()}_attempt_1.md`, translatedMdx);
-            }
-
-            if (!translatedMdx) {
-              console.warn(`[AI GENERATOR] Failed to translate lesson "${lesson.title}". Using fallback translator.`);
-              translatedMdx = lesson.content.replace('lang: "en"', `lang: "${targetLang}"`);
-            }
+            const { translatedMdx: initialTranslatedMdx, transSuccess: initialTransSuccess, transTitle: initialTransTitle } = await performSectionBasedTranslation(lesson, targetLang, apiKey);
+            let translatedMdx = initialTranslatedMdx;
+            let transSuccess = initialTransSuccess;
+            let transTitle = initialTransTitle;
 
             // === TRANSLATION CRITIC PIPELINE ===
             let approved = false;
@@ -5545,59 +5631,7 @@ if (process.env.DEBUG === 'true') {
               translatedMdx = currentTranslation;
             }
 
-            // Translate title
-            let transTitle = lesson.title;
-            try {
-              const promptTitle = `Translate the lesson title "${lesson.title}" to "${targetLang.toUpperCase()}". Return only the translated string.`;
-              
-              let transTitleSuccess = false;
-              if (isVertexConfigured()) {
-                try {
-                  const resTitle = await callVertexAI({
-                    task: 'course_translation',
-                    contents: [{ role: 'user', parts: [{ text: promptTitle }] }],
-                    generationConfig: { temperature: 0.1 }
-                  });
-                  if (resTitle && resTitle.ok) {
-                    const tJson = await resTitle.json();
-                    transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
-                    transTitleSuccess = true;
-                  }
-                } catch (err) {
-                  console.warn("[AI GENERATOR] Vertex title translation call failed:", err);
-                }
-              }
-              
-              if (!transTitleSuccess && apiKey) {
-                console.log(`[AI GENERATOR] Translating title "${lesson.title}" via AI Studio fallback (gemini-2.5-flash)...`);
-                const startTime = Date.now();
-                try {
-                  const compressedTitle = compressPromptText(promptTitle);
-                  const resTitle = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      contents: [{ parts: [{ text: compressedTitle }] }]
-                    })
-                  });
-                  if (resTitle.ok) {
-                    const tJson = await resTitle.json();
-                    transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
-                    transTitleSuccess = true;
 
-                    const durationMs = Date.now() - startTime;
-                    const usage = tJson.usageMetadata || {};
-                    const promptTokens = usage.promptTokenCount || 0;
-                    const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-                    await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedTitle);
-                  }
-                } catch (err) {
-                  console.error(`[AI GENERATOR] AI Studio title translation fetch exception:`, err);
-                }
-              }
-            } catch (e) {
-              console.warn(`[AI GENERATOR] Title translation failed:`, e);
-            }
 
             // De-hallucinate translated references
             let validatedMdx = await validateAndFixBibliography(translatedMdx, targetLang.toLowerCase());
@@ -5794,6 +5828,69 @@ export async function reviseCourseContent(courseSlug: string, revisionDetails: s
   console.log(`[REVISION AGENT] Starting revision for course: "${courseSlug}" (Lang: ${targetLang})`);
   console.log(`[REVISION AGENT] Original Details: "${revisionDetails}"`);
 
+  const callAIEngine = async (
+    promptText: string,
+    schema?: any,
+    temperature: number = 0.2,
+    frequencyPenalty?: number,
+    topP?: number,
+    isJsonMode: boolean = false
+  ): Promise<string> => {
+    const generationConfig: any = { 
+      temperature,
+      maxOutputTokens: 8192
+    };
+    if (frequencyPenalty !== undefined) {
+      generationConfig.frequencyPenalty = frequencyPenalty;
+    }
+    if (topP !== undefined) {
+      generationConfig.topP = topP;
+    }
+    if (schema) {
+      generationConfig.responseMimeType = "application/json";
+      generationConfig.responseSchema = schema;
+    } else if (isJsonMode || promptText.toLowerCase().includes('json') || promptText.toLowerCase().includes('schema')) {
+      generationConfig.responseMimeType = "application/json";
+    }
+
+    if (isVertexConfigured()) {
+      try {
+        const res = await callVertexAI({
+          task: 'course_generation',
+          contents: [{ role: 'user', parts: [{ text: promptText }] }],
+          generationConfig
+        });
+        if (res && res.ok) {
+          const resJson = await res.json();
+          return resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        }
+      } catch (e) {
+        console.warn(`[REVISION AGENT - VERTEX] Vertex AI call failed:`, e);
+      }
+    }
+
+    if (apiKey) {
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: compressPromptText(promptText) }] }],
+            generationConfig
+          })
+        });
+        if (res.ok) {
+          const resJson = await res.json();
+          return resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        }
+      } catch (e) {
+        console.error(`[REVISION AGENT - STUDIO] AI Studio call failed:`, e);
+      }
+    }
+
+    return '';
+  };
+
   // 1. Fetch untreated feedbacks for this course slug to compile and evaluate them
   let untreatedFeedbacks: any[] = [];
   try {
@@ -5986,75 +6083,210 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
     const lesson = lessons.find(l => l.lesson_slug === slug);
     if (!lesson) continue;
 
-    console.log(`[REVISION AGENT] Revising lesson: "${lesson.title}" (${slug})...`);
+    console.log(`[REVISION AGENT] Initiating revision sequence for lesson: "${lesson.title}" (${slug})...`);
 
-    const promptRevise = `You are a Pedagogical Revision Agent (Revision Agent).
-Your mission is to revise and correct a specific course lesson (written in MDX) based on the feedback/reports below.
+    // STEP 1: Syntax Preprocessor (Auto-healing syntax before LLMs see it)
+    console.log(`[REVISION AGENT] Running Syntax Preprocessor to sanitize source MDX...`);
+    const cleanLessonContent = preprocessMdx(lesson.content, targetLang.toLowerCase(), false, lesson.lesson_slug, lesson.order);
 
-COURSE: ${courseSlug}
+    // STEP 2: Agent Qualificateur (Agent 5 - Diagnosing feedback & scoping revision)
+    console.log(`[REVISION AGENT - AGENT 5] Qualifying lesson feedbacks and determining scope...`);
+    const promptQualify = `You are a world-class educational curriculum architect and Qualifying Agent (Agent 5).
+Your task is to analyze a lesson's current MDX content and the compilation of user feedbacks/comments to diagnose errors, moderate the feedback, and determine the exact scope and targets of revision.
+
+COURSE SLUG: "${courseSlug}"
 LESSON TITLE: "${lesson.title}"
-REVISION DETAILS / FEEDBACK:
+FEEDBACKS / COMMENTS:
 "${feedbackText}"
 
 CURRENT MDX CONTENT:
 ---
-${lesson.content}
+${cleanLessonContent}
 ---
 
-INSTRUCTIONS:
-1. Revise the content to address the issues specified in the feedback.
-2. Maintain high academic density, rigor, and the target language of the lesson.
-3. Preserve all MDX custom React components (<Quiz>, <Question>, <Glossary>, <HistoricalPerson>, <Location>, <DataChart>, <DynamicSimulation>, <SpeciesLink>, <ChemicalLink>, <CelestialLink>, etc.) exactly as they are, including all their attributes, unless the feedback specifically requests to change/fix them.
-4. Keep the frontmatter block at the top intact.
-5. Do NOT include markdown code block wrappers (like \`\`\`md or \`\`\`mdx) around your output. Return ONLY the raw revised MDX content.
-6. Make precise edits. Do not lose other parts of the lesson.`;
+Your mission:
+1. Moderate and verify the feedbacks: determine which comments are valid and which are not.
+2. Formulate a summary pre-critique report detailing the exact changes that need to be made, and identify if there are any other latent issues to fix.
+3. Classify the scope of revision:
+   - "global": If the lesson has catastrophic issues, or the user gave a very poor rating pointing to global issues, or the feedback requests a complete structural, tone, or level adjustment across the entire lesson.
+   - "local": If the feedback only targets specific sections (e.g. "Fix the Euler equation in section 2"), specific quizzes, or specific widgets.
+4. Extract the precise targets that need modification. For each target, specify:
+   - "type": "section", "quiz", or "widget".
+   - "id": For a section, its exact markdown heading (e.g. "## Introduction"). For quizzes/widgets, their specific ID (e.g. "quiz_1", "biography_einstein").
+   - "heading": The markdown heading of the section where this item resides.
+   - "feedback": Specific local revision instructions for this item.
 
-    let revisedMdx = '';
-    let reviseSuccess = false;
+You must output ONLY a valid JSON object matching this schema:
+{
+  "scope": "global" | "local",
+  "preCritique": "Detailed pre-critique and diagnosis guidelines...",
+  "affectedItems": [
+    {
+      "type": "section" | "quiz" | "widget",
+      "id": "item_id_or_heading",
+      "heading": "heading_of_enclosing_section",
+      "feedback": "specific instructions for this item"
+    }
+  ]
+}
+Return ONLY the raw JSON. Do NOT wrap it in markdown code blocks.`;
 
-    if (isVertexConfigured()) {
-      try {
-        const res = await callVertexAI({
-          task: 'course_generation',
-          contents: [{ role: 'user', parts: [{ text: promptRevise }] }],
-          generationConfig: {
-            temperature: 0.35,
-            frequencyPenalty: 0.25,
-            topP: 0.85
-          }
-        });
-        if (res && res.ok) {
-          const jsonRes = await res.json();
-          revisedMdx = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          reviseSuccess = true;
-        }
-      } catch (e) {
-        console.warn(`[REVISION AGENT] Vertex AI revision failed for "${slug}":`, e);
-      }
+    const qualificationText = await callAIEngine(promptQualify, revisionQualificationSchema, 0.1);
+    let qualification = { scope: 'local', preCritique: '', affectedItems: [] as any[] };
+    try {
+      const cleaned = qualificationText.replace(/```json/g, '').replace(/```/g, '').trim();
+      qualification = safeJsonParse(cleaned, 'reviseCourseContent (Agent 5 qualification)');
+    } catch (e) {
+      console.error(`[REVISION AGENT] Failed to parse qualification JSON: "${qualificationText}". Defaulting to local scope.`, e);
+      qualification = {
+        scope: 'global',
+        preCritique: 'Could not parse qualification. Defaulting to full global rewrite.',
+        affectedItems: []
+      };
     }
 
-    if (!reviseSuccess && apiKey) {
-      try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: compressPromptText(promptRevise) }] }],
-            generationConfig: {
-              temperature: 0.35,
-              frequencyPenalty: 0.25,
-              topP: 0.85
-            }
-          })
+    console.log(`[REVISION AGENT] Qualified scope for "${lesson.title}": "${qualification.scope.toUpperCase()}"`);
+
+    let revisedMdx = '';
+
+    // STEP 3: Scoped Execution Strategies
+    if (qualification.scope === 'global') {
+      console.log(`[REVISION AGENT] Performing section-by-section global revision...`);
+      const parsedSections = parseMarkdownSections(cleanLessonContent);
+      const revisedSections: MarkdownSection[] = [];
+      let precedingContext = 'None. This is the first section.';
+
+      for (let sIdx = 0; sIdx < parsedSections.length; sIdx++) {
+        const sec = parsedSections[sIdx];
+        console.log(`[REVISION AGENT] Glob-revision of section ${sIdx + 1}/${parsedSections.length}: "${sec.heading || 'Header / Introduction'}"...`);
+
+        const promptSectionRevise = `You are Scribe (Agent 3), a professional academic writer.
+We are performing a global revision of the lesson "${lesson.title}". We are revising it section-by-section.
+
+COURSE SLUG: "${courseSlug}"
+LESSON TITLE: "${lesson.title}"
+LANGUAGE: "${targetLang.toUpperCase()}"
+
+GLOBAL DIAGNOSIS / PRE-CRITIQUE:
+"${qualification.preCritique}"
+
+CURRENT SECTION HEADING: "${sec.heading || 'Header / Introduction Block'}"
+CURRENT SECTION CONTENT:
+${sec.content}
+
+CONTEXT (Preceding section generated text):
+${precedingContext}
+
+INSTRUCTIONS:
+1. Revise the content of this section to fully address the global diagnosis/pre-critique.
+2. Maintain high academic density, rigor, and the target language of the lesson.
+3. If the heading is empty, this is the header/frontmatter block of the lesson. You must ONLY revise any prose or prerequisites/objectives text, and you must strictly preserve the "---" boundaries and YAML frontmatter at the very top.
+4. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, etc.) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors. For references/citations, you MUST exclusively use [[WIDGET:Citation:num]] (e.g. [[WIDGET:Citation:1]]) instead of any HTML/JSX markup or brackets.
+5. Preserve all existing [[WIDGET:id]] anchors exactly as they are in the current content.
+6. Return ONLY the revised section content. Do NOT include markdown code block wrappers or conversational text outside.`;
+
+        const revisedSecContent = await callAIEngine(promptSectionRevise, null, 0.35, 0.25, 0.85);
+        revisedSections.push({
+          heading: sec.heading,
+          content: revisedSecContent.trim()
         });
-        if (res.ok) {
-          const jsonRes = await res.json();
-          revisedMdx = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          reviseSuccess = true;
-        }
-      } catch (e) {
-        console.error(`[REVISION AGENT] AI Studio revision failed for "${slug}":`, e);
+        precedingContext = revisedSecContent.slice(-2000);
       }
+
+      revisedMdx = reconstructMarkdown(revisedSections);
+    } else {
+      console.log(`[REVISION AGENT] Performing targeted local revision...`);
+      const parsedSections = parseMarkdownSections(cleanLessonContent);
+
+      for (const item of qualification.affectedItems) {
+        const headingToFind = (item.heading || '').trim().toLowerCase();
+        const secIndex = parsedSections.findIndex(s => {
+          const sHeadingNorm = (s.heading || 'Header / Introduction Block').trim().toLowerCase();
+          return sHeadingNorm === headingToFind || 
+                 sHeadingNorm.replace(/^##\s+/, '') === headingToFind.replace(/^##\s+/, '');
+        });
+
+        if (secIndex === -1) {
+          console.warn(`[REVISION AGENT] Section matching "${item.heading}" not found for item type "${item.type}". Skipping local item.`);
+          continue;
+        }
+
+        const sec = parsedSections[secIndex];
+
+        if (item.type === 'section') {
+          console.log(`[REVISION AGENT] Revising section narrative: "${sec.heading || 'Header / Introduction'}"...`);
+          const promptLocalSec = `You are Scribe (Agent 3), a professional academic writer.
+We need to revise a specific section of the lesson "${lesson.title}" to resolve local feedback.
+
+LESSON TITLE: "${lesson.title}"
+HEADING: "${sec.heading || 'Header / Introduction Block'}"
+LOCAL REVISION FEEDBACK:
+"${item.feedback}"
+
+CURRENT CONTENT of this section:
+${sec.content}
+
+INSTRUCTIONS:
+1. Revise the content of this section to address the local feedback.
+2. Maintain high academic density, rigor, and target language.
+3. If the heading is empty, preserve the frontmatter.
+4. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Use [[WIDGET:id]] anchors and [[WIDGET:Citation:num]] for citations.
+5. Return ONLY the revised section content.`;
+
+          const revisedSecContent = await callAIEngine(promptLocalSec, null, 0.35, 0.25, 0.85);
+          sec.content = revisedSecContent.trim();
+        } else if (item.type === 'quiz') {
+          console.log(`[REVISION AGENT] Isolating and revising quiz with ID "${item.id}"...`);
+          const quizRegex = new RegExp(`<Quiz\\b[^>]*?id=["']${item.id}["'][^>]*?>[\\s\\S]*?<\\/Quiz>`, 'i');
+          const quizMatch = sec.content.match(quizRegex);
+          if (quizMatch) {
+            const quizElement = quizMatch[0];
+            const promptQuiz = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+We need to revise a quiz component in the lesson "${lesson.title}" to resolve specific feedback.
+
+QUIZ TAG:
+${quizElement}
+
+FEEDBACK:
+"${item.feedback}"
+
+INSTRUCTIONS:
+1. Edit the questions, options, explanations, or correct indices in the quiz props/options to resolve the feedback.
+2. Return ONLY the revised JSX quiz tag (e.g. <Quiz ...>...</Quiz>). Do NOT wrap in markdown code blocks.`;
+
+            const revisedQuiz = await callAIEngine(promptQuiz, null, 0.2);
+            sec.content = sec.content.replace(quizElement, revisedQuiz.trim());
+          } else {
+            console.warn(`[REVISION AGENT] Quiz with ID "${item.id}" not found in section "${sec.heading}".`);
+          }
+        } else if (item.type === 'widget') {
+          console.log(`[REVISION AGENT] Isolating and revising widget with ID "${item.id}"...`);
+          const widgetRegex = new RegExp(`<(\\w+)\\b[^>]*?id=["']${item.id}["'][^>]*?\/?>`, 'i');
+          const widgetMatch = sec.content.match(widgetRegex);
+          if (widgetMatch) {
+            const widgetElement = widgetMatch[0];
+            const promptWidget = `You are a world-class educational curriculum architect (Agent 3B - Widgets Architect).
+We need to revise a custom widget tag in the lesson "${lesson.title}" to resolve specific feedback.
+
+WIDGET TAG:
+${widgetElement}
+
+FEEDBACK:
+"${item.feedback}"
+
+INSTRUCTIONS:
+1. Adjust the props of the widget to address the feedback.
+2. Return ONLY the revised JSX widget tag. Do NOT wrap in markdown code blocks.`;
+
+            const revisedWidget = await callAIEngine(promptWidget, null, 0.2);
+            sec.content = sec.content.replace(widgetElement, revisedWidget.trim());
+          } else {
+            console.warn(`[REVISION AGENT] Widget with ID "${item.id}" not found in section "${sec.heading}".`);
+          }
+        }
+      }
+
+      revisedMdx = reconstructMarkdown(parsedSections);
     }
 
     if (!revisedMdx) {
@@ -6110,6 +6342,7 @@ Your validation checklist:
    - Regardless of discipline: Ensure any audio players ('<AudioPlayer />' or '<Audio />') or video players ('<Video />') from the original are preserved and not lost during revision.
 9. Section Interactivity and Interactive Sandboxes:
    - Ensure that every major conceptual section (demarcated by a '##' heading) still contains at least one interactive/active learning component (e.g. formative quizzes, fill-in-the-blanks, solved/unsolved exercises, or sandbox/simulation widgets like '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', '<DynamicSimulation />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />').
+10. Widgets-First Citation (WFTA) Compliance: Absolutely no custom JSX/HTML tags (such as <sup id="cite-...">(...)</sup> or <sup>(...)</sup>) or manual bracketed references (like [ref1], [1]) are allowed in the prose content. All citations/references in the prose must strictly use the [[WIDGET:Citation:num]] anchor format, e.g. [[WIDGET:Citation:1]]. Reject any revision containing non-compliant HTML/JSX citation markup or manual brackets.
 
 Your audit can be in dual-mode:
 - **"isGlobalRevision" MUST ONLY be set to true if the issues are widespread and catastrophic** (completely unparseable structure, severe length deficiency, or total failure of the revision requiring a complete full-JSON rewrite). If so, provide a comprehensive "globalCritique".
@@ -6209,72 +6442,56 @@ You must output ONLY a valid JSON object matching the revisionAuditSchema:
         console.warn(`[REVISION AGENT - AGENT 4] Revision REJECTED for "${lesson.title}". Global: ${isGlobalRevision}.`);
 
         if (isGlobalRevision) {
-          console.log(`[REVISION AGENT] Initiating Scribe full-text global rewrite based on critique: "${globalCritique}"`);
-          const promptRefineGlobal = `You are Scribe (Agent 3), a professional academic writer. The Revision Critic Agent (Agent 4) has rejected your previous revised MDX in its entirety with a global critique:
+          console.log(`[REVISION AGENT] Initiating Scribe section-by-section global refinement based on critique: "${globalCritique}"`);
+          const parsedSections = parseMarkdownSections(currentMdx);
+          const refinedSections: MarkdownSection[] = [];
+          let precedingContext = 'None. This is the first section.';
+          let refineSuccess = true;
 
-GLOBAL CRITIQUE:
-${globalCritique}
+          for (let sIdx = 0; sIdx < parsedSections.length; sIdx++) {
+            const sec = parsedSections[sIdx];
+            console.log(`[REVISION AGENT] Global refinement of section ${sIdx + 1}/${parsedSections.length}: "${sec.heading || 'Header / Introduction'}"...`);
 
-Original MDX Content:
-${lesson.content}
+            const promptRefineGlobalSection = `You are Scribe (Agent 3), a professional academic writer.
+The Revision Critic Agent (Agent 4) has rejected the revised MDX for "${lesson.title}". We are refining the lesson section-by-section.
 
-Previous Revised Content:
-${currentMdx}
+GLOBAL CRITIQUE from Agent 4:
+"${globalCritique}"
 
-Revision Instructions:
-${feedbackText}
+LESSON TITLE: "${lesson.title}"
+COURSE SLUG: "${courseSlug}"
+LANGUAGE: "${targetLang.toUpperCase()}"
 
-Please re-generate the ENTIRE revised MDX content for "${lesson.title}", fully addressing the critic's global critique, ensuring high academic density, proper structure, and full compliance.
-Return ONLY the revised MDX content. Do NOT include markdown code block wrappers (such as \`\`\`md or \`\`\`mdx) or conversational intro/outro text.`;
+CURRENT SECTION HEADING: "${sec.heading || 'Header / Introduction Block'}"
+CURRENT SECTION CONTENT:
+${sec.content}
 
-          let refineSuccess = false;
-          if (isVertexConfigured()) {
-            try {
-              const resRefine = await callVertexAI({
-                task: 'course_generation',
-                contents: [{ role: 'user', parts: [{ text: promptRefineGlobal }] }],
-                generationConfig: {
-                  temperature: 0.35,
-                  frequencyPenalty: 0.25,
-                  topP: 0.85
-                }
-              });
-              if (resRefine && resRefine.ok) {
-                const resJson = await resRefine.json();
-                currentMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                refineSuccess = true;
-              }
-            } catch (err) {
-              console.warn("[REVISION AGENT - AGENT 4] Vertex global refinement call failed:", err);
+CONTEXT (Preceding section refined text):
+${precedingContext}
+
+INSTRUCTIONS:
+1. Refine the content of this section to fully address the global critique.
+2. Maintain high academic density, rigor, and the target language.
+3. If the heading is empty, this is the header/frontmatter block of the lesson. You must ONLY revise any prose or prerequisites/objectives text, and you must strictly preserve the "---" boundaries and YAML frontmatter at the very top.
+4. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Use [[WIDGET:id]] anchors and [[WIDGET:Citation:num]] for citations.
+5. Return ONLY the refined section content. Do NOT include markdown code block wrappers or conversational text outside.`;
+
+            const refinedSecContent = await callAIEngine(promptRefineGlobalSection, null, 0.35, 0.25, 0.85);
+            if (!refinedSecContent) {
+              refineSuccess = false;
+              break;
             }
+            refinedSections.push({
+              heading: sec.heading,
+              content: refinedSecContent.trim()
+            });
+            precedingContext = refinedSecContent.slice(-2000);
           }
 
-          if (!refineSuccess && apiKey) {
-            try {
-              const resRefine = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  contents: [{ parts: [{ text: compressPromptText(promptRefineGlobal) }] }],
-                  generationConfig: {
-                    temperature: 0.35,
-                    frequencyPenalty: 0.25,
-                    topP: 0.85
-                  }
-                })
-              });
-              if (resRefine.ok) {
-                const resJson = await resRefine.json();
-                currentMdx = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                refineSuccess = true;
-              }
-            } catch (err) {
-              console.error("[REVISION AGENT - AGENT 4] AI Studio fallback global refinement call failed:", err);
-            }
-          }
-
-          if (!refineSuccess) {
-            console.warn("[REVISION AGENT - AGENT 4] Global refinement failed, continuing with current content.");
+          if (refineSuccess) {
+            currentMdx = reconstructMarkdown(refinedSections);
+          } else {
+            console.warn("[REVISION AGENT - AGENT 4] Global section refinement failed, continuing with current content.");
             revisedMdx = currentMdx;
             break;
           }
@@ -6351,7 +6568,8 @@ INSTRUCTIONS:
    [Your revised content here, preserving academic rigor and MDX elements]
    </revised_section>
 3. Do NOT include markdown code block wrappers (like \`\`\`md or \`\`\`mdx) around your entire output.
-4. Return ONLY the wrapped revised sections. Do not include any other conversational text or metadata outside the tags.`;
+4. Return ONLY the wrapped revised sections. Do not include any other conversational text or metadata outside the tags.
+5. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup>) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors. For references/citations, you MUST exclusively use [[WIDGET:Citation:num]] (e.g. [[WIDGET:Citation:1]]) instead of any HTML/JSX markup or brackets. Preserve all existing [[WIDGET:...]] anchors exactly as they are in the current content.`;
 
             let scribeRepairOutput = '';
             let repairSuccess = false;
@@ -7781,7 +7999,16 @@ function stripJsxComments(mdx: string): string {
   });
 }
 
-async function validateMdxContent(content: string, lang: string = 'fr'): Promise<{ success: boolean; error?: string }> {
+export async function validateMdxContent(content: string, lang: string = 'fr'): Promise<{ success: boolean; error?: string }> {
+  // Check for residual legacy citation artifacts (e.g. <sup>, [ref...])
+  const legacyCitationRegex = /<\/?sup\b|\[ref[-_]?\d+\]/gi;
+  if (legacyCitationRegex.test(content)) {
+    return {
+      success: false,
+      error: "MDX validation failed: Residual legacy citation artifacts (e.g. <sup>, [ref...]) detected. All citations must strictly use the [[WIDGET:Citation:...]] format."
+    };
+  }
+
   const cleanedContent = preprocessMdx(content, lang);
   try {
     const { resolvedContent } = await resolvePrecompiledAnchors(cleanedContent, lang);

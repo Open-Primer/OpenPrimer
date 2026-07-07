@@ -65,6 +65,7 @@ import {
 } from './helpers';
 import { progressService } from './progress-service';
 import { sanitizeString, detectPromptInjection, isSpam } from '../security';
+import { cleanPathSegment } from '../translations';
 
 export const mockDatabaseProvider: DatabaseService = {
   getSystemParameters: async () => {
@@ -177,18 +178,22 @@ This lesson covers:
   },
 
   saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }) => {
+    const cleanCourseSlug = cleanPathSegment(lesson.course_slug);
+    const cleanLessonSlug = cleanPathSegment(lesson.lesson_slug);
     if (typeof window !== 'undefined') {
       const stored = window.localStorage.getItem('openprimer_lessons');
       const lessons = stored ? JSON.parse(stored) : [];
       const updated = [
-        ...lessons.filter((l: any) => !(l.course_slug === lesson.course_slug && l.lesson_slug === lesson.lesson_slug && l.lang.toLowerCase() === lesson.lang.toLowerCase())),
+        ...lessons.filter((l: any) => !(l.course_slug === cleanCourseSlug && l.lesson_slug === cleanLessonSlug && l.lang.toLowerCase() === lesson.lang.toLowerCase())),
         {
           ...lesson,
+          course_slug: cleanCourseSlug,
+          lesson_slug: cleanLessonSlug,
           lang: lesson.lang.toLowerCase()
         }
       ];
       window.localStorage.setItem('openprimer_lessons', JSON.stringify(updated));
-      return { data: lesson, error: null };
+      return { data: { ...lesson, course_slug: cleanCourseSlug, lesson_slug: cleanLessonSlug }, error: null };
     }
     return { data: null, error: new Error("Mock offline mode does not support dynamic lessons database saving") };
   },
@@ -1137,10 +1142,11 @@ This lesson covers:
 
   saveCourse: async (course: any) => {
     const list = getMockCourses();
+    const cleanSlug = course.slug ? cleanPathSegment(course.slug) : '';
     let searchId = typeof course.id === 'string' ? parseInt(course.id.replace(/\D/g, '')) || Math.floor(Math.random() * 1000000) : course.id;
     
     // Check if there is an existing course by slug or ID
-    const existingBySlug = course.slug ? list.find(c => c.slug === course.slug) : null;
+    const existingBySlug = cleanSlug ? list.find(c => c.slug === cleanSlug) : null;
     const existing = existingBySlug || list.find(c => c.id === searchId);
     
     if (existing) {
@@ -1163,6 +1169,7 @@ This lesson covers:
         ...existing, 
         ...course, 
         id: searchId,
+        slug: cleanSlug,
         languages: finalLanguages,
         langs: finalLanguages.map((l: string) => l.toUpperCase())
       };
@@ -1171,7 +1178,7 @@ This lesson covers:
       finalCourse = {
         id: searchId || (list.length > 0 ? Math.max(...list.map(c => c.id)) + 1 : 1),
         title: course.title,
-        slug: course.slug || (() => {
+        slug: cleanSlug || (() => {
           const asciiClean = course.title
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
@@ -1179,9 +1186,9 @@ This lesson covers:
             .replace(/[^a-z0-9\s_-]/g, '')
             .trim()
             .replace(/\s+/g, '_');
-          return (asciiClean && asciiClean.replace(/_/g, '').length > 0)
+          return cleanPathSegment((asciiClean && asciiClean.replace(/_/g, '').length > 0)
             ? asciiClean
-            : course.title.toLowerCase().trim().replace(/\s+/g, '_');
+            : course.title.toLowerCase().trim().replace(/\s+/g, '_'));
         })(),
         level: course.level || 'L1',
         subject: course.subject || 'General',

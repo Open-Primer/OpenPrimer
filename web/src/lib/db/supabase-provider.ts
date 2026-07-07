@@ -35,6 +35,7 @@ import {
 } from './helpers';
 import { progressService } from './progress-service';
 import { sanitizeString, detectPromptInjection, isSpam } from '../security';
+import { cleanPathSegment } from '../translations';
 
 export async function purgeOrphanedCourseMedia(courseSlug: string): Promise<{ data: any; error: any }> {
   try {
@@ -337,12 +338,14 @@ export const supabaseDatabaseProvider: DatabaseService = {
         cleanedContent = cleanedContent.replace(/\r?\n```$/, '');
         cleanedContent = cleanedContent.trim();
       }
+      const cleanCourseSlug = cleanPathSegment(lesson.course_slug);
+      const cleanLessonSlug = cleanPathSegment(lesson.lesson_slug);
       const { data, error } = await supabaseAdmin
         .from('lessons')
         .upsert(
           {
-            course_slug: lesson.course_slug,
-            lesson_slug: lesson.lesson_slug,
+            course_slug: cleanCourseSlug,
+            lesson_slug: cleanLessonSlug,
             lang: lesson.lang.toLowerCase(),
             title: lesson.title,
             content: cleanedContent,
@@ -1787,9 +1790,10 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   addCourse: async (course: Omit<MockCourse, 'id' | 'popularity' | 'is_active'>) => {
     try {
+      const cleanSlug = cleanPathSegment(course.slug);
       const { data, error } = await supabaseAdmin.from('courses').insert({
         title: course.title,
-        slug: course.slug,
+        slug: cleanSlug,
         level: course.level,
         subject: course.subject,
         description: course.description,
@@ -1828,11 +1832,12 @@ export const supabaseDatabaseProvider: DatabaseService = {
     try {
       let existingId = null;
       let existingLanguages: string[] = [];
-      if (course.slug) {
+      const cleanSlug = course.slug ? cleanPathSegment(course.slug) : '';
+      if (cleanSlug) {
         const { data: existingCourse } = await supabaseAdmin
           .from('courses')
           .select('id, languages')
-          .eq('slug', course.slug)
+          .eq('slug', cleanSlug)
           .maybeSingle();
         if (existingCourse) {
           existingId = existingCourse.id;
@@ -1859,7 +1864,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
       const { data, error } = await supabaseAdmin.from('courses').upsert({
         id: searchId,
         title: course.title,
-        slug: course.slug,
+        slug: cleanSlug,
         level: course.level,
         subject: course.subject,
         description: course.description,

@@ -3256,6 +3256,15 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   // Apply systematic healing first so high-fidelity content and components are injected automatically
   let processed = content;
 
+  // Convert legacy/manual citations into [[WIDGET:Citation:X]]
+  processed = processed.replace(/<sup\s+id="cite-(\d+)"[^>]*>\s*<a\s+href="#ref-\1"[^>]*>[\s\S]*?<\/a>\s*<\/sup>/gi, '[[WIDGET:Citation:$1]]');
+  processed = processed.replace(/<sup[^>]*>\s*<a\s+href="#ref-(\d+)"[^>]*>[\s\S]*?<\/a>\s*<\/sup>/gi, '[[WIDGET:Citation:$1]]');
+  processed = processed.replace(/<sup[^>]*>\s*\[\s*(\d+)\s*\]\s*<\/sup>/gi, '[[WIDGET:Citation:$1]]');
+  processed = processed.replace(/<sup[^>]*>\s*(\d+)\s*<\/sup>/gi, '[[WIDGET:Citation:$1]]');
+  processed = processed.replace(/\[\s*(\d+)\s*\]\s*\(\s*#ref-\1\s*\)/gi, '[[WIDGET:Citation:$1]]');
+  processed = processed.replace(/\[ref[-_:]\s*(\d+)\s*\]/gi, '[[WIDGET:Citation:$1]]');
+  processed = processed.replace(/\[\[?\s*WIDGET\s*:\s*(?:reference|referecne|citation|cite)\s*:\s*(\d+)\s*\]\]?/gi, '[[WIDGET:Citation:$1]]');
+
   // Pedagogical widgets and highlight hover cards are preserved in the MDX content to ensure they are rendered.
 
   // If first lesson of any course (where lessonOrder === 1 or lessonSlug is 'introduction'), omit PreviousLessonSummary entirely
@@ -3321,7 +3330,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   });
 
   // 2. Wrap unfenced Mermaid diagram blocks in triple-backticks
-  const rawMermaidRegex = /(\r?\n)mermaid\s*\r?\n(graph\s+(?:TD|LR|TB|BT|RL|StateDiagram)|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|gitGraph|journey)([\s\S]*?)(?=\r?\n\s*(?:\*Figure|#|---|<|\r?\n|$))/gi;
+  const rawMermaidRegex = /(\r?\n)mermaid\s*\r?\n(graph\s+(?:TD|LR|TB|BT|RL|StateDiagram)|flowchart\s+(?:TD|LR|TB|BT|RL)|timeline|mindmap|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|gitGraph|journey)([\s\S]*?)(?=\r?\n\s*(?:\*Figure|#|---|<|\r?\n|$))/gi;
   processed = processed.replace(rawMermaidRegex, (match, prefix, type, body) => {
     const cleanBody = body
       .replace(/&#123;/g, '{')
@@ -4258,6 +4267,10 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       // 5. Replace citation/quote block component references
       const dupRefNumRegex = new RegExp(`\\brefNum=\\{${oldNum}\\}`, 'g');
       updatedPreRef = updatedPreRef.replace(dupRefNumRegex, `refNum={${newNum}}`);
+
+      // 6. Replace WFTA widget citations
+      const dupWidgetRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*Citation\\s*:\\s*${oldNum}\\b`, 'gi');
+      updatedPreRef = updatedPreRef.replace(dupWidgetRegex, `[[WIDGET:Citation:${newNum}`);
     }
 
     if (finalItems.length > 0) {
@@ -4614,8 +4627,20 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
     'ProjectLink', 'SpeciesLink', 'ChemicalLink', 'CelestialLink'
   ]);
 
-  function formatAttribute(k: string, v: any): string {
+  function formatAttribute(k: string, v: any, originalTag?: string): string {
     const cleanV = String(v || '').trim();
+    if (originalTag) {
+      const escapedK = k.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const bracedRegex = new RegExp(`\\b${escapedK}\\s*=\\s*\\{`);
+      if (bracedRegex.test(originalTag)) {
+        return ` ${k}={${cleanV}}`;
+      }
+      const quotedRegex = new RegExp(`\\b${escapedK}\\s*=\\s*["']`);
+      if (quotedRegex.test(originalTag)) {
+        const escapedV = cleanV.replace(/"/g, '&quot;');
+        return ` ${k}="${escapedV}"`;
+      }
+    }
     const isBraced = cleanV.startsWith('[') || cleanV.startsWith('{') || cleanV === 'true' || cleanV === 'false' || /^\d+$/.test(cleanV);
     if (isBraced) {
       return ` ${k}={${cleanV}}`;
@@ -4653,7 +4678,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         const updatedAttrs = { ...entry.attrs, lang: targetLang.toLowerCase() };
         let attrsStr = '';
         for (const [k, v] of Object.entries(updatedAttrs)) {
-          attrsStr += formatAttribute(k, v);
+          attrsStr += formatAttribute(k, v, entry.original);
         }
         original = `<${entry.tagName}${attrsStr}>`;
       }
@@ -4675,7 +4700,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         }
         let attrsStr = '';
         for (const [k, v] of Object.entries(updatedAttrs)) {
-          attrsStr += formatAttribute(k, v);
+          attrsStr += formatAttribute(k, v, entry.original);
         }
         const restoredTag = entry.isSelfClosing 
           ? `<${entry.tagName}${attrsStr} />` 
@@ -4693,7 +4718,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'sentence' && k !== 'answer') {
-            attrsStr += formatAttribute(k, v);
+            attrsStr += formatAttribute(k, v, entry.original);
           }
         }
         const restoredTag = `<FillInBlanks sentence="${sentence}" answer="${answer}"${attrsStr} />`;
@@ -4710,7 +4735,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'term' && k !== 'definition') {
-            attrsStr += formatAttribute(k, v);
+            attrsStr += formatAttribute(k, v, entry.original);
           }
         }
         const restoredTag = `<Glossary term="${term}" definition="${definition}"${attrsStr} />`;
@@ -4727,7 +4752,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'prompt' && k !== 'subject') {
-            attrsStr += formatAttribute(k, v);
+            attrsStr += formatAttribute(k, v, entry.original);
           }
         }
         const restoredTag = `<EssayEvaluation prompt="${prompt}" subject="${subject}"${attrsStr} />`;
@@ -4747,7 +4772,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         }
         for (const [k, v] of Object.entries(updatedAttrs)) {
           if (k !== 'name') {
-            attrsStr += formatAttribute(k, v);
+            attrsStr += formatAttribute(k, v, entry.original);
           }
         }
         const restoredTag = `<${entry.tagName} name="${name}"${attrsStr} />`;
@@ -4763,7 +4788,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'text') {
-            attrsStr += formatAttribute(k, v);
+            attrsStr += formatAttribute(k, v, entry.original);
           }
         }
         const restoredTag = `<Option text="${text}"${attrsStr} />`;
@@ -4781,7 +4806,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'q' && k !== 'questionText' && k !== 'text' && k !== 'question' && k !== 'explanation') {
-            attrsStr += formatAttribute(k, v);
+            attrsStr += formatAttribute(k, v, entry.original);
           }
         }
         const expAttr = explanation ? ` explanation="${explanation}"` : '';
@@ -4798,7 +4823,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'itemsString') {
-            attrsStr += formatAttribute(k, v);
+            attrsStr += formatAttribute(k, v, entry.original);
           }
         }
         const restoredTag = `<Summary itemsString="${itemsString}"${attrsStr} />`;
@@ -4832,7 +4857,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         let attrsStr = '';
         for (const [k, v] of Object.entries(entry.attrs)) {
           if (k !== 'q' && k !== 'questionText' && k !== 'text' && k !== 'question' && k !== 'options' && k !== 'sectionTitle') {
-            attrsStr += formatAttribute(k, v);
+            attrsStr += formatAttribute(k, v, entry.original);
           }
         }
         const qKey = entry.qKey || 'q';
@@ -4956,8 +4981,9 @@ function isReferenceUsed(num: number, preRefText: string): boolean {
   const citeIdRegex = new RegExp(`\\bcite-${num}\\b`, 'i');
   const refIdRegex = new RegExp(`\\bref-${num}\\b`, 'i');
   const refNumRegex = new RegExp(`\\brefNum=\\{${num}\\}`, 'i');
+  const widgetRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*Citation\\s*:\\s*${num}\\b`, 'i');
   
-  return citeIdRegex.test(preRefText) || refIdRegex.test(preRefText) || refNumRegex.test(preRefText);
+  return citeIdRegex.test(preRefText) || refIdRegex.test(preRefText) || refNumRegex.test(preRefText) || widgetRegex.test(preRefText);
 }
 
 function simplifyCitationQuery(citationText: string): string {
@@ -5549,6 +5575,16 @@ export async function resolvePrecompiledAnchors(
 
   for (const item of matches) {
     const typeLower = item.type.toLowerCase();
+
+    if (typeLower === 'citation') {
+      const num = item.id;
+      const desc = item.topic || '';
+      const titleAttr = desc ? ` title="${desc.replace(/"/g, '&quot;')}"` : '';
+      const tagStr = `<sup id="cite-${num}" class="scroll-mt-24"><a href="#ref-${num}"${titleAttr}>[${num}]</a></sup>`;
+      resolvedContent = resolvedContent.replace(item.raw, tagStr);
+      continue;
+    }
+
     if (!resolverCapableTypes.has(typeLower)) {
       unresolvedAnchors.push(item);
       continue;
@@ -5643,6 +5679,7 @@ export async function resolvePrecompiledAnchors(
 export function rehypeMdxSanitizer(lang: string = 'en') {
   const whitelistedComponents = new Set([
     'Alert', 'Biography', 'CustomFigure', 'Visual', 'VisualMedia', 'Image', 'Quiz', 'Question', 'Option',
+    'Citation', 'QuoteBlock', 'InteractiveQuote',
     'Glossary', 'Video', 'AudioPlayer', 'Audio', 'PronunciationSandbox', 'SandboxPrononciation',
     'Explanation', 'Solution', 'KeyConcept', 'Instruction', 'Shape', 'FillInBlanks', 'FillInBlanks.Input',
     'FillInBlanksQuestion', 'MetaNote', 'SolvedProblem', 'Summary', 'SelfEval', 'SelfAssessment',
