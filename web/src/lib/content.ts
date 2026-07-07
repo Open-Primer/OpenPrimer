@@ -4036,10 +4036,10 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   else if (currentLang === 'de') heading = "### Referenzen";
   else if (currentLang === 'zh') heading = "### 参考文献";
 
-  let refIndex = processed.search(/###\s*(Réf|References|Bibliography)/i);
+  let refIndex = processed.search(/##\s*(Réf|References|Bibliography)/i); // [FIX P3] support ##–#### headings
   if (refIndex === -1 && (citationBlocks.length > 0 || existingRefs.length > 0)) {
     processed += `\n\n${heading}\n\n`;
-    refIndex = processed.search(/###\s*(Réf|References|Bibliography)/i);
+    refIndex = processed.search(/##\s*(Réf|References|Bibliography)/i); // [FIX P3] support ##–####
   }
 
   if (refIndex !== -1) {

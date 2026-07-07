@@ -3568,9 +3568,11 @@ If the syllabus is approved, you MUST set approved: true, and critique: "". You 
           }
         }
 
-        saveDraftRevision(`prompt_stage0_syllabus_critique_${courseSlugForSyllabus}_iter${syllabusIteration}.md`, syllabusCriticPrompt);
-        if (critiqueSuccess && critiqueJsonStr) {
-          saveDraftRevision(`critique_stage0_syllabus_${courseSlugForSyllabus}_iter${syllabusIteration}.json`, critiqueJsonStr);
+        if (process.env.DEBUG === 'true') { // [FIX G4/G5]
+          saveDraftRevision(`prompt_stage0_syllabus_critique_${courseSlugForSyllabus}_iter${syllabusIteration}.md`, syllabusCriticPrompt);
+          if (critiqueSuccess && critiqueJsonStr) {
+            saveDraftRevision(`critique_stage0_syllabus_${courseSlugForSyllabus}_iter${syllabusIteration}.json`, critiqueJsonStr);
+          }
         }
 
         let critiqueObj = { approved: true, critique: '' };
@@ -3589,7 +3591,9 @@ If the syllabus is approved, you MUST set approved: true, and critique: "". You 
           syllabusApproved = true;
         } else {
           syllabusRejections++;
-          await appendTaskLog(`[AI GENERATOR WARNING] Syllabus REJECTED by Critique Agent (rejection #${syllabusRejections}). Critique: "${critiqueObj.critique}". Retrying generation...`);
+          await appendTaskLog(`[AI GENERATOR WARNING] Syllabus REJECTED by Critique Agent (rejection #${syllabusRejections}/${maxSyllabusIterations}). Critique: "${critiqueObj.critique}". Retrying generation...`);
+          // [FIX G2] Unified cap: break when rejection count reaches the iteration limit.
+          if (syllabusRejections >= maxSyllabusIterations) { break; }
           currentSyllabusPrompt = `${promptSyllabus}
           
 =============================================================================
@@ -3611,10 +3615,12 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
 
       // Export syllabus prompt, schema, and outputs
       const courseSlug = cleanPathSegment(correctedCourseName);
-      saveDraftRevision(`prompt_stage0_syllabus_${courseSlug}.md`, promptSyllabus);
-      saveDraftRevision(`agent1_2_syllabus_schema.json`, JSON.stringify(syllabusSchema, null, 2));
-      if (rawJson) {
-        saveDraftRevision(`draft_stage0_syllabus_${courseSlug}.json`, rawJson);
+      if (process.env.DEBUG === 'true') { // [FIX G4/G5]
+        saveDraftRevision(`prompt_stage0_syllabus_${courseSlug}.md`, promptSyllabus);
+        saveDraftRevision(`agent1_2_syllabus_schema.json`, JSON.stringify(syllabusSchema, null, 2));
+        if (rawJson) {
+          saveDraftRevision(`draft_stage0_syllabus_${courseSlug}.json`, rawJson);
+        }
       }
       if (parsedSyllabus) {
         saveDraftRevision(`final_stage0_syllabus_${courseSlug}.json`, JSON.stringify(parsedSyllabus, null, 2));
@@ -3706,11 +3712,14 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
 
     const MAX_PARALLEL_LESSONS = Number(process.env.MAX_PARALLEL_LESSONS || 1);
 
-    const usedDatabaseWidgetIds = new Set<string>();
+    // [FIX G12] Replaced per-lesson Set; cross-lesson budget tracked as atomic count.
+    let globalDbWidgetCount = 0;
     const usedMediaRegistry: Array<{ type: string; description: string; title?: string; caption?: string }> = [];
 
     // 2. For each lesson, generate rich MDX content with concurrency limit
     await mapConcurrent(lessonsList, MAX_PARALLEL_LESSONS, async (item: any, index) => {
+      // [FIX G12] Per-lesson isolated Set — safe for parallel execution.
+      const lessonDbWidgetIds = new Set<string>();
       const realIndex = item.originalIndex !== undefined ? item.originalIndex : index;
 
       if (realIndex < lessonOffset) {
@@ -3871,6 +3880,11 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
               const ratio = wordCount > 0 ? (candidateTokenCount / wordCount).toFixed(2) : '0';
 
               await appendTaskLog(`[AI ENGINE - STUDIO] Response status: finishReason="${finishReason}", characters=${charCount}, words=${wordCount}, tokens=${candidateTokenCount} (promptTokens=${promptTokenCount}). Tokens-to-Words ratio = ${ratio}.`);
+              // [FIX G12] Use globalDbWidgetCount for cross-lesson budget, lessonDbWidgetIds for intra-lesson list.
+              const remainingBudget = Math.max(0, 2 - globalDbWidgetCount);
+              const alreadyUsedList = lessonDbWidgetIds.size > 0 
+                ? Array.from(lessonDbWidgetIds).map(id => `"${id}"`).join(', ')
+                : 'None';
               if (finishReason === 'MAX_TOKENS') {
                 await appendTaskLog(`[AI ENGINE - WARNING] AI Studio response was TRUNCATED because it reached output limit.`);
               }
@@ -3900,9 +3914,9 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
 
       // 1. Discipline-Aware Catalog Pruning
       const prunedCatalog = getFilteredWidgetsCatalog(courseContext.discipline || 'General');
-      const remainingBudget = Math.max(0, 2 - usedDatabaseWidgetIds.size);
-      const alreadyUsedList = usedDatabaseWidgetIds.size > 0 
-        ? Array.from(usedDatabaseWidgetIds).map(id => `"${id}"`).join(', ')
+      const remainingBudget = Math.max(0, 2 - globalDbWidgetCount);
+      const alreadyUsedList = globalDbWidgetCount > 0 
+        ? Array.from(lessonDbWidgetIds).map(id => `"${id}"`).join(', ')
         : 'None';
 
       const formattedCatalogList = Object.entries(prunedCatalog).map(([id, meta]: [string, any]) => {
@@ -4023,12 +4037,16 @@ Return ONLY a valid JSON object matching the outlineAuditSchema:
 [REJECT-ONLY REPORTING MANDATE]
 If the outline is approved, you MUST set approved: true, and critique: "". You must ONLY report failures/issues. Do not write any explanations or critique if the outline is approved.`;
 
-          saveDraftRevision(`prompt_stage1_outline_${item.slug}_iter${outlineIteration}.md`, currentOutlinePrompt);
-          saveDraftRevision(`draft_stage1_outline_${item.slug}_iter${outlineIteration}.json`, outlineRaw);
-          saveDraftRevision(`prompt_stage1_outline_critique${item.slug}_iter${outlineIteration}.md`, outlineCriticPrompt);
+          if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage1_outline_${item.slug}_iter${outlineIteration}.md`, currentOutlinePrompt); // [FIX G4/G5]
+          if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage1_outline_${item.slug}_iter${outlineIteration}.json`, outlineRaw); // [FIX G4/G5]
+          if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage1_outline_critique${item.slug}_iter${outlineIteration}.md`, outlineCriticPrompt); // [FIX G4/G5]
 
           let outlineCritiqueStr = await callAIEngine(outlineCriticPrompt, outlineAuditSchema, 0.1);
-          saveDraftRevision(`critique_stage1_outline${item.slug}_iter${outlineIteration}.json`, outlineCritiqueStr);
+          // [FIX G6] Warn when critic call returns empty (both AI services unavailable).
+          if (!outlineCritiqueStr || !outlineCritiqueStr.trim()) {
+            console.warn(`[AI GENERATOR WARNING] Outline critic call returned empty for "${item.title}" iter #${outlineIteration}. Quality check skipped.`);
+          }
+          if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage1_outline${item.slug}_iter${outlineIteration}.json`, outlineCritiqueStr); // [FIX G4/G5]
           let cleanCritique = outlineCritiqueStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
           let outlineCritique = { approved: true, critique: '' };
           try {
@@ -4183,9 +4201,9 @@ The critique agent rejected your previous attempt for this block. Correct the fo
 
 Write the content for the specified sections. Return ONLY the markdown content. Do NOT wrap the response in markdown code blocks.`;
 
-              saveDraftRevision(`prompt_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.md`, blockPrompt);
+              if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.md`, blockPrompt); // [FIX G4/G5]
               let blockRawText = await callAIEngine(blockPrompt, null, 0.35, 0.25, 0.85);
-              saveDraftRevision(`draft_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.md`, blockRawText);
+              if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.md`, blockRawText); // [FIX G4/G5]
               cleanedBlockText = blockRawText.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
             }
 
@@ -4230,10 +4248,10 @@ Return ONLY a valid JSON object matching blockNarrativeAuditSchema:
 2. If isGlobalRevision is true: approved MUST be false, isGlobalRevision MUST be true, globalCritique MUST describe the global issues, and sections MUST be empty.
 3. If approved is false and isGlobalRevision is false: sections MUST ONLY contain sections that are rejected (with approved set to false). Any approved section MUST be strictly omitted from the array.`;
 
-            saveDraftRevision(`prompt_stage1_narrative_block${bIdx + 1}_critique_${item.slug}_iter${blockIteration}.md`, blockCriticPrompt);
+            if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage1_narrative_block${bIdx + 1}_critique_${item.slug}_iter${blockIteration}.md`, blockCriticPrompt); // [FIX G4/G5]
 
             let auditJsonStr = await callAIEngine(blockCriticPrompt, blockNarrativeAuditSchema, 0.1);
-            saveDraftRevision(`critique_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.json`, auditJsonStr);
+            if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.json`, auditJsonStr); // [FIX G4/G5]
             let auditClean = auditJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
             let blockAudit = { approved: true, isGlobalRevision: false, globalCritique: '', sections: [] as any[] };
             try {
@@ -4544,14 +4562,14 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
 2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
 
-        saveDraftRevision(`prompt_stage2_widgets_block1_${item.slug}_iter${block1Iteration}.md`, block1PromptWithFeedback);
+        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block1_${item.slug}_iter${block1Iteration}.md`, block1PromptWithFeedback); // [FIX G4/G5]
         if (block1Parsed) {
-          saveDraftRevision(`draft_stage2_widgets_block1_${item.slug}_iter${block1Iteration}.json`, JSON.stringify(block1Parsed, null, 2));
+          if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block1_${item.slug}_iter${block1Iteration}.json`, JSON.stringify(block1Parsed, null, 2)); // [FIX G4/G5]
         }
-        saveDraftRevision(`prompt_stage2_widgets_block1_critique_${item.slug}_iter${block1Iteration}.md`, block1CriticPrompt);
+        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block1_critique_${item.slug}_iter${block1Iteration}.md`, block1CriticPrompt); // [FIX G4/G5]
 
         const criticJsonStr = await callAIEngine(block1CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
-        saveDraftRevision(`critique_stage2_widgets_block1_${item.slug}_iter${block1Iteration}.json`, criticJsonStr);
+        if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block1_${item.slug}_iter${block1Iteration}.json`, criticJsonStr); // [FIX G4/G5]
         const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
         let auditResult = { approved: true, critique: '', fields: [] as any[] };
         try {
@@ -4724,14 +4742,14 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
 2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
 
-          saveDraftRevision(`prompt_stage2_widgets_block2_${item.slug}_iter${block2Iteration}.md`, block2PromptWithFeedback);
+          if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block2_${item.slug}_iter${block2Iteration}.md`, block2PromptWithFeedback); // [FIX G4/G5]
           if (block2Parsed) {
-            saveDraftRevision(`draft_stage2_widgets_block2_${item.slug}_iter${block2Iteration}.json`, JSON.stringify(block2Parsed, null, 2));
+            if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block2_${item.slug}_iter${block2Iteration}.json`, JSON.stringify(block2Parsed, null, 2)); // [FIX G4/G5]
           }
-          saveDraftRevision(`prompt_stage2_widgets_block2_critique_${item.slug}_iter${block2Iteration}.md`, block2CriticPrompt);
+          if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block2_critique_${item.slug}_iter${block2Iteration}.md`, block2CriticPrompt); // [FIX G4/G5]
 
           const criticJsonStr = await callAIEngine(block2CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
-          saveDraftRevision(`critique_stage2_widgets_block2_${item.slug}_iter${block2Iteration}.json`, criticJsonStr);
+          if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block2_${item.slug}_iter${block2Iteration}.json`, criticJsonStr); // [FIX G4/G5]
           const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
           let auditResult = { approved: true, critique: '', fields: [] as any[] };
           try {
@@ -4839,14 +4857,14 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
 2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
 
-        saveDraftRevision(`prompt_stage2_widgets_block3_${item.slug}_iter${block3Iteration}.md`, block3PromptWithFeedback);
+        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block3_${item.slug}_iter${block3Iteration}.md`, block3PromptWithFeedback); // [FIX G4/G5]
         if (block3Parsed) {
-          saveDraftRevision(`draft_stage2_widgets_block3_${item.slug}_iter${block3Iteration}.json`, JSON.stringify(block3Parsed, null, 2));
+          if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block3_${item.slug}_iter${block3Iteration}.json`, JSON.stringify(block3Parsed, null, 2)); // [FIX G4/G5]
         }
-        saveDraftRevision(`prompt_stage2_widgets_block3_critique${item.slug}_iter${block3Iteration}.md`, block3CriticPrompt);
+        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block3_critique${item.slug}_iter${block3Iteration}.md`, block3CriticPrompt); // [FIX G4/G5]
 
         const criticJsonStr = await callAIEngine(block3CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
-        saveDraftRevision(`critique_stage2_widgets_block3${item.slug}_iter${block3Iteration}.json`, criticJsonStr);
+        if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block3${item.slug}_iter${block3Iteration}.json`, criticJsonStr); // [FIX G4/G5]
 
         const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
         let auditResult = { approved: true, critique: '', fields: [] as any[] };
@@ -4963,14 +4981,14 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
 2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
 
-        saveDraftRevision(`prompt_stage2_widgets_block4_${item.slug}_iter${block4Iteration}.md`, block4PromptWithFeedback);
+        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block4_${item.slug}_iter${block4Iteration}.md`, block4PromptWithFeedback); // [FIX G4/G5]
         if (block4Parsed) {
-          saveDraftRevision(`draft_stage2_widgets_block4_${item.slug}_iter${block4Iteration}.json`, JSON.stringify(block4Parsed, null, 2));
+          if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block4_${item.slug}_iter${block4Iteration}.json`, JSON.stringify(block4Parsed, null, 2)); // [FIX G4/G5]
         }
-        saveDraftRevision(`prompt_stage2_widgets_block4_critique${item.slug}_iter${block4Iteration}.md`, block4CriticPrompt);
+        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block4_critique${item.slug}_iter${block4Iteration}.md`, block4CriticPrompt); // [FIX G4/G5]
 
         const criticJsonStr = await callAIEngine(block4CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
-        saveDraftRevision(`critique_stage2_widgets_block4${item.slug}_iter${block4Iteration}.json`, criticJsonStr);
+        if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block4${item.slug}_iter${block4Iteration}.json`, criticJsonStr); // [FIX G4/G5]
 
         const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
         let auditResult = { approved: true, critique: '', fields: [] as any[] };
@@ -5013,8 +5031,8 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
             const noPropsWidgets = new Set(['StructureViewer3D', 'QuantumOrbitalExplorer', 'DynamicSimulation', 'ChemicalStoichiometry', 'BasicMathExplorer']);
             const isDatabaseCurated = noPropsWidgets.has(matchedKey);
 
-            const isDuplicate = usedDatabaseWidgetIds.has(matchedKey);
-            const isOverBudget = (usedDatabaseWidgetIds.size + databaseWidgetsInThisLesson) >= 2;
+            const isDuplicate = lessonDbWidgetIds.has(matchedKey);
+            const isOverBudget = (globalDbWidgetCount + databaseWidgetsInThisLesson) >= 2;
 
             if (isDatabaseCurated && (isDuplicate || isOverBudget)) {
               console.log(`[WIDGET CURATION] Filtered out database widget "${matchedKey}" (Duplicate: ${isDuplicate}, OverBudget: ${isOverBudget})`);
@@ -5026,7 +5044,8 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
               comp.id = matchedKey;
               comp.props = {};
               databaseWidgetsInThisLesson++;
-              usedDatabaseWidgetIds.add(matchedKey);
+              lessonDbWidgetIds.add(matchedKey);
+              globalDbWidgetCount++; // [FIX G12] cross-lesson atomic counter
             }
             appendTaskLog(`[WIDGET CURATION] Selected and approved widget: "${matchedKey}" (Database Curated: ${isDatabaseCurated})`);
             return true;
@@ -5230,7 +5249,7 @@ async function performSectionBasedTranslation(
   lesson: { title: string; content: string; lesson_slug: string },
   targetLang: string,
   apiKey: string | undefined | null
-): Promise<{ translatedMdx: string; transSuccess: boolean; transTitle: string }> {
+): Promise<{ translatedMdx: string; transSuccess: boolean; transTitle: string; registry: Record<string, any> }> {
   const { content: isolatedContent, registry } = isolateJsxForTranslation(lesson.content);
 
   // 1. Translate Title first to use as context
@@ -5286,9 +5305,9 @@ async function performSectionBasedTranslation(
 
   // 2. Split isolated content into sections
   const parsedSections = parseMarkdownSections(isolatedContent);
-  
-  // Translate sections in parallel
-  const translatedSections = await Promise.all(parsedSections.map(async (sec) => {
+  // [FIX T1] Concurrency cap prevents 429 errors on large lessons.
+  const MAX_PARALLEL_SECTIONS = Number(process.env.MAX_PARALLEL_SECTIONS ?? 3);
+  const translatedSections = await mapConcurrent(parsedSections, MAX_PARALLEL_SECTIONS, async (sec: any) => {
     let translatedContent = sec.content;
     const sectionToTranslate = sec.heading ? `${sec.heading}\n${sec.content}` : sec.content;
     
@@ -5358,22 +5377,30 @@ ${sectionToTranslate}`;
           console.error(`[AI GENERATOR] AI Studio translation section fetch exception:`, err);
         }
       }
+
+      // [FIX T2] Mark section as explicitly untranslated rather than silently returning source content.
+      if (!secSuccess && sectionToTranslate.trim()) {
+        console.error(`[TRANSLATION] Both Vertex and Studio failed for section "${sec.heading || 'Preamble'}" in "${lesson.title}". Marking as TRANSLATION_FAILED.`);
+        translatedContent = `<!-- TRANSLATION_FAILED: ${(sec.heading || 'Preamble').replace(/-->/g, '->')} -->\n${sectionToTranslate}`;
+      }
     }
 
     return {
       heading: '',
       content: translatedContent
     };
-  }));
+  });
 
   // Reconstruct and restore JSX
   const reconstructedIsolatedMdx = reconstructMarkdown(translatedSections);
   const translatedMdx = restoreJsxAfterTranslation(reconstructedIsolatedMdx, registry, targetLang);
   
+  // [FIX T6] Return registry so the critic-refine loop reuses the same JSX placeholder keys.
   return {
     translatedMdx,
     transSuccess: !!translatedMdx,
-    transTitle
+    transTitle,
+    registry
   };
 }
 
@@ -5476,7 +5503,8 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
             console.log(`[TRANSLATOR] Staggering translation of lesson "${lesson.title}" by ${delay / 1000}s...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             
-            const { translatedMdx: initialTranslatedMdx, transSuccess: initialTransSuccess, transTitle: initialTransTitle } = await performSectionBasedTranslation(lesson, targetLang, apiKey);
+            // [FIX T6] Capture sectionRegistry for reuse in critic-refine loop.
+            const { translatedMdx: initialTranslatedMdx, transSuccess: initialTransSuccess, transTitle: initialTransTitle, registry: sectionRegistry } = await performSectionBasedTranslation(lesson, targetLang, apiKey);
             let translatedMdx = initialTranslatedMdx;
             let transSuccess = initialTransSuccess;
             let transTitle = initialTransTitle;
@@ -5496,11 +5524,11 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
 Source Language: English
 Target Language: "${targetLang.toUpperCase()}"
 
-Original MDX Content:
-${lesson.content}
+Original MDX Content (JSX components shown as placeholders for fair comparison):
+${isolateJsxForTranslation(lesson.content).content}
 
-Translated MDX Content:
-${currentTranslation}
+Translated MDX Content (JSX components shown as placeholders for fair comparison):
+${isolateJsxForTranslation(currentTranslation).content}
 
 Your validation checklist:
 1. Academic Integrity: Is the scientific/academic depth, tone, and accuracy of the original content fully preserved?
@@ -5596,7 +5624,9 @@ let criticResText = '';
               } else {
                 console.warn(`[AI GENERATOR - TRANSLATION CRITIC] Translation REJECTED for "${lesson.title}". Critique: ${critique}`);
                 
-                const { content: isolatedContent, registry: refineRegistry } = isolateJsxForTranslation(lesson.content);
+                // [FIX T6] Reuse sectionRegistry from performSectionBasedTranslation instead of
+                // re-isolating, which produces different placeholder keys causing JSX corruption.
+                const { content: isolatedContent } = isolateJsxForTranslation(lesson.content);
                 const { content: isolatedRejected } = isolateJsxForTranslation(currentTranslation);
 
                 const promptRefine = `You are a professional academic translator. The Translation Critic Agent has rejected your previous translation with the following critique:
@@ -5637,7 +5667,7 @@ if (process.env.DEBUG === 'true') {
                     if (resRefine && resRefine.ok) {
                       const resJson = await resRefine.json();
                       const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                      currentTranslation = restoreJsxAfterTranslation(rawText, refineRegistry, targetLang);
+                      currentTranslation = restoreJsxAfterTranslation(rawText, sectionRegistry, targetLang);
                       refineSuccess = true;
                     }
                   } catch (err) {
@@ -5657,7 +5687,7 @@ if (process.env.DEBUG === 'true') {
                     if (resRefine.ok) {
                       const resJson = await resRefine.json();
                       const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                      currentTranslation = restoreJsxAfterTranslation(rawText, refineRegistry, targetLang);
+                      currentTranslation = restoreJsxAfterTranslation(rawText, sectionRegistry, targetLang);
                       refineSuccess = true;
                     }
                   } catch (err) {
@@ -5678,7 +5708,12 @@ if (process.env.DEBUG === 'true') {
             }
 
             if (!approved && currentTranslation) {
-              console.warn(`[AI GENERATOR - TRANSLATION CRITIC] Translation not fully approved after max critique iterations. Using latest refinement.`);
+              console.warn(`[AI GENERATOR - TRANSLATION CRITIC] Translation not fully approved after ${maxCritiqueIterations} critique iterations. Saving best-effort result.`);
+              // [FIX T7] Submit error report so operators know the translation was not validated.
+              try {
+                await dbService.submitReport(courseSlug, `${courseSlug}/${lesson.lesson_slug}`,
+                  `[CRITIC EXHAUSTED] Translation for "${lesson.title}" to ${targetLang} not approved after ${maxCritiqueIterations} iterations. Last critique: ${critique}`);
+              } catch (reportErr) { console.error('[TRANSLATION CRITIC] Failed to submit exhaustion report:', reportErr); }
               translatedMdx = currentTranslation;
             }
 
@@ -5721,7 +5756,8 @@ if (process.env.DEBUG === 'true') {
             }
 
             // Preprocess and heal translated MDX before writing to DB
-            const healedMdx = preprocessMdx(validatedMdx, targetLang.toLowerCase());
+            // [FIX H2] Pass lesson_slug and order so preprocessMdx applies lesson-specific sanitization.
+            const healedMdx = preprocessMdx(validatedMdx, targetLang.toLowerCase(), false, lesson.lesson_slug, lesson.order);
             const resolvedMdx = await resolveAndPersistMedia(healedMdx, targetLang.toLowerCase());
 
             if (process.env.DEBUG === 'true') {
@@ -6189,9 +6225,10 @@ Return ONLY the raw JSON. Do NOT wrap it in markdown code blocks.`;
       qualification = safeJsonParse(cleaned, 'reviseCourseContent (Agent 5 qualification)');
     } catch (e) {
       console.error(`[REVISION AGENT] Failed to parse qualification JSON: "${qualificationText}". Defaulting to local scope.`, e);
+      // [FIX R1] Include feedbackText so Agent 3 has actionable guidance even if Agent 5's JSON failed.
       qualification = {
         scope: 'global',
-        preCritique: 'Could not parse qualification. Defaulting to full global rewrite.',
+        preCritique: `Could not parse qualification from Agent 5. Applying global rewrite based on original feedback:\n\n${feedbackText}`,
         affectedItems: []
       };
     }
@@ -6312,7 +6349,9 @@ INSTRUCTIONS:
           }
         } else if (item.type === 'widget') {
           console.log(`[REVISION AGENT] Isolating and revising widget with ID "${item.id}"...`);
-          const widgetRegex = new RegExp(`<(\\w+)\\b[^>]*?id=["']${item.id}["'][^>]*?\/?>`, 'i');
+          // [FIX R3] Escape item.id to prevent SyntaxError on IDs with metacharacters.
+          const escapedWidgetId = String(item.id).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const widgetRegex = new RegExp('<(\\w+)\\b[^>]*?id=["\']' + escapedWidgetId + '["\'][^>]*?/?>', 'i');
           const widgetMatch = sec.content.match(widgetRegex);
           if (widgetMatch) {
             const widgetElement = widgetMatch[0];
@@ -6703,6 +6742,15 @@ INSTRUCTIONS:
       }
     }
 
+    // [FIX R6] Submit error report if revision critic never approved the content.
+    if (!approved) {
+      console.warn(`[REVISION AGENT - AGENT 4] Critic exhausted ${maxCritiqueIterations} iterations for "${lesson.title}" without approval.`);
+      try {
+        await dbService.submitReport(courseSlug, `${courseSlug}/${slug}`,
+          `[CRITIC EXHAUSTED] Revision for "${lesson.title}" not approved after ${maxCritiqueIterations} iterations. Last critique: ${critique}`);
+      } catch (reportErr) { console.error('[REVISION AGENT] Failed to submit critic-exhaustion report:', reportErr); }
+    }
+
     // Run verification/validation and self-healing loop
     let validatedMdx = await validateAndFixBibliography(revisedMdx, targetLang.toLowerCase());
     validatedMdx = await validateAndFixExternalResources(validatedMdx, targetLang.toLowerCase());
@@ -6740,7 +6788,8 @@ INSTRUCTIONS:
     }
 
     // Preprocess and heal MDX before writing to DB
-    const healedMdx = preprocessMdx(validatedMdx, targetLang.toLowerCase());
+    // [FIX H2] Pass slug and lesson.order so preprocessMdx applies lesson-specific rules.
+    const healedMdx = preprocessMdx(validatedMdx, targetLang.toLowerCase(), false, slug, lesson.order);
     const resolvedMdx = await resolveAndPersistMedia(healedMdx, targetLang.toLowerCase());
 
     // Save back to DB
