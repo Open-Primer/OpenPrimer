@@ -3232,6 +3232,20 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   // Apply systematic healing first so high-fidelity content and components are injected automatically
   let processed = content;
 
+  // 0. Remove all images, figures, video, and audio components (both self-closing and paired forms)
+  processed = processed.replace(/<(Image|CustomFigure|Video|Audio|Biography)\b[^>]*?\/>/gi, '');
+  processed = processed.replace(/<(Image|CustomFigure|Video|Audio|Biography)\b[^>]*?>[\s\S]*?<\/\1>/gi, '');
+
+  // Strip all highlight / hover card tags — both self-closing (<RealPerson id="..." />) and paired forms
+  const highlightTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)';
+  // Self-closing form: <RealPerson id="..." />
+  processed = processed.replace(new RegExp(`<(${highlightTagsPattern})\\b[^>]*?/>`, 'gi'), '');
+  // Paired form: <RealPerson ...>text</RealPerson> -> text
+  const highlightRegex = new RegExp(`<(${highlightTagsPattern})\\b[^>]*?>([\\s\\S]*?)<\\/\\1>`, 'gi');
+  while (highlightRegex.test(processed)) {
+    processed = processed.replace(highlightRegex, '$2');
+  }
+
   // If first lesson of any course (where lessonOrder === 1 or lessonSlug is 'introduction'), omit PreviousLessonSummary entirely
   if (lessonOrder === 1 || lessonSlug === 'introduction') {
     processed = processed.replace(/<(PreviousLessonSummary|ResumeLeconPrecedente)\b[^>]*?\/?>([\s\S]*?<\/\1>)?/gi, '');

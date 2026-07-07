@@ -1223,52 +1223,80 @@ export function isExistingArtwork(src: string, label: string): boolean {
 
 
 
+const wikipediaValidationCache = new Map<string, boolean>();
+
 async function validateWikipediaPage(term: string, lang: string): Promise<boolean> {
   const cleanTerm = term.trim();
   if (!cleanTerm) return false;
   
   const lookupTerm = cleanTerm.replace(/_/g, ' ');
+  const cacheKey = `${lang.toLowerCase()}:${lookupTerm.toLowerCase()}`;
   
-  // 1. Try target language first
-  try {
-    const url = `https://${lang.toLowerCase()}.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=${encodeURIComponent(lookupTerm)}`;
-    const res = await fetchWithTimeout(url, { headers: { 'User-Agent': 'OpenPrimer/1.0' } }, 3000);
-    if (res.ok) {
-      const data = await safeResponseJson(res, 'Wikipedia validation');
-      const pages = data.query?.pages;
-      if (pages) {
-        const pageId = Object.keys(pages)[0];
-        if (pageId && pageId !== '-1') {
-          return true;
-        }
-      }
-    }
-  } catch (e) {
-    console.warn(`[MEDIA-RESOLVER] Wikipedia validation failed for "${lookupTerm}" in ${lang}:`, e);
+  if (wikipediaValidationCache.has(cacheKey)) {
+    return wikipediaValidationCache.get(cacheKey)!;
   }
   
-  // 2. Try English fallback if target lang is not English
-  if (lang.toLowerCase() !== 'en') {
+  let isNetworkError = false;
+
+  const checkLang = async (currentLang: string): Promise<{ found: boolean; error?: any; status?: number }> => {
+    const url = `https://${currentLang.toLowerCase()}.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=${encodeURIComponent(lookupTerm)}`;
     try {
-      const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=${encodeURIComponent(lookupTerm)}`;
-      const res = await fetchWithTimeout(url, { headers: { 'User-Agent': 'OpenPrimer/1.0' } }, 3000);
+      const res = await fetchWithTimeout(url, { headers: { 'User-Agent': 'OpenPrimer/1.0 (https://openprimer.org; contact@openprimer.org)' } }, 4000);
       if (res.ok) {
-        const data = await safeResponseJson(res, 'Wikipedia validation fallback');
+        const data = await safeResponseJson(res, `Wikipedia validation in ${currentLang}`);
         const pages = data.query?.pages;
         if (pages) {
           const pageId = Object.keys(pages)[0];
           if (pageId && pageId !== '-1') {
-            return true;
+            return { found: true };
           }
         }
+        return { found: false };
+      } else {
+        console.warn(`[MEDIA-RESOLVER] Wikipedia API returned non-OK status ${res.status} for "${lookupTerm}" in ${currentLang}`);
+        return { found: false, status: res.status };
       }
     } catch (e) {
-      console.warn(`[MEDIA-RESOLVER] Wikipedia fallback validation failed for "${lookupTerm}":`, e);
+      console.warn(`[MEDIA-RESOLVER] Wikipedia API fetch failed for "${lookupTerm}" in ${currentLang}:`, e);
+      return { found: false, error: e };
     }
+  };
+
+  // 1. Try target language first
+  const targetResult = await checkLang(lang);
+  if (targetResult.found) {
+    wikipediaValidationCache.set(cacheKey, true);
+    return true;
   }
   
+  if (targetResult.error || (targetResult.status && targetResult.status !== 404)) {
+    isNetworkError = true;
+  }
+
+  // 2. Try English fallback if target lang is not English
+  if (lang.toLowerCase() !== 'en') {
+    const fallbackResult = await checkLang('en');
+    if (fallbackResult.found) {
+      wikipediaValidationCache.set(cacheKey, true);
+      return true;
+    }
+    if (fallbackResult.error || (fallbackResult.status && fallbackResult.status !== 404)) {
+      isNetworkError = true;
+    }
+  }
+
+  // If both failed but it was due to a network/rate-limit error (not a clean 404/not found),
+  // we assume it is valid (return true) to avoid erroneously setting unresolved={true} on valid entities.
+  if (isNetworkError) {
+    console.log(`[MEDIA-RESOLVER] Assuming "${lookupTerm}" is valid due to Wikipedia network/status error to prevent false unresolved flags.`);
+    wikipediaValidationCache.set(cacheKey, true);
+    return true;
+  }
+
+  wikipediaValidationCache.set(cacheKey, false);
   return false;
 }
+
 
 function getFigurePrefix(lang: string): string {
   const l = lang.toLowerCase().split('-')[0];
@@ -1377,6 +1405,20 @@ export async function resolveAndPersistMedia(
   discipline?: string
 ): Promise<string> {
   let updatedContent = mdxContent;
+
+  // 0. Remove all images, figures, video, and audio components as per user requirements
+  updatedContent = updatedContent.replace(/<(Image|CustomFigure|Video|Audio|Biography)\b[^>]*?\/>/gi, '');
+  updatedContent = updatedContent.replace(/<(Image|CustomFigure|Video|Audio|Biography)\b[^>]*?>([\s\S]*?)<\/\1>/gi, '');
+
+  // Strip all highlight / hover card tags — both self-closing (<RealPerson id="..." />) and paired forms
+  const highlightTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)';
+  // Self-closing form: <RealPerson id="..." />
+  updatedContent = updatedContent.replace(new RegExp(`<(${highlightTagsPattern})\\b[^>]*?/>`, 'gi'), '');
+  // Paired form: <RealPerson ...>text</RealPerson> -> text
+  const highlightRegex = new RegExp(`<(${highlightTagsPattern})\\b[^>]*?>([\\s\\S]*?)<\\/\\1>`, 'gi');
+  while (highlightRegex.test(updatedContent)) {
+    updatedContent = updatedContent.replace(highlightRegex, '$2');
+  }
 
   // 1. Process Video players: find dummy URLs/IDs and search YouTube
   // Matches: <Video ... /> tag structure
@@ -1895,29 +1937,47 @@ export async function resolveAndPersistMedia(
   ];
 
   const tagPattern = new RegExp(`<(${highlightTags.join('|')})\\s+([^>]*?)>([\\s\\S]*?)<\\/\\1>`, 'g');
+  
+  // Extract all unique lookup names first
+  const lookupNames = new Set<string>();
   let tagMatch;
-  const contentForTags = updatedContent;
-  while ((tagMatch = tagPattern.exec(contentForTags)) !== null) {
-    const fullTag = tagMatch[0];
-    const tagName = tagMatch[1];
+  tagPattern.lastIndex = 0;
+  while ((tagMatch = tagPattern.exec(updatedContent)) !== null) {
     const attrsStr = tagMatch[2];
     const innerText = tagMatch[3];
-
     const termMatch = attrsStr.match(/(?:name|term)="([^"]+)"/);
     const lookupName = termMatch ? termMatch[1] : innerText.trim();
-
     if (lookupName) {
-      const isValid = await validateWikipediaPage(lookupName, targetLang);
-      if (!isValid) {
+      lookupNames.add(lookupName);
+    }
+  }
+
+  // Validate all unique lookup names in parallel (using resilient validation with cache)
+  const validationResults = new Map<string, boolean>();
+  await Promise.all(
+    Array.from(lookupNames).map(async (name) => {
+      const isValid = await validateWikipediaPage(name, targetLang);
+      validationResults.set(name, isValid);
+    })
+  );
+
+  // Synchronously replace all highlight tags using the validation results map to avoid index desynchronization
+  updatedContent = updatedContent.replace(tagPattern, (fullTag, tagName, attrsStr, innerText) => {
+    const termMatch = attrsStr.match(/(?:name|term)="([^"]+)"/);
+    const lookupName = termMatch ? termMatch[1] : innerText.trim();
+    if (lookupName) {
+      const isValid = validationResults.get(lookupName);
+      if (isValid === false) {
         console.log(`[MEDIA-RESOLVER] Flagging unresolved highlight tag <${tagName}> for "${lookupName}"`);
         let updatedAttrs = attrsStr;
         if (!attrsStr.includes('unresolved=')) {
           updatedAttrs += ' unresolved={true}';
         }
-        updatedContent = updatedContent.replace(fullTag, `<${tagName} ${updatedAttrs}>${innerText}</${tagName}>`);
+        return `<${tagName} ${updatedAttrs}>${innerText}</${tagName}>`;
       }
     }
-  }
+    return fullTag;
+  });
 
   // 5. Renumber figures sequentially to guarantee continuous numbering after deletions
   updatedContent = renumberFigures(updatedContent, targetLang);

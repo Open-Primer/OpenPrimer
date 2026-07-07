@@ -40,7 +40,9 @@ export async function safeResponseJson(res: Response, contextName: string = 'unk
 }
 
 export function safeJsonParse(text: string, contextName: string = 'unknown'): any {
-  if (!text) return null;
+  if (!text || !text.trim()) {
+    throw new StructuralJsonError(`[JSON PARSE FAILED] The model returned an empty response. Context: "${contextName}".`);
+  }
   const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
   if (cleaned.startsWith('<!DOCTYPE') || cleaned.startsWith('<html') || cleaned.startsWith('<')) {
     throw new TransientNetworkError(`[JSON PARSE FAILED] Received HTML response instead of JSON. Context: "${contextName}". Snippet: "${cleaned.slice(0, 200)}"`);
@@ -158,6 +160,19 @@ export function getWordCountLimitForLevel(level: string): { min: number; max: nu
 }
 
 export function generateStatsMarkdown(stats: any): string {
+  // Compute dollar cost
+  const costUSD = (stats.tokenMetrics.promptTokens * 0.075 / 1_000_000) + (stats.tokenMetrics.candidatesTokens * 0.30 / 1_000_000);
+
+  // Per-block breakdown lines
+  let blockBreakdown = '';
+  if (stats.narrativeBlockAttempts && Array.isArray(stats.narrativeBlockAttempts) && stats.narrativeBlockAttempts.length > 0) {
+    blockBreakdown = '\n### Narrative Block Details\n';
+    stats.narrativeBlockAttempts.forEach((b: any, i: number) => {
+      const rejections = b.attempts - 1;
+      blockBreakdown += `- **Block ${i + 1}** ("${b.sections?.join(' / ') || '?'}"): ${b.attempts} attempt${b.attempts > 1 ? 's' : ''}${rejections > 0 ? `, ${rejections} rejection${rejections > 1 ? 's' : ''}` : ''} → ${b.approved ? '✅ Approved' : '⚠️ Max iterations reached'}\n`;
+    });
+  }
+
   return `# 📊 Generation Statistics: ${stats.lessonTitle}
 
 - **Course Name**: ${stats.courseName}
@@ -172,10 +187,13 @@ ${stats.error ? `- **Error**: \`${stats.error}\`\n` : ''}
 ## ⏱️ Performance Metrics
 - **Total Duration**: ${stats.durationSeconds} seconds
 - **Syllabus Generation Attempts**: ${stats.syllabusAttempts}
-- **Narrative Scribe Attempts**: ${stats.narrativeAttempts}
-- **Narrative Critic Rejections**: ${stats.narrativeRejections}
+- **Syllabus Critic Rejections**: ${stats.syllabusRejections ?? 0}
+- **Narrative Blocks Total**: ${stats.narrativeBlockAttempts?.length ?? '?'}
+- **Narrative Scribe Attempts (all blocks)**: ${stats.narrativeAttempts}
+- **Narrative Critic Rejections (all blocks)**: ${stats.narrativeRejections}
 - **Narrative Global Rewrites (4A)**: ${stats.narrativeGlobalRewrites ?? 0}
 - **Narrative Localized Section Repairs (4A)**: ${stats.narrativeLocalRepairs ?? 0}
+${blockBreakdown}
 - **Widgets Architect Attempts**: ${stats.widgetsAttempts}
 - **Widgets Critic Rejections**: ${stats.widgetsRejections}
 - **MDX Self-Healing Attempts**: ${stats.selfHealingAttempts}
@@ -184,8 +202,8 @@ ${stats.error ? `- **Error**: \`${stats.error}\`\n` : ''}
 - **Prompt Tokens**: ${stats.tokenMetrics.promptTokens.toLocaleString()}
 - **Candidates Tokens**: ${stats.tokenMetrics.candidatesTokens.toLocaleString()}
 - **Total Tokens**: ${(stats.tokenMetrics.promptTokens + stats.tokenMetrics.candidatesTokens).toLocaleString()}
-- **Estimated Cost (Gemini 2.5 Flash)**: $${((stats.tokenMetrics.promptTokens * 0.075 / 1000000) + (stats.tokenMetrics.candidatesTokens * 0.30 / 1000000)).toFixed(6)}
-  *(Based on official pricing: $0.075 / 1M input tokens, $0.30 / 1M output tokens)*
+- **Estimated Cost (Gemini 2.5 Flash)**: **$${costUSD.toFixed(6)}**
+  *(Based on official pricing: $0.075/1M prompt tokens, $0.30/1M output tokens)*
 `;
 }
 
@@ -251,7 +269,7 @@ const verificationSchema = {
   type: "object",
   properties: {
     approved: { type: "boolean" },
-    critique: { type: "string" }
+    critique: { type: "string", description: "Detailed critique explaining what to fix. MUST be empty if approved is true." }
   },
   required: ["approved", "critique"]
 };
@@ -260,7 +278,7 @@ const syllabusAuditSchema = {
   type: "object",
   properties: {
     approved: { type: "boolean" },
-    critique: { type: "string" }
+    critique: { type: "string", description: "Detailed critique explaining what to fix. MUST be empty if approved is true." }
   },
   required: ["approved", "critique"]
 };
@@ -287,7 +305,7 @@ const outlineAuditSchema = {
   type: "object",
   properties: {
     approved: { type: "boolean" },
-    critique: { type: "string" }
+    critique: { type: "string", description: "Detailed critique explaining what to fix. MUST be empty if approved is true." }
   },
   required: ["approved", "critique"]
 };
@@ -296,16 +314,43 @@ const blockNarrativeAuditSchema = {
   type: "object",
   properties: {
     approved: { type: "boolean" },
-    critique: { type: "string" }
+    isGlobalRevision: { type: "boolean" },
+    globalCritique: { type: "string", description: "Detailed critique explaining what to fix globally. MUST be empty if approved is true or isGlobalRevision is false." },
+    sections: {
+      type: "array",
+      description: "List of rejected sections. MUST be empty if approved is true or isGlobalRevision is true. Do NOT include approved sections.",
+      items: {
+        type: "object",
+        properties: {
+          heading: { type: "string" },
+          approved: { type: "boolean", description: "Must strictly be false because only rejected sections are allowed in this array." },
+          critique: { type: "string", description: "Detailed critique explaining what to fix in this specific section." }
+        },
+        required: ["heading", "approved", "critique"]
+      }
+    }
   },
-  required: ["approved", "critique"]
+  required: ["approved", "isGlobalRevision", "globalCritique"]
 };
 
 const widgetBlockAuditSchema = {
   type: "object",
   properties: {
     approved: { type: "boolean" },
-    critique: { type: "string" }
+    critique: { type: "string", description: "Detailed critique explaining what to fix globally. MUST be empty if approved is true." },
+    fields: {
+      type: "array",
+      description: "List of invalid/rejected fields. MUST be empty if approved is true. Do NOT include approved fields.",
+      items: {
+        type: "object",
+        properties: {
+          field: { type: "string", description: "Name of the invalid property/field, e.g., 'diagnosticQuiz' or 'references'." },
+          approved: { type: "boolean", description: "Must strictly be false because only rejected fields are allowed in this array." },
+          critique: { type: "string", description: "Detailed critique explaining what is invalid and how to fix it." }
+        },
+        required: ["field", "approved", "critique"]
+      }
+    }
   },
   required: ["approved", "critique"]
 };
@@ -337,15 +382,16 @@ const revisionAuditSchema = {
   properties: {
     approved: { type: "boolean" },
     isGlobalRevision: { type: "boolean" },
-    globalCritique: { type: "string" },
+    globalCritique: { type: "string", description: "Detailed critique explaining what to fix globally. MUST be empty if approved is true or isGlobalRevision is false." },
     sections: {
       type: "array",
+      description: "List of rejected sections. MUST be empty if approved is true or isGlobalRevision is true. Do NOT include approved sections.",
       items: {
         type: "object",
         properties: {
           heading: { type: "string" },
-          approved: { type: "boolean" },
-          critique: { type: "string" }
+          approved: { type: "boolean", description: "Must strictly be false because only rejected sections are allowed in this array." },
+          critique: { type: "string", description: "Detailed critique explaining what to fix in this specific section." }
         },
         required: ["heading", "approved", "critique"]
       }
@@ -3132,6 +3178,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
     }
   }
 
+  let syllabusRejections = 0;
   if (parsedSyllabus) {
     lessonsList = Array.isArray(parsedSyllabus) ? parsedSyllabus : (parsedSyllabus.lessons || []);
     courseContext = Array.isArray(parsedSyllabus) ? {} : (parsedSyllabus.courseContext || {});
@@ -3225,7 +3272,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
 
         // Run syllabus critique
         await appendTaskLog(`[AI GENERATOR] Running Critique on generated syllabus (Iteration #${syllabusIteration})...`);
-        const syllabusCriticPrompt = `You are the Syllabus Critique Agent. Your job is to review the syllabus generated by the Pedagogical Architect.
+        const syllabusCriticPrompt = `You are the Syllabus Critique Agent (Agent 1). Your job is to review the syllabus generated by the Pedagogical Architect.
 Verify that:
 1. The syllabus is completely aligned with the course name: "${correctedCourseName}" and level: "${getDescriptiveLevelForPrompt(level)}".
 2. There are no redundant lessons or generic filler lessons.
@@ -3242,7 +3289,8 @@ You must return ONLY a valid JSON object matching this schema:
   "critique": "detailed critique explaining what to fix, or empty if approved"
 }
 \`\`\`
-Do NOT wrap your JSON response in markdown code blocks.`;
+[REJECT-ONLY REPORTING MANDATE]
+If the syllabus is approved, you MUST set approved: true, and critique: "". You must ONLY report failures/issues. Do not write any explanations or critique if the syllabus is approved.`;
 
         let critiqueJsonStr = '';
         let critiqueSuccess = false;
@@ -3312,7 +3360,8 @@ Do NOT wrap your JSON response in markdown code blocks.`;
           parsedSyllabus = currentParsedSyllabus;
           syllabusApproved = true;
         } else {
-          await appendTaskLog(`[AI GENERATOR WARNING] Syllabus REJECTED by Critique Agent. Critique: "${critiqueObj.critique}". Retrying generation...`);
+          syllabusRejections++;
+          await appendTaskLog(`[AI GENERATOR WARNING] Syllabus REJECTED by Critique Agent (rejection #${syllabusRejections}). Critique: "${critiqueObj.critique}". Retrying generation...`);
           currentSyllabusPrompt = `${promptSyllabus}
           
 =============================================================================
@@ -3395,6 +3444,12 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
   } else if (process.env.ONLY_SECOND_LESSON === 'true') {
     lessonsList = lessonsList.slice(1, 2);
     console.log(`[ONLY_SECOND_LESSON] Sliced lessons list to only generate the second lesson: "${lessonsList[0]?.title}"`);
+  } else if (process.env.LIMIT_LESSONS) {
+    const limit = parseInt(process.env.LIMIT_LESSONS, 10);
+    if (!isNaN(limit) && limit > 0) {
+      lessonsList = lessonsList.slice(0, limit);
+      console.log(`[LIMIT_LESSONS] Sliced lessons list to generate only the first ${limit} lessons.`);
+    }
   }
 
   await appendTaskLog(`[AI GENERATOR] Syllabus loaded. Total lessons to generate: ${lessonsList.length}. Offset: ${lessonOffset}.`);
@@ -3451,7 +3506,7 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
         console.warn(`[AI GENERATOR] Incremental check failed for "${item.title}", proceeding to generate:`, err);
       }
 
-      const lessonStats = {
+      const lessonStats: any = {
         courseName: correctedCourseName,
         lessonTitle: item.title,
         lessonSlug: item.slug,
@@ -3461,10 +3516,12 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
         endTime: 0,
         durationSeconds: 0,
         syllabusAttempts: 1,
+        syllabusRejections: syllabusRejections,
         narrativeAttempts: 0,
         narrativeRejections: 0,
         narrativeGlobalRewrites: 0,
         narrativeLocalRepairs: 0,
+        narrativeBlockAttempts: [] as Array<{ sections: string[]; attempts: number; approved: boolean }>,
         widgetsAttempts: 0,
         widgetsRejections: 0,
         selfHealingAttempts: 0,
@@ -3720,7 +3777,7 @@ Do NOT wrap your JSON response in markdown code blocks.`;
 
           // Critique the outline
           await appendTaskLog(`[AI GENERATOR] Critiquing outline for lesson "${item.title}" (Attempt #${outlineIteration})...`);
-          const outlineCriticPrompt = `You are the Outline Critic Agent. Review this JIT lesson plan:
+          const outlineCriticPrompt = `You are the Outline Critic Agent (Agent 2). Review this JIT lesson plan:
 ${JSON.stringify(parsedOutline, null, 2)}
 
 Ensure:
@@ -3735,7 +3792,8 @@ Return ONLY a valid JSON object matching the outlineAuditSchema:
   "critique": "detailed critique explaining what to fix, or empty if approved"
 }
 \`\`\`
-Do NOT wrap your JSON response in markdown code blocks.`;
+[REJECT-ONLY REPORTING MANDATE]
+If the outline is approved, you MUST set approved: true, and critique: "". You must ONLY report failures/issues. Do not write any explanations or critique if the outline is approved.`;
 
           saveDraftRevision(`prompt_stage1_outline_${item.slug}_iter${outlineIteration}.md`, currentOutlinePrompt);
           saveDraftRevision(`draft_stage1_outline_${item.slug}_iter${outlineIteration}.json`, outlineRaw);
@@ -3792,6 +3850,14 @@ Do NOT wrap your JSON response in markdown code blocks.`;
         let fullNarrativeText = '';
         for (let bIdx = 0; bIdx < blocks.length; bIdx++) {
           const currentBlockSections = blocks[bIdx];
+          const sectionHeadings = currentBlockSections.map((s: any) => s.heading);
+          const blockAttemptEntry = {
+            sections: sectionHeadings,
+            attempts: 0,
+            approved: false
+          };
+          lessonStats.narrativeBlockAttempts.push(blockAttemptEntry);
+
           const blockHeaderNames = currentBlockSections.map((s: any) => `"${s.heading}"`).join(', ');
           await appendTaskLog(`[AI GENERATOR - INVERTED] [STAGE 1-B] Writing narrative block ${bIdx + 1}/${blocks.length} (Sections: ${blockHeaderNames})...`);
 
@@ -3800,15 +3866,18 @@ Do NOT wrap your JSON response in markdown code blocks.`;
           const maxBlockIterations = 3;
           let blockFeedback = '';
           let cleanedBlockText = '';
+          let needsScribeDraft = true;
 
           while (!blockApproved && blockIteration < maxBlockIterations) {
             blockIteration++;
             lessonStats.narrativeAttempts++;
-            await appendTaskLog(`[AI GENERATOR] Scribe block generation iteration #${blockIteration} for block ${bIdx + 1}...`);
+            blockAttemptEntry.attempts = blockIteration;
 
-            const { min: minWords, max: maxWords } = getWordCountLimitForLevel(levelInput);
+            if (needsScribeDraft) {
+              await appendTaskLog(`[AI GENERATOR] Scribe block generation iteration #${blockIteration} for block ${bIdx + 1}...`);
+              const { min: minWords, max: maxWords } = getWordCountLimitForLevel(levelInput);
 
-            const blockPrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
+              const blockPrompt = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
 Your task is to write a section of the academic MDX narrative content for the specified lesson.
 
 We are writing the lesson block-by-block.
@@ -3838,14 +3907,15 @@ ${bIdx > 0 ? `Below is the text generated in the previous blocks. Do NOT repeat 
 ---
 
 ⚠️ CRITICAL MARKUP & XML/JSX COMPLIANCE RULES (MDX SAFETY MANDATE):
-1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Only Hover-Cards like <ConceptLink>, <RealPerson>, etc. are allowed inline in prose. Use [[WIDGET:id]] anchors for everything else.
+1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, etc.) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors for all widgets, media, links, or elements.
 2. NO RAW HTML FOR LISTS. Use Markdown bullets/numbering.
 3. NO LITERAL CURLY BRACES in plain text. Wrap in LaTeX or backticks.
 4. NO STRAY import/export statements.
 5. NO WIDGET ANCHORS INSIDE LISTS OR TABLES. Place them on separate blank lines.
 6. Captions of images or Mermaid diagrams must NOT contain figure prefixes (like 'Figure 1:', 'Image A -'). CAPTIONS MUST ONLY contain the descriptive prose.
+7. ACADEMIC REFERENCES CITATION MANDATE: You MUST actively cite the references listed under "### GLOBAL CONTEXT:" (if any) throughout the prose. Cite them inline using the format [ref1], [ref2], etc., where [ref1] maps to the first reference in the Global Context list, [ref2] to the second, and so on. Do not define a bibliography section here; simply cite them inline in this format.
 ${pronunciationMandate}
-${bIdx === blocks.length - 1 ? `7. Since this is the LAST block, you MUST end with the ## Conclusion section containing at least two comprehensive academic paragraphs, and all conclusion widgets in this exact order:
+${bIdx === blocks.length - 1 ? `8. Since this is the LAST block, you MUST end with the ## Conclusion section containing at least two comprehensive academic paragraphs, and all conclusion widgets in this exact order:
   [[WIDGET:conclusionSummary]]
   [[WIDGET:whatsNext]]
   [[WIDGET:goingFurther]]
@@ -3858,8 +3928,11 @@ The critique agent rejected your previous attempt for this block. Correct the fo
 
 Write the content for the specified sections. Return ONLY the markdown content. Do NOT wrap the response in markdown code blocks.`;
 
-            let blockRawText = await callAIEngine(blockPrompt, null, 0.35, 0.25, 0.85);
-            cleanedBlockText = blockRawText.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
+              saveDraftRevision(`prompt_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.md`, blockPrompt);
+              let blockRawText = await callAIEngine(blockPrompt, null, 0.35, 0.25, 0.85);
+              saveDraftRevision(`draft_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.md`, blockRawText);
+              cleanedBlockText = blockRawText.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
+            }
 
             // Audit the block text using Critic (Agent 4A)
             await appendTaskLog(`[AI GENERATOR] Auditing block ${bIdx + 1} text (Attempt #${blockIteration})...`);
@@ -3871,29 +3944,47 @@ ${cleanedBlockText}
 Check checkpoints:
 1. Zero-placeholders.
 2. Accurate academic density and level-appropriate language.
-3. Strict MDX/JSX safety (no raw custom component tags, no wrapped verbs in hover-cards).
+3. Strict MDX/JSX safety (absolutely no raw custom component or custom JSX/HTML tags like <ConceptLink>, <RealPerson>, <Glossary>, etc. inline in prose. All interactive elements and special links must strictly use the [[WIDGET:id]] anchor format).
 4. No figure prefixes like "Figure 1:" in visual captions.
 ${bIdx === blocks.length - 1 ? `5. Valid ## Conclusion section with at least two paragraphs and the required conclusion widgets.` : ''}
+
+Your audit must be in dual-mode:
+- **"isGlobalRevision" MUST ONLY be set to true if the issues are widespread and catastrophic** (completely unparseable structure, severe length deficiency, or total failure of the block narrative requiring a complete full-text rewrite). If so, provide a comprehensive "globalCritique".
+- **For standard, localized, or section-specific mistakes, you MUST set "isGlobalRevision": false**, and list ONLY the rejected sections requiring localized repair in the "sections" array.
 
 Return ONLY a valid JSON object matching blockNarrativeAuditSchema:
 \`\`\`json
 {
   "approved": boolean,
-  "critique": "detailed feedback explaining what to fix, or empty if approved"
+  "isGlobalRevision": boolean,
+  "globalCritique": "detailed feedback explaining what to fix globally, or empty if approved/local repair",
+  "sections": [
+    // If approved is false and isGlobalRevision is false, list ONLY the specific sections that are rejected. Do NOT include approved sections.
+    {
+      "heading": "heading of the rejected section",
+      "approved": false,
+      "critique": "detailed feedback explaining what to fix in this specific section"
+    }
+  ]
 }
 \`\`\`
-Do NOT wrap your JSON response in markdown code blocks.`;
 
-            saveDraftRevision(`prompt_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.md`, blockPrompt);
-            saveDraftRevision(`draft_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.md`, blockRawText);
+[REJECT-ONLY REPORTING MANDATE]
+1. If approved is true: approved MUST be true, isGlobalRevision MUST be false, globalCritique MUST be "", and sections MUST be empty.
+2. If isGlobalRevision is true: approved MUST be false, isGlobalRevision MUST be true, globalCritique MUST describe the global issues, and sections MUST be empty.
+3. If approved is false and isGlobalRevision is false: sections MUST ONLY contain sections that are rejected (with approved set to false). Any approved section MUST be strictly omitted from the array.`;
+
             saveDraftRevision(`prompt_stage1_narrative_block${bIdx + 1}_critique_${item.slug}_iter${blockIteration}.md`, blockCriticPrompt);
 
             let auditJsonStr = await callAIEngine(blockCriticPrompt, blockNarrativeAuditSchema, 0.1);
             saveDraftRevision(`critique_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.json`, auditJsonStr);
             let auditClean = auditJsonStr.replace(/```json/gi, '').replace(/```/gi, '').trim();
-            let blockAudit = { approved: true, critique: '' };
+            let blockAudit = { approved: true, isGlobalRevision: false, globalCritique: '', sections: [] as any[] };
             try {
-              blockAudit = safeJsonParse(auditClean, 'Block Narrative Audit Parsing');
+              const parsed = safeJsonParse(auditClean, 'Block Narrative Audit Parsing');
+              if (parsed) {
+                blockAudit = parsed;
+              }
             } catch (e) {
               console.warn(`[AI GENERATOR] Failed to parse block audit JSON:`, e);
             }
@@ -3902,11 +3993,110 @@ Do NOT wrap your JSON response in markdown code blocks.`;
               await appendTaskLog(`[AI GENERATOR] Block ${bIdx + 1} approved by Critique Agent!`);
               fullNarrativeText = (fullNarrativeText.trim() + "\n\n" + cleanedBlockText.trim()).trim();
               blockApproved = true;
+              blockAttemptEntry.approved = true;
             } else {
-              await appendTaskLog(`[AI GENERATOR WARNING] Block ${bIdx + 1} REJECTED. Critique: "${blockAudit.critique}".`);
               lessonStats.narrativeRejections++;
-                            lessonStats.narrativeLocalRepairs++;
-              blockFeedback = blockAudit.critique;
+              const isGlobal = !!blockAudit.isGlobalRevision;
+
+              if (isGlobal || blockIteration >= maxBlockIterations) {
+                await appendTaskLog(`[AI GENERATOR WARNING] Block ${bIdx + 1} REJECTED globally. Critique: "${blockAudit.globalCritique}".`);
+                blockFeedback = blockAudit.globalCritique || 'Narrative block rejected globally.';
+                needsScribeDraft = true;
+              } else {
+                const rejectedSections = (blockAudit.sections || []).filter((s: any) => !s.approved);
+                if (rejectedSections.length === 0) {
+                  await appendTaskLog(`[AI GENERATOR WARNING] Block ${bIdx + 1} REJECTED but returned no rejected sections. Retrying globally.`);
+                  blockFeedback = blockAudit.globalCritique || 'Narrative block rejected.';
+                  needsScribeDraft = true;
+                } else {
+                  lessonStats.narrativeLocalRepairs++;
+                  await appendTaskLog(`[AI GENERATOR WARNING] Block ${bIdx + 1} REJECTED locally. Repairing ${rejectedSections.length} section(s)...`);
+
+                  const parsedSections = parseMarkdownSections(cleanedBlockText);
+                  const rejectedSectionsData: any[] = [];
+
+                  for (let i = 0; i < parsedSections.length; i++) {
+                    const sec = parsedSections[i];
+                    const secHeadingNorm = (sec.heading || 'Header / Introduction Block').trim().toLowerCase();
+                    const criticMatch = rejectedSections.find((cs: any) => {
+                      const csHeadingNorm = (cs.heading || 'Header / Introduction Block').trim().toLowerCase();
+                      return csHeadingNorm === secHeadingNorm || csHeadingNorm.replace(/^##\s+/, '') === secHeadingNorm.replace(/^##\s+/, '');
+                    });
+                    if (criticMatch) {
+                      rejectedSectionsData.push({
+                        heading: sec.heading || 'Header / Introduction Block',
+                        content: sec.content,
+                        critique: criticMatch.critique,
+                        precedingHeading: i > 0 ? parsedSections[i - 1].heading : null,
+                        succeedingHeading: i < parsedSections.length - 1 ? parsedSections[i + 1].heading : null
+                      });
+                    }
+                  }
+
+                  if (rejectedSectionsData.length > 0) {
+                    const promptJointRepair = `You are a world-class academic professor and expert writer (Agent 3A - Narrative Scribe).
+We need to repair specific sections of the lesson narrative "${item.title}" (Block ${bIdx + 1}) that were rejected by the Narrative Critic (Agent 4A).
+
+[CRITICAL] CRITICAL MDX COMPLIANCE:
+- Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, etc.) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors.
+- Do NOT use raw HTML tags; use standard Markdown instead.
+- Do NOT use literal curly braces { } in plain text.
+
+[CRITICAL] RICH MARKDOWN TABLES AND MERMAID DIAGRAMS (MANDATORY FOR UNIVERSITY LEVELS):
+- If the academic level is University/Higher Education (L1, L2, L3, M1, M2):
+  * Ensure that if the section or heading is criticized for lacking structured comparative data or visual flows, you design and insert 1 to 2 rich Markdown tables (using standard \`| Column 1 | Column 2 |\` format) and/or 1 to 2 Mermaid diagrams (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model the concepts.
+
+CONTEXT:
+Course: "${correctedCourseName}" | Level: "${getDescriptiveLevelForPrompt(levelInput)}" | Language: "${targetLang.toUpperCase()}"
+References available:
+${referencesMetadata}
+
+${rejectedSectionsData.map((rj, idx) => `
+--- REJECTED SECTION ${idx + 1} ---
+Heading: "${rj.heading}"
+Neighborhood:
+  - Preceding: ${rj.precedingHeading || 'None'}
+  - Succeeding: ${rj.succeedingHeading || 'None'}
+Critique from Agent 4A:
+  "${rj.critique}"
+Current Content:
+${rj.content}
+----------------------------------
+`).join('\n')}
+
+INSTRUCTIONS:
+1. Repair each rejected section to fully resolve its critique.
+2. Wrap each repaired section in: <revised_section heading="HEADING_EXACTLY_AS_SHOWN">[your repaired content]</revised_section>
+3. Preserve all [[WIDGET:id]] anchors exactly as they are in the current content.
+4. ACADEMIC REFERENCES CITATION MANDATE: Ensure that all inline citations in the format [ref1], [ref2], etc. mapping to the available global references are strictly preserved or added where necessary to support the academic rigor of the content. Do not define a bibliography section here; simply cite them inline in this format.
+5. Do NOT include markdown code block wrappers or conversational text.`;
+
+                    let scribeRepairOutput = await callAIEngine(promptJointRepair, null, 0.35, 0.25, 0.85);
+                    const repairs = parseJointRepairOutput(scribeRepairOutput);
+
+                    // Fallback: single section repair with no XML tags
+                    if (repairs.size === 0 && rejectedSectionsData.length === 1) {
+                      const key = rejectedSectionsData[0].heading.trim().toLowerCase();
+                      repairs.set(key, scribeRepairOutput.trim());
+                    }
+
+                    // Apply repairs
+                    for (const sec of parsedSections) {
+                      const key = (sec.heading || 'Header / Introduction Block').trim().toLowerCase();
+                      if (repairs.has(key)) {
+                        await appendTaskLog(`[AI GENERATOR] Applying repaired content for section: "${sec.heading || 'Header / Introduction Block'}"`);
+                        sec.content = repairs.get(key)!;
+                      }
+                    }
+
+                    cleanedBlockText = reconstructMarkdown(parsedSections);
+                    needsScribeDraft = false; // Repaired section is ready for re-audit
+                  } else {
+                    blockFeedback = 'Failed to map rejected sections. Retrying globally.';
+                    needsScribeDraft = true;
+                  }
+                }
+              }
             }
           }
 
@@ -4078,13 +4268,24 @@ Check:
 3. LearningObjectives use Bloom's Taxonomy verbs (Analyze, Evaluate, Create for L1/L2/L3/Master levels).
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "approved": boolean,
-  "critique": "detailed feedback explaining what to fix, or empty if approved"
+  "critique": "detailed feedback explaining what to fix globally, or empty if approved",
+  "fields": [
+    // If approved is false, list ONLY the fields/keys that are rejected. Do NOT include approved fields.
+    {
+      "field": "name of the field (e.g., 'prerequisites', 'diagnosticQuiz', or 'learningObjectives')",
+      "approved": false,
+      "critique": "detailed feedback explaining what to fix in this specific field"
+    }
+  ]
 }
-\\\`\\\`\\\`
-Do NOT wrap your JSON response in markdown code blocks.`;
+\`\`\`
+
+[REJECT-ONLY REPORTING MANDATE]
+1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
+2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
 
         saveDraftRevision(`prompt_stage2_widgets_block1_${item.slug}_iter${block1Iteration}.md`, block1PromptWithFeedback);
         if (block1Parsed) {
@@ -4095,7 +4296,7 @@ Do NOT wrap your JSON response in markdown code blocks.`;
         const criticJsonStr = await callAIEngine(block1CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
         saveDraftRevision(`critique_stage2_widgets_block1_${item.slug}_iter${block1Iteration}.json`, criticJsonStr);
         const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
-        let auditResult = { approved: true, critique: '' };
+        let auditResult = { approved: true, critique: '', fields: [] as any[] };
         try {
           auditResult = safeJsonParse(cleanCritic, 'Widget Block 1 Audit Parsing');
         } catch (e) {
@@ -4106,9 +4307,13 @@ Do NOT wrap your JSON response in markdown code blocks.`;
           await appendTaskLog(`[AI GENERATOR] Widget Block 1 approved by Critique Agent!`);
           block1Approved = true;
         } else {
-          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 1 REJECTED. Critique: "${auditResult.critique}".`);
+          let critiqueMsg = auditResult.critique || 'Widget Block 1 rejected.';
+          if (auditResult.fields && auditResult.fields.length > 0) {
+            critiqueMsg += '\nDetailed errors:\n' + auditResult.fields.map((f: any) => `- Field "${f.field}": ${f.critique}`).join('\n');
+          }
+          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 1 REJECTED. Critique: "${critiqueMsg}".`);
           lessonStats.widgetsRejections++;
-          block1Feedback = auditResult.critique;
+          block1Feedback = critiqueMsg;
         }
       }
 
@@ -4192,13 +4397,24 @@ Ensure:
 3. Biography component details (dates, Wikipedia link) are correct.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "approved": boolean,
-  "critique": "detailed feedback explaining what to fix, or empty if approved"
+  "critique": "detailed feedback explaining what to fix globally, or empty if approved",
+  "fields": [
+    // If approved is false, list ONLY the fields/keys that are rejected. Do NOT include approved fields.
+    {
+      "field": "name of the field (e.g., 'interactiveComponents')",
+      "approved": false,
+      "critique": "detailed feedback explaining what to fix in this specific field"
+    }
+  ]
 }
-\\\`\\\`\\\`
-Do NOT wrap your JSON response in markdown code blocks.`;
+\`\`\`
+
+[REJECT-ONLY REPORTING MANDATE]
+1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
+2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
 
           saveDraftRevision(`prompt_stage2_widgets_block2_${item.slug}_iter${block2Iteration}.md`, block2PromptWithFeedback);
           if (block2Parsed) {
@@ -4209,7 +4425,7 @@ Do NOT wrap your JSON response in markdown code blocks.`;
           const criticJsonStr = await callAIEngine(block2CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
           saveDraftRevision(`critique_stage2_widgets_block2_${item.slug}_iter${block2Iteration}.json`, criticJsonStr);
           const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
-          let auditResult = { approved: true, critique: '' };
+          let auditResult = { approved: true, critique: '', fields: [] as any[] };
           try {
             auditResult = safeJsonParse(cleanCritic, 'Widget Block 2 Audit Parsing');
           } catch (e) {
@@ -4220,9 +4436,13 @@ Do NOT wrap your JSON response in markdown code blocks.`;
             await appendTaskLog(`[AI GENERATOR] Widget Block 2 approved by Critique Agent!`);
             block2Approved = true;
           } else {
-            await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 2 REJECTED. Critique: "${auditResult.critique}".`);
+            let critiqueMsg = auditResult.critique || 'Widget Block 2 rejected.';
+            if (auditResult.fields && auditResult.fields.length > 0) {
+              critiqueMsg += '\nDetailed errors:\n' + auditResult.fields.map((f: any) => `- Field "${f.field}": ${f.critique}`).join('\n');
+            }
+            await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 2 REJECTED. Critique: "${critiqueMsg}".`);
             lessonStats.widgetsRejections++;
-            block2Feedback = auditResult.critique;
+            block2Feedback = critiqueMsg;
           }
         }
       }
@@ -4291,13 +4511,24 @@ Ensure:
 2. The language is strictly in ${targetLang.toUpperCase()}.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "approved": boolean,
-  "critique": "detailed feedback explaining what to fix, or empty if approved"
+  "critique": "detailed feedback explaining what to fix globally, or empty if approved",
+  "fields": [
+    // If approved is false, list ONLY the fields/keys that are rejected. Do NOT include approved fields.
+    {
+      "field": "name of the field (e.g., 'conclusionSummary', 'whatsNext', 'goingFurther', or 'glossary')",
+      "approved": false,
+      "critique": "detailed feedback explaining what to fix in this specific field"
+    }
+  ]
 }
-\\\`\\\`\\\`
-Do NOT wrap your JSON response in markdown code blocks.`;
+\`\`\`
+
+[REJECT-ONLY REPORTING MANDATE]
+1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
+2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
 
         saveDraftRevision(`prompt_stage2_widgets_block3_${item.slug}_iter${block3Iteration}.md`, block3PromptWithFeedback);
         if (block3Parsed) {
@@ -4309,7 +4540,7 @@ Do NOT wrap your JSON response in markdown code blocks.`;
         saveDraftRevision(`critique_stage2_widgets_block3${item.slug}_iter${block3Iteration}.json`, criticJsonStr);
 
         const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
-        let auditResult = { approved: true, critique: '' };
+        let auditResult = { approved: true, critique: '', fields: [] as any[] };
         try {
           auditResult = safeJsonParse(cleanCritic, 'Widget Block 3 Audit Parsing');
         } catch (e) {
@@ -4320,9 +4551,13 @@ Do NOT wrap your JSON response in markdown code blocks.`;
           await appendTaskLog(`[AI GENERATOR] Widget Block 3 approved by Critique Agent!`);
           block3Approved = true;
         } else {
-          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 3 REJECTED. Critique: "${auditResult.critique}".`);
+          let critiqueMsg = auditResult.critique || 'Widget Block 3 rejected.';
+          if (auditResult.fields && auditResult.fields.length > 0) {
+            critiqueMsg += '\nDetailed errors:\n' + auditResult.fields.map((f: any) => `- Field "${f.field}": ${f.critique}`).join('\n');
+          }
+          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 3 REJECTED. Critique: "${critiqueMsg}".`);
           lessonStats.widgetsRejections++;
-          block3Feedback = auditResult.critique;
+          block3Feedback = critiqueMsg;
         }
       }
 
@@ -4399,13 +4634,24 @@ Ensure:
 3. No HTML or custom Hover-Card tags inside quiz strings.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "approved": boolean,
-  "critique": "detailed feedback explaining what to fix, or empty if approved"
+  "critique": "detailed feedback explaining what to fix globally, or empty if approved",
+  "fields": [
+    // If approved is false, list ONLY the fields/keys that are rejected. Do NOT include approved fields.
+    {
+      "field": "name of the field (e.g., 'finalEvaluation' or 'references')",
+      "approved": false,
+      "critique": "detailed feedback explaining what to fix in this specific field"
+    }
+  ]
 }
-\\\`\\\`\\\`
-Do NOT wrap your JSON response in markdown code blocks.`;
+\`\`\`
+
+[REJECT-ONLY REPORTING MANDATE]
+1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
+2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
 
         saveDraftRevision(`prompt_stage2_widgets_block4_${item.slug}_iter${block4Iteration}.md`, block4PromptWithFeedback);
         if (block4Parsed) {
@@ -4417,7 +4663,7 @@ Do NOT wrap your JSON response in markdown code blocks.`;
         saveDraftRevision(`critique_stage2_widgets_block4${item.slug}_iter${block4Iteration}.json`, criticJsonStr);
 
         const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
-        let auditResult = { approved: true, critique: '' };
+        let auditResult = { approved: true, critique: '', fields: [] as any[] };
         try {
           auditResult = safeJsonParse(cleanCritic, 'Widget Block 4 Audit Parsing');
         } catch (e) {
@@ -4428,9 +4674,13 @@ Do NOT wrap your JSON response in markdown code blocks.`;
           await appendTaskLog(`[AI GENERATOR] Widget Block 4 approved by Critique Agent!`);
           block4Approved = true;
         } else {
-          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 4 REJECTED. Critique: "${auditResult.critique}".`);
+          let critiqueMsg = auditResult.critique || 'Widget Block 4 rejected.';
+          if (auditResult.fields && auditResult.fields.length > 0) {
+            critiqueMsg += '\nDetailed errors:\n' + auditResult.fields.map((f: any) => `- Field "${f.field}": ${f.critique}`).join('\n');
+          }
+          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 4 REJECTED. Critique: "${critiqueMsg}".`);
           lessonStats.widgetsRejections++;
-          block4Feedback = auditResult.critique;
+          block4Feedback = critiqueMsg;
         }
       }
 
@@ -4782,6 +5032,7 @@ Rules:
    - Absolutely NO orphaned JSX tags or unclosed tags.
    - Never nest a custom component inside itself.
    - Do NOT generate empty components without text or children.
+7. ZERO-COMMENTARY MANDATE: Do not add any conversational introduction, notes, or explanation (e.g. "Here is the translation:"). Return ONLY the translated MDX content.
 
 MDX CONTENT TO TRANSLATE:
 ${isolatedContent}`;
@@ -4856,7 +5107,7 @@ ${isolatedContent}`;
             let critique = '';
             let currentTranslation = translatedMdx;
             let critiqueIteration = 0;
-            const maxCritiqueIterations = 5;
+            const maxCritiqueIterations = 3;
 
             while (!approved && critiqueIteration < maxCritiqueIterations && currentTranslation) {
               critiqueIteration++;
@@ -4888,7 +5139,9 @@ You must output ONLY a valid JSON object matching this structure:
   "approved": true or false,
   "critique": "If not approved, explain exactly what is wrong/missing/broken so the translator can correct it. If approved, keep this empty."
 }
-Do not write any markdown code block wrappers (like \`\`\`json) or any conversational text. Only output raw JSON.`;
+
+[REJECT-ONLY REPORTING MANDATE]
+If the translation is approved, you MUST set approved: true, and critique: "". You must ONLY report failures/issues. Do not write any explanations or critique if the translation is approved.`;
 
 let criticResText = '';
               let criticSuccess = false;
@@ -5572,7 +5825,7 @@ INSTRUCTIONS:
     let critique = '';
     let currentMdx = revisedMdx;
     let critiqueIteration = 0;
-    const maxCritiqueIterations = 5;
+    const maxCritiqueIterations = 3;
 
     while (!approved && critiqueIteration < maxCritiqueIterations && currentMdx) {
       critiqueIteration++;
@@ -5618,7 +5871,7 @@ Your validation checklist:
 
 Your audit can be in dual-mode:
 - **"isGlobalRevision" MUST ONLY be set to true if the issues are widespread and catastrophic** (completely unparseable structure, severe length deficiency, or total failure of the revision requiring a complete full-JSON rewrite). If so, provide a comprehensive "globalCritique".
-- **For standard, localized, or section-specific mistakes, you MUST set "isGlobalRevision": false**, approve/reject section-by-section, and specify the exact "critique" for the rejected sections in the "sections" array to allow localized section-by-section repairs. Do NOT trigger a global rewrite for standard localized errors.
+- **For standard, localized, or section-specific mistakes, you MUST set "isGlobalRevision": false**, and list ONLY the rejected sections requiring localized repair in the "sections" array.
 
 You must output ONLY a valid JSON object matching the revisionAuditSchema:
 {
@@ -5626,14 +5879,19 @@ You must output ONLY a valid JSON object matching the revisionAuditSchema:
   "isGlobalRevision": true or false,
   "globalCritique": "Explain exactly what is wrong/missing/broken globally if isGlobalRevision is true. Otherwise keep empty.",
   "sections": [
+    // If approved is false and isGlobalRevision is false, list ONLY the specific sections that are rejected. Do NOT include approved sections.
     {
       "heading": "Heading of the section, e.g., '## Introduction' (or '' for the header/frontmatter block)",
-      "approved": true or false,
-      "critique": "If not approved, explain exactly what is wrong/missing in this section."
+      "approved": false,
+      "critique": "Explain exactly what is wrong/missing in this specific section."
     }
   ]
 }
-Do not write any markdown code block wrappers (like \`\`\`json) or any conversational text. Only output raw JSON.`;
+
+[REJECT-ONLY REPORTING MANDATE]
+1. If approved is true: approved MUST be true, isGlobalRevision MUST be false, globalCritique MUST be "", and sections MUST be empty.
+2. If isGlobalRevision is true: approved MUST be false, isGlobalRevision MUST be true, globalCritique MUST describe the global issues, and sections MUST be empty.
+3. If approved is false and isGlobalRevision is false: sections MUST ONLY contain sections that are rejected (with approved set to false). Any approved section MUST be strictly omitted from the array.`;
 
       let criticResText = '';
       let criticSuccess = false;
@@ -6438,11 +6696,24 @@ function isBookReference(text: string): boolean {
 }
 
 async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'): Promise<string> {
+  // Find the bibliography section to isolate it from inline body citations
+  const refHeaderRegex = /(?:^|\n)(?:#{2,4})\s*(?:R[eé]f[eé]rences|References|Bibliographie)\b/i;
+  const matchHeader = mdx.match(refHeaderRegex);
+  if (!matchHeader || matchHeader.index === undefined) {
+    console.log("[BIBLIOGRAPHY VALIDATOR] No references header found. Skipping bibliography validation.");
+    return mdx;
+  }
+
+  const headerIndex = matchHeader.index;
+  const bodyText = mdx.slice(0, headerIndex);
+  const referencesText = mdx.slice(headerIndex);
+
   const refRegex = /(?:<a\s+id="ref-(\d+)"[^>]*><\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\n\s*(?:<a\s+id="ref-\d+"|\[\d+\]|###|---\s*|$))/g;
   let match;
   const replacements: { original: string; replacement: string; refId: string }[] = [];
+  let networkDisabled = false;
 
-  while ((match = refRegex.exec(mdx)) !== null) {
+  while ((match = refRegex.exec(referencesText)) !== null) {
     const fullMatch = match[0];
     const refId = match[1] || match[2];
     const refNum = match[2];
@@ -6483,6 +6754,10 @@ async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'
       /futura\s*science|futura-science|site|web|article\s*en\s*ligne|en\s*ligne|internet|blog|press|news/i.test(refText);
 
     for (let attempt = 0; attempt < 3; attempt++) {
+      if (networkDisabled) {
+        console.log(`[BIBLIOGRAPHY VALIDATOR] Network queries disabled (prior timeout/error). Skipping attempt ${attempt + 1}.`);
+        break;
+      }
       const query = queries[attempt];
       if (!query) continue;
       console.log(`[BIBLIOGRAPHY VALIDATOR] Attempt ${attempt + 1}/3 with query: "${query}" (isWebResource: ${isWebResource})`);
@@ -6498,11 +6773,16 @@ async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'
               break;
             }
           }
-        } catch (e) {
+        } catch (e: any) {
           console.warn(`[BIBLIOGRAPHY VALIDATOR] Wikipedia search attempt ${attempt + 1} failed:`, e);
+          if (e && (e.name === 'AbortError' || e.message?.includes('fetch failed'))) {
+            console.warn(`[BIBLIOGRAPHY VALIDATOR] Network error/timeout detected. Disabling future network validations.`);
+            networkDisabled = true;
+          }
         }
       }
 
+      if (networkDisabled) break;
       try {
         const searchRes = await fetchWithTimeout(`https://api.crossref.org/works?query=${encodeURIComponent(query)}&rows=1`);
         if (searchRes.ok) {
@@ -6517,10 +6797,15 @@ async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'
             break;
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         console.warn(`[BIBLIOGRAPHY VALIDATOR] Crossref attempt ${attempt + 1} failed:`, e);
+        if (e && (e.name === 'AbortError' || e.message?.includes('fetch failed'))) {
+          console.warn(`[BIBLIOGRAPHY VALIDATOR] Network error/timeout detected. Disabling future network validations.`);
+          networkDisabled = true;
+        }
       }
 
+      if (networkDisabled) break;
       try {
         const gBooksRes = await fetchWithTimeout(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=1`);
         if (gBooksRes.ok) {
@@ -6533,10 +6818,15 @@ async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'
             break;
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         console.warn(`[BIBLIOGRAPHY VALIDATOR] Google Books attempt ${attempt + 1} failed:`, e);
+        if (e && (e.name === 'AbortError' || e.message?.includes('fetch failed'))) {
+          console.warn(`[BIBLIOGRAPHY VALIDATOR] Network error/timeout detected. Disabling future network validations.`);
+          networkDisabled = true;
+        }
       }
 
+      if (networkDisabled) break;
       if (!isWebResource) {
         try {
           const wikiRes = await fetchWithTimeout(`https://${targetLang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=1&format=json`);
@@ -6548,8 +6838,12 @@ async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'
               break;
             }
           }
-        } catch (e) {
+        } catch (e: any) {
           console.warn(`[BIBLIOGRAPHY VALIDATOR] Fallback Wikipedia search attempt ${attempt + 1} failed:`, e);
+          if (e && (e.name === 'AbortError' || e.message?.includes('fetch failed'))) {
+            console.warn(`[BIBLIOGRAPHY VALIDATOR] Network error/timeout detected. Disabling future network validations.`);
+            networkDisabled = true;
+          }
         }
       }
     }
@@ -6576,9 +6870,13 @@ async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'
     }
   }
 
-  let updatedMdx = mdx;
+  let updatedRefText = referencesText;
   for (const rep of replacements) {
-    updatedMdx = updatedMdx.replace(rep.original, rep.replacement);
+    updatedRefText = updatedRefText.replace(rep.original, rep.replacement);
+  }
+
+  let updatedMdx = bodyText + updatedRefText;
+  for (const rep of replacements) {
     if (rep.replacement === '') {
       const footnoteRegex = new RegExp(`<sup><a\\b[^>]*href=["']#ref-${rep.refId}["'][^>]*>.*?</a></sup>`, 'g');
       updatedMdx = updatedMdx.replace(footnoteRegex, '');
@@ -6751,7 +7049,16 @@ async function isLinkReachable(url: string): Promise<boolean> {
 }
 
 async function validateAndFixExternalResources(mdx: string, targetLang: string = 'fr'): Promise<string> {
-  let updatedMdx = await validateAndFixImages(mdx);
+  // 0. Strip all media/image/hover-card tags before any network validation
+  let updatedMdx = mdx;
+  updatedMdx = updatedMdx.replace(/<(Image|CustomFigure|Video|Audio|Biography)\b[^>]*?\/>/gi, '');
+  updatedMdx = updatedMdx.replace(/<(Image|CustomFigure|Video|Audio|Biography)\b[^>]*?>([\s\S]*?)<\/\1>/gi, '');
+  const _hTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)';
+  // Self-closing form: <RealPerson id="..." />
+  updatedMdx = updatedMdx.replace(new RegExp(`<(${_hTagsPattern})\\b[^>]*?/>`, 'gi'), '');
+  // Paired form: <RealPerson ...>text</RealPerson> -> text
+  const _hRegex = new RegExp(`<(${_hTagsPattern})\\b[^>]*?>([\\s\\S]*?)<\\/\\1>`, 'gi');
+  while (_hRegex.test(updatedMdx)) { updatedMdx = updatedMdx.replace(_hRegex, '$2'); }
 
   // Validate and fix Video tags
   const videoRegex = /<Video\s+([^>]*?)\/>/gi;
