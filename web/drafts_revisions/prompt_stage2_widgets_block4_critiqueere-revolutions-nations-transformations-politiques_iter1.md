@@ -5,42 +5,42 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
     "props": {
       "questions": [
         {
-          "q": "Quel événement symbolise le début de la Révolution française le 14 juillet 1789 ?",
-          "explanation": "La prise de la Bastille, une prison royale, est devenue le symbole de la chute de l'Ancien Régime et du début de la Révolution française.",
+          "q": "Quelle date marque traditionnellement le début de la Révolution française?",
+          "explanation": "La prise de la Bastille le 14 juillet 1789 est symboliquement considérée comme le début de la Révolution française, bien que les États généraux aient été convoqués plus tôt.",
           "options": [
             {
-              "text": "La prise de la Bastille",
+              "text": "14 juillet 1789",
               "correct": true
             },
             {
-              "text": "Le serment du Jeu de paume",
+              "text": "5 mai 1789",
               "correct": false
             },
             {
-              "text": "La Déclaration des Droits de l'Homme et du Citoyen",
+              "text": "20 juin 1789",
               "correct": false
             },
             {
-              "text": "La fuite à Varennes",
+              "text": "10 août 1792",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quel philosophe des Lumières a fortement influencé les idées de souveraineté populaire et de contrat social, centrales dans les révolutions de la fin du XVIIIe siècle ?",
-          "explanation": "Jean-Jacques Rousseau, avec ses œuvres comme 'Du Contrat social', a développé des théories sur la souveraineté du peuple et la volonté générale, qui ont profondément inspiré les révolutionnaires.",
+          "q": "Quel philosophe des Lumières a fortement influencé les idées révolutionnaires, notamment avec sa théorie de la séparation des pouvoirs?",
+          "explanation": "Montesquieu, avec son ouvrage \"De l'esprit des lois\", a théorisé la séparation des pouvoirs (législatif, exécutif, judiciaire), une idée fondamentale pour les constitutions révolutionnaires.",
           "options": [
+            {
+              "text": "Jean-Jacques Rousseau",
+              "correct": false
+            },
             {
               "text": "Voltaire",
               "correct": false
             },
             {
-              "text": "Jean-Jacques Rousseau",
-              "correct": true
-            },
-            {
               "text": "Montesquieu",
-              "correct": false
+              "correct": true
             },
             {
               "text": "Denis Diderot",
@@ -49,11 +49,33 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
           ]
         },
         {
-          "q": "Quel était l'objectif principal du Congrès de Vienne (1814-1815) après les guerres napoléoniennes ?",
-          "explanation": "Le Congrès de Vienne visait principalement à restaurer les monarchies renversées par Napoléon et à redessiner la carte de l'Europe pour garantir un équilibre des puissances et prévenir de futures hégémonies.",
+          "q": "Quel est l'impact majeur du Code civil (Code Napoléon) promulgué en 1804?",
+          "explanation": "Le Code civil a consolidé les acquis de la Révolution en matière de droit civil, garantissant l'égalité devant la loi, la propriété privée et la laïcité de l'État, et a servi de modèle à de nombreux pays.",
           "options": [
             {
-              "text": "Établir une démocratie paneuropéenne",
+              "text": "Il a rétabli les privilèges de la noblesse",
+              "correct": false
+            },
+            {
+              "text": "Il a unifié et rationalisé le droit français",
+              "correct": true
+            },
+            {
+              "text": "Il a aboli la propriété privée",
+              "correct": false
+            },
+            {
+              "text": "Il a instauré le suffrage universel",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Quel fut l'objectif principal du Congrès de Vienne (1814-1815)?",
+          "explanation": "Le Congrès de Vienne visait à redessiner la carte de l'Europe après les guerres napoléoniennes, en restaurant les dynasties légitimes et en créant un système d'équilibre pour prévenir de nouvelles hégémonies.",
+          "options": [
+            {
+              "text": "Établir une république européenne",
               "correct": false
             },
             {
@@ -61,68 +83,91 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
               "correct": true
             },
             {
-              "text": "Promouvoir l'unification de l'Allemagne et de l'Italie",
+              "text": "Soutenir les mouvements nationalistes",
               "correct": false
             },
             {
-              "text": "Mettre fin à la traite négrière",
-              "correct": false
-            }
-          ]
-        },
-        {
-          "q": "Quelle déclaration fondamentale, adoptée en 1789, a proclamé les droits naturels et inaliénables de l'homme et du citoyen en France ?",
-          "explanation": "La Déclaration des Droits de l'Homme et du Citoyen, adoptée le 26 août 1789, est un texte fondamental de la Révolution française qui énonce un ensemble de droits naturels, individuels et collectifs.",
-          "options": [
-            {
-              "text": "La Constitution civile du clergé",
-              "correct": false
-            },
-            {
-              "text": "La Déclaration d'indépendance des États-Unis",
-              "correct": false
-            },
-            {
-              "text": "La Déclaration des Droits de l'Homme et du Citoyen",
-              "correct": true
-            },
-            {
-              "text": "Le Code Napoléon",
+              "text": "Abolir l'esclavage dans les colonies",
               "correct": false
             }
           ]
         },
         {
-          "q": "Comment le concept de 'nation' a-t-il évolué et gagné en importance durant l'ère des révolutions ?",
-          "explanation": "L'ère des révolutions a vu l'émergence du nationalisme, où la nation n'était plus le sujet du roi, mais une entité souveraine composée de citoyens partageant des liens culturels et historiques.",
+          "q": "Quel concept politique émerge fortement à l'ère des révolutions et conduit à la formation de nouveaux États-nations?",
+          "explanation": "Le nationalisme, l'idée qu'une nation est une communauté unie par une langue, une culture ou une histoire commune et qu'elle a droit à son propre État, a été une force motrice majeure des transformations politiques de cette période.",
           "options": [
             {
-              "text": "Il est resté une simple désignation géographique sans connotation politique.",
+              "text": "Le féodalisme",
               "correct": false
             },
             {
-              "text": "Il est devenu synonyme de la personne du monarque.",
+              "text": "L'impérialisme",
               "correct": false
             },
             {
-              "text": "Il a commencé à désigner une communauté politique unie par une culture, une langue ou une histoire commune, détentrice de la souveraineté",
+              "text": "Le nationalisme",
               "correct": true
             },
             {
-              "text": "Il a été remplacé par l'idée d'empire universel.",
+              "text": "L'absolutisme",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Quelle période de la Révolution française est caractérisée par une répression politique intense et l'exécution de nombreux opposants?",
+          "explanation": "La Terreur (1793-1794), sous l'impulsion du Comité de salut public et de figures comme Robespierre, fut une période de violence politique extrême visant à éliminer les ennemis de la Révolution.",
+          "options": [
+            {
+              "text": "La Grande Peur",
+              "correct": false
+            },
+            {
+              "text": "Le Directoire",
+              "correct": false
+            },
+            {
+              "text": "La Terreur",
+              "correct": true
+            },
+            {
+              "text": "Le Consulat",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Quel document fondamental, adopté en août 1789, proclame les principes de liberté, d'égalité et de souveraineté nationale?",
+          "explanation": "La Déclaration des droits de l'homme et du citoyen est un texte fondateur de la Révolution française, inspiré des Lumières, qui énonce les droits naturels et inaliénables de l'individu et les principes de la souveraineté nationale.",
+          "options": [
+            {
+              "text": "La Constitution de l'an I",
+              "correct": false
+            },
+            {
+              "text": "La Déclaration des droits de la femme et de la citoyenne",
+              "correct": false
+            },
+            {
+              "text": "La Déclaration des droits de l'homme et du citoyen",
+              "correct": true
+            },
+            {
+              "text": "Le Serment du Jeu de paume",
               "correct": false
             }
           ]
         }
       ],
-      "durationLimit": 300
+      "durationLimit": 420
     }
   },
   "references": [
-    "Doyle, William. 2002. *The Oxford History of the French Revolution*. 2nd ed. Oxford: Oxford University Press.",
-    "Palmer, R. R. 1959. *The Age of the Democratic Revolution: A Political History of Europe and America, 1760-1800*. Princeton, NJ: Princeton University Press.",
-    "Blanning, T. C. W. 2007. *The Pursuit of Glory: Europe 1648-1815*. New York: Viking.",
-    "Hobsbawm, E. J. 1992. *Nations and Nationalism since 1780: Programme, Myth, Reality*. 2nd ed. Cambridge: Cambridge University Press."
+    "Doyle, William. 2001. *The French Revolution: A Very Short Introduction*. Oxford: Oxford University Press.",
+    "Ellis, Geoffrey. 1997. *Napoleon*. London: Longman.",
+    "Furet, François. 1996. *The French Revolution, 1770-1814*. Translated by Antonia Nevill. Malden, MA: Blackwell Publishing.",
+    "Hobsbawm, Eric J. 1962. *The Age of Revolution: Europe 1789-1848*. London: Weidenfeld & Nicolson.",
+    "Kissinger, Henry A. 1957. *A World Restored: Metternich, Castlereagh, and the Problems of Peace, 1812-22*. Boston: Houghton Mifflin."
   ]
 }
 

@@ -3,52 +3,52 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 1:
   "prerequisites": {
     "items": [
       {
-        "title": "Introduction à l'histoire",
-        "slug": "introduction-histoire",
-        "level": "University Year 1 / Bachelor 1st Year (L1)",
+        "title": "Introduction à l'histoire générale",
+        "slug": "introduction-histoire-generale",
+        "level": "Lycée / Baccalauréat",
+        "subject": "Histoire"
+      },
+      {
+        "title": "Méthodologie de l'histoire",
+        "slug": "methodologie-histoire",
+        "level": "Lycée / Baccalauréat",
         "subject": "Histoire"
       },
       {
         "title": "Les grandes périodes de l'histoire",
         "slug": "grandes-periodes-histoire",
-        "level": "University Year 1 / Bachelor 1st Year (L1)",
-        "subject": "Histoire"
-      },
-      {
-        "title": "Méthodologie de l'analyse historique",
-        "slug": "methodologie-analyse-historique",
-        "level": "University Year 1 / Bachelor 1st Year (L1)",
+        "level": "Lycée / Baccalauréat",
         "subject": "Histoire"
       }
     ]
   },
   "diagnosticQuiz": {
-    "question": "Quelle est la principale caractéristique qui distingue l'Histoire contemporaine des autres périodes historiques?",
+    "question": "Quelle est la principale caractéristique qui distingue l'Histoire contemporaine des périodes historiques précédentes, selon la plupart des historiens?",
     "options": [
-      "Son étude exclusive des civilisations antiques.",
-      "Sa dépendance unique aux sources archéologiques.",
-      "Sa proximité avec le présent et l'abondance de sources diverses.",
-      "Son focus uniquement sur les événements politiques majeurs."
+      "L'absence de sources écrites fiables.",
+      "La prédominance des récits oraux comme unique source.",
+      "La proximité temporelle avec le présent et l'abondance des sources variées.",
+      "L'étude exclusive des civilisations antiques et médiévales."
     ],
     "correctIndex": 2,
-    "targetSectionId": "introduction-histoire-contemporaine",
-    "sectionTitle": "Introduction à l'Histoire Contemporaine"
+    "targetSectionId": "definition-histoire-contemporaine",
+    "sectionTitle": "Définition de l'Histoire contemporaine"
   },
   "learningObjectives": {
     "knowledge": [
-      "Analyser les enjeux méthodologiques de l'étude de l'Histoire contemporaine.",
-      "Évaluer les différentes approches historiographiques de la période contemporaine.",
-      "Formuler une définition argumentée de l'Histoire contemporaine en tenant compte de ses spécificités."
+      "Expliquer les différentes approches de la périodisation de l'Histoire contemporaine.",
+      "Décrire les enjeux épistémologiques liés à la définition de l'Histoire contemporaine.",
+      "Identifier les principales sources et méthodes spécifiques à l'étude de l'Histoire contemporaine."
     ],
     "skills": [
-      "Analyser des documents historiques primaires et secondaires relatifs à la période contemporaine.",
-      "Évaluer la validité et la fiabilité des sources historiques contemporaines.",
-      "Construire une problématique de recherche pertinente sur un sujet d'Histoire contemporaine."
+      "Analyser les débats historiographiques concernant les débuts et les limites de l'Histoire contemporaine.",
+      "Évaluer la pertinence de différentes définitions de l'Histoire contemporaine au regard de contextes historiques variés.",
+      "Formuler une problématique de recherche pertinente sur un sujet d'Histoire contemporaine."
     ],
     "attitudes": [
-      "Développer une approche critique face aux récits historiques du temps présent.",
-      "Évaluer l'importance de la contextualisation dans l'interprétation des événements contemporains.",
-      "Adopter une posture réflexive sur la place de l'historien dans la construction du savoir sur le temps présent."
+      "Développer une curiosité intellectuelle pour les enjeux mémoriels et les interprétations du passé récent.",
+      "Adopter une posture critique face aux discours sur l'actualité et leur historicisation.",
+      "Valoriser la complexité des processus historiques et la pluralité des perspectives."
     ]
   }
 }

@@ -1406,19 +1406,7 @@ export async function resolveAndPersistMedia(
 ): Promise<string> {
   let updatedContent = mdxContent;
 
-  // 0. Remove all images, figures, video, and audio components as per user requirements
-  updatedContent = updatedContent.replace(/<(Image|CustomFigure|Video|Audio|Biography)\b[^>]*?\/>/gi, '');
-  updatedContent = updatedContent.replace(/<(Image|CustomFigure|Video|Audio|Biography)\b[^>]*?>([\s\S]*?)<\/\1>/gi, '');
-
-  // Strip all highlight / hover card tags — both self-closing (<RealPerson id="..." />) and paired forms
-  const highlightTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)';
-  // Self-closing form: <RealPerson id="..." />
-  updatedContent = updatedContent.replace(new RegExp(`<(${highlightTagsPattern})\\b[^>]*?/>`, 'gi'), '');
-  // Paired form: <RealPerson ...>text</RealPerson> -> text
-  const highlightRegex = new RegExp(`<(${highlightTagsPattern})\\b[^>]*?>([\\s\\S]*?)<\\/\\1>`, 'gi');
-  while (highlightRegex.test(updatedContent)) {
-    updatedContent = updatedContent.replace(highlightRegex, '$2');
-  }
+  // 0. Do not strip media, figures, video, audio, biography, or highlight tags before resolving.
 
   // 1. Process Video players: find dummy URLs/IDs and search YouTube
   // Matches: <Video ... /> tag structure

@@ -4,10 +4,10 @@ Your task is to write a section of the academic MDX narrative content for the sp
 We are writing the lesson block-by-block.
 - This is Block 1 out of 3.
 - You MUST write the content for the following sections:
-* Heading: "## Introduction : Pourquoi étudier l'Histoire contemporaine ?"
-  Instructions: "Présenter le cours et les objectifs de la leçon. Expliquer la pertinence et les défis spécifiques de l'étude de l'histoire la plus récente, en soulignant la nécessité d'une approche critique et réflexive. Annoncer la structure de la leçon."
-* Heading: "## Définir l'Histoire contemporaine : Objets et spécificités"
-  Instructions: "Explorer les différentes acceptions du terme 'contemporain' en histoire. Discuter des caractéristiques propres à cette période (proximité avec les événements, abondance des sources, rôle de la mémoire, etc.) et des objets d'étude privilégiés par les historiens du temps présent."
+* Heading: "## Introduction : Qu'est-ce que l'Histoire contemporaine ?"
+  Instructions: "Présenter l'objectif du cours, introduire la notion d'Histoire contemporaine comme champ d'étude spécifique et problématiser d'emblée la difficulté de sa définition et de ses limites chronologiques."
+* Heading: "## Définir l'Histoire contemporaine : Enjeux et spécificités"
+  Instructions: "Expliquer les raisons de l'émergence de l'Histoire contemporaine comme discipline autonome. Aborder les premières tentatives de définition et les critères distinctifs (proximité temporelle, abondance des sources, rôle du témoin, etc.)."
 
 ---
 
@@ -26,6 +26,35 @@ We are writing the lesson block-by-block.
 [ref6] Milza, Pierre. "Les relations internationales de 1918 à 1991". Paris, Armand Colin, 2009.
 [ref7] Rioux, Jean-Pierre et Sirinelli, Jean-François (dir.). "Histoire culturelle de la France, tome 4 : Le temps des masses, le temps des médias, du XXe siècle à nos jours". Paris, Seuil, 1998.
 
+
+---
+
+### PRE-EXISTING WIDGET INVENTORY:
+The following relevant media and database resources are available for this course. If any of these are highly relevant to the current section, you should refer/embed them using their exact ID as [[WIDGET:id]] on a separate blank line:
+- ID: "Mermaid"
+  Name: "Mermaid Diagram Engine" (Moteur de diagrammes Mermaid)
+  Description: "Render rich flowcharts, timelines, and concept maps from descriptive text markup."
+  Disciplines: [All Disciplines]
+  Educational Level: "All levels"
+
+### PEDAGOGICAL WIDGETS MANDATE (CRITICAL):
+To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
+Aim to insert at least 3-5 of these anchors in this block, placed on separate blank lines (except inline hover-card highlights).
+Choose from the following options:
+1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
+2. [[WIDGET:Image:unique_id]] - For relevant paintings, historical photos, maps, diagrams, or illustrations. (e.g. [[WIDGET:Image:prise_bastille]])
+3. [[WIDGET:Video:unique_id]] - For relevant documentaries, video archives, or animations. (e.g. [[WIDGET:Video:revolution_francaise]])
+4. [[WIDGET:Audio:unique_id]] - For audio speeches, narrations, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits]])
+5. [[WIDGET:Mermaid:unique_id]] - For timelines, flowcharts, or structural diagrams. (e.g. [[WIDGET:Mermaid:timeline_causes]])
+6. [[WIDGET:Quiz:unique_id]] - For formative multiple-choice quizzes to verify student comprehension.
+7. [[WIDGET:SolvedExercise:unique_id]] - For step-by-step resolved exercises, coding snippets, or analytical case studies.
+8. [[WIDGET:UnsolvedExercise:unique_id]] - For unsolved application exercises or practice questions.
+9. [[WIDGET:FillInBlanks:unique_id]] - For interactive fill-in-the-blanks sentences.
+10. [[WIDGET:RealPerson:unique_id:Person Name]] - Inline hover-card highlight for any person mentioned. (e.g. "...alors que [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque...")
+11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
+12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
+
+Please write them exactly in this anchor format [[WIDGET:Type:unique_id]] (or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
 
 ---
 

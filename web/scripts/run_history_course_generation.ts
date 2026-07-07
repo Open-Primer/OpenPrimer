@@ -1,12 +1,13 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { createClient } from '@supabase/supabase-js';
+const fs = require('fs');
+const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+const { randomUUID } = require('crypto');
 
 // 1. Manually parse .env.local to ensure environment variables are present in process.env
 const envPath = path.join(process.cwd(), '.env.local');
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf-8');
-  envContent.split('\n').forEach(line => {
+  envContent.split('\n').forEach((line: string) => {
     const match = line.match(/^\s*([\w_]+)\s*=\s*(.*)\s*$/);
     if (match) {
       const key = match[1];
@@ -55,7 +56,7 @@ async function main() {
   if (delCourseErr) console.warn("   Warning deleting course:", delCourseErr.message);
 
   // Create a mock task in task_queue to pass the discipline/subject context
-  const taskId = require('crypto').randomUUID();
+  const taskId = randomUUID();
   const taskDescription = JSON.stringify({
     subject: course.subject,
     volume: "15h",

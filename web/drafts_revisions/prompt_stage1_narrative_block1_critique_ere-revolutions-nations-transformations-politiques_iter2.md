@@ -1,28 +1,48 @@
 You are the Narrative Critic Agent (Agent 4A). Review the generated block of text for the lesson:
 ---
 
-## Introduction : L'aube d'un monde nouveau
-La fin du XVIIIe siècle et le début du XIXe siècle constituent une période charnière de l'histoire mondiale, marquée par des bouleversements d'une ampleur sans précédent. Cette ère, souvent qualifiée d'« ère des révolutions » par des historiens majeurs comme Eric Hobsbawm, voit l'effondrement progressif de l'Ancien Régime et l'émergence de nouvelles formes d'organisation politique et sociale. Il ne s'agit pas d'événements isolés, mais d'un ensemble de mouvements interdépendants, souvent désignés sous le terme de « révolutions atlantiques », qui ont secoué l'Europe, les Amériques et au-delà. Ces révolutions partagent des idéaux, des acteurs et des dynamiques qui ont redéfini les contours du pouvoir, de la citoyenneté et de la nation.
+## Introduction : Contexte et enjeux de l'ère des révolutions
+La fin du XVIIIe siècle et le début du XIXe siècle marquent une période charnière dans l'histoire mondiale, souvent désignée comme l'« ère des révolutions » [ref1]. Ce cours se propose d'explorer les profondes transformations qui ont secoué l'espace atlantique – englobant l'Europe occidentale et les Amériques – entre environ 1770 et 1830. Il s'agit d'une période de ruptures majeures, où les structures politiques, sociales et économiques héritées de l'Ancien Régime sont remises en question, voire balayées, par des mouvements d'une ampleur inédite.
 
-Ce cours se propose d'explorer en profondeur cette période fondatrice de l'histoire contemporaine. Nos objectifs seront de comprendre les causes profondes qui ont mené à ces ruptures, d'analyser les déroulements complexes des différentes révolutions – de l'Amérique à la France, en passant par les Caraïbes et l'Amérique latine – et d'évaluer leurs conséquences durables sur la naissance des nations modernes, la transformation des sociétés et l'évolution des relations internationales. Il s'agira de saisir comment ces décennies ont jeté les bases du monde dans lequel nous vivons aujourd'hui.
-## Les prémices des révolutions : Lumières, crises et contestations
+[[WIDGET:Mermaid:timeline_revolutions_atlantic]]
+Chronologie indicative des principales révolutions atlantiques.
 
-Les révolutions de la fin du XVIIIe siècle n'ont pas surgi d'un vide ; elles sont le fruit d'une convergence de facteurs intellectuels, économiques, sociaux et politiques qui ont progressivement miné les fondements de l'ordre ancien.
+Au cœur de ces bouleversements se trouvent plusieurs concepts fondamentaux dont la signification est alors redéfinie. La [[WIDGET:ConceptLink:revolution:révolution]], au-delà d'un simple changement de régime, désigne désormais un processus radical de transformation politique et sociale, souvent violent, visant à refonder l'ordre existant sur de nouvelles bases idéologiques. L'idée de [[WIDGET:ConceptLink:nation:nation]] émerge comme une communauté politique et culturelle unie, détentrice de la légitimité du pouvoir, en opposition aux dynasties monarchiques. Cette nouvelle conception de la nation est intrinsèquement liée à celle de la [[WIDGET:ConceptLink:souverainete:souveraineté]], qui passe du monarque de droit divin au peuple ou à la nation elle-même. Enfin, la [[WIDGET:ConceptLink:citoyennete:citoyenneté]] se substitue progressivement au statut de sujet, conférant aux individus des droits et des devoirs au sein de la nouvelle entité politique, et impliquant une participation, même limitée, à la vie publique.
 
-Sur le plan **intellectuel**, la philosophie des Lumières a joué un rôle déterminant. Des penseurs tels que John Locke, Montesquieu, Jean-Jacques Rousseau et Voltaire ont diffusé des idées nouvelles sur la raison, les droits naturels de l'individu, la souveraineté populaire, la séparation des pouvoirs et la critique de l'absolutisme et des privilèges. Ces concepts, largement diffusés par les livres, les salons et les académies, ont offert un cadre théorique pour contester l'autorité monarchique et l'ordre social hérité. Ils ont nourri l'aspiration à une société plus juste et plus rationnelle.
+| Caractéristique | Ancien Régime (avant 1770) | Ère des Révolutions (1770-1830) |
+| :-------------- | :-------------------------- | :------------------------------ |
+| **Source de la légitimité** | Droit divin du monarque | Souveraineté du peuple/nation |
+| **Structure sociale** | Sociétés d'ordres (clergé, noblesse, tiers état) avec privilèges | Idéal d'égalité juridique, fin des privilèges, émergence de classes sociales |
+| **Forme de gouvernement** | Monarchie absolue ou tempérée | Républiques, monarchies constitutionnelles |
+| **Statut des individus** | Sujets du roi | Citoyens avec droits et devoirs |
+| **Économie** | Mercantilisme, corporatisme, agriculture dominante | Libéralisme économique, début de l'industrialisation |
 
-Les **facteurs économiques** ont également été cruciaux. Le XVIIIe siècle est marqué par une croissance démographique et économique, notamment grâce au commerce colonial et à l'essor de la bourgeoisie marchande et manufacturière. Cependant, cette prospérité s'accompagne de profondes inégalités. Les crises agricoles récurrentes, les famines et la pression fiscale croissante, souvent aggravée par les coûts des guerres (comme la guerre de Sept Ans ou la guerre d'indépendance américaine), ont mis à mal les finances des États et ont provoqué un mécontentement généralisé, en particulier parmi les classes populaires et la paysannerie.
+[[WIDGET:Image:map_atlantic_revolutions]]
+Carte de l'espace atlantique au tournant des XVIIIe et XIXe siècles, mettant en évidence les foyers révolutionnaires.
 
-Sur le plan **social**, la rigidité de la société d'ordres, avec ses privilèges aristocratiques et ecclésiastiques, est de plus en plus contestée. La bourgeoisie, forte de son dynamisme économique, aspire à une reconnaissance politique et sociale à la hauteur de son poids économique. Les masses populaires, quant à elles, souffrent de la pauvreté et de l'absence de représentation, ce qui les rend réceptives aux discours de contestation.
+La problématique générale de ce cours sera d'analyser comment ces révolutions atlantiques ont profondément transformé les sociétés et les systèmes politiques de leur temps, donnant naissance à de nouvelles nations et redéfinissant durablement les rapports de pouvoir, tant à l'intérieur des États qu'entre eux. Comment ces idéaux de liberté et d'égalité ont-ils été mis en œuvre, et avec quelles limites ? Quelles furent les conséquences à long terme de cette ère de bouleversements sur la construction de l'État moderne et l'émergence d'une nouvelle géopolitique mondiale ?
+## Les racines des bouleversements : Idées, crises et contestations
+L'émergence de ces mouvements révolutionnaires n'est pas le fruit du hasard, mais la convergence de causes profondes, intellectuelles, économiques, sociales et politiques, qui ont sapé les fondements de l'[[WIDGET:Glossary:ancien_regime:Ancien Régime]].
 
-Enfin, les **facteurs politiques** sont indissociables des précédents. Les monarchies absolues, souvent inefficaces et endettées, peinent à se réformer et à répondre aux aspirations nouvelles de leurs sujets. L'absence de participation politique et la concentration du pouvoir entre les mains du souverain et de ses élites créent un terreau fertile pour la contestation.
+L'héritage des [[WIDGET:ConceptLink:lumieres:Lumières]] constitue le terreau intellectuel de ces révolutions. Au XVIIIe siècle, des philosophes comme John Locke, Jean-Jacques Rousseau ou Montesquieu diffusent des idées nouvelles qui remettent en question l'absolutisme monarchique et les privilèges. Ils prônent la liberté individuelle, l'égalité des droits, la séparation des pouvoirs, la tolérance religieuse et la souveraineté du peuple. Ces concepts, largement diffusés par les livres, les salons et les gazettes, nourrissent une critique grandissante des institutions en place et offrent un cadre théorique aux aspirations réformatrices, puis révolutionnaires [ref5].
 
-C'est dans ce contexte que la **Révolution américaine** (1775-1783) apparaît comme le premier modèle de rupture avec l'ordre ancien et une mise en pratique des idéaux des Lumières. Les colonies britanniques d'Amérique du Nord, lassées des taxes imposées sans leur consentement ("No taxation without representation") et des restrictions commerciales, se soulèvent contre la métropole. La Déclaration d'indépendance de 1776 proclame des principes fondateurs qui résonneront dans le monde entier :
-*   L'**indépendance** nationale, affirmant le droit des peuples à disposer d'eux-mêmes.
-*   La mise en place d'une **république**, rejetant la monarchie au profit d'un gouvernement fondé sur la souveraineté populaire.
-*   La reconnaissance des **droits inaliénables** de l'homme (vie, liberté, recherche du bonheur) et l'établissement d'un gouvernement constitutionnel garantissant ces droits.
+[[WIDGET:Biography:rousseau]]
 
-La victoire des insurgés américains, soutenus par la France, démontre qu'une révolution politique est non seulement possible, mais qu'elle peut aboutir à la création d'un État fondé sur des principes nouveaux. Elle offre un exemple concret et inspirant pour les mouvements révolutionnaires à venir en Europe et dans les autres colonies.
+| Penseur des Lumières | Idées Clés | Impact sur les Révolutions |
+| :------------------ | :-------- | :------------------------ |
+| **John Locke**      | Droits naturels (vie, liberté, propriété), contrat social, droit de résistance à l'oppression | Influence majeure sur la Déclaration d'Indépendance américaine et les principes libéraux |
+| **Montesquieu**     | Séparation des pouvoirs (législatif, exécutif, judiciaire), équilibre des forces | Fondement des constitutions modernes, notamment américaine et française |
+| **Jean-Jacques Rousseau** | Souveraineté populaire, volonté générale, égalité civile, contrat social | Inspiration pour la démocratie directe et la notion de nation souveraine |
+| **Voltaire**        | Tolérance religieuse, liberté d'expression, critique de l'absolutisme et de l'Église | Combat pour les libertés fondamentales, influence sur les droits de l'homme |
+
+Parallèlement, les sociétés de l'époque sont traversées par de graves crises économiques et sociales. Les famines sont récurrentes, les prix des denrées alimentaires augmentent, et les inégalités sont criantes. La majeure partie de la population, notamment les paysans et les ouvriers urbains, vit dans la pauvreté, tandis que la noblesse et le clergé jouissent de privilèges fiscaux et sociaux exorbitants. Cette situation génère un profond ressentiment et une frustration croissante, particulièrement en France où la pression fiscale est lourde et inégalement répartie.
+
+[[WIDGET:Image:ancien_regime_inegalites]]
+Représentation allégorique des inégalités sociales sous l'Ancien Régime.
+
+Enfin, les tensions politiques et fiscales sont exacerbées dans les empires coloniaux et les monarchies européennes. Au sein des colonies britanniques d'Amérique, la politique fiscale de Londres, perçue comme arbitraire ("no taxation without representation"), conduit à une rupture et à la Guerre d'Indépendance. En France, les dépenses excessives de la monarchie, notamment pour soutenir la guerre d'indépendance américaine, creusent un déficit abyssal. Les tentatives de réforme fiscale se heurtent à l'opposition des corps privilégiés, paralysant l'État et alimentant la contestation. Ces prémices de contestations, d'abord isolées, se transforment progressivement en mouvements collectifs, préparant le terrain aux explosions révolutionnaires.
+
+[[WIDGET:Quiz:causes_revolutions]]
 ---
 
 Check checkpoints:

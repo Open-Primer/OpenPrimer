@@ -4,10 +4,10 @@ Your task is to write a section of the academic MDX narrative content for the sp
 We are writing the lesson block-by-block.
 - This is Block 2 out of 3.
 - You MUST write the content for the following sections:
-* Heading: "## Les enjeux de la périodisation : Quand commence le 'contemporain' ?"
-  Instructions: "Analyser les débats autour des dates charnières marquant le début de l'époque contemporaine (1789, 1815, 1914, 1945, etc.). Examiner les critères et les implications de ces choix chronologiques sur la compréhension des processus historiques."
-* Heading: "## Courants historiographiques et débats épistémologiques"
-  Instructions: "Présenter les principales écoles et approches historiographiques qui ont marqué l'étude de l'histoire contemporaine (Annales, histoire culturelle, histoire globale, etc.). Aborder les questions épistémologiques fondamentales : objectivité, rapport au présent, rôle de l'historien, usage des témoignages."
+* Heading: "## Les débats de périodisation et les enjeux épistémologiques"
+  Instructions: "Analyser les différentes propositions de périodisation de l'Histoire contemporaine (Révolution française, 1848, 1870, 1914, 1945, etc.) et leurs implications. Discuter des défis méthodologiques et épistémologiques liés à l'étude du 'temps présent' (objectivité, recul critique, rapport au politique)."
+* Heading: "## Courants historiographiques et textes fondateurs de la contemporanéité"
+  Instructions: "Présenter les principaux courants historiographiques qui ont marqué l'étude de l'Histoire contemporaine (Annales, histoire sociale, histoire culturelle, histoire globale, etc.). Examiner des extraits de textes fondateurs qui ont contribué à penser la notion de contemporanéité et ses ruptures."
 
 ---
 
@@ -29,20 +29,57 @@ We are writing the lesson block-by-block.
 
 ---
 
+### PRE-EXISTING WIDGET INVENTORY:
+The following relevant media and database resources are available for this course. If any of these are highly relevant to the current section, you should refer/embed them using their exact ID as [[WIDGET:id]] on a separate blank line:
+- ID: "Mermaid"
+  Name: "Mermaid Diagram Engine" (Moteur de diagrammes Mermaid)
+  Description: "Render rich flowcharts, timelines, and concept maps from descriptive text markup."
+  Disciplines: [All Disciplines]
+  Educational Level: "All levels"
+
+### PEDAGOGICAL WIDGETS MANDATE (CRITICAL):
+To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
+Aim to insert at least 3-5 of these anchors in this block, placed on separate blank lines (except inline hover-card highlights).
+Choose from the following options:
+1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
+2. [[WIDGET:Image:unique_id]] - For relevant paintings, historical photos, maps, diagrams, or illustrations. (e.g. [[WIDGET:Image:prise_bastille]])
+3. [[WIDGET:Video:unique_id]] - For relevant documentaries, video archives, or animations. (e.g. [[WIDGET:Video:revolution_francaise]])
+4. [[WIDGET:Audio:unique_id]] - For audio speeches, narrations, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits]])
+5. [[WIDGET:Mermaid:unique_id]] - For timelines, flowcharts, or structural diagrams. (e.g. [[WIDGET:Mermaid:timeline_causes]])
+6. [[WIDGET:Quiz:unique_id]] - For formative multiple-choice quizzes to verify student comprehension.
+7. [[WIDGET:SolvedExercise:unique_id]] - For step-by-step resolved exercises, coding snippets, or analytical case studies.
+8. [[WIDGET:UnsolvedExercise:unique_id]] - For unsolved application exercises or practice questions.
+9. [[WIDGET:FillInBlanks:unique_id]] - For interactive fill-in-the-blanks sentences.
+10. [[WIDGET:RealPerson:unique_id:Person Name]] - Inline hover-card highlight for any person mentioned. (e.g. "...alors que [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque...")
+11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
+12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
+
+Please write them exactly in this anchor format [[WIDGET:Type:unique_id]] (or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
+
+---
+
 ### PREVIOUS TEXT (for transitions and context):
 Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
 """
-... es historiens préfèrent situer le début de cette période plus tard, par exemple avec l'« Ère des empires » (1875-1914) [[WIDGET:ref2]] ou même le "court XXe siècle" (1914-1991) [[WIDGET:ref3]], soulignant ainsi que la périodisation est toujours une construction historiographique. René Rémond, dans son "Introduction à l'histoire de notre temps" [[WIDGET:ref5]], a également contribué à structurer cette approche. Il est crucial de comprendre que ces découpages ne sont pas naturels, mais des outils heuristiques permettant d'organiser la compréhension du passé.
+... e l'Histoire contemporaine est un exercice délicat, constamment remis en question par les événements et les perspectives historiographiques. Des historiens comme [[WIDGET:RealPerson:remond_rene:René Rémond]] [ref5] ont consacré une part importante de leurs travaux à cette problématisation, soulignant la nécessité d'une approche critique et nuancée.
 
-Au-delà de la chronologie, l'Histoire contemporaine se caractérise par un ensemble de traits distinctifs :
+## Définir l'Histoire contemporaine : Enjeux et spécificités
 
-1.  **La proximité avec les événements :** L'historien peut être le contemporain des faits qu'il étudie, voire en être un acteur ou un témoin indirect. Cette proximité peut être un atout (accès à des témoignages oraux, à des archives encore vivantes) mais aussi un défi (difficulté à prendre du recul, risque de subjectivité).
-2.  **L'abondance des sources :** La période contemporaine est marquée par une explosion documentaire. Aux archives traditionnelles s'ajoutent une multitude de sources médiatiques (presse écrite, radio, télévision, cinéma, internet), photographiques, sonores, ainsi que des témoignages oraux. Cette profusion exige de nouvelles méthodes de critique des sources et de gestion de l'information.
-3.  **Le rôle central de la mémoire :** La mémoire collective et individuelle joue un rôle prépondérant. L'historien doit distinguer l'histoire, discipline scientifique basée sur la preuve et la critique, de la mémoire, construction sociale et souvent affective du passé. Les "lieux de mémoire" et les "guerres de mémoire" sont des objets d'étude à part entière.
-4.  **L'accélération du temps et la globalisation :** Les transformations technologiques, économiques et sociales s'intensifient. Les événements ont une portée mondiale quasi immédiate, comme l'illustrent les processus de colonisation et de décolonisation [[WIDGET:ref4]] ou les relations internationales du XXe siècle [[WIDGET:ref6]].
-5.  **L'émergence de nouveaux acteurs et objets d'étude :** L'histoire contemporaine ne se limite plus aux grands hommes et aux événements politiques. Elle s'intéresse aux masses, aux cultures populaires, aux médias [[WIDGET:ref7]], aux identités de genre, aux minorités, à l'environnement, aux phénomènes transnationaux, etc.
+L'émergence de l'Histoire contemporaine comme discipline autonome est relativement récente. Pendant longtemps, l'histoire se concentrait sur des périodes suffisamment éloignées pour permettre une distance critique et l'accès à des sources stabilisées. Cependant, la multiplication des événements majeurs à partir de la fin du XVIIIe siècle, notamment avec les révolutions politiques et industrielles, a rendu impérative l'étude du passé immédiat.
 
-Les objets d'étude privilégiés par les historiens du temps présent sont donc multiples et en constante évolution : l'histoire politique des États-nations et des idéologies, l'histoire économique de l'industrialisation et du capitalisme mondialisé, l'histoire sociale des classes et des mouvements de contestation, l'histoire culturelle des masses et des médias, l'histoire des relations internationales et des conflits mondiaux [[WIDGET:ref6]], l'histoire des colonisations et des indépendances [[WIDGET:ref4]], et plus récemment, l'histoire environnementale ou l'histoire globale.
+[[WIDGET:Image:archives_modernes]]
+Caption: Des archives modernes, illustrant la diversité et l'abondance des sources disponibles pour l'historien du contemporain.
+
+Les premières tentatives de définition ont souvent cherché un point de rupture clair. La Révolution française de 1789 est fréquemment citée comme un point de départ symbolique, marquant l'avènement de la modernité politique et sociale [ref1]. D'autres proposent la Révolution industrielle, les guerres mondiales, ou même la chute du mur de Berlin. Ces critères distinctifs sont multiples :
+
+*   **La proximité temporelle :** L'historien du contemporain travaille sur une période dont les acteurs sont parfois encore vivants, ou dont les conséquences sont directement perceptibles dans le présent. Cette proximité peut être un atout (accès aux témoins) mais aussi un défi (manque de recul).
+*   **L'abondance des sources :** Contrairement aux périodes plus anciennes, l'époque contemporaine génère une quantité colossale de documents écrits, visuels, sonores et numériques. Cette profusion nécessite des méthodes d'analyse spécifiques pour trier, critiquer et interpréter cette masse d'informations.
+*   **Le rôle du témoin :** Le témoignage oral ou écrit des acteurs et des victimes est une source primordiale en Histoire contemporaine. Il apporte une dimension humaine et subjective irremplaçable, mais doit être confronté et critiqué avec rigueur.
+*   **La complexité des phénomènes :** Les sociétés contemporaines sont caractérisées par une interconnexion croissante des événements mondiaux (mondialisation, relations internationales [ref6]), l'émergence des masses et des médias [ref7], et des transformations technologiques rapides, rendant l'analyse historique particulièrement complexe.
+
+[[WIDGET:Quiz:caracteristiques_hc]]
+
+L'historien [[WIDGET:RealPerson:hobsbawm_eric:Eric Hobsbawm]] a par exemple proposé le concept du « court XXe siècle » (1914-1991) [ref3], illustrant une tentative de délimitation basée sur des ruptures géopolitiques majeures. Cette approche met en lumière la nature dynamique et interprétative de la périodisation en Histoire contemporaine.
 """
 
 ---

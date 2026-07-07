@@ -2,28 +2,24 @@ You are the Outline Critic Agent (Agent 2). Review this JIT lesson plan:
 {
   "sections": [
     {
-      "heading": "## Introduction : Pourquoi étudier l'Histoire contemporaine ?",
-      "description": "Présenter le cours et les objectifs de la leçon. Expliquer la pertinence et les défis spécifiques de l'étude de l'histoire la plus récente, en soulignant la nécessité d'une approche critique et réflexive. Annoncer la structure de la leçon."
+      "heading": "## Introduction : Qu'est-ce que l'Histoire contemporaine ?",
+      "description": "Présenter l'objectif du cours, introduire la notion d'Histoire contemporaine comme champ d'étude spécifique et problématiser d'emblée la difficulté de sa définition et de ses limites chronologiques."
     },
     {
-      "heading": "## Définir l'Histoire contemporaine : Objets et spécificités",
-      "description": "Explorer les différentes acceptions du terme 'contemporain' en histoire. Discuter des caractéristiques propres à cette période (proximité avec les événements, abondance des sources, rôle de la mémoire, etc.) et des objets d'étude privilégiés par les historiens du temps présent."
+      "heading": "## Définir l'Histoire contemporaine : Enjeux et spécificités",
+      "description": "Expliquer les raisons de l'émergence de l'Histoire contemporaine comme discipline autonome. Aborder les premières tentatives de définition et les critères distinctifs (proximité temporelle, abondance des sources, rôle du témoin, etc.)."
     },
     {
-      "heading": "## Les enjeux de la périodisation : Quand commence le 'contemporain' ?",
-      "description": "Analyser les débats autour des dates charnières marquant le début de l'époque contemporaine (1789, 1815, 1914, 1945, etc.). Examiner les critères et les implications de ces choix chronologiques sur la compréhension des processus historiques."
+      "heading": "## Les débats de périodisation et les enjeux épistémologiques",
+      "description": "Analyser les différentes propositions de périodisation de l'Histoire contemporaine (Révolution française, 1848, 1870, 1914, 1945, etc.) et leurs implications. Discuter des défis méthodologiques et épistémologiques liés à l'étude du 'temps présent' (objectivité, recul critique, rapport au politique)."
     },
     {
-      "heading": "## Courants historiographiques et débats épistémologiques",
-      "description": "Présenter les principales écoles et approches historiographiques qui ont marqué l'étude de l'histoire contemporaine (Annales, histoire culturelle, histoire globale, etc.). Aborder les questions épistémologiques fondamentales : objectivité, rapport au présent, rôle de l'historien, usage des témoignages."
+      "heading": "## Courants historiographiques et textes fondateurs de la contemporanéité",
+      "description": "Présenter les principaux courants historiographiques qui ont marqué l'étude de l'Histoire contemporaine (Annales, histoire sociale, histoire culturelle, histoire globale, etc.). Examiner des extraits de textes fondateurs qui ont contribué à penser la notion de contemporanéité et ses ruptures."
     },
     {
-      "heading": "## Textes fondateurs sur la notion de contemporanéité",
-      "description": "Analyser des extraits de textes clés qui ont contribué à définir ou à problématiser la notion de contemporanéité et la pratique de l'histoire du temps présent. Mettre en lumière les apports de penseurs majeurs à la réflexion sur cette période."
-    },
-    {
-      "heading": "## Conclusion : Perspectives et défis de l'historien du temps présent",
-      "description": "Récapituler les principaux points abordés concernant la définition, la périodisation et les enjeux de l'histoire contemporaine. Ouvrir sur les défis actuels et futurs de la discipline et l'importance de son rôle dans la compréhension du monde actuel."
+      "heading": "## Conclusion : L'Histoire contemporaine, un chantier permanent",
+      "description": "Récapituler les points clés abordés, souligner la nature évolutive et constamment redéfinie de l'Histoire contemporaine. Ouvrir sur les perspectives de recherche actuelles et l'importance d'une approche critique et réflexive."
     }
   ]
 }

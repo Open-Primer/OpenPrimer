@@ -4,10 +4,10 @@ Your task is to write a section of the academic MDX narrative content for the sp
 We are writing the lesson block-by-block.
 - This is Block 2 out of 3.
 - You MUST write the content for the following sections:
-* Heading: "## La Révolution française : De la rupture à l'exportation des idéaux"
-  Instructions: "Examiner les causes profondes et les différentes phases de la Révolution française (1789-1799), de la convocation des États généraux au Directoire. Mettre en lumière la radicalisation du processus, l'émergence de nouveaux concepts politiques (nation, citoyenneté, souveraineté populaire) et son impact majeur sur l'Europe."
-* Heading: "## L'Empire napoléonien et la reconfiguration de l'Europe"
-  Instructions: "Analyser l'ascension de Napoléon Bonaparte, la mise en place de l'Empire et la diffusion des principes révolutionnaires (Code Civil, réformes administratives) à travers les conquêtes européennes. Discuter des résistances et des réactions suscitées, menant à la chute de l'Empire et au Congrès de Vienne."
+* Heading: "## La Révolution américaine : Un modèle républicain et ses limites"
+  Instructions: "Décrire les causes et le déroulement de la Révolution américaine (guerre d'indépendance, Déclaration d'indépendance, Constitution). Analyser la naissance des États-Unis comme première république moderne. Discuter des limites de ce modèle (esclavage, droits des Amérindiens) et de son influence sur les autres mouvements révolutionnaires."
+* Heading: "## La Révolution française et l'onde de choc napoléonienne"
+  Instructions: "Expliquer les phases clés de la Révolution française (1789-1799) : de la monarchie constitutionnelle à la Terreur et au Directoire. Analyser la radicalisation politique et sociale, l'abolition des privilèges, la Déclaration des Droits de l'Homme et du Citoyen. Étudier l'expansion des idées révolutionnaires en Europe sous le Consulat et l'Empire napoléonien, et les résistances qu'elles ont suscitées."
 
 ---
 
@@ -29,23 +29,57 @@ We are writing the lesson block-by-block.
 
 ---
 
+### PRE-EXISTING WIDGET INVENTORY:
+The following relevant media and database resources are available for this course. If any of these are highly relevant to the current section, you should refer/embed them using their exact ID as [[WIDGET:id]] on a separate blank line:
+- ID: "Mermaid"
+  Name: "Mermaid Diagram Engine" (Moteur de diagrammes Mermaid)
+  Description: "Render rich flowcharts, timelines, and concept maps from descriptive text markup."
+  Disciplines: [All Disciplines]
+  Educational Level: "All levels"
+
+### PEDAGOGICAL WIDGETS MANDATE (CRITICAL):
+To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
+Aim to insert at least 3-5 of these anchors in this block, placed on separate blank lines (except inline hover-card highlights).
+Choose from the following options:
+1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
+2. [[WIDGET:Image:unique_id]] - For relevant paintings, historical photos, maps, diagrams, or illustrations. (e.g. [[WIDGET:Image:prise_bastille]])
+3. [[WIDGET:Video:unique_id]] - For relevant documentaries, video archives, or animations. (e.g. [[WIDGET:Video:revolution_francaise]])
+4. [[WIDGET:Audio:unique_id]] - For audio speeches, narrations, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits]])
+5. [[WIDGET:Mermaid:unique_id]] - For timelines, flowcharts, or structural diagrams. (e.g. [[WIDGET:Mermaid:timeline_causes]])
+6. [[WIDGET:Quiz:unique_id]] - For formative multiple-choice quizzes to verify student comprehension.
+7. [[WIDGET:SolvedExercise:unique_id]] - For step-by-step resolved exercises, coding snippets, or analytical case studies.
+8. [[WIDGET:UnsolvedExercise:unique_id]] - For unsolved application exercises or practice questions.
+9. [[WIDGET:FillInBlanks:unique_id]] - For interactive fill-in-the-blanks sentences.
+10. [[WIDGET:RealPerson:unique_id:Person Name]] - Inline hover-card highlight for any person mentioned. (e.g. "...alors que [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque...")
+11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
+12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
+
+Please write them exactly in this anchor format [[WIDGET:Type:unique_id]] (or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
+
+---
+
 ### PREVIOUS TEXT (for transitions and context):
 Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
 """
-...  séparation des pouvoirs et la critique de l'absolutisme et des privilèges. Ces concepts, largement diffusés par les livres, les salons et les académies, ont offert un cadre théorique pour contester l'autorité monarchique et l'ordre social hérité. Ils ont nourri l'aspiration à une société plus juste et plus rationnelle.
+... e terreau intellectuel de ces révolutions. Au XVIIIe siècle, des philosophes comme John Locke, Jean-Jacques Rousseau ou Montesquieu diffusent des idées nouvelles qui remettent en question l'absolutisme monarchique et les privilèges. Ils prônent la liberté individuelle, l'égalité des droits, la séparation des pouvoirs, la tolérance religieuse et la souveraineté du peuple. Ces concepts, largement diffusés par les livres, les salons et les gazettes, nourrissent une critique grandissante des institutions en place et offrent un cadre théorique aux aspirations réformatrices, puis révolutionnaires (Rémond, 1974-1977).
 
-Les **facteurs économiques** ont également été cruciaux. Le XVIIIe siècle est marqué par une croissance démographique et économique, notamment grâce au commerce colonial et à l'essor de la bourgeoisie marchande et manufacturière. Cependant, cette prospérité s'accompagne de profondes inégalités. Les crises agricoles récurrentes, les famines et la pression fiscale croissante, souvent aggravée par les coûts des guerres (comme la guerre de Sept Ans ou la guerre d'indépendance américaine), ont mis à mal les finances des États et ont provoqué un mécontentement généralisé, en particulier parmi les classes populaires et la paysannerie.
+[[WIDGET:Biography:rousseau]]
 
-Sur le plan **social**, la rigidité de la société d'ordres, avec ses privilèges aristocratiques et ecclésiastiques, est de plus en plus contestée. La bourgeoisie, forte de son dynamisme économique, aspire à une reconnaissance politique et sociale à la hauteur de son poids économique. Les masses populaires, quant à elles, souffrent de la pauvreté et de l'absence de représentation, ce qui les rend réceptives aux discours de contestation.
+| Penseur des Lumières | Idées Clés | Impact sur les Révolutions |
+| :------------------ | :-------- | :------------------------ |
+| **John Locke** | Droits naturels (vie, liberté, propriété), contrat social, droit de résistance à l'oppression | Influence majeure sur la Déclaration d'Indépendance américaine et les principes libéraux |
+| **Montesquieu** | Séparation des pouvoirs (législatif, exécutif, judiciaire), équilibre des forces | Fondement des constitutions modernes, notamment américaine et française |
+| **Jean-Jacques Rousseau** | Souveraineté populaire, volonté générale, égalité civile, contrat social | Inspiration pour la démocratie directe et la notion de nation souveraine |
+| **Voltaire** | Tolérance religieuse, liberté d'expression, critique de l'absolutisme et de l'Église | Combat pour les libertés fondamentales, influence sur les droits de l'homme |
 
-Enfin, les **facteurs politiques** sont indissociables des précédents. Les monarchies absolues, souvent inefficaces et endettées, peinent à se réformer et à répondre aux aspirations nouvelles de leurs sujets. L'absence de participation politique et la concentration du pouvoir entre les mains du souverain et de ses élites créent un terreau fertile pour la contestation.
+Parallèlement, les sociétés de l'époque sont traversées par de graves crises économiques et sociales. Les famines sont récurrentes, les prix des denrées alimentaires augmentent, et les inégalités sont criantes. La majeure partie de la population, notamment les paysans et les ouvriers urbains, vit dans la pauvreté, tandis que la noblesse et le clergé jouissent de privilèges fiscaux et sociaux exorbitants. Cette situation génère un profond ressentiment et une frustration croissante, particulièrement en France où la pression fiscale est lourde et inégalement répartie.
 
-C'est dans ce contexte que la **Révolution américaine** (1775-1783) apparaît comme le premier modèle de rupture avec l'ordre ancien et une mise en pratique des idéaux des Lumières. Les colonies britanniques d'Amérique du Nord, lassées des taxes imposées sans leur consentement ("No taxation without representation") et des restrictions commerciales, se soulèvent contre la métropole. La Déclaration d'indépendance de 1776 proclame des principes fondateurs qui résonneront dans le monde entier :
-*   L'**indépendance** nationale, affirmant le droit des peuples à disposer d'eux-mêmes.
-*   La mise en place d'une **république**, rejetant la monarchie au profit d'un gouvernement fondé sur la souveraineté populaire.
-*   La reconnaissance des **droits inaliénables** de l'homme (vie, liberté, recherche du bonheur) et l'établissement d'un gouvernement constitutionnel garantissant ces droits.
+[[WIDGET:Image:ancien_regime_inegalites]]
+Représentation allégorique des inégalités sociales sous l'Ancien Régime.
 
-La victoire des insurgés américains, soutenus par la France, démontre qu'une révolution politique est non seulement possible, mais qu'elle peut aboutir à la création d'un État fondé sur des principes nouveaux. Elle offre un exemple concret et inspirant pour les mouvements révolutionnaires à venir en Europe et dans les autres colonies.
+Enfin, les tensions politiques et fiscales sont exacerbées dans les empires coloniaux et les monarchies européennes. Au sein des colonies britanniques d'Amérique, la politique fiscale de Londres, perçue comme arbitraire ("no taxation without representation"), conduit à une rupture et à la Guerre d'Indépendance. En France, les dépenses excessives de la monarchie, notamment pour soutenir la guerre d'indépendance américaine, creusent un déficit abyssal. Les tentatives de réforme fiscale se heurtent à l'opposition des corps privilégiés, paralysant l'État et alimentant la contestation. Ces prémices de contestations, d'abord isolées, se transforment progressivement en mouvements collectifs, préparant le terrain aux explosions révolutionnaires.
+
+[[WIDGET:Quiz:causes_revolutions]]
 """
 
 ---

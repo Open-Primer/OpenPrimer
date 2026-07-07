@@ -4,10 +4,8 @@ Your task is to write a section of the academic MDX narrative content for the sp
 We are writing the lesson block-by-block.
 - This is Block 3 out of 3.
 - You MUST write the content for the following sections:
-* Heading: "## Textes fondateurs sur la notion de contemporanéité"
-  Instructions: "Analyser des extraits de textes clés qui ont contribué à définir ou à problématiser la notion de contemporanéité et la pratique de l'histoire du temps présent. Mettre en lumière les apports de penseurs majeurs à la réflexion sur cette période."
-* Heading: "## Conclusion : Perspectives et défis de l'historien du temps présent"
-  Instructions: "Récapituler les principaux points abordés concernant la définition, la périodisation et les enjeux de l'histoire contemporaine. Ouvrir sur les défis actuels et futurs de la discipline et l'importance de son rôle dans la compréhension du monde actuel."
+* Heading: "## Conclusion : L'Histoire contemporaine, un chantier permanent"
+  Instructions: "Récapituler les points clés abordés, souligner la nature évolutive et constamment redéfinie de l'Histoire contemporaine. Ouvrir sur les perspectives de recherche actuelles et l'importance d'une approche critique et réflexive."
 
 ---
 
@@ -29,40 +27,52 @@ We are writing the lesson block-by-block.
 
 ---
 
+### PRE-EXISTING WIDGET INVENTORY:
+The following relevant media and database resources are available for this course. If any of these are highly relevant to the current section, you should refer/embed them using their exact ID as [[WIDGET:id]] on a separate blank line:
+- ID: "Mermaid"
+  Name: "Mermaid Diagram Engine" (Moteur de diagrammes Mermaid)
+  Description: "Render rich flowcharts, timelines, and concept maps from descriptive text markup."
+  Disciplines: [All Disciplines]
+  Educational Level: "All levels"
+
+### PEDAGOGICAL WIDGETS MANDATE (CRITICAL):
+To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
+Aim to insert at least 3-5 of these anchors in this block, placed on separate blank lines (except inline hover-card highlights).
+Choose from the following options:
+1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
+2. [[WIDGET:Image:unique_id]] - For relevant paintings, historical photos, maps, diagrams, or illustrations. (e.g. [[WIDGET:Image:prise_bastille]])
+3. [[WIDGET:Video:unique_id]] - For relevant documentaries, video archives, or animations. (e.g. [[WIDGET:Video:revolution_francaise]])
+4. [[WIDGET:Audio:unique_id]] - For audio speeches, narrations, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits]])
+5. [[WIDGET:Mermaid:unique_id]] - For timelines, flowcharts, or structural diagrams. (e.g. [[WIDGET:Mermaid:timeline_causes]])
+6. [[WIDGET:Quiz:unique_id]] - For formative multiple-choice quizzes to verify student comprehension.
+7. [[WIDGET:SolvedExercise:unique_id]] - For step-by-step resolved exercises, coding snippets, or analytical case studies.
+8. [[WIDGET:UnsolvedExercise:unique_id]] - For unsolved application exercises or practice questions.
+9. [[WIDGET:FillInBlanks:unique_id]] - For interactive fill-in-the-blanks sentences.
+10. [[WIDGET:RealPerson:unique_id:Person Name]] - Inline hover-card highlight for any person mentioned. (e.g. "...alors que [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque...")
+11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
+12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
+
+Please write them exactly in this anchor format [[WIDGET:Type:unique_id]] (or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
+
+---
+
 ### PREVIOUS TEXT (for transitions and context):
 Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
 """
-...  la mémoire collective et aux usages publics de l'histoire est considérable. Enfin, l'**usage des témoignages**, particulièrement abondants en histoire contemporaine, pose des défis méthodologiques spécifiques. Si les témoignages oraux ou écrits sont des sources irremplaçables pour accéder à l'expérience vécue, ils nécessitent une critique rigoureuse, une contextualisation et une confrontation avec d'autres types de sources pour éviter les pièges de la subjectivité, de la reconstruction mémorielle ou de la partialité. L'historien doit ainsi constamment naviguer entre la quête de la vérité historique et la reconnaissance de la pluralité des interprétations du passé.
+...  au début du XXe siècle, a joué un rôle pionnier en élargissant le champ de l'histoire au-delà des événements politiques et militaires. Elle a promu une histoire économique et sociale, une histoire des mentalités et de la longue durée, influençant durablement la manière d'appréhender les sociétés contemporaines dans leur profondeur structurelle.
 
-Pour une meilleure compréhension des principaux courants historiographiques :
+Par la suite, l'**histoire sociale** s'est développée, s'intéressant aux classes populaires, aux mouvements ouvriers, aux structures familiales et aux inégalités. Elle a permis de comprendre les dynamiques profondes qui ont façonné les sociétés depuis le XIXe siècle. L'**histoire culturelle**, quant à elle, a mis l'accent sur les représentations, les pratiques, les symboles et les imaginaires collectifs. Des travaux comme ceux dirigés par [[WIDGET:RealPerson:rioux_jean_pierre:Jean-Pierre Rioux]] et [[WIDGET:RealPerson:sirinelli_jean_francois:Jean-François Sirinelli]] sur l'histoire culturelle de la France ont montré comment la culture de masse et les médias ont transformé les sociétés contemporaines [ref7].
 
-| Courant Historiographique | Période / Figures Clés | Objets d'Étude Principaux | Apports Méthodologiques / Concepts |
-| :----------------------- | :--------------------- | :-------------------------------- | :-------------------------------- |
-| **École des Annales** | Début XXe siècle (Febvre, Bloch, Braudel, Le Roy Ladurie) | Structures sociales, économies, mentalités, longue durée. | Histoire totale, interdisciplinarité, analyse de sources variées. |
-| **Histoire Culturelle** | (Chartier, Rioux, Sirinelli [[WIDGET:ref7]]) | Représentations, pratiques, symboles, médias, imaginaires collectifs. | Compréhension du sens social, des identités et des valeurs. |
-| **Histoire Sociale** | (Continuité, divers auteurs) | Classes, groupes sociaux, mouvements ouvriers, inégalités. | Analyse des dynamiques de pouvoir, des conditions de vie et des luttes. |
-| **Histoire Politique Renouvelée** | (René Rémond [[WIDGET:ref5]]) | Cultures politiques, acteurs, idéologies, systèmes de partis. | Au-delà de l'événementiel, analyse des systèmes et des mentalités politiques. |
-| **Histoire Globale / Mondiale** | Plus récent (Marc Ferro [[WIDGET:ref4]], etc.) | Interconnexions, circulations (personnes, biens, idées), phénomènes transnationaux. | Décentration des regards, dépassement des cadres nationaux, histoire connectée. |
+Plus récemment, l'**histoire globale** ou **transnationale** a émergé, cherchant à dépasser les cadres nationaux pour étudier les interconnexions, les circulations et les phénomènes à l'échelle planétaire. Des historiens comme [[WIDGET:RealPerson:ferro_marc:Marc Ferro]] ont illustré cette approche en analysant les dynamiques des colonisations et des décolonisations, soulignant les liens complexes entre les différentes parties du monde [ref4].
 
-Les débats épistémologiques peuvent être modélisés comme suit :
+[[WIDGET:Biography:ferro_marc]]
 
-```mermaid
-graph TD
-    A[Débats Épistémologiques en Histoire Contemporaine] --> B(Objectivité de l'Historien);
-    A --> C(Rapport au Présent);
-    A --> D(Rôle de l'Historien);
-    A --> E(Usage des Témoignages);
+Ces courants ont nourri une réflexion sur la notion de contemporanéité et ses ruptures, souvent à travers des textes fondateurs qui sont devenus des références incontournables. Les œuvres de [[WIDGET:RealPerson:hobsbawm_eric:Eric Hobsbawm]], notamment sa trilogie sur le "long XIXe siècle" et le "court XXe siècle", sont emblématiques de cette démarche. "L'Ère des révolutions, 1789-1848" [ref1] analyse la double révolution (industrielle et française) comme matrice du monde contemporain. "L'Ère des empires, 1875-1914" [ref2] explore l'apogée de l'impérialisme et les tensions menant à la Première Guerre mondiale. Enfin, "L'Âge des extrêmes : Le court XXe siècle, 1914-1991" [ref3] propose une synthèse magistrale des catastrophes et des transformations qui ont marqué le siècle passé.
 
-    B -- Questionne --> B1{Peut-on se défaire des préjugés?};
-    C -- Implique --> C1{Distinction entre curiosité légitime et instrumentalisation du passé};
-    D -- Interroge --> D1{Simple collecteur, interprète, narrateur, juge, ou acteur social?};
-    E -- Nécessite --> E1{Critique rigoureuse et contextualisation};
-    E -- Exige --> E2{Confrontation avec d'autres sources};
-    E -- Met en garde contre --> E3{Risques: subjectivité, reconstruction mémorielle, partialité};
+[[WIDGET:Image:hobsbawm_age_extremes]]
+Caption: La couverture de "L'Âge des extrêmes" d'Eric Hobsbawm, un ouvrage fondamental pour comprendre le XXe siècle.
 
-    D1 -- Engendre --> D2[Responsabilité face à la mémoire collective];
-    D1 -- Engendre --> D3[Responsabilité face aux usages publics de l'histoire];
-```
+De même, l'œuvre de [[WIDGET:RealPerson:remond_rene:René Rémond]], en particulier son "Introduction à l'histoire de notre temps" [ref5], a structuré la réflexion sur la définition et les enjeux de l'Histoire contemporaine en France, en proposant une grille d'analyse politique et sociale des périodes récentes. Ces textes, par leur ambition synthétique et leur capacité à problématiser le passé récent, sont essentiels pour tout étudiant souhaitant appréhender les fondements de l'Histoire contemporaine.
 """
 
 ---

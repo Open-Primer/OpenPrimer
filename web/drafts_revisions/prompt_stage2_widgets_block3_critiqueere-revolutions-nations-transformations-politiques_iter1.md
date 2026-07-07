@@ -3,18 +3,18 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 3:
   "conclusionSummary": {
     "items": [
       "La fin du XVIIIe et le début du XIXe siècle ont été marqués par des bouleversements politiques et sociaux sans précédent, initiés par la Révolution française.",
-      "Cette période a vu l'effondrement de l'Ancien Régime et l'émergence de nouvelles idéologies politiques, telles que le libéralisme et le nationalisme, qui ont profondément transformé les sociétés européennes.",
-      "Les guerres napoléoniennes ont exporté ces idées à travers le continent, redessinant les cartes et les mentalités, et défiant les structures monarchiques traditionnelles.",
-      "Bien que le Congrès de Vienne ait tenté de restaurer un ordre conservateur, les graines des nations modernes et des systèmes politiques basés sur la souveraineté populaire étaient semées de manière irréversible.",
-      "Ces transformations profondes ont jeté les bases du monde contemporain, influençant durablement les structures étatiques, les relations internationales et la conception même de la citoyenneté."
+      "Cette période a vu l'effondrement de l'Ancien Régime et l'émergence de nouvelles idéologies politiques, telles que la souveraineté nationale et le libéralisme.",
+      "Les guerres napoléoniennes ont exporté ces idées révolutionnaires à travers l'Europe, tout en suscitant des résistances et en stimulant le sentiment national dans les territoires occupés.",
+      "Ces conflits ont redessiné la carte de l'Europe et jeté les bases des États-nations modernes, transformant durablement les frontières et les identités politiques.",
+      "En somme, cette ère a profondément transformé les structures politiques, sociales et culturelles du continent, laissant un héritage durable sur la conception de l'État et de la citoyenneté."
     ]
   },
   "whatsNext": {
     "steps": [
       {
-        "title": "La Restauration et les nouvelles vagues révolutionnaires (1815-1848)",
-        "description": "Après les bouleversements de l'ère napoléonienne, l'Europe tente de retrouver un équilibre lors du Congrès de Vienne. Cependant, les aspirations nationales et libérales continuent de bouillonner, menant à de nouvelles révolutions et à la remise en question de l'ordre établi.",
-        "slug": "restauration-revolutions-1815-1848"
+        "title": "Le Congrès de Vienne et la Restauration",
+        "description": "Après les bouleversements révolutionnaires et napoléoniens, l'Europe tente de retrouver un équilibre. Cette leçon explorera les tentatives de restauration monarchique et la réorganisation du continent lors du Congrès de Vienne, ainsi que les premières contestations de cet ordre et l'émergence de nouvelles vagues révolutionnaires.",
+        "slug": "congres-vienne-restauration"
       }
     ]
   },
@@ -23,48 +23,48 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 3:
       {
         "title": "La Révolution française",
         "type": "book",
-        "description": "Une étude classique et approfondie des causes, du déroulement et des conséquences de la Révolution française, par un historien majeur de la période.",
+        "description": "Une étude classique et approfondie des causes, du déroulement et des conséquences de la Révolution française, offrant une perspective historiographique riche.",
         "author": "Michel Vovelle",
         "year": "1992"
       },
       {
         "title": "Napoléon",
         "type": "book",
-        "description": "Une biographie de référence de Napoléon Bonaparte, analysant son ascension, son règne et son impact sur l'Europe et le monde.",
+        "description": "Une biographie exhaustive de Napoléon Bonaparte, analysant son rôle dans la diffusion des idéaux révolutionnaires et la construction de l'Empire, ainsi que son impact sur l'Europe.",
         "author": "Jean Tulard",
         "year": "1987"
       },
       {
-        "title": "Le Congrès de Vienne (1814-1815)",
+        "title": "L'invention de la nation moderne",
         "type": "article",
-        "description": "Un article synthétique présentant les enjeux, les acteurs et les décisions prises lors du Congrès de Vienne, qui a redessiné la carte de l'Europe après les guerres napoléoniennes.",
-        "url": "https://www.universalis.fr/encyclopedie/congres-de-vienne/"
+        "description": "Analyse de l'émergence du concept de nation et de nationalisme à l'époque des révolutions, explorant comment ces idées ont façonné les identités collectives.",
+        "author": "Anne-Marie Thiesse",
+        "year": "1999"
       },
       {
-        "title": "L'Europe et la Révolution française",
-        "type": "book",
-        "description": "Une analyse des interactions entre la Révolution française et le reste de l'Europe, montrant comment les idées révolutionnaires se sont propagées et ont été reçues.",
-        "author": "Albert Sorel",
-        "year": "1885-1904"
+        "title": "Histoire de la Révolution française et de l'Empire",
+        "type": "website",
+        "description": "Un site de référence offrant des ressources variées (textes, images, chronologies, analyses) sur la Révolution française et la période napoléonienne, idéal pour approfondir les connaissances.",
+        "url": "https://www.herodote.net/histoire/revolution-francaise"
       }
     ]
   },
   "glossary": [
     {
-      "term": "Révolution française",
-      "definition": "Période de bouleversements politiques et sociaux majeurs en France, de 1789 à 1799, qui a mis fin à la monarchie absolue et à la société d'ordres, et a jeté les bases de la République et des principes de liberté et d'égalité."
+      "term": "Ancien Régime",
+      "definition": "Système politique et social en vigueur en France du XVIe au XVIIIe siècle, caractérisé par une monarchie absolue de droit divin, une société d'ordres (clergé, noblesse, tiers état) et des privilèges héréditaires."
+    },
+    {
+      "term": "Souveraineté nationale",
+      "definition": "Principe politique selon lequel la souveraineté, c'est-à-dire le pouvoir suprême, appartient à la nation, entité collective et indivisible, et non au monarque. Elle est exercée par des représentants élus."
     },
     {
       "term": "Nationalisme",
-      "definition": "Idéologie politique qui affirme l'existence d'une nation, c'est-à-dire d'un groupe humain partageant une identité culturelle, linguistique ou historique, et qui revendique son droit à l'autodétermination et à la souveraineté sur un territoire donné."
+      "definition": "Idéologie politique qui affirme l'existence et la primauté d'une nation, souvent basée sur une identité culturelle, linguistique ou historique commune, et qui vise à l'autonomie, à l'unité ou à la puissance de cette nation."
     },
     {
-      "term": "Ancien Régime",
-      "definition": "Terme utilisé pour désigner le système politique, social et économique de la France avant la Révolution de 1789, caractérisé par la monarchie absolue de droit divin, une société d'ordres (noblesse, clergé, tiers état) et des privilèges."
-    },
-    {
-      "term": "Congrès de Vienne",
-      "definition": "Conférence diplomatique qui s'est tenue à Vienne de septembre 1814 à juin 1815, réunissant les grandes puissances européennes (Autriche, Prusse, Russie, Royaume-Uni, France) pour redessiner la carte de l'Europe après la défaite de Napoléon et restaurer l'ordre monarchique et l'équilibre des puissances."
+      "term": "Code civil (Code Napoléon)",
+      "definition": "Recueil de lois civiles promulgué en 1804 sous Napoléon Bonaparte, qui unifie le droit français et consacre les principes fondamentaux de la Révolution tels que l'égalité devant la loi, la propriété privée et la laïcité de l'État."
     }
   ]
 }

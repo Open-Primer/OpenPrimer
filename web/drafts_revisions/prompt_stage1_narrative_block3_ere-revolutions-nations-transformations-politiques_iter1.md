@@ -4,10 +4,10 @@ Your task is to write a section of the academic MDX narrative content for the sp
 We are writing the lesson block-by-block.
 - This is Block 3 out of 3.
 - You MUST write the content for the following sections:
-* Heading: "## Les indépendances latino-américaines et l'héritage des révolutions"
-  Instructions: "Étudier les processus d'indépendance en Amérique latine, en les reliant à la dynamique des révolutions atlantiques. Analyser les spécificités de ces mouvements, les figures emblématiques et les défis de la construction des nouvelles nations et des modèles politiques émergents dans la région."
-* Heading: "## Conclusion : Bilan et héritages de l'ère des révolutions"
-  Instructions: "Synthétiser les principales transformations politiques, sociales et territoriales engendrées par cette période. Discuter des héritages durables sur les concepts de nation, d'État, de souveraineté et de citoyenneté, et ouvrir sur les développements du XIXe siècle."
+* Heading: "## L'émergence des nations et les autres révolutions atlantiques"
+  Instructions: "Aborder la Révolution haïtienne comme cas unique d'indépendance et d'abolition de l'esclavage. Examiner les mouvements d'indépendance en Amérique latine. Comparer les processus de construction nationale et les formes de souveraineté émergentes dans ces différentes régions, en soulignant les spécificités et les interconnexions."
+* Heading: "## Conclusion : Héritages et portée des révolutions atlantiques"
+  Instructions: "Synthétiser les apports majeurs de cette période : la fin de l'Ancien Régime, l'affirmation des principes de souveraineté nationale et de citoyenneté, la naissance de nouvelles entités étatiques. Discuter des héritages contradictoires (libertés vs. violences, universalisme vs. exclusions) et de l'impact à long terme de ces révolutions sur l'histoire politique mondiale."
 
 ---
 
@@ -29,36 +29,59 @@ We are writing the lesson block-by-block.
 
 ---
 
+### PRE-EXISTING WIDGET INVENTORY:
+The following relevant media and database resources are available for this course. If any of these are highly relevant to the current section, you should refer/embed them using their exact ID as [[WIDGET:id]] on a separate blank line:
+- ID: "Mermaid"
+  Name: "Mermaid Diagram Engine" (Moteur de diagrammes Mermaid)
+  Description: "Render rich flowcharts, timelines, and concept maps from descriptive text markup."
+  Disciplines: [All Disciplines]
+  Educational Level: "All levels"
+
+### PEDAGOGICAL WIDGETS MANDATE (CRITICAL):
+To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
+Aim to insert at least 3-5 of these anchors in this block, placed on separate blank lines (except inline hover-card highlights).
+Choose from the following options:
+1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
+2. [[WIDGET:Image:unique_id]] - For relevant paintings, historical photos, maps, diagrams, or illustrations. (e.g. [[WIDGET:Image:prise_bastille]])
+3. [[WIDGET:Video:unique_id]] - For relevant documentaries, video archives, or animations. (e.g. [[WIDGET:Video:revolution_francaise]])
+4. [[WIDGET:Audio:unique_id]] - For audio speeches, narrations, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits]])
+5. [[WIDGET:Mermaid:unique_id]] - For timelines, flowcharts, or structural diagrams. (e.g. [[WIDGET:Mermaid:timeline_causes]])
+6. [[WIDGET:Quiz:unique_id]] - For formative multiple-choice quizzes to verify student comprehension.
+7. [[WIDGET:SolvedExercise:unique_id]] - For step-by-step resolved exercises, coding snippets, or analytical case studies.
+8. [[WIDGET:UnsolvedExercise:unique_id]] - For unsolved application exercises or practice questions.
+9. [[WIDGET:FillInBlanks:unique_id]] - For interactive fill-in-the-blanks sentences.
+10. [[WIDGET:RealPerson:unique_id:Person Name]] - Inline hover-card highlight for any person mentioned. (e.g. "...alors que [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque...")
+11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
+12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
+
+Please write them exactly in this anchor format [[WIDGET:Type:unique_id]] (or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
+
+---
+
 ### PREVIOUS TEXT (for transitions and context):
 Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
 """
-... iennes redessinent la carte de l'Europe. De l'Espagne à la Russie, l'influence française est prépondérante, mais elle suscite également de vives résistances. Les peuples conquis, confrontés à l'occupation et aux prélèvements imposés par la France, développent des sentiments nationaux puissants, souvent en opposition à la domination française. Ces mouvements nationalistes, comme en Espagne ou en Allemagne, contribuent à forger de nouvelles identités collectives et à préparer les futures unifications nationales.
+...  crise financière et sociale aiguë, [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque les États généraux en mai 1789. Rapidement, les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]], rejoints par certains membres du clergé et de la noblesse, se proclament Assemblée nationale et prêtent le serment du Jeu de Paume, s'engageant à rédiger une Constitution.
 
-Pour illustrer la dualité entre l'héritage napoléonien et la réaction du Congrès de Vienne, voici une comparaison :
+[[WIDGET:Image:prise_bastille]]
+La prise de la Bastille le 14 juillet 1789, événement symbolique du début de la Révolution française.
 
-| Aspect | Héritage Napoléonien (Diffusion des principes) | Congrès de Vienne (Restauration et Réaction) |
-|---------------------|------------------------------------------------|----------------------------------------------|
-| **Principes Juridiques** | Code Civil (égalité devant la loi, propriété, laïcité) | Retour partiel au droit coutumier, maintien de certains privilèges |
-| **Administration** | Centralisation, uniformisation (préfets, départements) | Rétablissement des structures pré-révolutionnaires, autonomies locales |
-| **Frontières** | Redessinées par conquêtes, création d'États-clients | Rétablissement des dynasties légitimes, équilibre des puissances |
-| **Idéaux** | Liberté, égalité, souveraineté nationale | Ordre monarchique, tradition, religion, légitimité dynastique |
+La prise de la Bastille le 14 juillet 1789 marque le début de la révolte populaire. En août, l'Assemblée nationale abolit les privilèges féodaux et adopte la [[WIDGET:ConceptLink:declaration_droits_homme:Déclaration des Droits de l'Homme et du Citoyen]] (DDHC), un texte universel qui proclame l'égalité de tous devant la loi, la liberté d'expression, la souveraineté de la nation et la séparation des pouvoirs.
 
-La série de défaites militaires, notamment la campagne de Russie (1812) et la défaite de Leipzig (1813), conduit à la chute de l'Empire en 1814, puis définitivement après Waterloo en 1815. Pour restaurer l'ordre et la stabilité en Europe, les grandes puissances se réunissent au **Congrès de Vienne (1814-1815)**. Ce congrès, dominé par les principes de légitimité monarchique et d'équilibre des puissances, vise à effacer l'héritage révolutionnaire et impérial en rétablissant les dynasties déchues et en redessinant les frontières. Cependant, malgré cette tentative de retour à l'ordre ancien, les idéaux de liberté, de nation et de souveraineté populaire, semés par la Révolution et l'Empire, continueront de fermenter et de provoquer de nouvelles vagues révolutionnaires au cours du XIXe siècle [ref5].
+[[WIDGET:Audio:declaration_droits]]
+Extrait audio de la Déclaration des Droits de l'Homme et du Citoyen de 1789.
 
-Le schéma suivant visualise la séquence des événements et leurs interconnexions :
+La Révolution traverse ensuite plusieurs phases de radicalisation. Après une période de monarchie constitutionnelle (1789-1792), la chute de la monarchie en 1792 conduit à la proclamation de la Première République. La Convention nationale, dominée par les Montagnards, instaure la [[WIDGET:ConceptLink:terreur:Terreur]] (1793-1794), une période de répression politique intense sous la houlette de figures comme [[WIDGET:RealPerson:robespierre:Maximilien de Robespierre]], visant à défendre la Révolution contre ses ennemis intérieurs et extérieurs. L'abolition de l'esclavage dans les colonies en 1794 témoigne de cette radicalisation des principes révolutionnaires.
 
-```mermaid
-graph TD
-    A[Révolution Française (1789-1799)] --> B{Diffusion des Idéaux: Liberté, Égalité, Nation};
-    B --> C[Guerres Révolutionnaires & Empire Napoléonien (1792-1815)];
-    C --> D[Réformes Napoléoniennes (Code Civil, Administration centralisée)];
-    D --> E[Réactions Nationalistes en Europe (Espagne, Allemagne, Italie)];
-    C --> F[Chute de l'Empire Napoléonien (1815)];
-    F --> G[Congrès de Vienne (1814-1815)];
-    G --> H{Restauration de l'Ordre Ancien: Monarchie, Équilibre des Puissances};
-    H -- (Malgré la restauration) --> I[Persistance des Idéaux Révolutionnaires];
-    I --> J[Vagues Révolutionnaires du XIXe siècle (1820, 1830, 1848)];
-```
+[[WIDGET:Biography:robespierre]]
+
+Après la chute de Robespierre en 1794, le Directoire (1795-1799) tente de stabiliser la situation, mais est marqué par l'instabilité politique et les difficultés économiques. C'est dans ce contexte qu'émerge [[WIDGET:RealPerson:napoleon_bonaparte:Napoléon Bonaparte]], qui prend le pouvoir par le coup d'État du 18 Brumaire (9 novembre 1799), instaurant le Consulat.
+
+[[WIDGET:Biography:napoleon]]
+
+Sous le Consulat puis l'Empire (1804-1815), Napoléon consolide et diffuse les acquis de la Révolution tout en établissant un régime autoritaire. Le [[WIDGET:Glossary:code_civil:Code Civil]] (1804), par exemple, systématise le droit de propriété, l'égalité civile et la laïcité de l'État, influençant durablement les législations européennes. Les guerres napoléoniennes, bien que destructrices, contribuent à l'expansion des idées révolutionnaires (liberté, égalité, nationalisme) à travers l'Europe, ébranlant les vieilles monarchies et stimulant des mouvements nationaux et libéraux. Cependant, cette expansion suscite également de fortes résistances, notamment en Espagne et en Russie, où l'occupation française alimente un sentiment national anti-français, posant les jalons des futurs mouvements nationalistes du XIXe siècle [ref1].
+
+[[WIDGET:Video:revolution_francaise]]
 """
 
 ---

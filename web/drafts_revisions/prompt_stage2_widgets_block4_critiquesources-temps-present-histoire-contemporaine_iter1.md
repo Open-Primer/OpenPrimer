@@ -6,14 +6,10 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
       "questions": [
         {
           "q": "Qu'est-ce qui caractérise principalement l'Histoire contemporaine par rapport aux périodes précédentes ?",
-          "explanation": "L'Histoire contemporaine se distingue par sa proximité avec notre époque, ce qui implique une richesse et une diversité de sources (archives, presse, témoignages, images, etc.) sans précédent.",
+          "explanation": "L'Histoire contemporaine se distingue par sa proximité avec notre époque et la multiplicité des types de sources disponibles (écrites, orales, visuelles, numériques), ce qui pose des défis méthodologiques spécifiques.",
           "options": [
             {
               "text": "L'absence de sources écrites.",
-              "correct": false
-            },
-            {
-              "text": "La prédominance des récits oraux.",
               "correct": false
             },
             {
@@ -23,12 +19,16 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
             {
               "text": "L'étude exclusive des civilisations antiques.",
               "correct": false
+            },
+            {
+              "text": "La focalisation sur les monarchies absolues.",
+              "correct": false
             }
           ]
         },
         {
           "q": "Quel événement est souvent considéré comme le point de départ conventionnel de l'Histoire contemporaine en France ?",
-          "explanation": "En France, la Révolution de 1789 est traditionnellement retenue comme le début de l'époque contemporaine, marquant une rupture politique et sociale majeure.",
+          "explanation": "En France, la Révolution de 1789 est traditionnellement retenue comme le début de l'époque contemporaine, marquant une rupture politique, sociale et culturelle majeure avec l'Ancien Régime.",
           "options": [
             {
               "text": "La chute de l'Empire romain.",
@@ -49,111 +49,111 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
           ]
         },
         {
-          "q": "Parmi les thématiques suivantes, laquelle est centrale dans l'étude de l'Histoire contemporaine ?",
-          "explanation": "L'Histoire contemporaine s'intéresse particulièrement à l'émergence et à l'évolution des États-nations, aux grandes idéologies (libéralisme, socialisme, nationalisme, etc.) et aux profondes mutations des sociétés (industrialisation, urbanisation, mouvements sociaux).",
+          "q": "Pourquoi l'historien de l'époque contemporaine est-il confronté à des défis spécifiques ?",
+          "explanation": "La proximité des événements peut rendre difficile la prise de recul nécessaire à l'analyse historique objective. De plus, les enjeux mémoriels et les témoignages encore vivants peuvent influencer la perception et l'interprétation des faits.",
           "options": [
             {
-              "text": "Les dynasties royales médiévales.",
-              "correct": false
-            },
-            {
-              "text": "La formation des États-nations, les idéologies politiques et les transformations sociales.",
+              "text": "Manque de recul et implication émotionnelle potentielle.",
               "correct": true
             },
             {
-              "text": "Les mythes fondateurs des civilisations antiques.",
+              "text": "Absence totale de documents d'archives.",
               "correct": false
             },
             {
-              "text": "L'expansion des empires coloniaux du XVIe siècle.",
+              "text": "Impossibilité d'interroger des témoins.",
+              "correct": false
+            },
+            {
+              "text": "Sujets trop simples à analyser.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quel est l'un des principaux défis méthodologiques pour l'historien de l'époque contemporaine ?",
-          "explanation": "La proximité temporelle peut rendre difficile la distanciation nécessaire à l'analyse historique objective, d'autant plus que les enjeux politiques et mémoriels sont souvent encore vifs.",
+          "q": "Quelle est l'importance des sources orales en Histoire contemporaine ?",
+          "explanation": "Les témoignages oraux sont cruciaux pour comprendre les expériences individuelles et collectives, les mentalités et les événements non documentés par écrit. Ils complètent les archives et offrent des perspectives uniques sur l'expérience vécue.",
           "options": [
             {
-              "text": "Le manque de sources primaires.",
+              "text": "Elles sont considérées comme non fiables et inutiles.",
               "correct": false
             },
             {
-              "text": "La difficulté à prendre du recul face à des événements encore 'vivants' ou dont les acteurs sont encore présents.",
+              "text": "Elles complètent les sources écrites et offrent des perspectives uniques sur l'expérience vécue.",
               "correct": true
             },
             {
-              "text": "L'absence de documents écrits.",
+              "text": "Elles remplacent entièrement les archives écrites.",
               "correct": false
             },
             {
-              "text": "La nécessité de se fier uniquement aux récits légendaires.",
+              "text": "Elles ne concernent que l'histoire des peuples sans écriture.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Comment l'Histoire contemporaine se distingue-t-elle de l'actualité ou du journalisme ?",
-          "explanation": "Contrairement à l'actualité qui rapporte les faits immédiats, l'Histoire contemporaine cherche à comprendre les causes profondes, les dynamiques et les conséquences des événements sur une période plus longue, avec une démarche scientifique rigoureuse.",
+          "q": "Comment l'Histoire contemporaine se distingue-t-elle de l'Histoire moderne en historiographie française ?",
+          "explanation": "En historiographie française, l'Histoire moderne couvre la période allant de la fin du XVe siècle (ou début XVIe) à la Révolution française, tandis que l'Histoire contemporaine prend le relais à partir de 1789, marquant une nouvelle ère.",
           "options": [
             {
-              "text": "Elle utilise les mêmes méthodes et objectifs.",
+              "text": "L'Histoire moderne étudie le passé lointain, l'Histoire contemporaine le passé récent.",
               "correct": false
             },
             {
-              "text": "Elle se concentre uniquement sur les événements du jour.",
-              "correct": false
-            },
-            {
-              "text": "Elle vise une analyse critique et une mise en perspective sur le long terme, en s'appuyant sur des sources diversifiées et vérifiées.",
+              "text": "L'Histoire moderne se termine généralement avec la Révolution française, l'Histoire contemporaine commence après.",
               "correct": true
             },
             {
-              "text": "Elle ne s'intéresse qu'aux faits divers.",
+              "text": "Il n'y a aucune distinction, les termes sont interchangeables.",
+              "correct": false
+            },
+            {
+              "text": "L'Histoire moderne se concentre sur l'Europe, l'Histoire contemporaine sur le monde entier.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Le concept de 'temps présent' dans l'expression 'Aux sources du temps présent' fait référence à :",
-          "explanation": "Le 'temps présent' en histoire ne désigne pas l'instant T, mais une période dont les héritages et les dynamiques sont encore actifs et structurants pour notre société contemporaine.",
+          "q": "Quel est l'un des principaux objets d'étude de l'Histoire contemporaine ?",
+          "explanation": "L'Histoire contemporaine s'intéresse aux grandes transformations politiques, économiques, sociales et culturelles qui ont façonné le monde actuel depuis la fin du XVIIIe siècle, incluant les révolutions industrielles, les guerres mondiales, les idéologies, etc.",
           "options": [
             {
-              "text": "L'année en cours.",
+              "text": "Les empires coloniaux antiques.",
               "correct": false
             },
             {
-              "text": "Une période historique qui continue d'influencer notre monde actuel.",
+              "text": "Les grandes transformations politiques, économiques et sociales du monde depuis la fin du XVIIIe siècle.",
               "correct": true
             },
             {
-              "text": "Le passé lointain.",
+              "text": "La vie quotidienne au Moyen Âge.",
               "correct": false
             },
             {
-              "text": "Un futur hypothétique.",
+              "text": "Les mythes fondateurs des civilisations.",
               "correct": false
             }
           ]
         },
         {
-          "q": "L'étude de l'Histoire contemporaine implique souvent une approche pluridisciplinaire. Pourquoi ?",
-          "explanation": "La richesse et la complexité des sociétés contemporaines nécessitent souvent d'emprunter des outils et des concepts à d'autres sciences humaines et sociales pour une compréhension plus complète.",
+          "q": "La notion de 'temps présent' en Histoire contemporaine implique-t-elle que l'historien doit se limiter aux événements des dernières décennies ?",
+          "explanation": "Le 'temps présent' en Histoire contemporaine ne se limite pas à l'actualité immédiate, mais englobe la période dont les dynamiques et les héritages structurent encore notre monde actuel, remontant souvent à la fin du XVIIIe siècle.",
           "options": [
             {
-              "text": "Pour éviter de se spécialiser.",
+              "text": "Oui, absolument, pour garantir la pertinence.",
               "correct": false
             },
             {
-              "text": "Parce que les sources sont trop rares.",
-              "correct": false
-            },
-            {
-              "text": "Pour appréhender la complexité des phénomènes sociaux, économiques et culturels, en dialoguant avec la sociologie, la science politique, l'économie, etc.",
+              "text": "Non, elle fait référence à la période qui nous a directement façonnés, même si elle remonte à plusieurs siècles.",
               "correct": true
             },
             {
-              "text": "Pour se limiter à une seule perspective.",
+              "text": "Oui, car seules les sources numériques sont valides.",
+              "correct": false
+            },
+            {
+              "text": "Non, elle signifie que l'historien doit prédire l'avenir.",
               "correct": false
             }
           ]
@@ -163,11 +163,9 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
     }
   },
   "references": [
-    "Berstein, Serge, et Pierre Milza. 1996–2007. Histoire du XXe siècle. 4 vols. Paris: Hatier.",
-    "Ferro, Marc. 1985. L'Histoire sous surveillance. Science et conscience de l'historien. Paris: Gallimard.",
-    "Prost, Antoine. 1996. Douze leçons sur l'histoire. Paris: Seuil.",
-    "Rémond, René. 1974–1977. Introduction à l'histoire de notre temps. 3 vols. Paris: Seuil.",
-    "Sirinelli, Jean-François, éd. 1992. Histoire des droites en France. 3 vols. Paris: Gallimard."
+    "Bédarida, François. 1998. L'Histoire et le temps présent. Paris: CNRS Éditions.",
+    "Rémond, René. 1992. Introduction à l'histoire de notre temps. Paris: Seuil.",
+    "Prost, Antoine. 1996. Douze leçons sur l'histoire. Paris: Seuil."
   ]
 }
 

@@ -129,34 +129,143 @@ export function getDescriptiveLevelForPrompt(level: string): string {
   }
 }
 
+export interface LevelConstraints {
+  minWordCount: number;
+  maxWordCount: number;
+  minHoverCardsPerBlock: number;
+  minBlockWidgetsPerBlock: number;
+  globalWidgetsTarget: number;
+  minGlossaryCount: number;
+  minReferencesCount: number;
+  minBiographiesCount: number;
+  minConceptLinksCount: number;
+  mandatedWidgetTypes: string[];
+  discouragedWidgetTypes: string[];
+}
+
+export const DEFAULT_LEVEL_CONSTRAINTS: Record<string, LevelConstraints> = {
+  "foundation": {
+    "minWordCount": 800,
+    "maxWordCount": 1200,
+    "minHoverCardsPerBlock": 2,
+    "minBlockWidgetsPerBlock": 1,
+    "globalWidgetsTarget": 4,
+    "minGlossaryCount": 2,
+    "minReferencesCount": 1,
+    "minBiographiesCount": 1,
+    "minConceptLinksCount": 2,
+    "mandatedWidgetTypes": ["HistoricalAnecdote", "Quiz", "Image"],
+    "discouragedWidgetTypes": ["DataChart"]
+  },
+  "secondary_1": {
+    "minWordCount": 1000,
+    "maxWordCount": 1500,
+    "minHoverCardsPerBlock": 2,
+    "minBlockWidgetsPerBlock": 1,
+    "globalWidgetsTarget": 6,
+    "minGlossaryCount": 3,
+    "minReferencesCount": 2,
+    "minBiographiesCount": 1,
+    "minConceptLinksCount": 3,
+    "mandatedWidgetTypes": ["HistoricalAnecdote", "Quiz", "Image", "Mermaid"],
+    "discouragedWidgetTypes": []
+  },
+  "secondary_2_preuni": {
+    "minWordCount": 1500,
+    "maxWordCount": 2200,
+    "minHoverCardsPerBlock": 3,
+    "minBlockWidgetsPerBlock": 1,
+    "globalWidgetsTarget": 8,
+    "minGlossaryCount": 4,
+    "minReferencesCount": 3,
+    "minBiographiesCount": 2,
+    "minConceptLinksCount": 5,
+    "mandatedWidgetTypes": ["HistoricalAnecdote", "Quiz", "Image", "Mermaid", "SolvedExercise"],
+    "discouragedWidgetTypes": []
+  },
+  "university_undergrad": {
+    "minWordCount": 2500,
+    "maxWordCount": 3500,
+    "minHoverCardsPerBlock": 3,
+    "minBlockWidgetsPerBlock": 2,
+    "globalWidgetsTarget": 12,
+    "minGlossaryCount": 6,
+    "minReferencesCount": 5,
+    "minBiographiesCount": 2,
+    "minConceptLinksCount": 8,
+    "mandatedWidgetTypes": ["HistoricalAnecdote", "Quiz", "Image", "Mermaid", "SolvedExercise", "UnsolvedExercise", "DataChart"],
+    "discouragedWidgetTypes": []
+  },
+  "university_grad": {
+    "minWordCount": 3500,
+    "maxWordCount": 4500,
+    "minHoverCardsPerBlock": 4,
+    "minBlockWidgetsPerBlock": 2,
+    "globalWidgetsTarget": 16,
+    "minGlossaryCount": 8,
+    "minReferencesCount": 8,
+    "minBiographiesCount": 3,
+    "minConceptLinksCount": 12,
+    "mandatedWidgetTypes": ["Quiz", "Image", "Mermaid", "SolvedExercise", "UnsolvedExercise", "DataChart", "InteractiveDiagram"],
+    "discouragedWidgetTypes": ["HistoricalAnecdote"]
+  }
+};
+
+let loadedConstraints: Record<string, LevelConstraints> = DEFAULT_LEVEL_CONSTRAINTS;
+
+export async function loadLevelConstraintsFromDb(): Promise<Record<string, LevelConstraints>> {
+  try {
+    const { data } = await supabaseAdmin
+      .from('system_parameters')
+      .select('value')
+      .eq('key', 'academic_level_constraints')
+      .maybeSingle();
+      
+    if (data?.value) {
+      try {
+        const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+        if (parsed && typeof parsed === 'object') {
+          return parsed;
+        }
+      } catch (e) {
+        console.warn("[LevelConstraints] Failed to parse JSON from DB, seeding/using defaults", e);
+      }
+    }
+
+    // Seed defaults to Supabase if not present
+    await supabaseAdmin
+      .from('system_parameters')
+      .upsert({
+        key: 'academic_level_constraints',
+        value: JSON.stringify(DEFAULT_LEVEL_CONSTRAINTS, null, 2),
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'key' });
+
+  } catch (err) {
+    console.warn("[LevelConstraints] Supabase query failed, using static defaults:", err);
+  }
+  return DEFAULT_LEVEL_CONSTRAINTS;
+}
+
+export async function initializeConstraints() {
+  loadedConstraints = await loadLevelConstraintsFromDb();
+}
+
+export function getConstraintKeyForLevel(level: string): string {
+  const clean = (level || '').trim().toLowerCase();
+  if (clean.startsWith('foundation') || clean === 'primary') return 'foundation';
+  if (clean.includes('secondary_1') || clean.includes('middle')) return 'secondary_1';
+  if (clean.includes('secondary_2') || clean.includes('high') || clean.includes('preuni')) return 'secondary_2_preuni';
+  if (clean.includes('m1') || clean.includes('m2') || clean.includes('expert') || clean.includes('master')) return 'university_grad';
+  return 'university_undergrad';
+}
+
 export function getWordCountLimitForLevel(level: string): { min: number; max: number } {
   if (!level) return { min: 2500, max: 3500 };
   const clean = level.trim();
-  switch (clean) {
-    case 'foundation_1':
-    case 'foundation_2':
-      return { min: 800, max: 1200 };
-    case 'secondary_1':
-      return { min: 1000, max: 1500 };
-    case 'secondary_2':
-    case 'preuni_1':
-    case 'preuni_2':
-    case 'preuni_3':
-      return { min: 1500, max: 2200 };
-    case 'L1':
-      return { min: 2000, max: 3000 };
-    case 'L2':
-    case 'L3':
-    case 'intermediate':
-    case 'advanced':
-      return { min: 2500, max: 3500 };
-    case 'M1':
-    case 'M2':
-    case 'expert':
-      return { min: 3500, max: 4500 };
-    default:
-      return { min: 2500, max: 3500 };
-  }
+  const key = getConstraintKeyForLevel(clean);
+  const constraint = loadedConstraints[key] || DEFAULT_LEVEL_CONSTRAINTS[key] || DEFAULT_LEVEL_CONSTRAINTS.university_undergrad;
+  return { min: constraint.minWordCount, max: constraint.maxWordCount };
 }
 
 export function generateStatsMarkdown(stats: any): string {
@@ -1422,11 +1531,11 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       return true;
     });
 
-    const disc = (discipline || "").toLowerCase().trim();
-    const isMath = disc.includes("math") || disc.includes("algè") || disc.includes("geomet");
+    const disc = (discipline || "").toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const isMath = disc.includes("math") || disc.includes("alge") || disc.includes("geomet");
     const isPhysics = disc.includes("physic") || disc.includes("physiq") || disc.includes("astron");
     const isChemistry = disc.includes("chemist") || disc.includes("chimi");
-    const isBiology = disc.includes("biolog") || disc.includes("life science") || disc.includes("anatom") || disc.includes("medec") || disc.includes("medici") || disc.includes("santé");
+    const isBiology = disc.includes("biolog") || disc.includes("life science") || disc.includes("anatom") || disc.includes("medec") || disc.includes("medici") || disc.includes("sante");
     const isCS = disc.includes("computer") || disc.includes("informatique") || disc.includes("program") || disc.includes("software");
     const isEconomics = disc.includes("econom") || disc.includes("finan") || disc.includes("busines") || disc.includes("comptab");
     const isSocialPsych = disc.includes("psych") || disc.includes("sociol") || disc.includes("social");
@@ -1896,7 +2005,9 @@ export function getCitedReferenceNumbers(narrativeText: string): Set<number> {
 }
 
 function replaceWidget(content: string, widgetName: string, widgetStr: string): { content: string, replaced: boolean } {
-  const regex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*${widgetName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\s*\\]\\]`, 'gi');
+  const escapedName = widgetName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+  // Match [[WIDGET:widgetName]], [[WIDGET:Type:widgetName]], or [[WIDGET:Type:widgetName:Topic]]
+  const regex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*(?:[^:\\s\\]]+\\s*:\\s*)?${escapedName}\\s*(?::\\s*([^\\]]+))?\\s*\\]\\]`, 'gi');
   if (regex.test(content)) {
     return { content: content.replace(regex, widgetStr), replaced: true };
   }
@@ -1996,10 +2107,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     return `<${canonicalType}>\n${payload.trim()}\n</${canonicalType}>`;
   });
 
-  // Normalize suffix-augmented anchors [[WIDGET:Type:ID:Topic]] and [[WIDGET:Type:ID]] to [[WIDGET:ID]]
-  content = content.replace(/\[\[\s*WIDGET\s*:\s*([^:\s\]]+)\s*:\s*([^:\s\]]+)(?:\s*:\s*(.*?))?\s*\]\]+/gi, (match, type, id) => {
-    return `[[WIDGET:${id}]]`;
-  });
+  // Suffix-augmented anchors [[WIDGET:Type:ID:Topic]] are left intact here to preserve metadata for stitching fallbacks.
 
   // Initialize references array if not present
   if (!widgets) widgets = {};
@@ -2303,8 +2411,52 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const itemsAttr = (props.items || '').replace(/"/g, '&quot;');
       const explAttr = props.explanation ? ` explanation="${props.explanation.replace(/"/g, '&quot;')}"` : '';
       compStr = `<ReorderEvaluation items="${itemsAttr}"${titleAttr}${explAttr} />`;
+    } else if (comp.componentType === "Quiz") {
+      const qProps = props || {};
+      const qLimit = qProps.limit ? ` limit={${qProps.limit}}` : '';
+      const qDuration = qProps.durationLimit ? ` durationLimit={${qProps.durationLimit}}` : '';
+      const qMode = qProps.mode ? ` mode="${qProps.mode}"` : '';
+      const qQDuration = qProps.questionDurationLimit ? ` questionDurationLimit={${qProps.questionDurationLimit}}` : '';
+      const questionsMarkup = (qProps.questions || []).map((q: any) => {
+        const qText = (q.q || '').replace(/"/g, '&quot;');
+        const qExpl = (q.explanation || '').replace(/"/g, '&quot;');
+        const optionsMarkup = (q.options || []).map((o: any) => {
+          return `<Option text="${(o.text || '').replace(/"/g, '&quot;')}" correct={${o.correct}} />`;
+        }).join('\n    ');
+        return `  <Question q="${qText}" explanation="${qExpl}">\n    ${optionsMarkup}\n  </Question>`;
+      }).join('\n  ');
+      compStr = `<Quiz${qLimit}${qDuration}${qMode}${qQDuration}>\n  ${questionsMarkup}\n</Quiz>`;
+    } else if (comp.componentType === "SolvedExercise" || comp.componentType === "ExerciceResolut") {
+      const sTitle = (props.title || '').replace(/"/g, '&quot;');
+      const sProblem = props.problem || '';
+      const sSolution = props.solution || '';
+      compStr = `<SolvedExercise title="${sTitle}">\n${sProblem}\n<Solution>\n${sSolution}\n</Solution>\n</SolvedExercise>`;
+    } else if (comp.componentType === "UnsolvedExercise" || comp.componentType === "ExerciceACompleter") {
+      const uTitle = (props.title || '').replace(/"/g, '&quot;');
+      const uProblem = props.problem || '';
+      const uCorrectAnswer = (props.correctAnswer || '').replace(/"/g, '&quot;');
+      compStr = `<UnsolvedExercise title="${uTitle}" correctAnswer="${uCorrectAnswer}">\n${uProblem}\n</UnsolvedExercise>`;
+    } else if (comp.componentType === "FillInBlanks" || comp.componentType === "TextesATrous") {
+      const fSentence = (props.sentence || '').replace(/"/g, '&quot;');
+      const fAnswer = (props.answer || '').replace(/"/g, '&quot;');
+      compStr = `<FillInBlanks sentence="${fSentence}" answer="${fAnswer}" />`;
+    } else if (comp.componentType === "Mermaid") {
+      const mChart = props.chart || '';
+      compStr = `<Mermaid>\n${mChart}\n</Mermaid>`;
     } else {
-      compStr = `<${comp.componentType} id="${comp.id}" />`;
+      const props = comp.props || {};
+      const attrStrings: string[] = [];
+      Object.entries(props).forEach(([key, val]) => {
+        if (key === 'description' || key === 'commentary' || key === 'definition') {
+          attrStrings.push(`${key}="${String(val).replace(/"/g, '&quot;')}"`);
+        } else if (typeof val === 'string') {
+          attrStrings.push(`${key}="${val.replace(/"/g, '&quot;')}"`);
+        } else if (typeof val === 'boolean' || typeof val === 'number') {
+          attrStrings.push(`${key}={${val}}`);
+        }
+      });
+      const childrenVal = props.name || props.title || props.term || props.word || comp.id;
+      compStr = `<${comp.componentType} id="${comp.id}" ${attrStrings.join(' ')}>${childrenVal}</${comp.componentType}>`;
     }
 
     const { content: contentComp, replaced: repComp } = replaceWidget(content, comp.id, compStr);
@@ -2526,6 +2678,13 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     const referencesStr = `\n\n\n${refHeading}\n\n${referencesList.join('\n')}`;
     content = content.trim() + referencesStr;
   }
+
+  // Replace unresolved suffix-augmented inline interactive elements (RealPerson, ConceptLink, Glossary) with fallback tags
+  content = content.replace(/\[\[\s*WIDGET\s*:\s*(RealPerson|HistoricalPerson|ConceptLink|Glossary|Biography|Image|Video|Audio|Mermaid|Quiz|SolvedExercise|UnsolvedExercise|FillInBlanks)\s*:\s*([^:\s\]]+)\s*(?::\s*([^\]]*?))?\s*\]\]/gi, (match, type, id, topic) => {
+    const displayVal = topic ? topic.trim() : id.replace(/_/g, ' ');
+    const cleanDisplay = displayVal.replace(/"/g, '&quot;');
+    return `<${type} id="${id}" name="${cleanDisplay}" term="${cleanDisplay}">${displayVal}</${type}>`;
+  });
 
   // Clean up any remaining unresolved [[WIDGET:...]] placeholders
   content = content.replace(/\[\[\s*WIDGET\s*:.*?\]\]+/gi, '');
@@ -2927,7 +3086,7 @@ export function getFilteredWidgetsCatalog(discipline: string): Record<string, an
   if (!discipline) return dbCatalog;
   
   const filtered: Record<string, any> = {};
-  const normDiscipline = discipline.toLowerCase().trim();
+  const normDiscipline = discipline.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   
   for (const [id, meta] of Object.entries(dbCatalog)) {
     const disciplines: string[] = meta.disciplines || [];
@@ -2938,7 +3097,7 @@ export function getFilteredWidgetsCatalog(discipline: string): Record<string, an
     }
     
     const isMatch = disciplines.some(d => {
-      const normD = d.toLowerCase().trim();
+      const normD = d.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       return normDiscipline.includes(normD) || normD.includes(normDiscipline);
     });
     
@@ -3000,6 +3159,9 @@ export async function generateCourseContent(courseName: string, levelInput: stri
     return clean;
   };
   const level = normalizeLevel(levelInput);
+
+  await initializeConstraints();
+  await appendTaskLog(`[CONSTRAINTS] Loaded academic level constraints from database.`);
 
   let extra: any = {};
   if (taskId) {
@@ -3179,6 +3341,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
   }
 
   let syllabusRejections = 0;
+  let syllabusAttempts = 1;
   if (parsedSyllabus) {
     lessonsList = Array.isArray(parsedSyllabus) ? parsedSyllabus : (parsedSyllabus.lessons || []);
     courseContext = Array.isArray(parsedSyllabus) ? {} : (parsedSyllabus.courseContext || {});
@@ -3193,6 +3356,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
 
       while (!syllabusApproved && syllabusIteration < maxSyllabusIterations) {
         syllabusIteration++;
+        syllabusAttempts = syllabusIteration;
         await appendTaskLog(`[AI GENERATOR] Syllabus generation iteration #${syllabusIteration}...`);
         
         let attemptJson = '';
@@ -3515,7 +3679,7 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
         startTime: Date.now(),
         endTime: 0,
         durationSeconds: 0,
-        syllabusAttempts: 1,
+        syllabusAttempts: syllabusAttempts,
         syllabusRejections: syllabusRejections,
         narrativeAttempts: 0,
         narrativeRejections: 0,
@@ -3898,6 +4062,33 @@ ${referencesMetadata}
 
 ---
 
+### PRE-EXISTING WIDGET INVENTORY:
+The following relevant media and database resources are available for this course. If any of these are highly relevant to the current section, you should refer/embed them using their exact ID as [[WIDGET:id]] on a separate blank line:
+${formattedCatalogList || 'None pre-existing.'}
+
+### PEDAGOGICAL WIDGETS MANDATE (CRITICAL):
+To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
+You are REQUIRED to include:
+- At least 2-3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
+- At least 1-2 block widgets/media (using [[WIDGET:Image:id]], [[WIDGET:Mermaid:id]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], or [[WIDGET:Video:id]]) placed on separate blank lines.
+Choose from the following options:
+1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
+2. [[WIDGET:Image:unique_id]] - For relevant paintings, historical photos, maps, diagrams, or illustrations. (e.g. [[WIDGET:Image:prise_bastille]])
+3. [[WIDGET:Video:unique_id]] - For relevant documentaries, video archives, or animations. (e.g. [[WIDGET:Video:revolution_francaise]])
+4. [[WIDGET:Audio:unique_id]] - For audio speeches, narrations, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits]])
+5. [[WIDGET:Mermaid:unique_id]] - For timelines, flowcharts, or structural diagrams. (e.g. [[WIDGET:Mermaid:timeline_causes]])
+6. [[WIDGET:Quiz:unique_id]] - For formative multiple-choice quizzes to verify student comprehension.
+7. [[WIDGET:SolvedExercise:unique_id]] - For step-by-step resolved exercises, coding snippets, or analytical case studies.
+8. [[WIDGET:UnsolvedExercise:unique_id]] - For unsolved application exercises or practice questions.
+9. [[WIDGET:FillInBlanks:unique_id]] - For interactive fill-in-the-blanks sentences.
+10. [[WIDGET:RealPerson:unique_id:Person Name]] - Inline hover-card highlight for any person mentioned. (e.g. "...alors que [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque...")
+11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
+12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
+
+Please write them exactly in this anchor format [[WIDGET:Type:unique_id]] (or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
+
+---
+
 ### PREVIOUS TEXT (for transitions and context):
 ${bIdx > 0 ? `Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
 """
@@ -3946,7 +4137,8 @@ Check checkpoints:
 2. Accurate academic density and level-appropriate language.
 3. Strict MDX/JSX safety (absolutely no raw custom component or custom JSX/HTML tags like <ConceptLink>, <RealPerson>, <Glossary>, etc. inline in prose. All interactive elements and special links must strictly use the [[WIDGET:id]] anchor format).
 4. No figure prefixes like "Figure 1:" in visual captions.
-${bIdx === blocks.length - 1 ? `5. Valid ## Conclusion section with at least two paragraphs and the required conclusion widgets.` : ''}
+5. Presence of pedagogical widgets: Check that the block contains at least 2-3 inline hover-cards (ConceptLink, Glossary, RealPerson) and at least 1-2 block widgets (Image, Mermaid, ComparisonSlider, InteractiveDiagram, DataChart, Video) as anchors. If completely missing, reject the block.
+${bIdx === blocks.length - 1 ? `6. Valid ## Conclusion section with at least two paragraphs and the required conclusion widgets.` : ''}
 
 Your audit must be in dual-mode:
 - **"isGlobalRevision" MUST ONLY be set to true if the issues are widespread and catastrophic** (completely unparseable structure, severe length deficiency, or total failure of the block narrative requiring a complete full-text rewrite). If so, provide a comprehensive "globalCritique".
@@ -4347,12 +4539,62 @@ ${activeCustomAnchors.map(a => `- Anchor: [[WIDGET:${a.type}:${a.id}${a.topic ? 
 ### CATALOG AND GUIDELINES:
 ${dynamicCatalogList}
 
-You must define the "interactiveComponents" array containing one object for each anchor list above.
+### REQUIRED PROPS STRUCTURE per componentType:
+1. "Biography":
+   - "name": (string) Full name of the person.
+   - "dates": (string) Lifespan dates, e.g. "1723-1790" or "1856-1939".
+   - "description": (string) Detailed biographical summary focusing on their contributions (8-12 sentences).
+   - "wikipediaUrl": (string) Direct link to their English or French Wikipedia page.
+2. "Image":
+   - "description": (string) Detailed search/generation description for the image (at least 2-3 sentences of visual instructions). Do NOT generate sequential figure prefixes.
+   - "alt": (string) Short description for accessibility.
+   - "caption": (string) A detailed, italicized caption explaining academic relevance. Do NOT generate sequential figure numbers.
+   - "title": (string) Short title of the image.
+   - "searchQuery": (string) Highly canonical 1 to 3 search words (e.g. 'Claudio Monteverdi', 'Prise de la Bastille') to search in archives.
+3. "Video":
+   - "title": (string) Title of the video documentary or lecture segment.
+   - "duration": (string) Estimated duration, e.g. "3:15".
+4. "Audio":
+   - "title": (string) Short descriptive title for the audio.
+   - "duration": (string) e.g. "1:30".
+   - "description": (string) Detailed description/narration text.
+5. "Quiz":
+   - "limit": (integer) Number of questions to display.
+   - "questions": (array of objects) Each object must have:
+     - "q": (string) The question card text.
+     - "explanation": (string) Extremely concise, punchy explanation of the correct choice.
+     - "options": (array of objects) Each option must have:
+       - "text": (string) Option text.
+       - "correct": (boolean) Whether correct.
+6. "SolvedExercise":
+   - "title": (string) Exercise title.
+   - "problem": (string) The markdown-formatted problem statement.
+   - "solution": (string) Detailed step-by-step solution.
+7. "UnsolvedExercise":
+   - "title": (string) Exercise title.
+   - "problem": (string) Markdown problem statement.
+   - "correctAnswer": (string) The correct analytical answer or formula.
+8. "FillInBlanks":
+   - "sentence": (string) Sentence containing one or more blanks represented by five underscores (_____).
+   - "answer": (string) Correct comma-separated answers.
+9. "Mermaid":
+   - "chart": (string) Valid Mermaid chart notation starting with graph/sequenceDiagram/etc.
+10. "RealPerson" or "HistoricalPerson":
+   - "name": (string) Full name of the person (should match the Anchor Topic if provided).
+   - "description": (string) Wikipedia-style hover card tooltip summary of this person (2-4 sentences).
+11. "ConceptLink":
+   - "name": (string) Name of the concept (should match the Anchor Topic if provided).
+   - "description": (string) Wikipedia-style hover card tooltip summary of this concept (2-4 sentences).
+12. "Glossary":
+   - "term": (string) Glossary vocabulary term.
+   - "definition": (string) Detailed vocabulary definition (2-4 sentences).
+
+You must define the "interactiveComponents" array containing one object for each anchor listed above.
 For each component:
 - "id": Must match the ID from the anchor.
 - "componentType": Must match the Type from the anchor.
 - "sectionAnchor": The markdown heading "## Section Name" where this widget is placed in the narrative.
-- "props": The specific properties required for the widget type (Biography: name, dates, description, wikipediaUrl; Citation: quote, author, source, year, commentary; Image: description, alt, caption, searchQuery; etc.).
+- "props": The specific properties required for the widget type as described above.
 
 Return ONLY a valid JSON object matching this schema:
 \\\`\\\`\\\`json
@@ -7049,16 +7291,8 @@ async function isLinkReachable(url: string): Promise<boolean> {
 }
 
 async function validateAndFixExternalResources(mdx: string, targetLang: string = 'fr'): Promise<string> {
-  // 0. Strip all media/image/hover-card tags before any network validation
+  // 0. Do not strip media/image/hover-card tags before validation to preserve pedagogical components.
   let updatedMdx = mdx;
-  updatedMdx = updatedMdx.replace(/<(Image|CustomFigure|Video|Audio|Biography)\b[^>]*?\/>/gi, '');
-  updatedMdx = updatedMdx.replace(/<(Image|CustomFigure|Video|Audio|Biography)\b[^>]*?>([\s\S]*?)<\/\1>/gi, '');
-  const _hTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)';
-  // Self-closing form: <RealPerson id="..." />
-  updatedMdx = updatedMdx.replace(new RegExp(`<(${_hTagsPattern})\\b[^>]*?/>`, 'gi'), '');
-  // Paired form: <RealPerson ...>text</RealPerson> -> text
-  const _hRegex = new RegExp(`<(${_hTagsPattern})\\b[^>]*?>([\\s\\S]*?)<\\/\\1>`, 'gi');
-  while (_hRegex.test(updatedMdx)) { updatedMdx = updatedMdx.replace(_hRegex, '$2'); }
 
   // Validate and fix Video tags
   const videoRegex = /<Video\s+([^>]*?)\/>/gi;
