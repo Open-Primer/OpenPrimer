@@ -106,6 +106,18 @@ OpenPrimer structures the course generation pipeline into a strictly ordered, de
     *   **Operation**: Audits the pedagogical correctness of quizzes, option formatting, Bloom's Taxonomy verbs in objectives, citation style compliance, and structured JSON parameters.
     *   **Localized Feedback Loop**: Auditing is decoupled per block. If checks fail on Block X, Agent 4B returns a critique, looping back to Agent 3B to regenerate only Block X (maximum of 3 attempts), keeping other approved blocks untouched.
 
+7.  **🛠️ Agent 5 (Qualifying Agent / Agent Qualificateur):**
+    *   **Scope & Input**: Triggered when a course/lesson revision is requested due to poor ratings or multiple comments. Reads the entire existing lesson MDX and all untreated feedbacks.
+    *   **Operation**: Evaluates, moderates, and confirms the issues. Determines whether the revision is **Global** (requiring a structural narrative rewrite) or **Local** (confined to specific sections, quizzes, or widgets).
+    *   **Output**: Generates a structured JSON containing the scope, a pre-critique report, and a targeted list of `affectedItems` to modify.
+
+8.  **🧹 Pedagogical Revision Agent & Syntax Preprocessor:**
+    *   **Scope & Input**: Receives the original lesson, the pre-critique report, and the target cibles from Agent 5.
+    *   **Syntax Preprocessor**: Programmatically sanitizes the input MDX (escapes stray braces, closes unclosed HTML tags, normalizes figure captions) to ensure the LLM starts from a clean, compiler-compliant syntax foundation.
+    *   **Execution Strategy**:
+        *   *Global Revision*: Splices the lesson into sections (`parseMarkdownSections`) and rewrites them sequentially with a sliding context window to preserve narrative flow and bypass output token limits.
+        *   *Local Revision*: Selectively edits only the targeted section (narrative) or updates specific JSON props for quizzes/widgets (using Widget Architect Agent 3B) while leaving the rest of the lesson completely untouched.
+
 ---
 
 ### Programmatic Post-Processing & Stitching Layer (Stage 3)

@@ -36,6 +36,14 @@ Gradation limits adjust constraints per age group:
 ### D. Dual-Decoupled Verification Loop & Quality Gate (Agent 4A & 4B)
 All dynamically written outputs from Agent 3A (Narrative text) and Agent 3B (Widgets JSON) are checked independently for "Zero-Placeholder" compliance and pedagogical alignment. Skeletal text or misaligned JSON is rejected, and constructive critiques are looped back to the respective generator (up to 3 times) to guarantee maximum text density, pedagogical integrity, and perfect grammatical cohesion.
 
+### E. Pedagogical Revision Loop & Auto-Healing (Agent 5 & Scribe)
+When a lesson receives negative feedback or low ratings, the platform triggers a structured revision loop:
+1. **Diagnosis and Qualification (Agent 5):** Evaluates all user feedback against the current lesson to diagnose faults. It differentiates between *Global* (restructuring, pedagogical depth corrections) and *Local* (specific typos, minor quiz fixes) needs.
+2. **Syntax Preprocessor:** Cleans and heals syntax/MDX errors programmatically before the LLM runs, ensuring the revision agent operates on a perfectly valid layout.
+3. **Targeted Revision Execution:**
+   - For Global Revisions, it splits the lesson into narrative sections and rewrites them sequentially with a context window to avoid context length overflow.
+   - For Local Revisions, it alters only the specific target component (e.g. replacing a single section's text, or correcting a quiz question's JSON) to avoid side-effects on approved sections.
+
 ---
 
 ## 2. Academic Credits & Calibration Metrics
