@@ -2502,10 +2502,12 @@ function normalizeCustomTagsCasing(mdx: string): string {
     'MoleculeViewer', 'PhysicsSimulation', 'CodeEditor', 'NumberLine',
     'Alert', 'AlertBox', 'Admonition', 'Tip', 'Warning', 'Note', 'Important', 'Caution',
     'ArtworkZoom', 'TimelineSlider', 'InteractiveQuote', 'Citation', 'QuoteBlock', 'AnnotatedImage',
-    'Biography'
+    'Biography', 'ClimateImpactMap'
   ];
 
-  let processed = mdx;
+  let processed = mdx.replace(/<\/?(climate_impact_map|climate-impact-map|carte_impact_climatique)\b/gi, (match) => {
+    return match.startsWith('</') ? '</ClimateImpactMap' : '<ClimateImpactMap';
+  });
   for (const tag of customTags) {
     const tagRegex = new RegExp(`<(/?)(${tag})\\b`, 'gi');
     processed = processed.replace(tagRegex, (match, closeSlash, matchedTag) => {

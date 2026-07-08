@@ -1367,7 +1367,7 @@ export function parseAttributesRobustly(attrsStr: string): Record<string, string
   return attrs;
 }
 
-export function rebuildCustomFigure(attrs: Record<string, string>): string {
+export function rebuildCustomFigure(attrs: Record<string, string>, tagName: string = 'Image'): string {
   const parts: string[] = [];
   if (attrs.type) parts.push(`type="${attrs.type.replace(/"/g, '&quot;')}"`);
   if (attrs.description) parts.push(`description="${attrs.description.replace(/"/g, '&quot;')}"`);
@@ -1389,7 +1389,7 @@ export function rebuildCustomFigure(attrs: Record<string, string>): string {
     const val = attrs.isIllustration === 'true' || attrs.isIllustration === '{true}' ? 'true' : attrs.isIllustration;
     parts.push(`isIllustration={${val}}`);
   }
-  return `<Image ${parts.join(' ')} />`;
+  return `<${tagName} ${parts.join(' ')} />`;
 }
 
 /**
@@ -1682,11 +1682,12 @@ export async function resolveAndPersistMedia(
     }
   }
 
-  // Process JSX Figures: <CustomFigure src="..." /> or <Image src="..." /> or <CustomFigure type="..." />
-  const figRegex = /<(CustomFigure|Image)\s+([^>]*?)\/>/g;
+  // Process JSX Figures: <CustomFigure src="..." /> or <Image src="..." /> or <ClimateImpactMap src="..." />
+  const figRegex = /<(CustomFigure|Image|ClimateImpactMap|climate_impact_map)\s+([^>]*?)\/>/g;
   let figMatch;
   while ((figMatch = figRegex.exec(mdxContent)) !== null) {
     const fullTag = figMatch[0];
+    const tagName = figMatch[1];
     const attrsStr = figMatch[2];
 
     const getAttr = (name: string) => {
@@ -1840,7 +1841,7 @@ export async function resolveAndPersistMedia(
             currentAttrs.isIllustration = 'true';
           }
           
-          const newTag = rebuildCustomFigure(currentAttrs);
+          const newTag = rebuildCustomFigure(currentAttrs, tagName);
           updatedContent = updatedContent.replace(fullTag, newTag);
           resolvedSuccess = true;
           continue;
@@ -1848,9 +1849,29 @@ export async function resolveAndPersistMedia(
       }
 
       // Enforce strict restriction against generating existing historical artworks, sculptures, monuments, photographs, and scientific/factual diagrams
-      if (sourceUrl && sourceUrl.includes('pollinations.ai') && (isExistingArtwork(sourceUrl, altText || caption || description) || isFactualMedia(altText || caption || description))) {
-        console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork or factual asset Figure: "${altText || caption || description}"`);
-        updatedContent = updatedContent.replace(fullTag, "");
+      if (sourceUrl && sourceUrl.includes('pollinations.ai') && (tagName === 'ClimateImpactMap' || tagName === 'climate_impact_map' || isExistingArtwork(sourceUrl, altText || caption || description) || isFactualMedia(altText || caption || description))) {
+        if (tagName === 'ClimateImpactMap' || tagName === 'climate_impact_map') {
+          console.warn(`[MEDIA-RESOLVER] Blocked AI generation for ClimateImpactMap: "${altText || caption || description}". Keeping interactive widget and stripping src.`);
+          delete currentAttrs.src;
+          currentAttrs.unresolved = 'true';
+          const newTag = rebuildCustomFigure(currentAttrs, tagName);
+          updatedContent = updatedContent.replace(fullTag, newTag);
+          resolvedSuccess = true;
+          continue;
+        } else {
+          console.warn(`[MEDIA-RESOLVER] Blocked AI generation of existing artwork or factual asset Figure: "${altText || caption || description}"`);
+          updatedContent = updatedContent.replace(fullTag, "");
+          resolvedSuccess = true;
+          continue;
+        }
+      }
+
+      // If no source found and it is ClimateImpactMap with a pollinations or empty/placeholder URL, strip src immediately to prevent download and keep interactive widget
+      if ((!sourceUrl || sourceUrl.includes('pollinations.ai') || sourceUrl === 'placeholder') && (tagName === 'ClimateImpactMap' || tagName === 'climate_impact_map')) {
+        delete currentAttrs.src;
+        currentAttrs.unresolved = 'true';
+        const newTag = rebuildCustomFigure(currentAttrs, tagName);
+        updatedContent = updatedContent.replace(fullTag, newTag);
         resolvedSuccess = true;
         continue;
       }
@@ -1894,7 +1915,7 @@ export async function resolveAndPersistMedia(
             const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
             if (publicUrl) {
               currentAttrs.src = publicUrl;
-              const newTag = rebuildCustomFigure(currentAttrs);
+              const newTag = rebuildCustomFigure(currentAttrs, tagName);
               updatedContent = updatedContent.replace(fullTag, newTag);
               resolvedSuccess = true;
               continue;
@@ -1910,7 +1931,7 @@ export async function resolveAndPersistMedia(
         currentAttrs.unresolved = 'true';
       }
       
-      const newTag = rebuildCustomFigure(currentAttrs);
+      const newTag = rebuildCustomFigure(currentAttrs, tagName);
       updatedContent = updatedContent.replace(fullTag, newTag);
     }
   }

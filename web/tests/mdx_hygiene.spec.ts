@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { preprocessMdx } from '../src/lib/content';
 import { stitchLessonContent } from '../src/lib/ai';
+import { resolveAndPersistMedia } from '../src/lib/media-resolver';
 
 test.describe('MDX Structural Hygiene & HistoricalPerson Deduplication', () => {
   test('should strip HistoricalPerson from alert titles and deduplicate in body text', () => {
@@ -505,6 +506,25 @@ But this one [is perfectly balanced]
       expect(stitched).toContain('And another one with nested brackets [like this]');
       expect(stitched).not.toContain('[like this] ]');
       expect(stitched).toContain('But this one [is perfectly balanced]');
+    });
+  });
+
+  test.describe('ClimateImpactMap Integration and Hygiene', () => {
+    test('should normalize climate_impact_map casing to ClimateImpactMap', () => {
+      const rawMdx = `<climate_impact_map src="https://image.pollinations.ai/prompt/map" alt="Impact Map" />`;
+      const processed = preprocessMdx(rawMdx, 'en');
+      expect(processed).toContain('<ClimateImpactMap');
+      expect(processed).toContain('src="https://image.pollinations.ai/prompt/map');
+    });
+
+    test('should enforce no-fallback-to-AI policy and strip pollinations src from ClimateImpactMap tag', async () => {
+      const rawMdx = `<ClimateImpactMap src="https://image.pollinations.ai/prompt/map" />`;
+      const resolved = await resolveAndPersistMedia(rawMdx, 'en', 'Geography');
+      
+      // The pollinations.ai src should be stripped (removed), but the tag itself must remain as ClimateImpactMap
+      expect(resolved).toContain('<ClimateImpactMap');
+      expect(resolved).not.toContain('src="https://image.pollinations.ai/prompt/map"');
+      expect(resolved).toContain('unresolved={true}');
     });
   });
 });
