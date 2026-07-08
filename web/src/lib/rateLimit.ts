@@ -5,8 +5,34 @@ interface RateLimitRecord {
 }
 
 const localStore = new Map<string, RateLimitRecord>();
+const MAX_STORE_SIZE = 500;
+let evictionCounter = 0;
+
+/** L-1 FIX: Periodically sweep expired entries and cap store size. */
+function evictStaleEntries(windowMs: number): void {
+  const now = Date.now();
+  for (const [key, record] of localStore.entries()) {
+    record.timestamps = record.timestamps.filter(t => now - t < windowMs);
+    if (record.timestamps.length === 0) {
+      localStore.delete(key);
+    }
+  }
+  // Hard cap: if still over limit, evict oldest entries
+  if (localStore.size > MAX_STORE_SIZE) {
+    const toDelete = localStore.size - MAX_STORE_SIZE;
+    let deleted = 0;
+    for (const key of localStore.keys()) {
+      if (deleted >= toDelete) break;
+      localStore.delete(key);
+      deleted++;
+    }
+  }
+}
 
 function localRateLimit(ip: string, limit: number, windowMs: number): boolean {
+  // Sweep every 100 calls to avoid unbounded growth in long-running dev servers
+  if (++evictionCounter % 100 === 0) evictStaleEntries(windowMs);
+
   const now = Date.now();
   const record = localStore.get(ip) || { timestamps: [] };
   record.timestamps = record.timestamps.filter(t => now - t < windowMs);

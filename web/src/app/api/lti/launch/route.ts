@@ -112,7 +112,9 @@ export async function POST(request: Request) {
 
     // 6. Validate standard LTI claims (exp, nonce, state)
     const nowSeconds = Math.floor(Date.now() / 1000);
-    if (payload.exp && payload.exp < nowSeconds - 60) {
+    // M-2 FIX: No grace period — reject tokens past their exp claim immediately.
+    // Clock skew is the LMS's responsibility, not the relying party's.
+    if (payload.exp && payload.exp < nowSeconds) {
       return new Response('LTI Launch token has expired', { status: 403 });
     }
 
@@ -275,9 +277,11 @@ export async function POST(request: Request) {
         .eq('user_id', profile.id);
       const enrolledIds = progressRecords ? progressRecords.map((r: any) => r.course_id) : [];
 
-      cookieStore.set('op_user_id', profile.id, { path: '/', maxAge: 31536000, sameSite: 'lax' });
-      cookieStore.set('op_user_role', profile.role || 'student', { path: '/', maxAge: 31536000, sameSite: 'lax' });
-      cookieStore.set('op_enrolled_courses', JSON.stringify(enrolledIds), { path: '/', maxAge: 31536000, sameSite: 'lax' });
+      // L-2 FIX: Session cookies scoped to 8 hours (matching the JWT expiry) instead of 1 year.
+      const SESSION_MAX_AGE = 60 * 60 * 8; // 8 hours in seconds
+      cookieStore.set('op_user_id', profile.id, { path: '/', maxAge: SESSION_MAX_AGE, sameSite: 'lax', httpOnly: true });
+      cookieStore.set('op_user_role', profile.role || 'student', { path: '/', maxAge: SESSION_MAX_AGE, sameSite: 'lax', httpOnly: true });
+      cookieStore.set('op_enrolled_courses', JSON.stringify(enrolledIds), { path: '/', maxAge: SESSION_MAX_AGE, sameSite: 'lax', httpOnly: true });
     } catch (cookieErr) {
       console.error('[LTI-LAUNCH] Failed to write session cookies during API launch:', cookieErr);
     }
@@ -471,7 +475,9 @@ export async function POST(request: Request) {
         }
 
         if (window.opener) {
-          window.opener.postMessage({ type: 'LTI_LOGIN_SUCCESS', profile: ${JSON.stringify(profileToInject)} }, '*');
+          // C-3 FIX: Send postMessage only to the verified LMS origin, not wildcard '*'.
+          const allowedOrigin = ${JSON.stringify(new URL(platform.auth_login_url).origin)};
+          window.opener.postMessage({ type: 'LTI_LOGIN_SUCCESS', profile: ${JSON.stringify(profileToInject)} }, allowedOrigin);
         }
 
         document.getElementById('status').innerText = 'Session initialized. Redirecting to lesson...';
@@ -490,9 +496,13 @@ export async function POST(request: Request) {
 </body>
 </html>`;
 
+    // L-4 FIX: Add Content-Security-Policy header to restrict script sources.
     return new Response(launcherHtml, {
       headers: {
-        'Content-Type': 'text/html; charset=utf-8'
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Security-Policy': "default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; frame-ancestors 'self'",
+        'X-Frame-Options': 'SAMEORIGIN',
+        'X-Content-Type-Options': 'nosniff'
       }
     });
 

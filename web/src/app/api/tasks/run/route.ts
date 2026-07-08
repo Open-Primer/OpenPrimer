@@ -35,12 +35,12 @@ export async function POST(request: Request) {
     }
   }
 
-  // Enforce authorization check in production, or if CRON_SECRET is configured
-  if (isProd || cronSecret) {
-    if (!isAuthorized) {
-      console.warn('[SECURITY] Unauthorized access attempt to tasks endpoint.');
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+  // H-2 FIX: Always enforce authorization.
+  // Dev bypass only when ALLOW_OPEN_TASKS=true is explicitly set in the environment.
+  const devBypass = !isProd && process.env.ALLOW_OPEN_TASKS === 'true';
+  if (!devBypass && !isAuthorized) {
+    console.warn('[SECURITY] Unauthorized access attempt to tasks endpoint.');
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
   try {

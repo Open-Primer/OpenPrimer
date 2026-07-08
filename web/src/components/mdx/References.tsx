@@ -53,9 +53,23 @@ interface DisplayReferenceItem extends ReferenceItem {
   allNums: number[];
 }
 
+function stripDangerousHtml(raw: string): string {
+  // Allow-list sanitizer: strip all HTML tags first, then re-apply only safe ones.
+  // This prevents XSS from AI-generated content that may contain arbitrary HTML.
+  return raw
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '')
+    .replace(/javascript\s*:/gi, '')
+    .replace(/data\s*:/gi, '')
+    .replace(/<(?!\/?(strong|em|b|i|span|br|code)\b)[^>]+>/gi, '');
+}
+
 function parseMarkdownToHtml(text: string): string {
   if (!text) return "";
-  let html = text;
+  // Sanitize raw input BEFORE any markdown transformation
+  const safe = stripDangerousHtml(text);
+  let html = safe;
   // Replace double asterisks with strong
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   // Replace single asterisks with em

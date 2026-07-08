@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { dbService } from '../../../../lib/db';
 import { supabase } from '../../../../lib/supabase';
 import { getOrTranslateTemplate, personalizeAndRenderTemplate } from '@/lib/emailService';
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
     const resendApiKey = process.env.RESEND_API_KEY;
 
     // 1. Generate unique verification token
-    const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
 
     // 2. Create the user profile in local/Supabase database (unverified)
     const fName = (firstName || '').trim();
@@ -60,12 +61,9 @@ export async function POST(request: Request) {
       password
     });
 
-    // Save token in memory/DB for state tracking
-    if (typeof global !== 'undefined') {
-      const g = global as any;
-      if (!g.verificationStore) g.verificationStore = new Map();
-      g.verificationStore.set(email, { token: verificationToken, profile: newUserProfile });
-    }
+    // NOTE: Token is persisted only in Supabase auth_verification table.
+    // The global in-memory store was removed: it is unreliable in serverless environments
+    // (evaporates on cold starts) and was a security anti-pattern.
 
     // Save token in Supabase auth_verification table if available
     try {
@@ -124,11 +122,11 @@ export async function POST(request: Request) {
       console.warn('[RESEND WARNING] RESEND_API_KEY not configured. Falling back to console verification token delivery.');
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      isRealSent: !!resendApiKey,
-      verificationToken,
-      verificationUrl
+    // C-1 FIX: Never return the raw token or verification URL in the API response.
+    // Doing so would allow any caller to self-verify without clicking the email link.
+    return NextResponse.json({
+      success: true,
+      isRealSent: !!resendApiKey
     });
   } catch (err: any) {
     console.error(`[SIGNUP API ERROR]`, err);

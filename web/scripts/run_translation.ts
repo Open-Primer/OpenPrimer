@@ -31,8 +31,17 @@ if (fs.existsSync(rootEnvPath)) {
 process.env.CLI_WORKER = 'true';
 
 async function main() {
-  const courseSlug = cleanPathSegment("Introduction_a_la_sociologie_contemporaine");
-  const languages = ["es", "en"];
+  // M-3 FIX: Accept CLI arguments instead of hardcoded values.
+  // Usage: npx ts-node scripts/run_translation.ts <course-slug> [lang1,lang2,...]
+  const rawSlug = process.argv[2];
+  if (!rawSlug) {
+    console.error('❌ Missing required argument: course slug.');
+    console.error('Usage: npx ts-node scripts/run_translation.ts <course-slug> [lang1,lang2,...]');
+    console.error('Example: npx ts-node scripts/run_translation.ts introduction-a-la-sociologie-contemporaine es,en');
+    process.exit(1);
+  }
+  const courseSlug = cleanPathSegment(rawSlug);
+  const languages = (process.argv[3] || 'en').split(',').map(l => l.trim()).filter(Boolean);
 
   // Dynamically import ai.ts to guarantee process.env is fully populated first
   const { translateCourseContent } = await import('../src/lib/ai');
