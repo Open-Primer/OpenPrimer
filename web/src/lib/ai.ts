@@ -271,6 +271,7 @@ export function getWordCountLimitForLevel(level: string): { min: number; max: nu
 export function generateStatsMarkdown(stats: any): string {
   // Compute dollar cost
   const costUSD = (stats.tokenMetrics.promptTokens * 0.075 / 1_000_000) + (stats.tokenMetrics.candidatesTokens * 0.30 / 1_000_000);
+  stats.estimatedCostUSD = Number(costUSD.toFixed(6));
 
   // Per-block breakdown lines
   let blockBreakdown = '';
@@ -279,6 +280,14 @@ export function generateStatsMarkdown(stats: any): string {
     stats.narrativeBlockAttempts.forEach((b: any, i: number) => {
       const rejections = b.attempts - 1;
       blockBreakdown += `- **Block ${i + 1}** ("${b.sections?.join(' / ') || '?'}"): ${b.attempts} attempt${b.attempts > 1 ? 's' : ''}${rejections > 0 ? `, ${rejections} rejection${rejections > 1 ? 's' : ''}` : ''} → ${b.approved ? '✅ Approved' : '⚠️ Max iterations reached'}\n`;
+    });
+  }
+
+  let widgetBlockBreakdown = '';
+  if (stats.widgetBlockAttempts && Array.isArray(stats.widgetBlockAttempts) && stats.widgetBlockAttempts.length > 0) {
+    widgetBlockBreakdown = '\n### Widget Block Details\n';
+    stats.widgetBlockAttempts.forEach((b: any) => {
+      widgetBlockBreakdown += `- **${b.blockName}**: ${b.attempts} attempt${b.attempts > 1 ? 's' : ''}${b.rejections > 0 ? `, ${b.rejections} rejection${b.rejections > 1 ? 's' : ''}` : ''} → ${b.approved ? '✅ Approved' : '⚠️ Max iterations reached'}\n`;
     });
   }
 
@@ -305,6 +314,38 @@ ${stats.error ? `- **Error**: \`${stats.error}\`\n` : ''}
 ${blockBreakdown}
 - **Widgets Architect Attempts**: ${stats.widgetsAttempts}
 - **Widgets Critic Rejections**: ${stats.widgetsRejections}
+- **MDX Self-Healing Attempts**: ${stats.selfHealingAttempts}
+${widgetBlockBreakdown}
+
+## 🪙 Token & Cost Estimation
+- **Prompt Tokens**: ${stats.tokenMetrics.promptTokens.toLocaleString()}
+- **Candidates Tokens**: ${stats.tokenMetrics.candidatesTokens.toLocaleString()}
+- **Total Tokens**: ${(stats.tokenMetrics.promptTokens + stats.tokenMetrics.candidatesTokens).toLocaleString()}
+- **Estimated Cost (Gemini 2.5 Flash)**: **$${costUSD.toFixed(6)}**
+  *(Based on official pricing: $0.075/1M prompt tokens, $0.30/1M output tokens)*
+`;
+}
+
+export function generateTranslationStatsMarkdown(stats: any): string {
+  const costUSD = (stats.tokenMetrics.promptTokens * 0.075 / 1_000_000) + (stats.tokenMetrics.candidatesTokens * 0.30 / 1_000_000);
+  stats.estimatedCostUSD = Number(costUSD.toFixed(6));
+
+  return `# 📊 Translation Statistics: ${stats.lessonTitle}
+
+- **Course Slug**: ${stats.courseSlug}
+- **Lesson Title**: ${stats.lessonTitle}
+- **Lesson Slug**: ${stats.lessonSlug}
+- **Target Language**: ${stats.targetLanguage.toUpperCase()}
+- **Translation Date**: ${new Date(stats.startTime).toLocaleString()}
+- **Status**: ${stats.status === 'success' ? '✅ SUCCESS' : '❌ FAILED'}
+${stats.error ? `- **Error**: \`${stats.error}\`\n` : ''}
+
+## ⏱️ Performance Metrics
+- **Total Duration**: ${stats.durationSeconds} seconds
+- **Total MDX Sections**: ${stats.sectionsTotal}
+- **Section Translation Failures**: ${stats.sectionTranslationFailures}
+- **Translation Critic Iterations**: ${stats.critiqueIterations}
+- **Translation Critic Rejections**: ${stats.critiqueRejections}
 - **MDX Self-Healing Attempts**: ${stats.selfHealingAttempts}
 
 ## 🪙 Token & Cost Estimation
@@ -1394,7 +1435,12 @@ function detectLanguageLeakage(text: string, targetLang: string): boolean {
   if (clean.length < 8) return false;
 
   const normLang = (targetLang || 'fr').toLowerCase().split('-')[0];
-  if (normLang === 'en') return false;
+
+  // [FIX A4] For EN-target courses, detect French leakage (most common bleed-through language).
+  if (normLang === 'en') {
+    const frenchStopwords = /\b(le|la|les|un|une|des|du|en|et|ou|est|sont|dans|pour|par|sur|avec|qui|que|ce|cette|ces|aussi|donc|mais|car)\b/i;
+    return clean.length > 15 && frenchStopwords.test(clean);
+  }
 
   const englishIndicators = [
     /\bthe\s+(?:study|theory|concept|process|method|system|model|structure|function|example|role|importance|nature|effect|development|history|origin|application|analysis|definition|classification|principles|elements|components|features|characteristics)\b/i,
@@ -1430,6 +1476,16 @@ function detectLanguageLeakage(text: string, targetLang: string): boolean {
     }
   }
 
+  // [FIX A5] DE/ES/ZH — detect English leakage via double-fire (EN indicators + non-EN target).
+  if (normLang === 'de' || normLang === 'es' || normLang === 'zh') {
+    if (matches >= 1) return true; // English indicators fired in a non-English target
+    // ZH: flag if long text has no CJK characters at all
+    if (normLang === 'zh' && clean.length > 20) {
+      const hasCjk = /[\u4E00-\u9FFF\u3400-\u4DBF]/.test(text);
+      if (!hasCjk) return true;
+    }
+  }
+
   return false;
 }
 
@@ -1448,11 +1504,17 @@ ${text}`;
       const resJson = await res.json();
       const resultText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
       const cleanRes = resultText.replace(/```[a-z]*/g, '').replace(/```/g, '').trim();
+      // [FIX A6] Sanity check: reject translation if output is suspiciously short (e.g. model hallucinated empty/punctuation).
+      if (cleanRes.length < text.length * 0.2) {
+        console.warn(`[TRANSLATE] Output suspiciously short (${cleanRes.length} vs source ${text.length}), returning original.`);
+        return text;
+      }
       return cleanRes;
     }
     return text;
   } catch (err) {
     console.error(`[TRANSLATE] Failed to translate:`, err);
+    console.warn('[TRANSLATE] Returning original text (possibly untranslated) — check quota/network.');
     return text;
   }
 }
@@ -1498,19 +1560,23 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
         widgets.diagnosticQuiz = null;
       } else {
         if (typeof widgets.diagnosticQuiz.correctIndex !== 'number' || widgets.diagnosticQuiz.correctIndex < 0 || widgets.diagnosticQuiz.correctIndex >= widgets.diagnosticQuiz.options.length) {
-          widgets.diagnosticQuiz.correctIndex = 0;
+          // [FIX A1] Corrupt correctIndex -> drop the quiz instead of silently forcing option 0 as correct.
+          console.warn(`[validateAndFixWidgets] diagnosticQuiz.correctIndex out of range — dropping quiz.`);
+          widgets.diagnosticQuiz = null;
         }
         
-        // Translate diagnosticQuiz fields if leaked
-        if (detectLanguageLeakage(widgets.diagnosticQuiz.question, lang)) {
-          widgets.diagnosticQuiz.question = await translateText(widgets.diagnosticQuiz.question, lang);
-        }
-        if (detectLanguageLeakage(widgets.diagnosticQuiz.sectionTitle, lang)) {
-          widgets.diagnosticQuiz.sectionTitle = await translateText(widgets.diagnosticQuiz.sectionTitle, lang);
-        }
-        for (let i = 0; i < widgets.diagnosticQuiz.options.length; i++) {
-          if (detectLanguageLeakage(widgets.diagnosticQuiz.options[i], lang)) {
-            widgets.diagnosticQuiz.options[i] = await translateText(widgets.diagnosticQuiz.options[i], lang);
+        if (widgets.diagnosticQuiz) {
+          // Translate diagnosticQuiz fields if leaked
+          if (detectLanguageLeakage(widgets.diagnosticQuiz.question, lang)) {
+            widgets.diagnosticQuiz.question = await translateText(widgets.diagnosticQuiz.question, lang);
+          }
+          if (detectLanguageLeakage(widgets.diagnosticQuiz.sectionTitle, lang)) {
+            widgets.diagnosticQuiz.sectionTitle = await translateText(widgets.diagnosticQuiz.sectionTitle, lang);
+          }
+          for (let i = 0; i < widgets.diagnosticQuiz.options.length; i++) {
+            if (detectLanguageLeakage(widgets.diagnosticQuiz.options[i], lang)) {
+              widgets.diagnosticQuiz.options[i] = await translateText(widgets.diagnosticQuiz.options[i], lang);
+            }
           }
         }
       }
@@ -2294,17 +2360,17 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     ? `<Objectives>
   <Knowledge>
     <ul className="list-disc pl-4 space-y-1">
-      ${widgets.learningObjectives.knowledge.map((k: string) => `<li>${k}</li>`).join('\n      ')}
+      ${widgets.learningObjectives.knowledge.map((k: string) => `<li>${k.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</li>`).join('\n      ')} {/* [FIX A3] */}
     </ul>
   </Knowledge>
   <Skills>
     <ul className="list-disc pl-4 space-y-1">
-      ${widgets.learningObjectives.skills.map((s: string) => `<li>${s}</li>`).join('\n      ')}
+      ${widgets.learningObjectives.skills.map((s: string) => `<li>${s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</li>`).join('\n      ')}
     </ul>
   </Skills>
   <Attitudes>
     <ul className="list-disc pl-4 space-y-1">
-      ${widgets.learningObjectives.attitudes.map((a: string) => `<li>${a}</li>`).join('\n      ')}
+      ${widgets.learningObjectives.attitudes.map((a: string) => `<li>${a.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</li>`).join('\n      ')}
     </ul>
   </Attitudes>
 </Objectives>`
@@ -2400,7 +2466,8 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     if (comp.componentType === "Quiz") {
       compStr = `<Quiz durationLimit={${props.durationLimit || 300}}${props.limit ? ` limit={${props.limit}}` : ''}>\n  ${(props.questions || []).map((q: any) => `  <Question q="${(q.q || '').replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${(o.text || '').replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
     } else if (comp.componentType === "FillInBlanks") {
-      compStr = `<FillInBlanks sentence="${(props.sentence || '').replace(/"/g, '&quot;')}" answer="${(props.answer || '').replace(/"/g, '&quot;')}" />`;
+      // [FIX A2] Use question/blanks props matching the component contract (not legacy sentence/answer).
+      compStr = `<FillInBlanks question="${(props.question || props.sentence || '').replace(/"/g, '&quot;')}" blanks='${props.blanks ? JSON.stringify(props.blanks) : JSON.stringify([props.answer || ''])}' />`;
     } else if (comp.componentType === "SolvedExercise") {
       compStr = `<SolvedExercise title="${(props.title || '').replace(/"/g, '&quot;')}" solution="${(props.solution || '').replace(/"/g, '&quot;')}">\n  ${props.problem || ''}\n</SolvedExercise>`;
     } else if (comp.componentType === "UnsolvedExercise") {
@@ -2513,9 +2580,10 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const uCorrectAnswer = (props.correctAnswer || '').replace(/"/g, '&quot;');
       compStr = `<UnsolvedExercise title="${uTitle}" correctAnswer="${uCorrectAnswer}">\n${uProblem}\n</UnsolvedExercise>`;
     } else if (comp.componentType === "FillInBlanks" || comp.componentType === "TextesATrous") {
-      const fSentence = (props.sentence || '').replace(/"/g, '&quot;');
-      const fAnswer = (props.answer || '').replace(/"/g, '&quot;');
-      compStr = `<FillInBlanks sentence="${fSentence}" answer="${fAnswer}" />`;
+      // [FIX A2] Use question/blanks props to match healFillInBlanks normalization.
+      const fQuestion = (props.question || props.sentence || '').replace(/"/g, '&quot;');
+      const fBlanks = props.blanks ? JSON.stringify(props.blanks) : JSON.stringify([props.answer || '']);
+      compStr = `<FillInBlanks question="${fQuestion}" blanks='${fBlanks}' />`;
     } else if (comp.componentType === "Mermaid") {
       const mChart = props.chart || '';
       compStr = `<Mermaid>\n${mChart}\n</Mermaid>`;
@@ -3770,13 +3838,15 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
         narrativeBlockAttempts: [] as Array<{ sections: string[]; attempts: number; approved: boolean }>,
         widgetsAttempts: 0,
         widgetsRejections: 0,
+        widgetBlockAttempts: [] as Array<{ blockName: string; attempts: number; rejections: number; approved: boolean }>,
         selfHealingAttempts: 0,
         status: 'pending',
         error: '',
         tokenMetrics: {
           promptTokens: 0,
           candidatesTokens: 0
-        }
+        },
+        estimatedCostUSD: 0
       };
 
       try {
@@ -5939,6 +6009,9 @@ export async function reviseCourseContent(courseSlug: string, revisionDetails: s
   console.log(`[REVISION AGENT] Starting revision for course: "${courseSlug}" (Lang: ${targetLang})`);
   console.log(`[REVISION AGENT] Original Details: "${revisionDetails}"`);
 
+  // [FIX A7] Revision engine — mirrors generation engine but logs metrics for dashboard analytics.
+  let revisionPromptTokens = 0;
+  let revisionOutputTokens = 0;
   const callAIEngine = async (
     promptText: string,
     schema?: any,
@@ -5973,7 +6046,11 @@ export async function reviseCourseContent(courseSlug: string, revisionDetails: s
         });
         if (res && res.ok) {
           const resJson = await res.json();
-          return resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const revText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const revUsage = resJson.usageMetadata || {};
+          revisionPromptTokens += revUsage.promptTokenCount || 0;
+          revisionOutputTokens += revUsage.candidatesTokenCount || revUsage.candidateTokenCount || 0;
+          return revText;
         }
       } catch (e) {
         console.warn(`[REVISION AGENT - VERTEX] Vertex AI call failed:`, e);
@@ -6172,20 +6249,25 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
   }
 
   let affectedSlugs: string[] = [];
+  let parseFailed = false;
   try {
     const cleaned = identifyRaw.replace(/```json/g, '').replace(/```/g, '').trim();
     affectedSlugs = safeJsonParse(cleaned, 'translateCourseContent (Revision affected slugs)');
   } catch (e) {
     console.error(`[REVISION AGENT] Failed to parse affected slugs JSON: "${identifyRaw}". Defaulting to all lessons.`, e);
     affectedSlugs = lessons.map(l => l.lesson_slug);
+    console.warn('[REVISION AGENT R2/A16] Parse failed — falling back to all-lesson revision. Slug validation skipped.');
+    parseFailed = true;
   }
 
-  // [FIX R2] Validate parsed slugs exist in the lessons array; drop stale/hallucinated slugs.
-  const validLessonSlugs = new Set(lessons.map(l => l.lesson_slug));
-  const invalidSlugs = affectedSlugs.filter(s => !validLessonSlugs.has(s));
-  if (invalidSlugs.length > 0) {
-    console.warn(`[REVISION AGENT] Dropping ${invalidSlugs.length} unrecognized slug(s) from affectedSlugs: ${invalidSlugs.join(', ')}`);
-    affectedSlugs = affectedSlugs.filter(s => validLessonSlugs.has(s));
+  if (!parseFailed) {
+    // [FIX R2/A16] Only validate slugs when the parser succeeded (not on the all-lessons fallback).
+    const validLessonSlugs = new Set(lessons.map(l => l.lesson_slug));
+    const invalidSlugs = affectedSlugs.filter(s => !validLessonSlugs.has(s));
+    if (invalidSlugs.length > 0) {
+      console.warn(`[REVISION AGENT] Dropping ${invalidSlugs.length} unrecognized slug(s): ${invalidSlugs.join(', ')}`);
+      affectedSlugs = affectedSlugs.filter(s => validLessonSlugs.has(s));
+    }
   }
 
   const revisedSlugs = affectedSlugs;
@@ -8150,7 +8232,11 @@ function stripJsxComments(mdx: string): string {
   });
 }
 
-export async function validateMdxContent(content: string, lang: string = 'fr'): Promise<{ success: boolean; error?: string }> {
+export async function validateMdxContent(
+  content: string,
+  lang: string = 'fr',
+  alreadyPreprocessed: boolean = false // [FIX A11] Skip redundant preprocessing if already sanitized.
+): Promise<{ success: boolean; error?: string }> {
   // Check for residual legacy citation artifacts (e.g. <sup>, [ref...])
   const legacyCitationRegex = /<\/?sup\b|\[ref[-_]?\d+\]/gi;
   if (legacyCitationRegex.test(content)) {
@@ -8160,7 +8246,7 @@ export async function validateMdxContent(content: string, lang: string = 'fr'): 
     };
   }
 
-  const cleanedContent = preprocessMdx(content, lang);
+  const cleanedContent = alreadyPreprocessed ? content : preprocessMdx(content, lang);
   try {
     const { resolvedContent } = await resolvePrecompiledAnchors(cleanedContent, lang);
     const { serialize } = await import('next-mdx-remote/serialize');
