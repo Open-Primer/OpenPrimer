@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Play, Pause, Square, Settings, ChevronRight, MessageSquare, AlertCircle } from 'lucide-react';
-import { UI_STRINGS } from '@/components/RefinedUI';
+import { UI_STRINGS } from '@/lib/translations';
 import { usePathname } from 'next/navigation';
 
 interface AudioReaderProps {

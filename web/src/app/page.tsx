@@ -8,7 +8,7 @@ import { OpenPrimerIcon } from '@/components/OpenPrimerIcon';
 import { TopNav, AITutorOverlay, Footer } from '@/components/RefinedUI';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-import { UI_STRINGS } from '@/components/RefinedUI';
+import { UI_STRINGS } from '@/lib/translations';
 import { dbService, isDatabaseConfigured } from '@/lib/db';
 import { CourseKiosk } from '@/components/CourseKiosk';
 import { PasswordRequirements } from '@/components/PasswordRequirements';

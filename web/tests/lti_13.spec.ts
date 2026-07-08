@@ -253,7 +253,7 @@ test.describe('LTI 1.3 Integration Suite', () => {
       await expect(page.locator('text=JSON + MDX').first()).toBeVisible();
 
       // Click close button
-      const closeBtn = page.locator('button:has-text("Fermer"), button:has-text("Close")').first();
+      const closeBtn = page.locator('button[aria-label="Close"], button[aria-label="Fermer"]').first();
       await closeBtn.click();
       await expect(modalTitle).not.toBeVisible();
     });

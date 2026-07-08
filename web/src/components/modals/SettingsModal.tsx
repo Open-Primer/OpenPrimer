@@ -6,7 +6,7 @@ import { User, Mail, Globe, ShieldAlert, CheckCircle, Trash2, Save, EyeOff, Lock
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { PasswordRequirements } from '@/components/PasswordRequirements';
-import { UI_STRINGS } from '@/components/RefinedUI';
+import { UI_STRINGS } from '@/lib/translations';
 import { encryptApiKey, decryptApiKey } from '@/lib/crypto';
 
 const ACCESSIBILITY_GUIDE = {

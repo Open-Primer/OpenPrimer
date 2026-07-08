@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { NavItem } from '@/lib/content';
 import { dbService, progressService, isDatabaseConfigured, isSandboxFallbackAllowed } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
-import { UI_STRINGS } from '@/components/RefinedUI';
+import { UI_STRINGS } from '@/lib/translations';
 
 interface SidebarProps {
   items: NavItem[];

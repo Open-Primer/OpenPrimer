@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { TopNav, UI_STRINGS, Footer, getLocalizedLabel, formatCourseLevel, AITutorOverlay } from '@/components/RefinedUI';
+import { TopNav, Footer, AITutorOverlay } from '@/components/RefinedUI';
+import { UI_STRINGS, getLocalizedLabel, formatCourseLevel } from '@/lib/translations';
 import { AudioReader } from '@/components/AudioReader';
 import * as Icons from 'lucide-react';
 import { GraduationCap, Book, Star, Clock, Award, ChevronRight, Brain, Sparkles, ShieldCheck, Bookmark, Trophy, Globe, BookOpen } from 'lucide-react';
