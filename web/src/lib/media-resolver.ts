@@ -699,11 +699,11 @@ export function getConciseQuery(description: string, alt: string, caption: strin
   return (cleanAlt || cleanCaption || desc || '').trim();
 }
 
-async function optimizeQueryWithGemini(rawQuery: string, lang: string = 'en'): Promise<string> {
+async function optimizeQueryWithGemini(rawQuery: string, lang: string = 'en', forceEnglish: boolean = false): Promise<string> {
   const trimmed = rawQuery.trim();
   const words = trimmed.split(/\s+/);
   // If it's already short (e.g. 3 words or less), just return it
-  if (words.length <= 3) {
+  if (words.length <= 3 && !forceEnglish) {
     return trimmed;
   }
 
@@ -713,11 +713,20 @@ async function optimizeQueryWithGemini(rawQuery: string, lang: string = 'en'): P
       return trimmed;
     }
 
-    const promptText = `Tu es un assistant de recherche documentaire.
+    let promptText = '';
+    if (forceEnglish) {
+      promptText = `Tu es un assistant de recherche documentaire.
+Considère la description de média suivante : "${trimmed}".
+Optimise cette description pour en faire une requête de recherche très efficace EN ANGLAIS sur des bases de données comme NASA, Smithsonian, The Met, ou Unsplash.
+Ta tâche consiste à extraire uniquement 1 à 3 mots-clés essentiels EN ANGLAIS (noms propres ou noms communs cardinaux, par exemple "Claudio Monteverdi", "Sonar ASDIC", "Doppler effect", "Bayreuth Festspielhaus") sans adjectif superflu, verbe ou explication secondaire. Traduis en anglais si nécessaire.
+Réponds UNIQUEMENT avec ces mots-clés optimisés en anglais, sans guillemets, sans ponctuation finale et sans autre texte explicatif.`;
+    } else {
+      promptText = `Tu es un assistant de recherche documentaire.
 Considère la description de média suivante : "${trimmed}".
 Optimise cette description pour en faire une requête de recherche très efficace sur des bases de données comme Wikimedia Commons, Wikipédia ou de grands musées.
 Ta tâche consiste à extraire uniquement 1 à 3 mots-clés essentiels (noms propres ou noms communs cardinaux, par exemple "Claudio Monteverdi", "Sonar ASDIC", "Effet Doppler", "Théâtre de Bayreuth") sans adjectif superflu, verbe ou explication secondaire.
-Réponds UNIQUEMENT avec ces mots-clés optimisés en français ou en anglais selon la nature du terme, sans guillemets, sans ponctuation finale et sans autre texte explicatif.`;
+Réponds UNIQUEMENT avec ces mots-clés optimisés en ${lang === 'fr' ? 'français' : 'anglais'} selon la nature du terme, sans guillemets, sans ponctuation finale et sans autre texte explicatif.`;
+    }
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
@@ -761,23 +770,143 @@ Réponds UNIQUEMENT avec ces mots-clés optimisés en français ou en anglais se
   return trimmed;
 }
 
-export async function resolveImageFromSources(
-  title: string,
-  lang: string = 'en',
+async function generateGenericQueryWithGemini(specificQuery: string, lang: string = 'en'): Promise<string> {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!apiKey) {
+      return specificQuery;
+    }
+
+    const promptText = `Tu es un assistant de recherche documentaire.
+Considère la description de média spécifique suivante : "${specificQuery}".
+Cette description est trop rare ou spécifique pour trouver une image exacte dans les banques de données (ex: "le bouton de la veste d'Einstein" ou "la tasse de chocolat de Louis XIV").
+Propose un concept, une entité, un objet ou un personnage historique beaucoup plus simple, basique et générique lié à cette description, qui a de fortes chances d'exister en image libre de droits (ex: pour "le bouton de la veste d'Einstein", propose "Albert Einstein" ; pour "la tasse de chocolat de Louis XIV", propose "Louis XIV" ou "Château de Versailles" ; pour "la vibration de l'atome d'hydrogène", propose "atome hydrogène").
+Réponds UNIQUEMENT avec ce terme générique simplifié (1 à 3 mots), en français ou en anglais, sans guillemets, sans ponctuation finale et sans autre texte explicatif.`;
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+    const payload = {
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: compressPromptText(promptText)
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        maxOutputTokens: 15,
+        temperature: 0.1
+      }
+    };
+
+    const res = await fetchWithTimeout(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }, 8000);
+
+    if (res.ok) {
+      const resJson = await res.json();
+      const text = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) {
+        const generic = text.trim().replace(/["']/g, '');
+        if (generic && generic.length > 0) {
+          console.log(`[MEDIA-RESOLVER] Generated generic query from "${specificQuery}": "${generic}"`);
+          return generic;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`[MEDIA-RESOLVER] generateGenericQueryWithGemini failed for "${specificQuery}":`, err);
+  }
+  return specificQuery;
+}
+
+async function describeImageWithGemini(imageUrl: string, lang: string = 'fr'): Promise<string | null> {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!apiKey) {
+      return null;
+    }
+
+    const resImg = await fetchWithTimeout(imageUrl, {}, 10000);
+    if (!resImg.ok) {
+      console.warn(`[MEDIA-RESOLVER] Failed to download image for description: ${imageUrl}`);
+      return null;
+    }
+    const contentType = resImg.headers.get('content-type') || 'image/jpeg';
+    const arrayBuffer = await resImg.arrayBuffer();
+    const base64Data = Buffer.from(arrayBuffer).toString('base64');
+
+    const targetLangName = lang.toLowerCase() === 'fr' ? 'français' :
+                           lang.toLowerCase() === 'es' ? 'espagnol' :
+                           lang.toLowerCase() === 'de' ? 'allemand' :
+                           lang.toLowerCase() === 'zh' ? 'chinois' : 'anglais';
+
+    const promptText = `Analyse cette image.
+Rédige une description concise, neutre, informative et factuelle (1 phrase, environ 10 à 25 mots) de ce qui est visible dans cette image, adaptée pour servir de légende (caption) et de texte alternatif (alt) pour des étudiants dans un cours pédagogique.
+Génère la description en ${targetLangName}.
+Réponds UNIQUEMENT avec la description générée, sans introduire de texte explicatif, sans guillemets, et sans préambule du type "Cette image montre...".`;
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+    const payload = {
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              inlineData: {
+                mimeType: contentType.split(';')[0],
+                data: base64Data
+              }
+            },
+            {
+              text: compressPromptText(promptText)
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        maxOutputTokens: 60,
+        temperature: 0.2
+      }
+    };
+
+    const res = await fetchWithTimeout(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }, 15000);
+
+    if (res.ok) {
+      const json = await safeResponseJson(res, 'Gemini image description');
+      const desc = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      if (desc) {
+        console.log(`[MEDIA-RESOLVER] Gemini generated new description in ${targetLangName}: "${desc}"`);
+        return desc;
+      }
+    }
+  } catch (err) {
+    console.warn('[MEDIA-RESOLVER] Error describing image with Gemini:', err);
+  }
+  return null;
+}
+
+async function searchCascade(
+  query: string,
+  queryEnglish: string,
+  lang: string,
   discipline?: string,
-  validationPrompt?: string
+  validationDesc?: string
 ): Promise<{ url: string; sourceLabel: string; sourceUrl?: string } | null> {
-  const originalQuery = title.trim().replace(/_/g, ' ');
-  const validationDesc = validationPrompt ? validationPrompt : originalQuery;
-
-  // Optimize query with Gemini for DB search
-  const query = await optimizeQueryWithGemini(originalQuery, lang);
-  console.log(`[MEDIA-RESOLVER] Original query: "${originalQuery}" | Optimized search query: "${query}"`);
-
   // 1. Wikidata P18 — canonical, most reliable for named entities
   const wdImage = await fetchWikidataImage(query, lang);
   if (wdImage) {
-    const isValid = await validateImageWithGemini(wdImage, validationDesc);
+    const isValid = await validateImageWithGemini(wdImage, validationDesc || query);
     if (isValid) {
       return { 
          url: wdImage, 
@@ -792,7 +921,7 @@ export async function resolveImageFromSources(
   // 2. Wikipedia/Wikimedia Commons search
   const wikiImage = await fetchWikipediaImage(query, lang);
   if (wikiImage) {
-    const isValid = await validateImageWithGemini(wikiImage, validationDesc);
+    const isValid = await validateImageWithGemini(wikiImage, validationDesc || query);
     if (isValid) {
       return { 
          url: wikiImage, 
@@ -810,7 +939,7 @@ export async function resolveImageFromSources(
   if (isHistoryOrLit) {
     const gallicaImage = await fetchGallicaImage(query);
     if (gallicaImage) {
-      const isValid = await validateImageWithGemini(gallicaImage, validationDesc);
+      const isValid = await validateImageWithGemini(gallicaImage, validationDesc || query);
       if (isValid) {
         return { 
           url: gallicaImage, 
@@ -827,13 +956,13 @@ export async function resolveImageFromSources(
   const isScience = disc.includes('astro') || disc.includes('physi') || disc.includes('spac') ||
     disc.includes('cosmo') || disc.includes('bio') || disc.includes('chem') || disc.includes('geo');
   if (isScience) {
-    const nasaImage = await fetchNASAImage(query);
+    const nasaImage = await fetchNASAImage(queryEnglish);
     if (nasaImage) {
-      const isValid = await validateImageWithGemini(nasaImage, validationDesc);
+      const isValid = await validateImageWithGemini(nasaImage, validationDesc || queryEnglish);
       if (isValid) {
         return { url: nasaImage, sourceLabel: 'NASA Images (Public Domain)' };
       } else {
-        console.log(`[MEDIA-RESOLVER] NASA image rejected by Gemini for query "${query}". Trying fallback...`);
+        console.log(`[MEDIA-RESOLVER] NASA image rejected by Gemini for query "${queryEnglish}". Trying fallback...`);
       }
     }
   }
@@ -841,21 +970,21 @@ export async function resolveImageFromSources(
   // 5. Met Museum — for art, history, archaeology, classical studies
   const isArtHistory = disc.includes('art') || disc.includes('archae') || disc.includes('philosoph');
   if (isArtHistory) {
-    const metImage = await fetchMetMuseumImage(query);
+    const metImage = await fetchMetMuseumImage(queryEnglish);
     if (metImage) {
-      const isValid = await validateImageWithGemini(metImage, validationDesc);
+      const isValid = await validateImageWithGemini(metImage, validationDesc || queryEnglish);
       if (isValid) {
         return { url: metImage, sourceLabel: 'The Metropolitan Museum of Art (CC0)' };
       } else {
-        console.log(`[MEDIA-RESOLVER] Met Museum image rejected by Gemini for query "${query}". Trying fallback...`);
+        console.log(`[MEDIA-RESOLVER] Met Museum image rejected by Gemini for query "${queryEnglish}". Trying fallback...`);
       }
     }
   }
 
   // 6. Archive.org Fallback for Images
-  const archiveImage = await fetchArchiveOrgMedia(query, 'image');
+  const archiveImage = await fetchArchiveOrgMedia(queryEnglish, 'image');
   if (archiveImage?.url) {
-    const isValid = await validateImageWithGemini(archiveImage.url, validationDesc);
+    const isValid = await validateImageWithGemini(archiveImage.url, validationDesc || queryEnglish);
     if (isValid) {
       return {
         url: archiveImage.url,
@@ -863,38 +992,88 @@ export async function resolveImageFromSources(
         sourceUrl: archiveImage.url
       };
     } else {
-      console.log(`[MEDIA-RESOLVER] Archive.org image rejected by Gemini for query "${query}". Trying fallback...`);
+      console.log(`[MEDIA-RESOLVER] Archive.org image rejected by Gemini for query "${queryEnglish}". Trying fallback...`);
     }
   }
 
   // 7. Smithsonian — broad fallback for natural history, science, culture
-  const smithsonianImage = await fetchSmithsonianImage(query);
+  const smithsonianImage = await fetchSmithsonianImage(queryEnglish);
   if (smithsonianImage) {
-    const isValid = await validateImageWithGemini(smithsonianImage, validationDesc);
+    const isValid = await validateImageWithGemini(smithsonianImage, validationDesc || queryEnglish);
     if (isValid) {
       return { url: smithsonianImage, sourceLabel: 'Smithsonian Open Access (CC0)' };
     } else {
-      console.log(`[MEDIA-RESOLVER] Smithsonian image rejected by Gemini for query "${query}". Trying fallback...`);
+      console.log(`[MEDIA-RESOLVER] Smithsonian image rejected by Gemini for query "${queryEnglish}". Trying fallback...`);
     }
   }
 
   // 8. NASA as universal last resort (very broad image library)
   if (!isScience) {
-    const nasaFallback = await fetchNASAImage(query);
+    const nasaFallback = await fetchNASAImage(queryEnglish);
     if (nasaFallback) {
-      const isValid = await validateImageWithGemini(nasaFallback, validationDesc);
+      const isValid = await validateImageWithGemini(nasaFallback, validationDesc || queryEnglish);
       if (isValid) {
         return { url: nasaFallback, sourceLabel: 'NASA Images (Public Domain)' };
       } else {
-        console.log(`[MEDIA-RESOLVER] NASA fallback image rejected by Gemini for query "${query}". Trying fallback...`);
+        console.log(`[MEDIA-RESOLVER] NASA fallback image rejected by Gemini for query "${queryEnglish}". Trying fallback...`);
       }
     }
   }
 
   // 9. Unsplash fallback
-  const unsplashResult = await fetchUnsplashImage(query);
+  const unsplashResult = await fetchUnsplashImage(queryEnglish);
   if (unsplashResult) {
-    return unsplashResult;
+    return {
+      url: unsplashResult.url,
+      sourceLabel: unsplashResult.sourceLabel,
+      sourceUrl: unsplashResult.url
+    };
+  }
+
+  return null;
+}
+
+export async function resolveImageFromSources(
+  title: string,
+  lang: string = 'en',
+  discipline?: string,
+  validationPrompt?: string
+): Promise<{ url: string; sourceLabel: string; sourceUrl?: string; description?: string } | null> {
+  const originalQuery = title.trim().replace(/_/g, ' ');
+  const validationDesc = validationPrompt ? validationPrompt : originalQuery;
+
+  // Optimize query with Gemini for DB search
+  const query = await optimizeQueryWithGemini(originalQuery, lang);
+  const queryEnglish = lang.startsWith('en') ? query : await optimizeQueryWithGemini(originalQuery, lang, true);
+  console.log(`[MEDIA-RESOLVER] Original query: "${originalQuery}" | Optimized search query: "${query}" | English query: "${queryEnglish}"`);
+
+  // Try specific search first
+  let result = await searchCascade(query, queryEnglish, lang, discipline, validationDesc);
+  if (result) {
+    return result;
+  }
+
+  // Specific search failed, let's try a simplified/generic query
+  console.log(`[MEDIA-RESOLVER] Specific search failed for "${originalQuery}". Attempting generic fallback...`);
+  const genericQuery = await generateGenericQueryWithGemini(originalQuery, lang);
+  if (genericQuery && genericQuery !== originalQuery) {
+    const genericOptimized = await optimizeQueryWithGemini(genericQuery, lang);
+    const genericEnglish = lang.startsWith('en') ? genericOptimized : await optimizeQueryWithGemini(genericQuery, lang, true);
+    console.log(`[MEDIA-RESOLVER] Generic query generated: "${genericQuery}" | Optimized: "${genericOptimized}" | English: "${genericEnglish}"`);
+    
+    // We validate the generic image against the generic query name to make it easier to match
+    const genericResult = await searchCascade(genericOptimized, genericEnglish, lang, discipline, genericQuery);
+    if (genericResult) {
+      console.log(`[MEDIA-RESOLVER] Generic fallback succeeded. Generating description for image: ${genericResult.url}`);
+      const newDescription = await describeImageWithGemini(genericResult.url, lang);
+      if (newDescription) {
+        return {
+          ...genericResult,
+          description: newDescription
+        };
+      }
+      return genericResult;
+    }
   }
 
   return null;
@@ -1599,10 +1778,11 @@ export async function resolveAndPersistMedia(
       const resolved = await resolveImageFromSources(queryName, targetLang, discipline);
       if (resolved) {
         console.log(`[MEDIA-RESOLVER] Resolved image for "${queryName}" via ${resolved.sourceLabel}: ${resolved.url}`);
-        // Replace image URL
-        updatedContent = updatedContent.replace(fullMatch, `![${altText}](${resolved.url})`);
+        const finalAltText = resolved.description || altText;
+        // Replace image URL and Alt text
+        updatedContent = updatedContent.replace(fullMatch, `![${finalAltText}](${resolved.url})`);
         // Inject source attribution into the *Figure: ...* caption that follows (within ~400 chars)
-        const afterImg = updatedContent.indexOf(`![${altText}](${resolved.url})`);
+        const afterImg = updatedContent.indexOf(`![${finalAltText}](${resolved.url})`);
         if (afterImg !== -1) {
           const snippet = updatedContent.slice(afterImg, afterImg + 400);
           const captionMatch = snippet.match(/(\*Figure\s*:[^\n*]+)(\*)/);
@@ -1612,7 +1792,16 @@ export async function resolveAndPersistMedia(
               const finalLabel = resolved.sourceUrl 
                 ? `[${resolved.sourceLabel}](${resolved.sourceUrl})`
                 : resolved.sourceLabel;
-              const updatedCaption = originalCaption.replace(/\*$/, ` — Source\u00a0: ${finalLabel}*`);
+              
+              let updatedCaption = originalCaption;
+              if (resolved.description) {
+                const figNumMatch = originalCaption.match(/^\*Figure\s*(\d*)\s*:\s*/i);
+                const figNumPrefix = figNumMatch ? `Figure ${figNumMatch[1]}: ` : '';
+                updatedCaption = `*${figNumPrefix}${resolved.description} — Source\u00a0: ${finalLabel}*`;
+              } else {
+                updatedCaption = originalCaption.replace(/\*$/, ` — Source\u00a0: ${finalLabel}*`);
+              }
+
               updatedContent = updatedContent.slice(0, afterImg) +
                 updatedContent.slice(afterImg).replace(originalCaption, updatedCaption);
             }
@@ -1831,9 +2020,17 @@ export async function resolveAndPersistMedia(
           if (resolved.sourceUrl) {
             finalLabel = `[${resolved.sourceLabel}](${resolved.sourceUrl})`;
           }
-          if (caption && !caption.includes('Source:')) {
-            currentAttrs.caption = `${caption} — Source: ${finalLabel}`;
+          
+          if (resolved.description) {
+            currentAttrs.alt = resolved.description;
+            currentAttrs.description = resolved.description;
+            currentAttrs.caption = `${resolved.description} — Source: ${finalLabel}`;
+          } else {
+            if (caption && !caption.includes('Source:')) {
+              currentAttrs.caption = `${caption} — Source: ${finalLabel}`;
+            }
           }
+          
           if (resolved.sourceUrl) {
             currentAttrs.fallbackUrl = resolved.sourceUrl;
           }
@@ -2157,12 +2354,15 @@ Réponds uniquement par OUI ou NON.`;
   }
 }
 
-export async function resolveMediaImage(queryName: string, lang: string): Promise<{ url: string | null; fallbackUrl: string | null }> {
+async function searchMediaImageCascade(
+  queryName: string,
+  lang: string
+): Promise<{ url: string | null; fallbackUrl: string | null; sourceLabel?: string }> {
   const wikidataResult = await searchWikidataImage(queryName, lang);
   if (wikidataResult.url) {
     const isValid = await validateImageWithGemini(wikidataResult.url, queryName);
     if (isValid) {
-      return wikidataResult;
+      return { ...wikidataResult, sourceLabel: 'Wikimedia Commons' };
     } else {
       console.log(`[MEDIA-RESOLVER] Wikidata image rejected by Gemini for query "${queryName}". Trying fallback...`);
     }
@@ -2173,7 +2373,7 @@ export async function resolveMediaImage(queryName: string, lang: string): Promis
     const isValid = await validateImageWithGemini(wikiUrl, queryName);
     if (isValid) {
       const fallbackUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(queryName.replace(/\s/g, '_'))}`;
-      return { url: wikiUrl, fallbackUrl };
+      return { url: wikiUrl, fallbackUrl, sourceLabel: 'Wikimedia Commons' };
     } else {
       console.log(`[MEDIA-RESOLVER] Wikipedia page image rejected by Gemini for query "${queryName}". Trying fallback...`);
     }
@@ -2183,7 +2383,7 @@ export async function resolveMediaImage(queryName: string, lang: string): Promis
   if (gallicaUrl) {
     const isValid = await validateImageWithGemini(gallicaUrl, queryName);
     if (isValid) {
-      return { url: gallicaUrl, fallbackUrl: wikidataResult.fallbackUrl || null };
+      return { url: gallicaUrl, fallbackUrl: wikidataResult.fallbackUrl || null, sourceLabel: 'Gallica / BNF' };
     } else {
       console.log(`[MEDIA-RESOLVER] Gallica image rejected by Gemini for query "${queryName}". Trying fallback...`);
     }
@@ -2193,23 +2393,55 @@ export async function resolveMediaImage(queryName: string, lang: string): Promis
   if (commonsUrl) {
     const isValid = await validateImageWithGemini(commonsUrl, queryName);
     if (isValid) {
-      return { url: commonsUrl, fallbackUrl: wikidataResult.fallbackUrl || null };
+      return { url: commonsUrl, fallbackUrl: wikidataResult.fallbackUrl || null, sourceLabel: 'Wikimedia Commons' };
     } else {
       console.log(`[MEDIA-RESOLVER] Wikimedia Commons image rejected by Gemini for query "${queryName}".`);
     }
   }
 
-  const archiveResult = await fetchArchiveOrgMedia(queryName, 'image');
+  const queryEnglish = lang.startsWith('en') ? queryName : await optimizeQueryWithGemini(queryName, lang, true);
+  const archiveResult = await fetchArchiveOrgMedia(queryEnglish, 'image');
   if (archiveResult?.url) {
     const isValid = await validateImageWithGemini(archiveResult.url, queryName);
     if (isValid) {
-      return { url: archiveResult.url, fallbackUrl: wikidataResult.fallbackUrl || null };
+      return { url: archiveResult.url, fallbackUrl: wikidataResult.fallbackUrl || null, sourceLabel: archiveResult.sourceLabel };
     } else {
       console.log(`[MEDIA-RESOLVER] Archive.org image rejected by Gemini for query "${queryName}".`);
     }
   }
 
   return { url: null, fallbackUrl: wikidataResult.fallbackUrl || null };
+}
+
+export async function resolveMediaImage(
+  queryName: string,
+  lang: string
+): Promise<{ url: string | null; fallbackUrl: string | null; description?: string | null; sourceLabel?: string }> {
+  const originalQuery = queryName.trim().replace(/_/g, ' ');
+  
+  // Try specific search first
+  let result = await searchMediaImageCascade(originalQuery, lang);
+  if (result.url) {
+    return result;
+  }
+
+  // Try generic fallback
+  console.log(`[RESTITUTION-REPAIR] Specific search failed for "${originalQuery}". Attempting generic fallback...`);
+  const genericQuery = await generateGenericQueryWithGemini(originalQuery, lang);
+  if (genericQuery && genericQuery !== originalQuery) {
+    console.log(`[RESTITUTION-REPAIR] Generic query generated: "${genericQuery}"`);
+    let genericResult = await searchMediaImageCascade(genericQuery, lang);
+    if (genericResult.url) {
+      console.log(`[RESTITUTION-REPAIR] Generic fallback succeeded. Generating description for image: ${genericResult.url}`);
+      const newDescription = await describeImageWithGemini(genericResult.url, lang);
+      return {
+        ...genericResult,
+        description: newDescription
+      };
+    }
+  }
+
+  return { url: null, fallbackUrl: null };
 }
 
 export async function searchWikimediaCommonsImage(query: string): Promise<string | null> {
@@ -2471,7 +2703,26 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
               
               const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
               if (publicUrl) {
-                updatedContent = updatedContent.replaceAll(fullMatch, `![${altText}](${publicUrl})`);
+                const finalAltText = resolution.description || altText;
+                updatedContent = updatedContent.replaceAll(fullMatch, `![${finalAltText}](${publicUrl})`);
+                
+                if (resolution.description) {
+                  const afterImg = updatedContent.indexOf(`![${finalAltText}](${publicUrl})`);
+                  if (afterImg !== -1) {
+                    const snippet = updatedContent.slice(afterImg, afterImg + 400);
+                    const captionMatch = snippet.match(/(\*Figure\s*:[^\n*]+)(\*)/);
+                    if (captionMatch) {
+                      const originalCaption = captionMatch[0];
+                      const figNumMatch = originalCaption.match(/^\*Figure\s*(\d*)\s*:\s*/i);
+                      const figNumPrefix = figNumMatch ? `Figure ${figNumMatch[1]}: ` : '';
+                      const sourceLabel = resolution.sourceLabel || 'Wikimedia Commons';
+                      const updatedCaption = `*${figNumPrefix}${resolution.description} — Source\u00a0: ${sourceLabel}*`;
+                      updatedContent = updatedContent.slice(0, afterImg) +
+                        updatedContent.slice(afterImg).replace(originalCaption, updatedCaption);
+                    }
+                  }
+                }
+                
                 console.log(`[RESTITUTION-REPAIR] Successfully repaired markdown image to: ${publicUrl}`);
                 success = true;
               }
@@ -2545,6 +2796,12 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
                 currentAttrs.src = publicUrl;
                 if (wikidataFallbackUrl) {
                   currentAttrs.fallbackUrl = wikidataFallbackUrl;
+                }
+                if (resolution.description) {
+                  currentAttrs.alt = resolution.description;
+                  currentAttrs.description = resolution.description;
+                  const sourceLabel = resolution.sourceLabel || 'Wikimedia Commons';
+                  currentAttrs.caption = `${resolution.description} — Source: ${sourceLabel}`;
                 }
                 console.log(`[RESTITUTION-REPAIR] Successfully repaired CustomFigure to: ${publicUrl}`);
                 success = true;

@@ -209,6 +209,26 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
   const ariaTexts = KIOSK_ARIA_TEXTS[lang.toUpperCase()] || KIOSK_ARIA_TEXTS.EN;
 
   useEffect(() => {
+    // 1. Eagerly load from localStorage cache if present
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('openprimer_courses');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const activeLang = lang.toLowerCase();
+            const activeOnly = parsed.filter((c: any) => {
+              const isActive = c.is_active !== false && (c.archivingLevel === undefined || c.archivingLevel < 2);
+              if (!isActive) return false;
+              if (!c.languages || c.languages.length === 0) return false;
+              return c.languages.some((l: string) => l.toLowerCase() === activeLang);
+            });
+            setCourses(activeOnly);
+          }
+        } catch (e) {}
+      }
+    }
+
     dbService.getAllCourses()
       .then(({ data }) => {
         if (data && data.length > 0) {

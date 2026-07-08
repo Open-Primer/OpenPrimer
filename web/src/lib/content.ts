@@ -3257,6 +3257,9 @@ function deduplicateOriginalQuotes(mdx: string): string {
 }
 
 export function preprocessMdx(content: string, lang: string = 'en', isSummative: boolean = false, lessonSlug?: string, lessonOrder?: number): string {
+  if (lessonSlug === 'evaluation-finale' || lessonSlug === 'final-evaluation') {
+    isSummative = true;
+  }
   // Apply systematic healing first so high-fidelity content and components are injected automatically
   let processed = content;
 
@@ -3301,6 +3304,34 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     if (evalWidgets.length > 0) {
       processed = frontmatter + evalWidgets.join('\n\n');
     }
+
+    // Hardening: Purge references, glossary lists, hover cards, and citation tags inside summative evaluations
+    // 1. Remove references lists (e.g. <References />)
+    processed = processed.replace(/<References\b[^>]*?\/?>([\s\S]*?<\/References>)?/gi, '');
+    
+    // 2. Remove glossary lists / items
+    processed = processed.replace(/<GlossaryList\b[^>]*?>[\s\S]*?<\/GlossaryList>/gi, '');
+    processed = processed.replace(/<GlossaryList\.Item\b[^>]*?\/?>([\s\S]*?<\/GlossaryList\.Item>)?/gi, '');
+
+    // 3. Remove all hover card tags (e.g. ConceptLink, RealPerson, etc.) but preserve their text children
+    const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)';
+    const entityRegex = new RegExp(`<(${entityTagsPattern})\\b[^>]*?>([\\s\\S]*?)<\\/\\1>`, 'gi');
+    for (let i = 0; i < 3; i++) {
+      processed = processed.replace(entityRegex, '$2');
+    }
+    processed = processed.replace(new RegExp(`<(${entityTagsPattern})\\b[^>]*?\\/>`, 'gi'), '');
+
+    // 4. Remove any citation anchors (like [[WIDGET:Citation:X]] or [X](#ref-X) or <sup>X</sup>)
+    processed = processed.replace(/\[\[\s*WIDGET\s*:\s*(?:Citation|Reference|Ref)\s*:\s*\\d+\s*\]\]/gi, '');
+    processed = processed.replace(/<sup>\s*<a\b[^>]*?id="ref-src-\\d+"[^>]*?>\s*\\d+\s*<\/a>\s*<\/sup>/gi, '');
+    processed = processed.replace(/\[ref[-_]?\s*(\\d+)\]/gi, '');
+    processed = processed.replace(/<sup>\s*\[?(\\d+)\]?\s*<\/sup>/gi, '');
+    processed = processed.replace(/<sup[^>]*>\s*<a[^>]*>[\s\S]*?<\/a>\s*<\/sup>/gi, '');
+
+    // 5. Remove prohibited widgets
+    const prohibitedWidgetsPattern = '(?:PreviousLessonSummary|ResumeLeconPrecedente|CareerProfile|ProfilCarriere|ResearchFocus|FocusRecherche|AcademicSkeptic|SceptiqueAcademique|CriticalThinking|ReflexionCritique|WhatsNext|EtApres|GoingFurther|PourAllerPlusLoin|References|GlossaryList)';
+    processed = processed.replace(new RegExp(`<(${prohibitedWidgetsPattern})\\b[^>]*?>([\\s\\S]*?)<\\/\\1>`, 'gi'), '');
+    processed = processed.replace(new RegExp(`<(${prohibitedWidgetsPattern})\\b[^>]*?\\/>`, 'gi'), '');
   }
 
   // Clean up duplicate frontmatter boundaries if any

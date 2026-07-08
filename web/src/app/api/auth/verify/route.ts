@@ -35,29 +35,15 @@ export async function POST(request: Request) {
       console.warn('[VERIFICATION] Supabase auth_verification fetch failed/offline:', dbErr);
     }
 
-    // Check in global cache store as a robust fallback
-    if (!profile && typeof global !== 'undefined') {
-      const g = global as any;
-      if (g.verificationStore && g.verificationStore.has(email)) {
-        const stored = g.verificationStore.get(email);
-        if (stored.token === token) {
-          profile = stored.profile;
-          g.verificationStore.delete(email); // Clean up
-        }
-      }
-    }
+    // C-3' FIX: The global.verificationStore read was removed.
+    // The write was already removed in Audit-4 (H-4 fix in signup/route.ts).
+    // Supabase auth_verification is the sole persistence layer.
 
-    // fallback verification if cache is lost or not matched
+    // C-2' FIX: If the token is not found in the DB, hard-reject.
+    // The previous fallback auto-created a verified profile for any email + any token,
+    // which was a complete authentication bypass.
     if (!profile) {
-      console.warn(`[VERIFICATION FALLBACK] Token cache lookup missed. Simulating verification for ${email}.`);
-      profile = {
-        id: `u_${Date.now()}`,
-        name: email.split('@')[0],
-        email,
-        role: 'student',
-        preferredLang: 'EN',
-        isEmailVerified: true
-      };
+      return NextResponse.json({ success: false, error: 'Invalid or expired verification token.' }, { status: 400 });
     }
 
     // Set verified flag and make sure user profile in db is updated!
@@ -67,9 +53,23 @@ export async function POST(request: Request) {
     };
 
     console.log(`[VERIFY SUCCESS] Account ${email} fully verified!`);
-    return NextResponse.json({ success: true, profile: verifiedProfile });
+    // H-3' FIX: Return only the fields the client needs, not the full persisted object.
+    return NextResponse.json({
+      success: true,
+      profile: {
+        id: verifiedProfile.id,
+        name: verifiedProfile.name,
+        email: verifiedProfile.email,
+        role: verifiedProfile.role || 'student',
+        preferredLang: verifiedProfile.preferredLang || 'EN',
+        isEmailVerified: true
+      }
+    });
   } catch (err: any) {
     console.error(`[VERIFY API ERROR]`, err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      error: process.env.NODE_ENV === 'production' ? 'An internal error occurred.' : err.message
+    }, { status: 500 });
   }
 }

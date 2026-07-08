@@ -200,6 +200,8 @@ export {
 import { mockDatabaseProvider } from './db/mock-provider';
 import { supabaseDatabaseProvider } from './db/supabase-provider';
 
+const pendingReads = new Map<string, Promise<any>>();
+
 export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
   get(target, prop, receiver) {
     const isProduction = process.env.NODE_ENV === 'production';
@@ -264,58 +266,77 @@ export const dbService: DatabaseService = new Proxy({} as DatabaseService, {
 
         const blockFallback = isWriteMethod(propStr);
 
-        let resolvedSandboxAllowed = isSandboxFallbackAllowed();
-        if (typeof window === 'undefined') {
+        // Deduplicate parallel read calls with same arguments
+        const isRead = !blockFallback;
+        const cacheKey = isRead ? `${propStr}:${JSON.stringify(args)}` : null;
+        if (isRead && cacheKey && pendingReads.has(cacheKey)) {
+          return pendingReads.get(cacheKey);
+        }
+
+        const runQuery = async () => {
+          let resolvedSandboxAllowed = isSandboxFallbackAllowed();
+          if (typeof window === 'undefined') {
+            try {
+              const { cookies } = require('next/headers');
+              const cookieStore = await cookies();
+              if (cookieStore.get('op_mock_archiving_levels')?.value || cookieStore.get('op_allow_sandbox')?.value === 'true') {
+                resolvedSandboxAllowed = true;
+              }
+            } catch (e) {}
+          }
+
+          const resolvedUseSupabase = isProduction || (isDatabaseConfigured && !isOffline && !resolvedSandboxAllowed && (!isLocalhost || !dynamicOffline));
+          const resolvedProvider = resolvedUseSupabase ? supabaseDatabaseProvider : mockDatabaseProvider;
+          const targetFn = Reflect.get(resolvedProvider, prop, receiver);
+
+          if (typeof targetFn !== 'function') {
+            throw new Error(`Method '${propStr}' does not exist on the resolved database provider.`);
+          }
+
           try {
-            const { cookies } = require('next/headers');
-            const cookieStore = await cookies();
-            if (cookieStore.get('op_mock_archiving_levels')?.value || cookieStore.get('op_allow_sandbox')?.value === 'true') {
-              resolvedSandboxAllowed = true;
+            const res = await targetFn.apply(resolvedProvider, args);
+            if (typeof window !== 'undefined' && propStr === 'getUserProgress') {
+              console.log(`[DB PROXY RES] getUserProgress resolved. Args: ${JSON.stringify(args)}. Result: ${JSON.stringify(res)}`);
             }
-          } catch (e) {}
+            if (resolvedUseSupabase && isLocalhost && resolvedSandboxAllowed && res && res.error && isConnectionFailure(res.error)) {
+              if (blockFallback) {
+                console.error(`[DATABASE] Authoritative write/mutation query '${propStr}' failed on remote database. Fallback is disabled to preserve data integrity.`, res.error);
+                return res;
+              }
+              console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' failed on localhost due to connection failure. Falling back to Mock/LocalStorage provider.`, res.error);
+              setDynamicOffline(true);
+              const retryValue = Reflect.get(mockDatabaseProvider, prop, receiver);
+              if (typeof retryValue === 'function') {
+                return retryValue.apply(mockDatabaseProvider, args);
+              }
+            }
+            return res;
+          } catch (err) {
+            if (resolvedUseSupabase && isLocalhost && resolvedSandboxAllowed && isConnectionFailure(err)) {
+              if (blockFallback) {
+                console.error(`[DATABASE] Authoritative write/mutation query '${propStr}' threw an error on remote database. Fallback is disabled to preserve data integrity.`, err);
+                throw err;
+              }
+              console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' threw a connection error on localhost. Falling back to Mock/LocalStorage provider.`, err);
+              setDynamicOffline(true);
+              const retryValue = Reflect.get(mockDatabaseProvider, prop, receiver);
+              if (typeof retryValue === 'function') {
+                return retryValue.apply(mockDatabaseProvider, args);
+              }
+            }
+            throw err;
+          }
+        };
+
+        if (isRead && cacheKey) {
+          const promise = runQuery().finally(() => {
+            pendingReads.delete(cacheKey);
+          });
+          pendingReads.set(cacheKey, promise);
+          return promise;
         }
 
-        const resolvedUseSupabase = isProduction || (isDatabaseConfigured && !isOffline && !resolvedSandboxAllowed && (!isLocalhost || !dynamicOffline));
-        const resolvedProvider = resolvedUseSupabase ? supabaseDatabaseProvider : mockDatabaseProvider;
-        const targetFn = Reflect.get(resolvedProvider, prop, receiver);
-
-        if (typeof targetFn !== 'function') {
-          throw new Error(`Method '${propStr}' does not exist on the resolved database provider.`);
-        }
-
-        try {
-          const res = await targetFn.apply(resolvedProvider, args);
-          if (typeof window !== 'undefined' && propStr === 'getUserProgress') {
-            console.log(`[DB PROXY RES] getUserProgress resolved. Args: ${JSON.stringify(args)}. Result: ${JSON.stringify(res)}`);
-          }
-          if (resolvedUseSupabase && isLocalhost && resolvedSandboxAllowed && res && res.error && isConnectionFailure(res.error)) {
-            if (blockFallback) {
-              console.error(`[DATABASE] Authoritative write/mutation query '${propStr}' failed on remote database. Fallback is disabled to preserve data integrity.`, res.error);
-              return res;
-            }
-            console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' failed on localhost due to connection failure. Falling back to Mock/LocalStorage provider.`, res.error);
-            setDynamicOffline(true);
-            const retryValue = Reflect.get(mockDatabaseProvider, prop, receiver);
-            if (typeof retryValue === 'function') {
-              return retryValue.apply(mockDatabaseProvider, args);
-            }
-          }
-          return res;
-        } catch (err) {
-          if (resolvedUseSupabase && isLocalhost && resolvedSandboxAllowed && isConnectionFailure(err)) {
-            if (blockFallback) {
-              console.error(`[DATABASE] Authoritative write/mutation query '${propStr}' threw an error on remote database. Fallback is disabled to preserve data integrity.`, err);
-              throw err;
-            }
-            console.warn(`[DATABASE FALLBACK] Supabase query '${String(prop)}' threw a connection error on localhost. Falling back to Mock/LocalStorage provider.`, err);
-            setDynamicOffline(true);
-            const retryValue = Reflect.get(mockDatabaseProvider, prop, receiver);
-            if (typeof retryValue === 'function') {
-              return retryValue.apply(mockDatabaseProvider, args);
-            }
-          }
-          throw err;
-        }
+        return runQuery();
       };
     }
 

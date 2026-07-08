@@ -60,6 +60,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('[CONFIRM RESET API ERROR]', err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      error: process.env.NODE_ENV === 'production' ? 'An internal error occurred.' : err.message
+    }, { status: 500 });
   }
 }

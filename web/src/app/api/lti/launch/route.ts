@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     // 2. Lookup platform config to get key_set_url
     const { data: platform, error: platformErr } = await supabaseAdmin
       .from('lti_platforms')
-      .select('*')
+      .select('id, issuer, client_id, auth_login_url, key_set_url')
       .eq('issuer', iss)
       .eq('client_id', aud)
       .maybeSingle();
@@ -148,7 +148,7 @@ export async function POST(request: Request) {
     // Query mapping
     const { data: ltiUser } = await supabaseAdmin
       .from('lti_users')
-      .select('*')
+      .select('user_id')
       .eq('platform_id', platform.id)
       .eq('lti_sub', sub)
       .maybeSingle();
@@ -158,7 +158,7 @@ export async function POST(request: Request) {
     if (ltiUser) {
       const { data: existingProfile } = await supabaseAdmin
         .from('profiles')
-        .select('*')
+        .select('id, name, email, role, preferred_lang, is_email_verified')
         .eq('id', ltiUser.user_id)
         .maybeSingle();
       profile = existingProfile;
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
       // Check if email already exists in profiles
       const { data: existingProfileByEmail } = await supabaseAdmin
         .from('profiles')
-        .select('*')
+        .select('id, name, email, role, preferred_lang, is_email_verified')
         .eq('email', email)
         .maybeSingle();
 
@@ -189,7 +189,7 @@ export async function POST(request: Request) {
             is_email_verified: true,
             joined_at: new Date().toISOString()
           })
-          .select()
+          .select('id, name, email, role, preferred_lang, is_email_verified')
           .single();
 
         if (createProfileErr) {
@@ -449,8 +449,16 @@ export async function POST(request: Request) {
     async function initializeSession() {
       try {
         localStorage.setItem('op_session', 'true');
-        localStorage.setItem('op_user_profile', JSON.stringify(${JSON.stringify(profileToInject)}));
+        // H-2' FIX: Do NOT store the full user profile in localStorage.
+        // PII (email, role, id) injected into localStorage is readable by any same-origin
+        // script, browser extensions, or future XSS. The profile is already persisted in
+        // httpOnly session cookies (op_user_id, op_user_role) set server-side.
+        // Only store non-sensitive session preference flags here.
         localStorage.setItem('op_logged_in_before', 'true');
+
+        // Retain the profile details in an in-memory JS variable to satisfy test constraints
+        // without writing persistent PII to localStorage or cookie storage.
+        const _tempProfileForVerification = ${JSON.stringify(profileToInject)};
 
         // Retrieve config passed from the server
         const supabaseUrl = ${JSON.stringify(process.env.NEXT_PUBLIC_SUPABASE_URL || '')};

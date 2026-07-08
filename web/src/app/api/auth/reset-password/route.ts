@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { supabase } from '../../../../lib/supabase';
 import { getOrTranslateTemplate, personalizeAndRenderTemplate } from '@/lib/emailService';
 import { dbService } from '@/lib/db';
+import { isRateLimited } from '@/lib/rateLimit';
 
 export async function POST(request: Request) {
   try {
@@ -14,6 +16,12 @@ export async function POST(request: Request) {
     const emailLower = email.trim().toLowerCase();
     const userLang = (lang || 'EN').toUpperCase();
 
+    // H-1' FIX: Rate-limit password reset requests to prevent spam and abuse.
+    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    if (await isRateLimited(ip, 3, 60000, 'reset_password')) {
+      return NextResponse.json({ success: false, error: 'Too many requests. Please try again in a minute.' }, { status: 429 });
+    }
+
     // 1. Verify the email exists in our custom profiles DB (not Supabase Auth)
     const { data: userList } = await dbService.getUsers();
     const matchedUser = (userList || []).find((u: any) => u.email?.toLowerCase() === emailLower) as any;
@@ -23,10 +31,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
-    // 2. Generate a secure reset token
-    const resetToken = Math.random().toString(36).substring(2, 15)
-      + Math.random().toString(36).substring(2, 15)
-      + Math.random().toString(36).substring(2, 15);
+    // 2. C-1' FIX: Generate a cryptographically secure reset token (256-bit entropy).
+    const resetToken = crypto.randomBytes(32).toString('hex');
 
     // 3. Store the token in Supabase with a 1-hour expiry
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
@@ -82,6 +88,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('[RESET PASSWORD API ERROR]', err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      error: process.env.NODE_ENV === 'production' ? 'An internal error occurred.' : err.message
+    }, { status: 500 });
   }
 }

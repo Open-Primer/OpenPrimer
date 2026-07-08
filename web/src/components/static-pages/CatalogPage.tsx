@@ -491,8 +491,25 @@ export const CatalogPage = () => {
   };
 
   useEffect(() => {
+    let hasCache = false;
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('openprimer_courses');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setCourses(parsed);
+            setIsLoading(false);
+            hasCache = true;
+          }
+        } catch (e) {}
+      }
+    }
+
     async function loadCoursesAndProgress() {
-      setIsLoading(true);
+      if (!hasCache) {
+        setIsLoading(true);
+      }
       try {
         const { data } = await dbService.getAllCourses();
         let validDbIds = new Set<number>();

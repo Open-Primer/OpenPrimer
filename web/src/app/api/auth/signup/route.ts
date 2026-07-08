@@ -130,7 +130,10 @@ export async function POST(request: Request) {
     });
   } catch (err: any) {
     console.error(`[SIGNUP API ERROR]`, err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      error: process.env.NODE_ENV === 'production' ? 'An internal error occurred.' : err.message
+    }, { status: 500 });
   }
 }
 

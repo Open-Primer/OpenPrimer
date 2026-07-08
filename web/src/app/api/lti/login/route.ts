@@ -41,7 +41,7 @@ async function handleLoginInitiation(request: Request) {
   // Lookup trust relationship in database
   let query = supabaseAdmin
     .from('lti_platforms')
-    .select('*')
+    .select('issuer, client_id, auth_login_url, key_set_url')
     .eq('issuer', iss);
   
   if (client_id) {

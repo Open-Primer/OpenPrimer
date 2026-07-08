@@ -119,8 +119,8 @@ Also a component citation <Citation refNum={2} author="Carlson" source="Physiolo
     const processed = preprocessMdx(rawMdx, 'fr');
 
     // Verify inline citations: both should now point to [1]
-    expect(processed).toContain('<sup id="cite-1" class="scroll-mt-24"><a href="#ref-1">[1]</a></sup>');
-    expect(processed).not.toContain('<sup id="cite-2"');
+    expect(processed).toContain('[[WIDGET:Citation:1]]');
+    expect(processed).not.toContain('[[WIDGET:Citation:2]]');
     
     // Verify component citation: refNum={2} should be rewritten to refNum={1}
     expect(processed).toContain('refNum={1}');
@@ -525,6 +525,19 @@ But this one [is perfectly balanced]
       expect(resolved).toContain('<ClimateImpactMap');
       expect(resolved).not.toContain('src="https://image.pollinations.ai/prompt/map"');
       expect(resolved).toContain('unresolved={true}');
+    });
+
+    test('should resolve suffix-augmented block widgets (Image, ClimateImpactMap) to proper self-closing tags with description', () => {
+      const rawMdx = `
+      Some prose before.
+      [[WIDGET:Image:test_img:This is a test image description]]
+      Some prose between.
+      [[WIDGET:climate_impact_map:test_map:This is a test map description]]
+      Some prose after.
+      `;
+      const stitched = stitchLessonContent(rawMdx, {}, false);
+      expect(stitched).toContain('<Image caption="Figure 1 : This is a test image description" id="test_img" description="This is a test image description" />');
+      expect(stitched).toContain('<ClimateImpactMap id="test_map" description="This is a test map description" />');
     });
   });
 });
