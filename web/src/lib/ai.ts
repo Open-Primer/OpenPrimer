@@ -4605,9 +4605,18 @@ Return ONLY a valid JSON object matching this schema:
 \\\`\\\`\\\`
 Do NOT wrap your JSON response in markdown code blocks.`;
 
+      const widgetBlock1Entry = {
+        blockName: "Block 1: Structure",
+        attempts: 0,
+        rejections: 0,
+        approved: false
+      };
+      lessonStats.widgetBlockAttempts.push(widgetBlock1Entry);
+
       while (!block1Approved && block1Iteration < maxBlock1Iterations) {
         block1Iteration++;
         lessonStats.widgetsAttempts++;
+        widgetBlock1Entry.attempts = block1Iteration;
         await appendTaskLog(`[AI GENERATOR] Generating Widget Block 1 (Attempt #${block1Iteration})...`);
 
         let block1PromptWithFeedback = block1Prompt;
@@ -4672,6 +4681,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
         if (auditResult.approved || isTerminalEvaluation) {
           await appendTaskLog(`[AI GENERATOR] Widget Block 1 approved by Critique Agent!`);
           block1Approved = true;
+          widgetBlock1Entry.approved = true;
         } else {
           let critiqueMsg = auditResult.critique || 'Widget Block 1 rejected.';
           if (auditResult.fields && auditResult.fields.length > 0) {
@@ -4679,6 +4689,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
           }
           await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 1 REJECTED. Critique: "${critiqueMsg}".`);
           lessonStats.widgetsRejections++;
+          widgetBlock1Entry.rejections++;
           block1Feedback = critiqueMsg;
         }
       }
@@ -4696,11 +4707,20 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
       let block2Feedback = '';
       let block2Parsed: any = null;
 
+      const widgetBlock2Entry = {
+        blockName: "Block 2: Interactive",
+        attempts: 0,
+        rejections: 0,
+        approved: false
+      };
+      lessonStats.widgetBlockAttempts.push(widgetBlock2Entry);
+
       const activeCustomAnchors = activeAnchors.filter(a => !['prerequisites', 'diagnosticQuiz', 'learningObjectives', 'conclusionSummary', 'whatsNext', 'goingFurther', 'finalEvaluation', 'references'].includes(a.type));
 
       if (activeCustomAnchors.length === 0 || isTerminalEvaluation) {
         await appendTaskLog(`[AI GENERATOR] No custom narrative widget anchors found. Skipping Widget Block 2.`);
         block2Approved = true;
+        widgetBlock2Entry.approved = true;
       } else {
         const block2Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 Your task is to design the JSON object for the interactive components of the lesson.
@@ -4788,6 +4808,7 @@ Do NOT wrap your JSON response in markdown code blocks.`;
         while (!block2Approved && block2Iteration < maxBlock2Iterations) {
           block2Iteration++;
           lessonStats.widgetsAttempts++;
+          widgetBlock2Entry.attempts = block2Iteration;
           await appendTaskLog(`[AI GENERATOR] Generating Widget Block 2 (Attempt #${block2Iteration})...`);
 
           let block2PromptWithFeedback = block2Prompt;
@@ -4852,6 +4873,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
           if (auditResult.approved) {
             await appendTaskLog(`[AI GENERATOR] Widget Block 2 approved by Critique Agent!`);
             block2Approved = true;
+            widgetBlock2Entry.approved = true;
           } else {
             let critiqueMsg = auditResult.critique || 'Widget Block 2 rejected.';
             if (auditResult.fields && auditResult.fields.length > 0) {
@@ -4859,6 +4881,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
             }
             await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 2 REJECTED. Critique: "${critiqueMsg}".`);
             lessonStats.widgetsRejections++;
+            widgetBlock2Entry.rejections++;
             block2Feedback = critiqueMsg;
           }
         }
@@ -4874,6 +4897,14 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
       const maxBlock3Iterations = 3;
       let block3Feedback = '';
       let block3Parsed: any = null;
+
+      const widgetBlock3Entry = {
+        blockName: "Block 3: Conclusion & Glossary",
+        attempts: 0,
+        rejections: 0,
+        approved: false
+      };
+      lessonStats.widgetBlockAttempts.push(widgetBlock3Entry);
 
       const block3Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 Your task is to design the JSON object for the conclusion, glossary, and transition widgets of the lesson:
@@ -4904,6 +4935,7 @@ Do NOT wrap your JSON response in markdown code blocks.`;
       while (!block3Approved && block3Iteration < maxBlock3Iterations) {
         block3Iteration++;
         lessonStats.widgetsAttempts++;
+        widgetBlock3Entry.attempts = block3Iteration;
         await appendTaskLog(`[AI GENERATOR] Generating Widget Block 3 (Attempt #${block3Iteration})...`);
 
         let block3PromptWithFeedback = block3Prompt;
@@ -4968,6 +5000,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
         if (auditResult.approved || isTerminalEvaluation) {
           await appendTaskLog(`[AI GENERATOR] Widget Block 3 approved by Critique Agent!`);
           block3Approved = true;
+          widgetBlock3Entry.approved = true;
         } else {
           let critiqueMsg = auditResult.critique || 'Widget Block 3 rejected.';
           if (auditResult.fields && auditResult.fields.length > 0) {
@@ -4975,6 +5008,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
           }
           await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 3 REJECTED. Critique: "${critiqueMsg}".`);
           lessonStats.widgetsRejections++;
+          widgetBlock3Entry.rejections++;
           block3Feedback = critiqueMsg;
         }
       }
@@ -4993,6 +5027,14 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
       const maxBlock4Iterations = 3;
       let block4Feedback = '';
       let block4Parsed: any = null;
+
+      const widgetBlock4Entry = {
+        blockName: "Block 4: Evaluation & References",
+        attempts: 0,
+        rejections: 0,
+        approved: false
+      };
+      lessonStats.widgetBlockAttempts.push(widgetBlock4Entry);
 
       const block4Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 Your task is to design the JSON object for the final evaluation quiz and reference widgets of the lesson:
@@ -5027,6 +5069,7 @@ Do NOT wrap your JSON response in markdown code blocks.`;
       while (!block4Approved && block4Iteration < maxBlock4Iterations) {
         block4Iteration++;
         lessonStats.widgetsAttempts++;
+        widgetBlock4Entry.attempts = block4Iteration;
         await appendTaskLog(`[AI GENERATOR] Generating Widget Block 4 (Attempt #${block4Iteration})...`);
 
         let block4PromptWithFeedback = block4Prompt;
@@ -5092,6 +5135,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
         if (auditResult.approved || isTerminalEvaluation) {
           await appendTaskLog(`[AI GENERATOR] Widget Block 4 approved by Critique Agent!`);
           block4Approved = true;
+          widgetBlock4Entry.approved = true;
         } else {
           let critiqueMsg = auditResult.critique || 'Widget Block 4 rejected.';
           if (auditResult.fields && auditResult.fields.length > 0) {
@@ -5099,6 +5143,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
           }
           await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 4 REJECTED. Critique: "${critiqueMsg}".`);
           lessonStats.widgetsRejections++;
+          widgetBlock4Entry.rejections++;
           block4Feedback = critiqueMsg;
         }
       }
@@ -5192,7 +5237,7 @@ ${validatedMdx}`;
           healAttempt++;
           lessonStats.selfHealingAttempts++;
           console.log(`[SELF-HEALING] Attempt ${healAttempt}/${maxHealAttempts} to heal MDX compilation error: ${mdxCheck.error}`);
-          healedResult = await healMdxWithAI(healedResult, mdxCheck.error || 'Unknown MDX compilation error', targetLang.toLowerCase());
+          healedResult = await healMdxWithAI(healedResult, mdxCheck.error || 'Unknown MDX compilation error', targetLang.toLowerCase(), lessonStats);
           mdxCheck = await validateMdxContent(healedResult, targetLang.toLowerCase());
         }
 
@@ -5261,8 +5306,9 @@ ${validatedMdx}`;
       saveDraftRevision(`final_stage2_widgets_${item.slug}.json`, JSON.stringify(parsedWidgets, null, 2));
       saveDraftRevision(`final_stage3_stitched_${item.slug}.mdx`, resolvedMdx);
 
+      const mdStats = generateStatsMarkdown(lessonStats);
       saveDraftRevision(`stats_${item.slug}.json`, JSON.stringify(lessonStats, null, 2));
-      saveDraftRevision(`stats_${item.slug}.md`, generateStatsMarkdown(lessonStats));
+      saveDraftRevision(`stats_${item.slug}.md`, mdStats);
 
     } catch (err: any) {
       lessonStats.status = 'failed';
@@ -5271,8 +5317,9 @@ ${validatedMdx}`;
       lessonStats.durationSeconds = Math.round((lessonStats.endTime - lessonStats.startTime) / 1000);
 
       // Save stats on failure
+      const mdStats = generateStatsMarkdown(lessonStats);
       saveDraftRevision(`stats_${item.slug}.json`, JSON.stringify(lessonStats, null, 2));
-      saveDraftRevision(`stats_${item.slug}.md`, generateStatsMarkdown(lessonStats));
+      saveDraftRevision(`stats_${item.slug}.md`, mdStats);
 
       throw err;
     }
@@ -5339,7 +5386,8 @@ ${validatedMdx}`;
 async function performSectionBasedTranslation(
   lesson: { title: string; content: string; lesson_slug: string },
   targetLang: string,
-  apiKey: string | undefined | null
+  apiKey: string | undefined | null,
+  stats?: any
 ): Promise<{ translatedMdx: string; transSuccess: boolean; transTitle: string; registry: Record<string, any> }> {
   const { content: isolatedContent, registry } = isolateJsxForTranslation(lesson.content);
 
@@ -5359,6 +5407,11 @@ async function performSectionBasedTranslation(
           const tJson = await resTitle.json();
           transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
           transTitleSuccess = true;
+          if (stats) {
+            const usage = tJson.usageMetadata || {};
+            stats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
+            stats.tokenMetrics.candidatesTokens += usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+          }
         }
       } catch (err) {
         console.warn("[AI GENERATOR] Vertex title translation call failed:", err);
@@ -5384,6 +5437,10 @@ async function performSectionBasedTranslation(
           const usage = tJson.usageMetadata || {};
           const promptTokens = usage.promptTokenCount || 0;
           const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+          if (stats) {
+            stats.tokenMetrics.promptTokens += promptTokens;
+            stats.tokenMetrics.candidatesTokens += candidatesTokens;
+          }
           await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedTitle);
         }
       } catch (err) {
@@ -5396,6 +5453,9 @@ async function performSectionBasedTranslation(
 
   // 2. Split isolated content into sections
   const parsedSections = parseMarkdownSections(isolatedContent);
+  if (stats) {
+    stats.sectionsTotal = parsedSections.length;
+  }
   // [FIX T1] Concurrency cap prevents 429 errors on large lessons.
   const MAX_PARALLEL_SECTIONS = Number(process.env.MAX_PARALLEL_SECTIONS ?? 3);
   const translatedSections = await mapConcurrent(parsedSections, MAX_PARALLEL_SECTIONS, async (sec: any) => {
@@ -5437,6 +5497,11 @@ ${sectionToTranslate}`;
             const resJson = await resSec.json();
             translatedContent = resJson.candidates?.[0]?.content?.parts?.[0]?.text || sectionToTranslate;
             secSuccess = true;
+            if (stats) {
+              const usage = resJson.usageMetadata || {};
+              stats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
+              stats.tokenMetrics.candidatesTokens += usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+            }
           }
         } catch (err) {
           console.warn(`[AI GENERATOR] Vertex translation call failed for section:`, err);
@@ -5462,6 +5527,10 @@ ${sectionToTranslate}`;
             const usage = resJson.usageMetadata || {};
             const promptTokens = usage.promptTokenCount || 0;
             const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+            if (stats) {
+              stats.tokenMetrics.promptTokens += promptTokens;
+              stats.tokenMetrics.candidatesTokens += candidatesTokens;
+            }
             await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedPrompt);
           }
         } catch (err) {
@@ -5473,6 +5542,9 @@ ${sectionToTranslate}`;
       if (!secSuccess && sectionToTranslate.trim()) {
         console.error(`[TRANSLATION] Both Vertex and Studio failed for section "${sec.heading || 'Preamble'}" in "${lesson.title}". Marking as TRANSLATION_FAILED.`);
         translatedContent = `<!-- TRANSLATION_FAILED: ${(sec.heading || 'Preamble').replace(/-->/g, '->')} -->\n${sectionToTranslate}`;
+        if (stats) {
+          stats.sectionTranslationFailures++;
+        }
       }
     }
 
@@ -5592,13 +5664,35 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
             console.warn(`[INCREMENTAL] Translation check failed for "${lesson.title}", proceeding.`, err);
           }
 
+          const translationStats: any = {
+            courseSlug: courseSlug,
+            lessonTitle: lesson.title,
+            lessonSlug: lesson.lesson_slug,
+            targetLanguage: targetLang,
+            startTime: Date.now(),
+            endTime: 0,
+            durationSeconds: 0,
+            sectionsTotal: 0,
+            sectionTranslationFailures: 0,
+            critiqueIterations: 0,
+            critiqueRejections: 0,
+            selfHealingAttempts: 0,
+            status: 'pending',
+            error: '',
+            tokenMetrics: {
+              promptTokens: 0,
+              candidatesTokens: 0
+            },
+            estimatedCostUSD: 0
+          };
+
           try {
             const delay = index * INTER_LESSON_DELAY_MS;
             console.log(`[TRANSLATOR] Staggering translation of lesson "${lesson.title}" by ${delay / 1000}s...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             
             // [FIX T6] Capture sectionRegistry for reuse in critic-refine loop.
-            const { translatedMdx: initialTranslatedMdx, transSuccess: initialTransSuccess, transTitle: initialTransTitle, registry: sectionRegistry } = await performSectionBasedTranslation(lesson, targetLang, apiKey);
+            const { translatedMdx: initialTranslatedMdx, transSuccess: initialTransSuccess, transTitle: initialTransTitle, registry: sectionRegistry } = await performSectionBasedTranslation(lesson, targetLang, apiKey, translationStats);
             let translatedMdx = initialTranslatedMdx;
             let transSuccess = initialTransSuccess;
             let transTitle = initialTransTitle;
@@ -5612,6 +5706,7 @@ export async function translateCourseContent(courseSlug: string, targetLang: str
 
             while (!approved && critiqueIteration < maxCritiqueIterations && currentTranslation) {
               critiqueIteration++;
+              translationStats.critiqueIterations = critiqueIteration;
               console.log(`[AI GENERATOR - TRANSLATION CRITIC] Reviewing translation for "${lesson.title}" to "${targetLang}" (Attempt ${critiqueIteration}/${maxCritiqueIterations})...`);
 
               const promptCritic = `You are the Translation Critic Agent (Agent 4 - Specialized in Translation Quality Assurance). Your job is to strictly validate the translated academic MDX content against the original source content.
@@ -5666,6 +5761,11 @@ let criticResText = '';
                     const resJson = await res.json();
                     criticResText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
                     criticSuccess = true;
+                    if (translationStats) {
+                      const usage = resJson.usageMetadata || {};
+                      translationStats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
+                      translationStats.tokenMetrics.candidatesTokens += usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+                    }
                   }
                 } catch (err) {
                   console.warn("[AI GENERATOR - TRANSLATION CRITIC] Vertex critique call failed:", err);
@@ -5673,6 +5773,7 @@ let criticResText = '';
               }
 
               if (!criticSuccess && apiKey) {
+                const startTime = Date.now();
                 try {
                   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
@@ -5689,6 +5790,15 @@ let criticResText = '';
                     const resJson = await res.json();
                     criticResText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
                     criticSuccess = true;
+                    const durationMs = Date.now() - startTime;
+                    const usage = resJson.usageMetadata || {};
+                    const promptTokens = usage.promptTokenCount || 0;
+                    const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+                    if (translationStats) {
+                      translationStats.tokenMetrics.promptTokens += promptTokens;
+                      translationStats.tokenMetrics.candidatesTokens += candidatesTokens;
+                    }
+                    await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptCritic);
                   }
                 } catch (err) {
                   console.error("[AI GENERATOR - TRANSLATION CRITIC] AI Studio fallback critique call failed:", err);
@@ -5717,6 +5827,9 @@ let criticResText = '';
                 translatedMdx = currentTranslation;
               } else {
                 console.warn(`[AI GENERATOR - TRANSLATION CRITIC] Translation REJECTED for "${lesson.title}". Critique: ${critique}`);
+                if (translationStats) {
+                  translationStats.critiqueRejections++;
+                }
                 
                 // [FIX T6] Reuse sectionRegistry from performSectionBasedTranslation instead of
                 // re-isolating, which produces different placeholder keys causing JSX corruption.
@@ -5763,6 +5876,11 @@ if (process.env.DEBUG === 'true') {
                       const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
                       currentTranslation = restoreJsxAfterTranslation(rawText, sectionRegistry, targetLang);
                       refineSuccess = true;
+                      if (translationStats) {
+                        const usage = resJson.usageMetadata || {};
+                        translationStats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
+                        translationStats.tokenMetrics.candidatesTokens += usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+                      }
                     }
                   } catch (err) {
                     console.warn("[AI GENERATOR - TRANSLATION CRITIC] Vertex translation refinement call failed:", err);
@@ -5770,6 +5888,7 @@ if (process.env.DEBUG === 'true') {
                 }
 
                 if (!refineSuccess && apiKey) {
+                  const startTime = Date.now();
                   try {
                     const resRefine = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                       method: 'POST',
@@ -5783,6 +5902,15 @@ if (process.env.DEBUG === 'true') {
                       const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
                       currentTranslation = restoreJsxAfterTranslation(rawText, sectionRegistry, targetLang);
                       refineSuccess = true;
+                      const durationMs = Date.now() - startTime;
+                      const usage = resJson.usageMetadata || {};
+                      const promptTokens = usage.promptTokenCount || 0;
+                      const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+                      if (translationStats) {
+                        translationStats.tokenMetrics.promptTokens += promptTokens;
+                        translationStats.tokenMetrics.candidatesTokens += candidatesTokens;
+                      }
+                      await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptRefine);
                     }
                   } catch (err) {
                     console.error("[AI GENERATOR - TRANSLATION CRITIC] AI Studio fallback translation refinement call failed:", err);
@@ -5826,8 +5954,11 @@ if (process.env.DEBUG === 'true') {
               const maxHealAttempts = 3;
               while (!mdxCheck.success && healAttempt < maxHealAttempts) {
                 healAttempt++;
+                if (translationStats) {
+                  translationStats.selfHealingAttempts++;
+                }
                 console.log(`[SELF-HEALING-TRANSLATION] Attempt ${healAttempt}/${maxHealAttempts} to heal MDX compilation error: ${mdxCheck.error}`);
-                healedResult = await healMdxWithAI(healedResult, mdxCheck.error || 'Unknown MDX compilation error', targetLang.toLowerCase());
+                healedResult = await healMdxWithAI(healedResult, mdxCheck.error || 'Unknown MDX compilation error', targetLang.toLowerCase(), translationStats);
                 mdxCheck = await validateMdxContent(healedResult, targetLang.toLowerCase());
               }
 
@@ -5869,9 +6000,27 @@ if (process.env.DEBUG === 'true') {
             });
             await updateTaskProgress();
 
+            translationStats.status = 'success';
+            translationStats.endTime = Date.now();
+            translationStats.durationSeconds = Math.round((translationStats.endTime - translationStats.startTime) / 1000);
+
+            const mdTransStats = generateTranslationStatsMarkdown(translationStats);
+            saveDraftRevision(`stats_translation_${lesson.lesson_slug}.json`, JSON.stringify(translationStats, null, 2));
+            saveDraftRevision(`stats_translation_${lesson.lesson_slug}.md`, mdTransStats);
+
           } catch (lessonErr: any) {
             console.error(`[TRANSLATOR ERROR] Failed to translate lesson "${lesson.title}":`, lessonErr);
             failures.push(`Lesson "${lesson.title}": ${lessonErr.message || String(lessonErr)}`);
+
+            translationStats.status = 'failed';
+            translationStats.error = lessonErr instanceof Error ? lessonErr.message : String(lessonErr);
+            translationStats.endTime = Date.now();
+            translationStats.durationSeconds = Math.round((translationStats.endTime - translationStats.startTime) / 1000);
+
+            const mdTransStats = generateTranslationStatsMarkdown(translationStats);
+            saveDraftRevision(`stats_translation_${lesson.lesson_slug}.json`, JSON.stringify(translationStats, null, 2));
+            saveDraftRevision(`stats_translation_${lesson.lesson_slug}.md`, mdTransStats);
+
             await updateTaskProgress();
           }
         });
@@ -7052,7 +7201,7 @@ Return ONLY the raw JSON object. Do not wrap it in markdown blockticks (\`\`\`).
   };
 }
 
-export async function healMdxWithAI(content: string, mdxError: string, targetLang: string = 'fr'): Promise<string> {
+export async function healMdxWithAI(content: string, mdxError: string, targetLang: string = 'fr', stats?: any): Promise<string> {
   // [FIX H1] Truncate large MDX content to ~120 lines around the error to reduce context size.
   const mdxLines = content.split('\n');
   const healerContent = mdxLines.length > 120 ? mdxLines.slice(0, 120).join('\n') + '\n... [content truncated for context efficiency]' : content;
@@ -7090,7 +7239,14 @@ INSTRUCTIONS:
       if (res && res.ok) {
         const jsonRes = await res.json();
         repairedMdx = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        if (repairedMdx) success = true;
+        if (repairedMdx) {
+          success = true;
+          if (stats) {
+            const usage = jsonRes.usageMetadata || {};
+            stats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
+            stats.tokenMetrics.candidatesTokens += usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+          }
+        }
       }
     } catch (err) {
       console.warn(`[SELF-HEALING] Vertex AI healer exception:`, err);
@@ -7118,6 +7274,10 @@ INSTRUCTIONS:
           const usage = jsonRes.usageMetadata || {};
           const promptTokens = usage.promptTokenCount || 0;
           const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+          if (stats) {
+            stats.tokenMetrics.promptTokens += promptTokens;
+            stats.tokenMetrics.candidatesTokens += candidatesTokens;
+          }
           await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedHealer);
         } else {
           console.warn("[SELF-HEALING] AI Studio healer returned empty content");

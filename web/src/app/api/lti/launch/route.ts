@@ -121,10 +121,12 @@ export async function POST(request: Request) {
     const savedState = cookieStore.get('lti_state')?.value;
 
     if (savedNonce && payload.nonce && savedNonce !== payload.nonce) {
-      console.warn('[LTI-LAUNCH] Nonce mismatch:', { savedNonce, tokenNonce: payload.nonce });
+      console.error('[LTI-LAUNCH] Nonce mismatch:', { savedNonce, tokenNonce: payload.nonce });
+      return new Response('LTI Launch nonce validation failed', { status: 403 });
     }
     if (savedState && state && savedState !== state) {
-      console.warn('[LTI-LAUNCH] State mismatch:', { savedState, queryState: state });
+      console.error('[LTI-LAUNCH] State mismatch:', { savedState, queryState: state });
+      return new Response('LTI Launch state validation failed', { status: 403 });
     }
 
     // 7. Resolve LMS user profile and mapping
@@ -280,9 +282,13 @@ export async function POST(request: Request) {
       console.error('[LTI-LAUNCH] Failed to write session cookies during API launch:', cookieErr);
     }
 
-    // 9. Generate and symmetrically sign a Custom Supabase JWT for Option 2 (Secure LTI Auth)
     const jwtSecret = process.env.SUPABASE_JWT_SECRET;
+    const isProd = process.env.NODE_ENV === 'production';
     if (!jwtSecret) {
+      if (isProd) {
+        console.error('[LTI-LAUNCH] CRITICAL: SUPABASE_JWT_SECRET environment variable is not defined in production. Aborting launch.');
+        return new Response('Configuration error: Secure JWT key not configured', { status: 500 });
+      }
       console.warn('[LTI-LAUNCH] WARNING: SUPABASE_JWT_SECRET environment variable is not defined. Using a temporary fallback signature. Authenticated client-side queries will fail signature validation in Supabase.');
     }
     const secretToUse = jwtSecret || 'super-secret-jwt-token-with-at-least-32-characters-long';

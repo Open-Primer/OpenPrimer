@@ -2232,7 +2232,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
   const MAX_CHECKS = 6;
   const MAX_REPAIRS = 3;
 
-  const targetLangLower = targetLang.toLowerCase();
+  const targetLangLower = (targetLang || 'fr').toLowerCase();
 
   // 1. Validate & Repair YouTube Videos
   const videoRegex = /<Video\s+([^>]*?)\/>/g;
@@ -2285,7 +2285,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
           updatedAttrs += ` url="${newUrl}"`;
         }
         
-        updatedContent = updatedContent.replace(fullTag, `<Video ${updatedAttrs}/>`);
+        updatedContent = updatedContent.replaceAll(fullTag, `<Video ${updatedAttrs}/>`);
         console.log(`[RESTITUTION-REPAIR] Successfully repaired video "${title}" to ID: ${realId}`);
       } else {
         console.log(`[RESTITUTION-REPAIR] Could not resolve alternative video for "${title}". Setting unresolved={true}.`);
@@ -2293,7 +2293,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
         if (!attrsStr.includes('unresolved=')) {
           updatedAttrs += ' unresolved={true}';
         }
-        updatedContent = updatedContent.replace(fullTag, `<Video ${updatedAttrs}/>`);
+        updatedContent = updatedContent.replaceAll(fullTag, `<Video ${updatedAttrs}/>`);
       }
     }
   }
@@ -2398,7 +2398,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
           } else {
             updatedAttrs += ` url="${publicUrl}"`;
           }
-          updatedContent = updatedContent.replace(fullTag, `<Audio ${updatedAttrs}/>`);
+          updatedContent = updatedContent.replaceAll(fullTag, `<Audio ${updatedAttrs}/>`);
           console.log(`[RESTITUTION-REPAIR] Successfully repaired audio to: ${publicUrl}`);
         }
       }
@@ -2450,7 +2450,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
               
               const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
               if (publicUrl) {
-                updatedContent = updatedContent.replace(fullMatch, `![${altText}](${publicUrl})`);
+                updatedContent = updatedContent.replaceAll(fullMatch, `![${altText}](${publicUrl})`);
                 console.log(`[RESTITUTION-REPAIR] Successfully repaired markdown image to: ${publicUrl}`);
                 success = true;
               }
@@ -2463,7 +2463,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
 
       if (!success) {
         // If repair failed, remove the image tag completely as per "Strict No AI Fallbacks for Factual Assets" / "Omit broken images"
-        updatedContent = updatedContent.replace(fullMatch, '');
+        updatedContent = updatedContent.replaceAll(fullMatch, '');
         console.log(`[RESTITUTION-REPAIR] Removed broken/unresolved markdown image: "${altText}"`);
       }
     }
@@ -2541,10 +2541,8 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
       }
     }
 
-    // ALWAYS rebuild and replace the CustomFigure tag. This guarantees that any raw double quotes
-    // inside caption or other attributes (e.g. from existing DB records) are correctly escaped as &quot;
     const newTag = rebuildCustomFigure(currentAttrs);
-    updatedContent = updatedContent.replace(fullTag, newTag);
+    updatedContent = updatedContent.replaceAll(fullTag, newTag);
   }
 
   // 5. Renumber figures sequentially to guarantee continuous numbering after client-side deletions/repairs

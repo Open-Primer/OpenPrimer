@@ -26,7 +26,12 @@ function verifySignature(payload: string, signature: string | null): boolean {
     if (!webhookSecret || !signature) return false;
     const hmac = crypto.createHmac('sha256', webhookSecret);
     const digest = 'sha256=' + hmac.update(payload).digest('hex');
-    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
+    const signatureBuffer = Buffer.from(signature);
+    const digestBuffer = Buffer.from(digest);
+    if (signatureBuffer.length !== digestBuffer.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(signatureBuffer, digestBuffer);
   }
   return true; // Dev mode / bypass if not configured
 }
