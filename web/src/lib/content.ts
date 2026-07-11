@@ -5941,11 +5941,14 @@ export async function resolvePrecompiledAnchors(
 
 export function rehypeMdxSanitizer(lang: string = 'en') {
   const whitelistedComponents = new Set([
+    // Core Layout, Audio, Video & Alert
     'Alert', 'Biography', 'CustomFigure', 'Visual', 'VisualMedia', 'Image', 'Quiz', 'Question', 'Option',
     'Citation', 'QuoteBlock', 'InteractiveQuote',
     'Glossary', 'Video', 'AudioPlayer', 'Audio', 'PronunciationSandbox', 'SandboxPrononciation',
     'Explanation', 'Solution', 'KeyConcept', 'Instruction', 'Shape', 'FillInBlanks', 'FillInBlanks.Input',
     'FillInBlanksQuestion', 'MetaNote', 'SolvedProblem', 'Summary', 'SelfEval', 'SelfAssessment',
+    
+    // Entity Overlays
     'RealPerson', 'HistoricalPerson', 'PersonnageHistorique', 'FictionalCharacter', 'PersonnageFictif',
     'Location', 'Place', 'ConceptLink', 'ConceptLien', 'TheoremLink', 'TheoremeLien', 'ThéorèmeLien',
     'InstitutionLink', 'InstitutionLien', 'Event', 'HistoricalEventLink', 'EvenementHistorique',
@@ -5954,10 +5957,38 @@ export function rehypeMdxSanitizer(lang: string = 'en') {
     'ChemicalLien', 'MoleculesLien', 'MoleculeLien', 'ChimieLien', 'CelestialLink', 'CelestialLien',
     'CorpsCeleste', 'CorpsCéleste', 'AstroLien', 'EssayEvaluation', 'OralEvaluation', 'EvaluationOrale',
     'Prerequisites', 'Epistemology', 'DiagnosticQuiz', 'ExternalSandbox', 'References', 'Mermaid',
+    
+    // Interactive Simulation & Plotter Widgets
     'FunctionPlotter', 'InteractiveDiagram', 'ComparisonSlider', 'CodeSandbox', 'SolvedExercise',
     'UnsolvedExercise', 'GestaltInteractive', 'GestaltLab', 'DataChart', 'StructureViewer3D',
     'QuantumOrbitalExplorer', 'ExplorateurOrbitalesQuantiques', 'DynamicSimulation', 'GoingFurther',
-    'GoingFurtherItem', 'FunctionManipulator', 'ManipulateurFonction', 'ExplorateurFonctions'
+    'GoingFurtherItem', 'FunctionManipulator', 'ManipulateurFonction', 'ExplorateurFonctions',
+    'EquationManipulator', 'ManipulateurEquation', 'ExplorateurEquations', 'ChemicalStoichiometry',
+    'EquilibrageChimique', 'StoichiometrieChimique', 'BasicMathExplorer', 'ExplorateurMathsBase',
+    'BiophysicsSimulator', 'SimulateurBiophysique', 'LogicGateSimulator', 'SimulateurPorteLogique',
+    'SimulateurPortesLogiques', 'GeneticsPedigreeLab', 'LabGenetiquePedigree', 'CarreePunnett',
+    'OrbitalMechanicsSim', 'SimulateurOrbiteMecanique', 'SimulateurOrbital', 'PeriodicTable',
+    'TableauPeriodique', 'SolarSystemOrrery', 'SystemeSolaire', 'FinancialChart', 'GraphiqueFinancier',
+    'WaveInterferenceSim', 'SimulateurOndes', 'AcousticPianoSynth', 'SynthetiseurPiano', 'SankeyDiagram',
+    'DiagrammeSankey', 'ClimateImpactMap', 'CarteImpactClimatique', 'GeoMapExplorer', 'ExplorateurGeographique',
+    'CardSort', 'AssociationPaires', 'MatchingEvaluation', 'AssociationCorrespondance', 'ReorderEvaluation',
+    'ReordonnerItems', 'SocraticInput', 'AnalyseSocratique', 'Timeline', 'FriseChronologique',
+    
+    // Custom Pedagogical Blocks
+    'CriticalThinking', 'EspritCritique', 'DidYouKnow', 'LeSaviezVous', 'HistoricalAnecdote', 'AnecdoteHistorique',
+    'HistoricalEvent', 'HistoricalFact', 'FaitHistorique', 'ScientificMethod', 'MethodeScientifique',
+    'WhatsNext', 'EtApres', 'PointOfView', 'PointDeVue', 'Geometry2D', 'Geometrie2D', 'BrilliantIdea',
+    'IdeeBrillante', 'OpenQuestion', 'ScientificDebate', 'PreviousLessonSummary', 'ResumeLeconPrecedente',
+    'CareerProfile', 'FicheMetier', 'FocalisationMetier', 'ResearchFocus', 'QuestionRecherche',
+    'RecentNewsBridge', 'LienActualite', 'DivergingViews', 'DivergingView', 'VisionsOpposees', 'VisionsOpposées',
+    
+    // Learning Objectives
+    'Objectives', 'Objective', 'Knowledge', 'Skills', 'Attitudes',
+    
+    // Evaluation, Assignments & Structural Widgets
+    'SummativeEvaluation', 'EvaluationSection', 'Assignment', 'Deadline', 'Submission', 'Evaluation',
+    'FinalProject', 'FinalWork', 'Format', 'Instructions', 'FinalQuiz', 'QuizQuestion', 'Answer',
+    'Description', 'Title', 'FormativeQuiz', 'Callout', 'CalloutContainer'
   ]);
 
   function forceAsciiLocal(str: string): string {
