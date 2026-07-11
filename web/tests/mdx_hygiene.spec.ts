@@ -119,8 +119,8 @@ Also a component citation <Citation refNum={2} author="Carlson" source="Physiolo
     const processed = preprocessMdx(rawMdx, 'fr');
 
     // Verify inline citations: both should now point to [1]
-    expect(processed).toContain('[[WIDGET:Citation:1]]');
-    expect(processed).not.toContain('[[WIDGET:Citation:2]]');
+    expect(processed).toContain('[[WIDGET:Reference:1]]');
+    expect(processed).not.toContain('[[WIDGET:Reference:2]]');
     
     // Verify component citation: refNum={2} should be rewritten to refNum={1}
     expect(processed).toContain('refNum={1}');
