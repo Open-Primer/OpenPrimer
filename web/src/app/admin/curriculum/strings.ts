@@ -895,7 +895,12 @@ export const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Auto-Retry Interval": "Auto-Retry Interval",
     "Cooldown delay in hours before a failed task is retried.": "Cooldown delay in hours before a failed task is retried.",
     "Task Retention": "Task Retention",
-    "Retention period in days before completed or failed tasks are permanently purged.": "Retention period in days before completed or failed tasks are permanently purged."
+    "Retention period in days before completed or failed tasks are permanently purged.": "Retention period in days before completed or failed tasks are permanently purged.",
+    "Pause all queued and running tasks": "Pause all queued and running tasks",
+    "Reload queue from DB and resume all paused tasks": "Reload queue from DB and resume all paused tasks",
+    "Approve & Archive": "Approve & Archive",
+    "This action is outdated by a newer pipeline task.": "This action is outdated by a newer pipeline task.",
+    "Re-scan MDX directory to load physical disk changes": "Re-scan MDX directory to load physical disk changes"
   },
   FR: {
     "Approve & Promote": "Approuver & Promouvoir",
@@ -912,7 +917,12 @@ export const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Auto-Retry Interval": "Intervalle de Relance",
     "Cooldown delay in hours before a failed task is retried.": "Délai en heures avant qu'une tâche échouée ne soit automatiquement relancée.",
     "Task Retention": "Rétention des Tâches",
-    "Retention period in days before completed or failed tasks are permanently purged.": "Période de conservation en jours avant que les tâches terminées ou échouées ne soient purgées."
+    "Retention period in days before completed or failed tasks are permanently purged.": "Période de conservation en jours avant que les tâches terminées ou échouées ne soient purgées.",
+    "Pause all queued and running tasks": "Mettre en pause toutes les tâches en attente et en cours",
+    "Reload queue from DB and resume all paused tasks": "Recharger la file depuis la base de données et reprendre toutes les tâches en pause",
+    "Approve & Archive": "Approuver & Archiver",
+    "This action is outdated by a newer pipeline task.": "Cette action est obsolète suite à une tâche de pipeline plus récente.",
+    "Re-scan MDX directory to load physical disk changes": "Ré-analyser le dossier MDX pour charger les modifications physiques sur le disque"
   },
   ES: {
     "Approve & Promote": "Aprobar y Promover",
@@ -929,7 +939,12 @@ export const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Auto-Retry Interval": "Intervalo de Reintento",
     "Cooldown delay in hours before a failed task is retried.": "Tiempo de espera en horas antes de que se vuelva a intentar una tarea fallida.",
     "Task Retention": "Retención de Tareas",
-    "Retention period in days before completed or failed tasks are permanently purged.": "Período de retención en días antes de que las tareas completadas o fallidas se eliminen permanentemente."
+    "Retention period in days before completed or failed tasks are permanently purged.": "Período de retención en días antes de que las tareas completadas o fallidas se eliminen permanentemente.",
+    "Pause all queued and running tasks": "Pausar todas las tareas en cola y en ejecución",
+    "Reload queue from DB and resume all paused tasks": "Recargar la cola desde la base de datos y reanudar todas las tareas pausadas",
+    "Approve & Archive": "Aprobar y Archivar",
+    "This action is outdated by a newer pipeline task.": "Esta acción está obsoleta por una tarea de pipeline más nueva.",
+    "Re-scan MDX directory to load physical disk changes": "Volver a escanear el directorio MDX para cargar los cambios físicos del disco"
   },
   DE: {
     "Approve & Promote": "Genehmigen & Fördern",
@@ -946,7 +961,12 @@ export const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Auto-Retry Interval": "Wiederholungsintervall",
     "Cooldown delay in hours before a failed task is retried.": "Wertezeit in Stunden, bevor ein fehlgeschlagener Auftrag wiederholt wird.",
     "Task Retention": "Aufbewahrungszeitraum",
-    "Retention period in days before completed or failed tasks are permanently purged.": "Aufbewahrungsdauer in Tagen, bevor abgeschlossene oder fehlgeschlagene Aufträge gelöscht werden."
+    "Retention period in days before completed or failed tasks are permanently purged.": "Aufbewahrungsdauer in Tagen, bevor abgeschlossene oder fehlgeschlagene Aufträge gelöscht werden.",
+    "Pause all queued and running tasks": "Alle wartenden und laufenden Aufgaben pausieren",
+    "Reload queue from DB and resume all paused tasks": "Warteschlange aus der Datenbank neu laden und alle pausierten Aufgaben fortsetzen",
+    "Approve & Archive": "Genehmigen & Archivieren",
+    "This action is outdated by a newer pipeline task.": "Diese Aktion ist durch eine neuere Pipeline-Aufgabe veraltet.",
+    "Re-scan MDX directory to load physical disk changes": "MDX-Verzeichnis neu scannen, um physische Datenträgeränderungen zu laden"
   },
   ZH: {
     "Approve & Promote": "批准并晋升",
@@ -963,7 +983,12 @@ export const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Auto-Retry Interval": "自动重试间隔",
     "Cooldown delay in hours before a failed task is retried.": "失败任务自动重试之前的冷却延迟时间（小时）。",
     "Task Retention": "任务保留时间",
-    "Retention period in days before completed or failed tasks are permanently purged.": "已完成或失败的任务被永久清除之前的保留期（天）。"
+    "Retention period in days before completed or failed tasks are permanently purged.": "已完成或失败的任务被永久清除之前的保留期（天）。",
+    "Pause all queued and running tasks": "暂停所有排队中和运行中的任务",
+    "Reload queue from DB and resume all paused tasks": "从数据库重新加载队列并恢复所有已暂停的任务",
+    "Approve & Archive": "批准并归档",
+    "This action is outdated by a newer pipeline task.": "此操作已被更高级的新流水线任务替代。",
+    "Re-scan MDX directory to load physical disk changes": "重新扫描 MDX 目录以加载物理磁盘更改"
   },
   PT: {
     "Approve & Promote": "Aprovar & Promover",
@@ -980,7 +1005,12 @@ export const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Auto-Retry Interval": "Intervalo de Repetição Automática",
     "Cooldown delay in hours before a failed task is retried.": "Atraso de espera em horas antes de uma tarefa falha ser repetida.",
     "Task Retention": "Retenção de Tarefas",
-    "Retention period in days before completed or failed tasks are permanently purged.": "Período de retenção em dias antes que tarefas concluídas ou falhas sejam eliminadas permanentemente."
+    "Retention period in days before completed or failed tasks are permanently purged.": "Período de retenção em dias antes que tarefas concluídas ou falhas sejam eliminadas permanentemente.",
+    "Pause all queued and running tasks": "Pausar todas as tarefas na fila e em execução",
+    "Reload queue from DB and resume all paused tasks": "Recarregar fila do banco de dados e retomar todas as tarefas pausadas",
+    "Approve & Archive": "Aprovar & Arquivar",
+    "This action is outdated by a newer pipeline task.": "Esta ação foi superada por uma tarefa de pipeline mais recente.",
+    "Re-scan MDX directory to load physical disk changes": "Re-escanear o diretório MDX para carregar as alterações físicas do disco"
   },
   AR: {
     "Approve & Promote": "موافقة وترقية",
@@ -997,7 +1027,12 @@ export const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Auto-Retry Interval": "فترة إعادة المحاولة التلقائية",
     "Cooldown delay in hours before a failed task is retried.": "فترة الانتظار بالساعات قبل إعادة محاولة المهمة الفاشلة.",
     "Task Retention": "الاحتفاظ بالمهام",
-    "Retention period in days before completed or failed tasks are permanently purged.": "فترة الاحتفاظ بالأيام قبل حذف المهام المكتملة أو الفاشلة نهائياً."
+    "Retention period in days before completed or failed tasks are permanently purged.": "فترة الاحتفاظ بالأيام قبل حذف المهام المكتملة أو الفاشلة نهائياً.",
+    "Pause all queued and running tasks": "إيقاف جميع المهام قيد التشغيل والانتظار مؤقتًا",
+    "Reload queue from DB and resume all paused tasks": "إعادة تحميل الطابور من قاعدة البيانات واستئناف جميع المهام الموقوفة مؤقتًا",
+    "Approve & Archive": "موافقة وأرشفة",
+    "This action is outdated by a newer pipeline task.": "هذا الإجراء قديم بسبب وجود مهمة معالجة أحدث.",
+    "Re-scan MDX directory to load physical disk changes": "إعادة فحص دليل MDX لتحميل التغييرات الفعلية من القرص"
   },
   HI: {
     "Approve & Promote": "अनुमोदित करें & प्रचारित करें",
@@ -1014,7 +1049,12 @@ export const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Auto-Retry Interval": "स्वतः पुनः प्रयास अंतराल",
     "Cooldown delay in hours before a failed task is retried.": "विफल कार्य का पुनः प्रयास करने से पहले घंटों में प्रतीक्षा समय।",
     "Task Retention": "कार्य प्रतिधारण",
-    "Retention period in days before completed or failed tasks are permanently purged.": "पूर्ण या विफल कार्यों को स्थायी रूप से हटाए जाने से पहले दिनों में प्रतिधारण अवधि।"
+    "Retention period in days before completed or failed tasks are permanently purged.": "पूर्ण या विफल कार्यों को स्थायी रूप से हटाए जाने से पहले दिनों में प्रतिधारण अवधि।",
+    "Pause all queued and running tasks": "सभी कतारबद्ध और चल रहे कार्यों को रोकें",
+    "Reload queue from DB and resume all paused tasks": "डेटाबेस से कतार को पुन: लोड करें और सभी रुके हुए कार्यों को फिर से शुरू करें",
+    "Approve & Archive": "अनुमोदित करें और संग्रहीत करें",
+    "This action is outdated by a newer pipeline task.": "यह क्रिया नई पाइपलाइन कार्य द्वारा पुरानी हो चुकी है।",
+    "Re-scan MDX directory to load physical disk changes": "भौतिक डिस्क परिवर्तनों को लोड करने के लिए एमडीएक्स निर्देशिका को फिर से स्कैन करें"
   },
   UR: {
     "Approve & Promote": "منظور کریں & ترقی دیں",
@@ -1031,7 +1071,12 @@ export const EXTRA_TOOLTIP_STRINGS: Record<string, Record<string, string>> = {
     "Auto-Retry Interval": "خودکار دوبارہ کوشش کا وقفہ",
     "Cooldown delay in hours before a failed task is retried.": "ناکام کام کی دوبارہ کوشش سے پہلے گھنٹوں میں انتظار کا وقت۔",
     "Task Retention": "کام کی برقراری",
-    "Retention period in days before completed or failed tasks are permanently purged.": "مکمل یا ناکام کاموں کو مستقل طور پر حذف کیے جانے سے پہلے دنوں میں برقراری کی مدت۔"
+    "Retention period in days before completed or failed tasks are permanently purged.": "مکمل یا ناکام کاموں کو مستقل طور پر حذف کیے جانے سے پہلے دنوں میں برقراری کی مدت۔",
+    "Pause all queued and running tasks": "تمام قطار میں موجود اور جاری کاموں کو روکیں",
+    "Reload queue from DB and resume all paused tasks": "ڈیٹا بیس سے قطار کو دوبارہ لوڈ کریں اور تمام رکے ہوئے کاموں کو دوبارہ شروع کریں",
+    "Approve & Archive": "منظور کریں اور آرکائیو کریں",
+    "This action is outdated by a newer pipeline task.": "یہ عمل پائپ لائن کے نئے کام کی وجہ سے پرانا ہو چکا ہے۔",
+    "Re-scan MDX directory to load physical disk changes": "فزیکل ڈسک کی تبدیلیوں کو لوڈ کرنے کے لیے ایم ڈی ایکس ڈائریکٹری کو دوبارہ اسکین کریں"
   }
 };
 

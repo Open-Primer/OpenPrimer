@@ -18,8 +18,6 @@ const formatCourseLevelGlobal = (level: string | undefined | null, lang: string)
 };
 
 interface QueueTabProps {
-  smithsonianApiKey: string;
-  unsplashApiKey: string;
   lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR' | 'PT' | 'AR' | 'HI' | 'UR';
   tr: (key: string) => string;
   courses: any[];
@@ -39,8 +37,6 @@ interface QueueTabProps {
 }
 
 export const QueueTab: React.FC<QueueTabProps> = ({
-  smithsonianApiKey,
-  unsplashApiKey,
   lang,
   tr,
   courses,
@@ -521,46 +517,6 @@ export const QueueTab: React.FC<QueueTabProps> = ({
               </div>
             </div>
           )}
-
-          {/* 5. Smithsonian API Key */}
-          <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-855 rounded-3xl justify-between hover:border-slate-800 transition-all sm:col-span-2">
-            <div>
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Smithsonian API Key")}</span>
-              <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                {tr("Required for natural history, sciences, and museum content. Get a free API key at: ")} 
-                <a href="https://api.si.edu/openaccess/api/registration/" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">api.si.edu/openaccess/api/registration</a>
-              </p>
-            </div>
-            <div className="mt-3 pt-3 border-t border-slate-900/60 flex items-center justify-between gap-4">
-              <input 
-                type="password" 
-                value={smithsonianApiKey || ''} 
-                onChange={(e) => updateParameter('smithsonianApiKey', e.target.value)} 
-                placeholder={tr("Enter Smithsonian API Key...")} 
-                className="bg-slate-900 border border-slate-850 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-550/40 w-full font-mono" 
-              />
-            </div>
-          </div>
-
-          {/* 6. Unsplash API Key */}
-          <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-855 rounded-3xl justify-between hover:border-slate-800 transition-all sm:col-span-2">
-            <div>
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Unsplash Access Key")}</span>
-              <p className="text-[10px] text-slate-500 mt-1 leading-normal">
-                {tr("Required for general high-quality contextual illustrations. Register a developer account at: ")} 
-                <a href="https://unsplash.com/developers" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">unsplash.com/developers</a>, {tr("create a new Application, and copy the Access Key.")}
-              </p>
-            </div>
-            <div className="mt-3 pt-3 border-t border-slate-900/60 flex items-center justify-between gap-4">
-              <input 
-                type="password" 
-                value={unsplashApiKey || ''} 
-                onChange={(e) => updateParameter('unsplashApiKey', e.target.value)} 
-                placeholder={tr("Enter Unsplash Access Key...")} 
-                className="bg-slate-900 border border-slate-850 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-550/40 w-full font-mono" 
-              />
-            </div>
-          </div>
         </div>
       </div>
 

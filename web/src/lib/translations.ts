@@ -396,6 +396,7 @@ export const RAW_STATIC_UI_STRINGS = {
   "audio_ai_generated": "Audio synthesized by artificial intelligence — illustrative only",
   "summative_single_attempt_warning": "⚠️ Single Attempt Only: This is a final evaluation. You will not be able to retake this test after submission.",
   "change_tutor": "Change tutor",
+  "clear_search": "Clear search",
   "tutor_tab": "Tutor",
   "flashcards_tab": "Flashcards",
   "spaced_repetition": "Spaced Repetition",
@@ -416,6 +417,9 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   FR: {
     "change_tutor": "Changer de tuteur",
+    "clear_search": "Effacer la recherche",
+    "remove_favorites": "Supprimer des favoris",
+    "save_course": "Sauvegarder ce cours",
     "legal_notice": "Mentions Légales",
     "tutor_tab": "Tuteur",
     "flashcards_tab": "Flashcards",
@@ -493,6 +497,9 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   HI: {
     "change_tutor": "ट्यूटर बदलें",
+    "clear_search": "खोज साफ़ करें",
+    "remove_favorites": "बुकमार्क हटाएं",
+    "save_course": "इस कोर्स को सहेजें",
     "legal_notice": "कानूनी नोटिस",
     "tutor_tab": "ट्यूटर",
     "flashcards_tab": "फ्लैशकार्ड",
@@ -522,6 +529,9 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   ES: {
     "change_tutor": "Cambiar tutor",
+    "clear_search": "Limpiar búsqueda",
+    "remove_favorites": "Eliminar de favoritos",
+    "save_course": "Guardar este curso",
     "legal_notice": "Aviso Legal",
     "tutor_tab": "Tutor",
     "flashcards_tab": "Tarjetas",
@@ -551,6 +561,9 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   DE: {
     "change_tutor": "Tutor wechseln",
+    "clear_search": "Suche löschen",
+    "remove_favorites": "Aus Favoriten entfernen",
+    "save_course": "Kurs speichern",
     "legal_notice": "Rechtliche Hinweise",
     "tutor_tab": "Tutor",
     "flashcards_tab": "Karteikarten",
@@ -580,6 +593,9 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   ZH: {
     "change_tutor": "更换导师",
+    "clear_search": "清除搜索",
+    "remove_favorites": "从收藏中移除",
+    "save_course": "保存此课程",
     "legal_notice": "法律声明",
     "tutor_tab": "AI导师",
     "flashcards_tab": "记忆卡片",
@@ -609,6 +625,9 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   PT: {
     "change_tutor": "Alterar tutor",
+    "clear_search": "Limpar pesquisa",
+    "remove_favorites": "Remover dos favoritos",
+    "save_course": "Salvar este curso",
     "legal_notice": "Aviso Legal",
     "tutor_tab": "Tutor",
     "flashcards_tab": "Flashcards",
@@ -638,6 +657,9 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   AR: {
     "change_tutor": "تغيير المعلم",
+    "clear_search": "مسح البحث",
+    "remove_favorites": "إزالة من المفضلات",
+    "save_course": "حفظ هذه الدورة",
     "legal_notice": "إشعار قانوني",
     "tutor_tab": "المعلم الآلي",
     "flashcards_tab": "البطاقات التعليمية",
@@ -667,6 +689,9 @@ export const RAW_STATIC_UI_STRINGS = {
   },
   UR: {
     "change_tutor": "ٹیوٹر تبدیل کریں",
+    "clear_search": "تلاش صاف کریں",
+    "remove_favorites": "پسندیدہ سے ہٹائیں",
+    "save_course": "اس کورس کو محفوظ کریں",
     "legal_notice": "قانونی نوٹس",
     "tutor_tab": "ٹیوٹر",
     "flashcards_tab": "فلیش کارڈز",

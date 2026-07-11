@@ -853,7 +853,7 @@ export const CatalogPage = () => {
                     type="button"
                     onClick={() => setSearchQuery('')}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-600 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
-                    title="Clear search"
+                    title={t.clear_search}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>

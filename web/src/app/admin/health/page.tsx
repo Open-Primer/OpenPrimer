@@ -853,11 +853,14 @@ export default function ServerHealthPage() {
       setSupabaseAnonKey(localStorage.getItem('op_supabase_anon_key') || '');
       setResendApiKey(localStorage.getItem('op_resend_api_key') || '');
       setGeminiApiKey(localStorage.getItem('op_gemini_api_key') || '');
-      setSmithsonianApiKey(localStorage.getItem('op_smithsonian_api_key') || '');
-      setUnsplashApiKey(localStorage.getItem('op_unsplash_api_key') || '');
+      
+      const localSmithsonian = localStorage.getItem('op_smithsonian_api_key') || '';
+      const localUnsplash = localStorage.getItem('op_unsplash_api_key') || '';
+      setSmithsonianApiKey(localSmithsonian);
+      setUnsplashApiKey(localUnsplash);
 
-      // Fetch dynamic database SLA History
-      const fetchSla = async () => {
+      // Fetch dynamic database SLA History and also load permanent keys from DB
+      const loadDbSystemParametersAndSla = async () => {
         try {
           const adminSession = localStorage.getItem('op_session') || '';
           const headers: Record<string, string> = {};
@@ -876,12 +879,31 @@ export default function ServerHealthPage() {
         } catch (err) {
           console.warn("Failed to fetch database SLA history", err);
         }
+
+        try {
+          const { data: params } = await dbService.getSystemParameters();
+          if (params && params.length > 0) {
+            params.forEach((param: any) => {
+              if (param.key === 'smithsonianApiKey' && param.value) {
+                setSmithsonianApiKey(param.value);
+                localStorage.setItem('op_smithsonian_api_key', param.value);
+              }
+              if (param.key === 'unsplashApiKey' && param.value) {
+                setUnsplashApiKey(param.value);
+                localStorage.setItem('op_unsplash_api_key', param.value);
+              }
+            });
+          }
+        } catch (err) {
+          console.warn("Failed to load Smithsonian / Unsplash keys from DB", err);
+        }
       };
-      fetchSla();
+
+      loadDbSystemParametersAndSla();
     }
   }, []);
 
-  const handleSaveKeys = (e: React.FormEvent) => {
+  const handleSaveKeys = async (e: React.FormEvent) => {
     e.preventDefault();
     if (supabaseUrl && supabaseUrl !== process.env.NEXT_PUBLIC_SUPABASE_URL) localStorage.setItem('op_supabase_url', supabaseUrl);
     else localStorage.removeItem('op_supabase_url');
@@ -895,24 +917,38 @@ export default function ServerHealthPage() {
     if (geminiApiKey) localStorage.setItem('op_gemini_api_key', geminiApiKey);
     else localStorage.removeItem('op_gemini_api_key');
 
-    if (smithsonianApiKey) localStorage.setItem('op_smithsonian_api_key', smithsonianApiKey);
-    else localStorage.removeItem('op_smithsonian_api_key');
+    if (smithsonianApiKey) {
+      localStorage.setItem('op_smithsonian_api_key', smithsonianApiKey);
+      await dbService.saveSystemParameter({ key: 'smithsonianApiKey', value: smithsonianApiKey });
+    } else {
+      localStorage.removeItem('op_smithsonian_api_key');
+      await dbService.saveSystemParameter({ key: 'smithsonianApiKey', value: '' });
+    }
 
-    if (unsplashApiKey) localStorage.setItem('op_unsplash_api_key', unsplashApiKey);
-    else localStorage.removeItem('op_unsplash_api_key');
+    if (unsplashApiKey) {
+      localStorage.setItem('op_unsplash_api_key', unsplashApiKey);
+      await dbService.saveSystemParameter({ key: 'unsplashApiKey', value: unsplashApiKey });
+    } else {
+      localStorage.removeItem('op_unsplash_api_key');
+      await dbService.saveSystemParameter({ key: 'unsplashApiKey', value: '' });
+    }
 
     setNotif(t.keys_applied || 'API Keys successfully hot-swapped!');
     setTimeout(() => setNotif(null), 4000);
     refresh();
   };
 
-  const handleResetKeys = () => {
+  const handleResetKeys = async () => {
     localStorage.removeItem('op_supabase_url');
     localStorage.removeItem('op_supabase_anon_key');
     localStorage.removeItem('op_resend_api_key');
     localStorage.removeItem('op_gemini_api_key');
     localStorage.removeItem('op_smithsonian_api_key');
     localStorage.removeItem('op_unsplash_api_key');
+    
+    await dbService.saveSystemParameter({ key: 'smithsonianApiKey', value: '' });
+    await dbService.saveSystemParameter({ key: 'unsplashApiKey', value: '' });
+
     setSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://supabase.io');
     setSupabaseAnonKey('');
     setResendApiKey('');

@@ -1810,7 +1810,7 @@ export const AITutorOverlay = ({
             <button
               onClick={handleDismissCoachPopover}
               className="absolute top-4 right-4 p-1 text-slate-500 hover:text-white rounded-lg hover:bg-slate-800/40 transition-all cursor-pointer"
-              title={lang.toUpperCase() === 'FR' ? 'Masquer' : 'Dismiss'}
+              title={t.coaching_dismiss}
             >
               <X className="w-4 h-4" />
             </button>

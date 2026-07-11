@@ -1734,7 +1734,7 @@ export default function CurriculumPage() {
                                     )}
 
                                     {/* 2. Stars Rating */}
-                                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1.5 select-none" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
+                                    <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1.5 select-none" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} ${t.reviews}`}>
                                       <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                                       {averageRating > 0 ? averageRating.toFixed(1) : (isCurr ? "4.8" : "3.4")} ({ratingCount > 0 ? ratingCount : (isCurr ? 24 : 12)})
                                     </span>
@@ -1758,11 +1758,11 @@ export default function CurriculumPage() {
                                         e.stopPropagation();
                                         setSelectedEnrollCourse(courseDetails || course);
                                       }}
-                                      title="Syllabus"
+                                      title={t.course_sheet}
                                       className="px-3 py-1.5 bg-slate-950/40 border border-slate-800 hover:border-slate-700 text-blue-400 hover:text-blue-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider"
                                     >
                                       <Icons.BookOpen className="w-3.5 h-3.5" />
-                                      Syllabus
+                                      {t.course_sheet}
                                     </button>
 
                                     {/* 6. Bookmark Toggle Button */}
@@ -1989,7 +1989,7 @@ export default function CurriculumPage() {
                                    )}
 
                                    {/* 2. Stars Rating */}
-                                   <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1.5 select-none" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
+                                   <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1.5 select-none" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} ${t.reviews}`}>
                                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                                      {averageRating > 0 ? averageRating.toFixed(1) : (isCurr ? "4.8" : "3.4")} ({ratingCount > 0 ? ratingCount : (isCurr ? 24 : 12)})
                                    </span>
@@ -2013,11 +2013,11 @@ export default function CurriculumPage() {
                                        e.stopPropagation();
                                        setSelectedEnrollCourse(courseDetails || course);
                                      }}
-                                     title="Syllabus"
+                                     title={t.course_sheet}
                                       className="px-3 py-1.5 bg-slate-950/40 border border-slate-800 hover:border-slate-700 text-blue-400 hover:text-blue-300 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider"
                                    >
                                       <Icons.BookOpen className="w-3.5 h-3.5" />
-                                      Syllabus
+                                      {t.course_sheet}
                                    </button>
 
                                    {/* 6. Bookmark Toggle Button */}
@@ -2509,7 +2509,7 @@ export default function CurriculumPage() {
                         {selectedCurriculumForDrillDown.title}
                       </h3>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} reviews`}>
+                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 flex items-center gap-1" title={`${averageRating.toFixed(1)} / 5 — ${ratingCount} ${t.reviews}`}>
                           <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                           {averageRating > 0 ? averageRating.toFixed(1) : "4.8"} ({ratingCount > 0 ? ratingCount : 12})
                         </span>

@@ -129,8 +129,6 @@ export default function AdminCurriculumPage() {
   const [queueRetentionDays, setQueueRetentionDays] = useState(30);
   const [maxParallelTasks, setMaxParallelTasks] = useState(1);
   const [executeTasksInBrowser, setExecuteTasksInBrowser] = useState(false);
-  const [smithsonianApiKey, setSmithsonianApiKey] = useState('');
-  const [unsplashApiKey, setUnsplashApiKey] = useState('');
 
   // Translation Autonomy settings
   const [autoTranslate, setAutoTranslate] = useState(false);
@@ -353,8 +351,6 @@ export default function AdminCurriculumPage() {
         if (process.env.NODE_ENV === 'production') break;
         setExecuteTasksInBrowser(value === 'true');
         break;
-      case 'smithsonianApiKey': setSmithsonianApiKey(value); break;
-      case 'unsplashApiKey': setUnsplashApiKey(value); break;
     }
     try {
       await dbService.saveSystemParameter({ key, value });
@@ -443,8 +439,6 @@ export default function AdminCurriculumPage() {
                 loadedExecuteTasksInBrowser = val === 'true';
               }
               break;
-            case 'smithsonianApiKey': setSmithsonianApiKey(val); break;
-            case 'unsplashApiKey': setUnsplashApiKey(val); break;
           }
         });
       }
@@ -2614,8 +2608,6 @@ export default function AdminCurriculumPage() {
                  maxParallelTasks={maxParallelTasks}
                  executeTasksInBrowser={executeTasksInBrowser}
                  updateParameter={updateParameter}
-                 smithsonianApiKey={smithsonianApiKey}
-                 unsplashApiKey={unsplashApiKey}
                  queue={queue}
                  setQueue={setQueue}
                  loadData={loadData}
