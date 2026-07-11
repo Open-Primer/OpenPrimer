@@ -1319,6 +1319,182 @@ const UNIVERSITY_FILIERES: UniversityFiliere[] = [
       }
     }
   },
+  {
+    key: "sante",
+    type: "licence",
+    title: "Licence Sciences pour la Santé & PASS (L1-L3)",
+    subject: "Santé",
+    levels: {
+      L1: {
+        S1: {
+          majeures: ["Atomes, Biomolécules & Bioénergétique (UE1)", "La Cellule, les Tissus & Histologie Générale (UE2)"],
+          mineures: ["Biophysique & Éléments de Physiologie", "Mathématiques & Probabilités pour la Santé"],
+          transversales: ["Anglais Médical I (Terminology & Prefixes)", "Méthodes de Travail Universitaire en Santé (Mémoire/QCM)"]
+        },
+        S2: {
+          majeures: ["Anatomie Générale de l'Appareil Locomoteur (UE5)", "Initiation à la Connaissance du Médicament (UE6)"],
+          mineures: ["Sciences Humaines et Sociales en Santé", "Biostatistiques Appliquées & Épidémiologie Clinique"],
+          transversales: ["Anglais Médical II (Clinical cases)", "Outils Numériques pour les Professions de Santé"]
+        }
+      },
+      L2: {
+        S1: {
+          majeures: ["Physiologie Humaine Intégrée & Neurobiologie", "Biologie Moléculaire, Génétique & Cycle Cellulaire"],
+          mineures: ["Microbiologie Générale & Virologie Fondamentale", "Bases d'Immunologie Médicale"],
+          transversales: ["Anglais Médical III (Hospital charts)", "Déontologie, Éthique Médicale & Droits du Patient"]
+        },
+        S2: {
+          majeures: ["Sémiologie Médicale & Techniques d'Examen Clinique", "Pharmacologie Générale & Pharmacocinétique"],
+          mineures: ["Histologie Systémique & Anatomie Pathologique", "Biochimie Clinique, Endocrinologie & Métabolismes"],
+          transversales: ["Anglais Médical IV (Medical papers)", "Secourisme, Gestes d'Urgence et Prévention des Risques (SST)"]
+        }
+      },
+      L3: {
+        S1: {
+          majeures: ["Pathologie Infectieuse, Bactériologie & Mycologie Clinique", "Oncologie Médicale & Mécanismes de Cancérogénèse"],
+          mineures: ["Neuroanatomie Fonctionnelle & Neurobiologie du Comportement", "Nutrition, Diététique & Métabolisme Humain"],
+          transversales: ["Anglais Médical V (International conferences)", "Méthodologie de la Recherche Clinique & Essais Cliniques"]
+        },
+        S2: {
+          majeures: ["Imagerie Médicale : Biophysique, IRM, Scanner & Échographie", "Médecine Génomique & Thérapie Génique et Cellulaire"],
+          mineures: ["Santé Publique, Politiques de Santé & Épidémiologie Globale", "Hématologie Clinique, Immunopathologie & Transfusion"],
+          transversales: ["Anglais Médical VI (Medical thesis)", "Projet de Fin d'Études de Licence Santé"]
+        }
+      }
+    }
+  },
+  {
+    key: "ing",
+    type: "licence",
+    title: "Licence de Sciences pour l'Ingénieur (L1-L3)",
+    subject: "Sciences pour l'Ingénieur",
+    levels: {
+      L1: {
+        S1: {
+          majeures: ["Mécanique Newtonienne du Point & Vecteurs", "Électricité de Base & Analyse des Circuits"],
+          mineures: ["Mathématiques pour l'Ingénieur I", "Algorithmique, Structures de Données & Programmation (C)"],
+          transversales: ["Anglais Technique de l'Ingénieur I", "Dessin Technique & Initiation à la CAO (SolidWorks)"]
+        },
+        S2: {
+          majeures: ["Cinématique et Statique des Solides", "Optique Fondamentale pour l'Ingénieur"],
+          mineures: ["Mathématiques pour l'Ingénieur II (Algèbre & Analyse)", "Thermodynamique Physique des Gaz Parfaits"],
+          transversales: ["Anglais Technique de l'Ingénieur II", "Méthodologie du Projet Technique et Travail de Groupe"]
+        }
+      },
+      L2: {
+        S1: {
+          majeures: ["Thermodynamique Appliquée & Machines Thermiques", "Résistance des Matériaux (RDM) : Traction, Flexion, Torsion"],
+          mineures: ["Mathématiques pour l'Ingénieur III (Calcul Vectoriel & Intégral)", "Électronique Analogique : Diodes, Transistors, Op-Amp"],
+          transversales: ["Anglais Technique de l'Ingénieur III", "Programmation Python & Analyse Numérique Appliquée"]
+        },
+        S2: {
+          majeures: ["Mécanique des Solides Indéformables & Dynamique", "Électronique Numérique & Systèmes Combinatoires"],
+          mineures: ["Sciences des Matériaux : Métaux, Polymères, Céramiques", "Mesures Physiques & Instrumentation Industrielle"],
+          transversales: ["Anglais Technique de l'Ingénieur IV", "Conception Assistée par Ordinateur Avancée (CAO)"]
+        }
+      },
+      L3: {
+        S1: {
+          majeures: ["Automatique Linéaire, Asservissements & Régulation", "Sciences des Matériaux Complexes & Alliages"],
+          mineures: ["Électrotechnique & Machines Électriques (Moteurs, Alternateurs)", "Mécanique des Vibrations & Amortissement"],
+          transversales: ["Anglais Technique de l'Ingénieur V", "Gestion de Projet Industriels, Qualité & Normes ISO"]
+        },
+        S2: {
+          majeures: ["Mécanique des Fluides Appliquée (Hydraulique & Pneumatique)", "Traitement Analogique et Numérique du Signal"],
+          mineures: ["Thermique de l'Ingénieur & Transferts de Chaleur", "Introduction aux Énergies Renouvelables & Durables"],
+          transversales: ["Anglais Technique de l'Ingénieur VI", "Projet de Synthèse de Fin d'Études en Bureau d'Études"]
+        }
+      }
+    }
+  },
+  {
+    key: "staps",
+    type: "licence",
+    title: "Licence STAPS - Sciences du Sport & de l'Effort (L1-L3)",
+    subject: "Sciences du Sport",
+    levels: {
+      L1: {
+        S1: {
+          majeures: ["Anatomie Fonctionnelle de l'Appareil Locomoteur", "Histoire du Sport & Évolution des Pratiques Physiques"],
+          mineures: ["Introduction aux Neurosciences et Contrôle Moteur", "Psychologie Générale de l'Apprentissage"],
+          transversales: ["Anglais des Sciences du Sport I", "Méthodologie du Travail Universitaire et Rédaction"]
+        },
+        S2: {
+          majeures: ["Physiologie Générale de l'Exercice Physique", "Sociologie du Sport & Structures Institutionnelles"],
+          mineures: ["Introduction à la Biomécanique du Mouvement", "Pédagogie des Activités Physiques et Sportives (APS)"],
+          transversales: ["Anglais des Sciences du Sport II", "Outils Numériques pour l'Analyse Spatiale du Sport"]
+        }
+      },
+      L2: {
+        S1: {
+          majeures: ["Biomécanique du Mouvement Humain : Cinématique & Dynamique", "Psychologie du Sport & Apprentissage Moteur"],
+          mineures: ["Physiologie Cardiorespiratoire à l'Effort", "Didactique et Enseignement du Sport"],
+          transversales: ["Anglais des Sciences du Sport III", "Méthodes Statistiques Appliquées aux Sciences du Sport"]
+        },
+        S2: {
+          majeures: ["Neurosciences du Contrôle Moteur & Coordination", "Sociologie du Sport : Inégalités & Publics"],
+          mineures: ["Physiologie Neuromusculaire & Fatigue Périphérique", "Gestion des Organisations Sportives et Évènementiel"],
+          transversales: ["Anglais des Sciences du Sport IV", "Techniques d'Observation et Analyse Vidéo du Mouvement"]
+        }
+      },
+      L3: {
+        S1: {
+          majeures: ["Analyse de la Performance & Nutrition de l'Athlète", "Traumatologie du Sport & Réhabilitation Fonctionnelle"],
+          mineures: ["Théorie de l'Entraînement & Planification", "Psychologie de la Performance : Motivation & Stress"],
+          transversales: ["Anglais des Sciences du Sport V", "Outils d'Évaluation de la Force et de l'Endurance (Ergonomie)"]
+        },
+        S2: {
+          majeures: ["Entraînement Sportif & Programmation Métabolique", "Évaluation Physique de l'Athlète de Haut Niveau"],
+          mineures: ["Sport, Santé & Prévention des Maladies Chroniques (APA)", "Marketing Sportif, Sponsoring & Droits des Médias"],
+          transversales: ["Anglais des Sciences du Sport VI", "Mémoire d'Études de Licence STAPS"]
+        }
+      }
+    }
+  },
+  {
+    key: "gestion",
+    type: "licence",
+    title: "Licence de Gestion & Management des Organisations (L1-L3)",
+    subject: "Sciences de Gestion",
+    levels: {
+      L1: {
+        S1: {
+          majeures: ["Introduction Générale au Management & Organisations", "Comptabilité Financière Générale I"],
+          mineures: ["Microéconomie Appliquée à la Firme", "Mathématiques Financières & Calcul de Taux"],
+          transversales: ["Anglais des Sciences de Gestion I", "Outils Informatiques & Tableurs de Gestion (Excel)"]
+        },
+        S2: {
+          majeures: ["Théories des Organisations & Structures", "Comptabilité Financière Générale II"],
+          mineures: ["Introduction au Droit Commercial & des Affaires", "Macroéconomie Appliquée et Fluctuations"],
+          transversales: ["Anglais des Sciences de Gestion II", "Méthodologie de Synthèse et Rédaction de Notes de Synthèse"]
+        }
+      },
+      L2: {
+        S1: {
+          majeures: ["Contrôle de Gestion Opérationnel & Calcul de Coûts", "Comportement Organisationnel & Relations Humaines"],
+          mineures: ["Marketing Opérationnel & Mix Marketing", "Introduction au Droit du Travail"],
+          transversales: ["Anglais des Sciences de Gestion III", "Statistiques Inférentielles pour Décideurs"]
+        },
+        S2: {
+          majeures: ["Gestion Budgétaire & Prévisions", "Gestion Financière de l'Entreprise : Trésorerie & Analyse"],
+          mineures: ["Gestion des Systèmes d'Information (GSI)", "Comportement du Consommateur & Études de Marché"],
+          transversales: ["Anglais des Sciences de Gestion IV", "Base de Données Relationnelles Appliquées à la Gestion (Access/SQL)"]
+        }
+      },
+      L3: {
+        S1: {
+          majeures: ["Management Stratégique & Planification", "Gestion des Ressources Humaines (GRH)"],
+          mineures: ["Droit Fiscal des Sociétés", "Marketing Stratégique & Gestion de Marque"],
+          transversales: ["Anglais des Sciences de Gestion V", "Négociation Commerciale et Techniques de Vente"]
+        },
+        S2: {
+          majeures: ["Finance d'Entreprise Approfondie : Évaluation", "Droit Social des Affaires"],
+          mineures: ["Gestion de la Chaîne Logistique (Supply Chain Management)", "Management Interculturel et Diversité"],
+          transversales: ["Anglais des Sciences de Gestion VI", "Rapport de Stage de Licence de Gestion"]
+        }
+      }
+    }
+  },
 
   // MASTERS (8 filières de pointe prioritaires)
   {
@@ -1573,6 +1749,134 @@ const UNIVERSITY_FILIERES: UniversityFiliere[] = [
           majeures: ["Biotechnologies Industrielles et Nanotechnologies pour la Santé", "Éthique des Biotechnologies et Législation de la Santé"],
           mineures: ["Pharmacogénomique et Conception Rationnelle de Médicaments", "Biostatistiques Avancées pour Essais Médicaux"],
           transversales: ["Anglais des Biotechnologies : Mémoire M2", "Projet de Recherche Encadré en Laboratoire ou Stage"]
+        }
+      }
+    }
+  },
+  {
+    key: "m_sante_pub",
+    type: "master",
+    title: "Master Santé Publique, Épidémiologie & Biostatistiques (M1-M2)",
+    subject: "Santé",
+    levels: {
+      M1: {
+        S1: {
+          majeures: ["Épidémiologie Clinique & Méthodes d'Observation", "Biostatistiques Avancées & Logiciels Statistiques (R/SAS)"],
+          mineures: ["Toxicologie Environnementale & Santé Globale", "Histoire et Démographie de la Santé Publique"],
+          transversales: ["Anglais de la Santé Publique I", "Modélisation de Données de Santé Complexes"]
+        },
+        S2: {
+          majeures: ["Politiques de Santé & Planification Sanitaire", "Méthodologie des Essais Cliniques Randomisés"],
+          mineures: ["Évaluation de l'Impact Environnemental sur la Santé", "Économie de la Santé et Régulation des Systèmes"],
+          transversales: ["Anglais de la Santé Publique II", "Ateliers de Pratique de Terrain et Enquêtes Épidémiologiques"]
+        }
+      },
+      M2: {
+        S1: {
+          majeures: ["Modélisation Mathématique des Maladies Infectieuses", "Épidémiologie Nutritionnelle, Génétique et Sociale"],
+          mineures: ["Droit International de la Santé & Bioéthique", "Promotion de la Santé et Éducation des Populations"],
+          transversales: ["Anglais de la Santé Publique : Conférences", "MLOps en Santé : Traitement de Données Massives"]
+        },
+        S2: {
+          majeures: ["Gestion des Crises Sanitaires et Urgences Épidémiques", "Systèmes de Santé Comparés et Globalisation"],
+          mineures: ["Évaluation du Risque Sanitaire et d'Exposition", "Recherche Opérationnelle en Santé Publique"],
+          transversales: ["Anglais de la Santé Publique : Mémoire M2", "Stage de Recherche en Laboratoire ou Organisation Internationale"]
+        }
+      }
+    }
+  },
+  {
+    key: "m_ing_sys",
+    type: "master",
+    title: "Master Ingénierie des Systèmes Complexes, Robotique & Matériaux (M1-M2)",
+    subject: "Sciences pour l'Ingénieur",
+    levels: {
+      M1: {
+        S1: {
+          majeures: ["Méthode des Éléments Finis (FEM) & Modélisation", "Automatique Non-Linéaire et Multivariable"],
+          mineures: ["Robotique Mobile : Cinématique, Localisation, Mapping", "Sciences des Matériaux Avancés & Nanotechnologies"],
+          transversales: ["Anglais de l'Ingénierie Avancée I", "Programmation Robotique Avancée (ROS / C++)"]
+        },
+        S2: {
+          majeures: ["Dynamique des Systèmes Multi-Corps complexes", "Électronique des Systèmes Embarqués en Temps Réel"],
+          mineures: ["Mécanique des Fluides Numérique (CFD)", "Optimisation Multicritère des Systèmes Complexes"],
+          transversales: ["Anglais de l'Ingénierie Avancée II", "Conception de Jumeaux Numériques Industriels"]
+        }
+      },
+      M2: {
+        S1: {
+          majeures: ["Intelligence Artificielle appliquée à la Robotique", "Modélisation Thermomécanique et Rupture des Matériaux"],
+          mineures: ["Systèmes de Vision et Traitement d'Images pour Robots", "Sûreté de Fonctionnement, Fiabilité & Diagnostic"],
+          transversales: ["Anglais de l'Ingénierie : Conférences Techniques", "Ateliers Industriels : CAO/EAD Intégrées"]
+        },
+        S2: {
+          majeures: ["Robotique Humanoïde et Systèmes Bio-Inspirés", "Matériaux Composites, Intelligents et Métamatériaux"],
+          mineures: ["Automatique Robuste & Commande Prédictive", "Internet des Objets Industriels (IIoT) & Smart Industry"],
+          transversales: ["Anglais de l'Ingénierie : Mémoire M2", "Projet de Fin d'Études de Master en Partenariat Industriel (6 mois)"]
+        }
+      }
+    }
+  },
+  {
+    key: "m_staps_perf",
+    type: "master",
+    title: "Master STAPS : Entraînement, Performance de Pointe & Nutrition (M1-M2)",
+    subject: "Sciences du Sport",
+    levels: {
+      M1: {
+        S1: {
+          majeures: ["Physiologie Neuromusculaire & Métabolique Avancée", "Nutrition de l'Athlète de Haut Niveau"],
+          mineures: ["Analyse Vidéo de la Performance et Biomécanique 3D", "Évaluation Physiologique de l'Élite : Vo2Max, VMA"],
+          transversales: ["Anglais du Sport de Performance I", "Statistiques Avancées Appliquées au Sport de Performance"]
+        },
+        S2: {
+          majeures: ["Méthodologie d'Entraînement de Force & Hypertrophie", "Préparation Mentale & Psychologie Cognitive du Sportif"],
+          mineures: ["Physiologie de l'Altitude & environnements extrêmes", "Planification de la Récupération & Cryothérapie"],
+          transversales: ["Anglais du Sport de Performance II", "Technologie des Capteurs Embarqués & Outils d'Analyse (GPS)"]
+        }
+      },
+      M2: {
+        S1: {
+          majeures: ["Planification Métabolique & Périodisation Annuelle", "Neurosciences de la Décision Motrice en Conditions Réelles"],
+          mineures: ["Prévention des Blessures, Gainage & Proprioception", "Nutrogénomique et Suppléments Nutritionnels"],
+          transversales: ["Anglais Professionnel de la Performance : Séminaires", "Ateliers Pratiques d'Évaluation de la Force sur Plateforme"]
+        },
+        S2: {
+          majeures: ["Modélisation Mathématique de la Performance Sportive", "Ingénierie de la Performance : Profil Force-Vitesse"],
+          mineures: ["Doping, Réglementation et Éthique dans le Sport de Performance", "Management d'une Équipe Technique de Haut Niveau"],
+          transversales: ["Anglais du Sport de Performance : Mémoire M2", "Stage Pratique Encadré en Club Professionnel ou Centre Olympique"]
+        }
+      }
+    }
+  },
+  {
+    key: "m_mba_strat",
+    type: "master",
+    title: "Master Executive MBA & Stratégie d'Entreprise (M1-M2)",
+    subject: "Sciences de Gestion",
+    levels: {
+      M1: {
+        S1: {
+          majeures: ["Stratégie d'Entreprise Internationale & Globalisation", "Audit Financier Avancé et Consolidation"],
+          mineures: ["Gestion des Risques d'Entreprise (Enterprise Risk Management)", "Droit Fiscal National et International des Sociétés"],
+          transversales: ["Anglais des Affaires Stratégiques I", "Modélisation Financière Avancée et Valuation M&A"]
+        },
+        S2: {
+          majeures: ["Leadership de Crise & Conduite du Changement", "Comportement Organisationnel & Négociations Complexes"],
+          mineures: ["Management de l'Innovation et Transformation Numérique", "Gouvernance d'Entreprise & Responsabilité Sociétale (RSE)"],
+          transversales: ["Anglais des Affaires Stratégiques II", "Ateliers Pratiques de Business Plan et Venture Capital"]
+        }
+      },
+      M2: {
+        S1: {
+          majeures: ["Fusions-Acquisitions (M&A) : Stratégie & Intégration", "Management des Alliances Stratégiques & Partenariats"],
+          mineures: ["Stratégie Marketing de Rupture et Plateformes Web", "Éthique, Compliance & Réglementation Internationale (Sox/Sapin II)"],
+          transversales: ["Anglais Executive : Management Pitch & Conférences", "Conduite de Négociations Sociales et Syndicales"]
+        },
+        S2: {
+          majeures: ["Théorie des Jeux appliquée à la Décision Stratégique", "Management de l'Intelligence Collective & Créativité"],
+          mineures: ["Management de la Supply Chain Globale dans l'Incertitude", "Stratégie de Croissance Externe & Restructurations d'Entreprises"],
+          transversales: ["Anglais Executive : Mémoire MBA M2", "Projet de Conseil Stratégique Réel de Fin de Master (6 mois)"]
         }
       }
     }
@@ -1839,8 +2143,8 @@ async function run() {
   console.log(`  - Tâches de génération de leçons associées : ${totalTasksPreBacGen}`);
   console.log(`  - Traductions pré-bac : 0 (Vœu de limitation de coût et spécificité nationale)`);
   console.log(`\n🎓 NIVEAU UNIVERSITAIRE (POST-BAC) :`);
-  console.log(`  - Licences nationales modélisées (L1 à L3) : 16 filières`);
-  console.log(`  - Masters prioritaires de pointe modélisés (M1 à M2) : 8 filières`);
+  console.log(`  - Licences nationales modélisées (L1 à L3) : 20 filières`);
+  console.log(`  - Masters prioritaires de pointe modélisés (M1 à M2) : 12 filières`);
   console.log(`  - Maquettes de curriculums universitaires créées : ${totalCurriculumsPostBac}`);
   console.log(`  - Modules d'enseignement magistral denses créés en FR : ${totalTasksPostBacGen}`);
   console.log(`  - Tâches de traduction scientifique mondiale (8 langues) : ${totalTasksPostBacTrans}`);
