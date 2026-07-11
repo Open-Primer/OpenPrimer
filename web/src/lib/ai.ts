@@ -1038,6 +1038,44 @@ const lessonWidgetsSchema = {
             type: "object",
             properties: {
               id: { type: "string" },
+              componentType: { type: "string", enum: ["Glossary", "Lexique"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  term: { type: "string", description: "The glossary vocabulary term." },
+                  definition: { type: "string", description: "Detailed vocabulary definition (2-4 sentences)." },
+                  wikipediaUrl: { type: "string", description: "Direct canonical link to their Wikipedia page." },
+                  searchQuery: { type: "string", description: "Canonical search query to find the term on Wikipedia." }
+                },
+                required: ["term", "definition", "wikipediaUrl", "searchQuery"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["ConceptLink", "RealPerson", "HistoricalPerson", "EventLink", "HistoricalEventLink", "Location", "EvenementHistorique", "ÉvénementHistorique"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  name: { type: "string", description: "Name of the entity." },
+                  description: { type: "string", description: "Wikipedia-style hover card tooltip summary of this entity (2-4 sentences)." },
+                  wikipediaUrl: { type: "string", description: "Direct canonical link to their Wikipedia page." },
+                  searchQuery: { type: "string", description: "Canonical search query to find the entity on Wikipedia." }
+                },
+                required: ["name", "description", "wikipediaUrl", "searchQuery"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
               componentType: { type: "string" },
               sectionAnchor: { type: "string" },
               props: {

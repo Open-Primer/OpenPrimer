@@ -27,6 +27,7 @@ import { Timeline } from './Timeline';
 import { Biography } from './Biography';
 import { MatchingEvaluation } from './MatchingEvaluation';
 import { ReorderEvaluation } from './ReorderEvaluation';
+import { LawLink } from './LawLink';
 
 // New Visual and Interactive Components
 import { Mermaid } from './Mermaid';
@@ -2410,6 +2411,9 @@ const components = {
   SelfEval,
   SelfAssessment,
   // ─── Entity Overlays (inline hover cards) ────────────────────────────────
+  LawLink,
+  LienLoi: LawLink,
+  LienJuridique: LawLink,
   RealPerson,                            // Canonical: real/existing person
   HistoricalPerson,                      // Backward-compat alias for RealPerson
   PersonnageHistorique: RealPerson,      // French alias
@@ -3250,7 +3254,7 @@ function stripJsxAndRender(rawMdx: string) {
   });
 
   // 10. Replace inline named components with text formatting
-  clean = clean.replace(/<(?:RealPerson|HistoricalPerson|Event|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|FictionalCharacter|Location|Place|WebsiteLink|ProjectLink|SiteWeb|ProjetLien|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)\b[^>]*?>([\s\S]*?)<\/(?:RealPerson|HistoricalPerson|Event|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|FictionalCharacter|Location|Place|WebsiteLink|ProjectLink|SiteWeb|ProjetLien|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)>/gi, '**$1**');
+  clean = clean.replace(/<(?:RealPerson|HistoricalPerson|Event|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|FictionalCharacter|Location|Place|WebsiteLink|ProjectLink|SiteWeb|ProjetLien|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien|LawLink|LienLoi|LienJuridique)\b[^>]*?>([\s\S]*?)<\/(?:RealPerson|HistoricalPerson|Event|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|FictionalCharacter|Location|Place|WebsiteLink|ProjectLink|SiteWeb|ProjetLien|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien|LawLink|LienLoi|LienJuridique)>/gi, '**$1**');
   clean = clean.replace(/<Artwork\b[^>]*?>([\s\S]*?)<\/Artwork>/gi, '*$1*');
   
   // Strip remaining custom tag structures but preserve their content
