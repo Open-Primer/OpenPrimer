@@ -1,4 +1,4 @@
-import { formatCourseLevel } from '@/lib/translations';
+import { formatCourseLevel, cleanPathSegment } from '@/lib/translations';
 import { locale as en } from './locales/en';
 import { locale as fr } from './locales/fr';
 import { locale as es } from './locales/es';
@@ -1204,12 +1204,50 @@ export const translateMetadataForLanguage = async (targetLang: string) => {
   }
   localStorage.setItem(`op_lang_levels_${targetLang}`, JSON.stringify(translatedLevels));
 
+  // 1b. Translate Level Slugs dynamically for URL localization
+  const levelsToTranslate = ['L1', 'L2', 'L3', 'M1', 'M2'];
+  const levelLabels: Record<string, string> = {
+    L1: 'First Year',
+    L2: 'Second Year',
+    L3: 'Third Year',
+    M1: 'Fourth Year',
+    M2: 'Fifth Year'
+  };
+  const dynamicLevelSlugs: Record<string, string> = {};
+  try {
+    const rawLabels = levelsToTranslate.map(k => levelLabels[k]);
+    const translatedLabels = await batchTranslateTexts(rawLabels, targetLower);
+    levelsToTranslate.forEach((lvl, idx) => {
+      dynamicLevelSlugs[lvl] = cleanPathSegment(translatedLabels[idx] || levelLabels[lvl]);
+    });
+    localStorage.setItem(`op_dynamic_level_slugs_${targetUpper}`, JSON.stringify(dynamicLevelSlugs));
+  } catch (err) {
+    console.error("Failed to dynamically translate level slugs:", err);
+  }
+
   // 2. Translate all Disciplines using static constants
   const translatedDisciplines: Record<string, string> = {};
   for (const disc of DISCIPLINES) {
     translatedDisciplines[disc.value] = (disc as any)[targetUpper] || disc.EN;
   }
   localStorage.setItem(`op_lang_disciplines_${targetLang}`, JSON.stringify(translatedDisciplines));
+
+  // 2b. Translate Subject Slugs dynamically for URL localization
+  const subjectsToTranslate = [
+    'physics', 'biology', 'law', 'chemistry', 'computer science', 
+    'history', 'economics', 'literature', 'philosophy', 'art', 
+    'medicine', 'mathematics'
+  ];
+  const dynamicSubjectSlugs: Record<string, string> = {};
+  try {
+    const translatedSubjects = await batchTranslateTexts(subjectsToTranslate, targetLower);
+    subjectsToTranslate.forEach((subj, idx) => {
+      dynamicSubjectSlugs[subj] = cleanPathSegment(translatedSubjects[idx] || subj);
+    });
+    localStorage.setItem(`op_dynamic_subject_slugs_${targetUpper}`, JSON.stringify(dynamicSubjectSlugs));
+  } catch (err) {
+    console.error("Failed to dynamically translate subject slugs:", err);
+  }
 
   // 3. Static dictionary for Socratic Game UI labels to completely bypass translate API
   const gameTranslations: Record<string, string> = {};
@@ -1479,6 +1517,78 @@ export const translateMetadataForLanguage = async (targetLang: string) => {
   const localizedQuotes = localizedQuotesDict[targetUpper] || baseQuotes;
   gameTranslations['quotes'] = JSON.stringify(localizedQuotes);
   localStorage.setItem(`op_lang_game_${targetLang}`, JSON.stringify(gameTranslations));
+
+  // 4b. Dynamic translation of Achievements/Badges
+  try {
+    console.log(`[translateMetadataForLanguage] Translating achievements/badges dynamically for ${targetUpper}...`);
+    const { dbService } = await import('@/lib/db');
+    const { data: achievements } = await dbService.getAchievements();
+    if (achievements && achievements.length > 0) {
+      const needsTranslation = achievements.filter(ach => {
+        const trans = ach.translations || {};
+        return !trans[targetUpper] && !trans[targetLower];
+      });
+
+      if (needsTranslation.length > 0) {
+        const textsToTranslate: string[] = [];
+        needsTranslation.forEach(ach => {
+          textsToTranslate.push(ach.name);
+          textsToTranslate.push(ach.description);
+        });
+
+        const translatedTexts = await batchTranslateTexts(textsToTranslate, targetLower);
+        
+        let textIdx = 0;
+        for (const ach of needsTranslation) {
+          const transName = translatedTexts[textIdx++] || ach.name;
+          const transDesc = translatedTexts[textIdx++] || ach.description;
+          ach.translations = ach.translations || {};
+          ach.translations[targetUpper] = { name: transName, description: transDesc };
+          ach.translations[targetLower] = { name: transName, description: transDesc };
+          await dbService.saveAchievement(ach);
+        }
+        console.log(`[translateMetadataForLanguage] Successfully translated ${needsTranslation.length} achievements to ${targetUpper}`);
+      }
+    }
+  } catch (achErr) {
+    console.error("[translateMetadataForLanguage] Error translating achievements dynamically:", achErr);
+  }
+
+  // 4c. Dynamic translation of Tutor Personalities
+  try {
+    console.log(`[translateMetadataForLanguage] Translating tutor personalities dynamically for ${targetUpper}...`);
+    const { dbService } = await import('@/lib/db');
+    const { data: personalities } = await dbService.getTutorPersonalities();
+    if (personalities && personalities.length > 0) {
+      const needsTranslation = personalities.filter(p => {
+        const trans = p.translations || {};
+        return !trans[targetUpper] && !trans[targetLower];
+      });
+
+      if (needsTranslation.length > 0) {
+        const textsToTranslate: string[] = [];
+        needsTranslation.forEach(p => {
+          textsToTranslate.push(p.name);
+          textsToTranslate.push(p.prompt);
+        });
+
+        const translatedTexts = await batchTranslateTexts(textsToTranslate, targetLower);
+
+        let textIdx = 0;
+        for (const p of needsTranslation) {
+          const transName = translatedTexts[textIdx++] || p.name;
+          const transPrompt = translatedTexts[textIdx++] || p.prompt;
+          p.translations = p.translations || {};
+          p.translations[targetUpper] = { name: transName, prompt: transPrompt };
+          p.translations[targetLower] = { name: transName, prompt: transPrompt };
+          await dbService.saveTutorPersonality(p);
+        }
+        console.log(`[translateMetadataForLanguage] Successfully translated ${needsTranslation.length} tutor personalities to ${targetUpper}`);
+      }
+    }
+  } catch (persErr) {
+    console.error("[translateMetadataForLanguage] Error translating tutor personalities dynamically:", persErr);
+  }
 
   // 5. Dynamic translation of the cockpit dictionaries: COCKPIT_DICTIONARY, LOCALIZED_POPUPS, CURRICULUM_STRINGS, EXTRA_TOOLTIP_STRINGS
   if (['EN', 'FR', 'ES', 'DE', 'ZH', 'PT', 'AR', 'HI', 'UR'].includes(targetUpper)) {

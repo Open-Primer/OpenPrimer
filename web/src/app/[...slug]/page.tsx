@@ -11,7 +11,7 @@ import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import { CourseCompletionFeedback } from '@/components/CourseCompletionFeedback';
-import { STATIC_UI_STRINGS, cleanPathSegment, formatCourseLevel } from '@/lib/translations';
+import { STATIC_UI_STRINGS, cleanPathSegment, formatCourseLevel, getLocalizedLevelSlug, getLocalizedSubjectSlug, getCoursePath, getCanonicalLevelFromSlug, getCanonicalSubjectFromSlug } from '@/lib/translations';
 import { ExportLessonButton } from '@/components/ExportLessonButton';
 import { ErrorModal } from '@/components/modals/ErrorModal';
 import { dbService } from '@/lib/db';
@@ -170,7 +170,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
             } catch (err) {
               console.error("Error fetching first lesson slug for curriculum child:", err);
             }
-            redirectUrl = `/${cleanPathSegment(firstChild.level)}/${cleanPathSegment(firstChild.subject)}/${firstChild.slug}/${resolvedSlug}`;
+            redirectUrl = getCoursePath(firstChild.level, firstChild.subject, firstChild.slug, resolvedSlug, lang);
           }
         }
 
@@ -186,7 +186,9 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           }
 
           if (firstLessonSlug !== 'introduction') {
-            redirectUrl = `/${slug[0]}/${slug[1]}/${slug[2]}/${firstLessonSlug}`;
+            const canonicalLevel = getCanonicalLevelFromSlug(slug[0], lang);
+            const canonicalSubject = getCanonicalSubjectFromSlug(slug[1], lang);
+            redirectUrl = getCoursePath(canonicalLevel, canonicalSubject, slug[2], firstLessonSlug, lang);
           } else if (!resolvedSandboxAllowed) {
             const { data: introLesson } = await supabase
               .from('lessons')
@@ -207,7 +209,9 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
                 .maybeSingle();
 
               if (firstLesson) {
-                redirectUrl = `/${slug[0]}/${slug[1]}/${slug[2]}/${firstLesson.lesson_slug}`;
+                const canonicalLevel = getCanonicalLevelFromSlug(slug[0], lang);
+                const canonicalSubject = getCanonicalSubjectFromSlug(slug[1], lang);
+                redirectUrl = getCoursePath(canonicalLevel, canonicalSubject, slug[2], firstLesson.lesson_slug, lang);
               }
             }
           }

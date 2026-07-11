@@ -44,6 +44,7 @@ import { GoingFurther, GoingFurtherItem } from './GoingFurther';
 import { Citation, QuoteBlock, InteractiveQuote } from './Citation';
 import { FunctionManipulator } from './FunctionManipulator';
 import { ClimateImpactMap } from './ClimateImpactMap';
+import { GeoMapExplorer } from './GeoMapExplorer';
 import { EquationManipulator } from './EquationManipulator';
 import { ChemicalStoichiometry } from './ChemicalStoichiometry';
 import { BasicMathExplorer } from './BasicMathExplorer';
@@ -2511,6 +2512,9 @@ const components = {
   ClimateImpactMap,
   climate_impact_map: ClimateImpactMap,
   CarteImpactClimatique: ClimateImpactMap,
+  GeoMapExplorer,
+  geo_map_explorer: GeoMapExplorer,
+  ExplorateurGeographique: GeoMapExplorer,
   CardSort,
   AssociationPaires: CardSort,
   MatchingEvaluation,

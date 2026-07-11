@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { dbService, BADGE_LIBRARY, progressService } from '@/lib/db';
 import { EnrollmentModal } from '@/components/modals/EnrollmentModal';
-import { cleanPathSegment } from '@/lib/translations';
+import { cleanPathSegment, getCoursePath as getCoursePathHelper } from '@/lib/translations';
 
 import { locale as arLocale } from '../../admin/curriculum/locales/ar';
 import { locale as deLocale } from '../../admin/curriculum/locales/de';
@@ -870,7 +870,7 @@ export default function CurriculumPage() {
       level = 'L1'; subject = 'Mathematics'; targetSlug = 'Statistics';
     }
 
-    window.location.href = `/${cleanPathSegment(level)}/${cleanPathSegment(subject)}/${targetSlug}/${resolvedSlug}`;
+    window.location.href = getCoursePathHelper(level, subject, targetSlug, resolvedSlug, lang);
   };
 
 
@@ -878,30 +878,30 @@ export default function CurriculumPage() {
     const slug = c.slug;
     if (!slug) return '/catalog';
     if (slug === 'classical-mechanics' || slug === 'Classical_Mechanics' || c.id === 1) {
-      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Physics')}/Classical_Mechanics/introduction`;
+      return getCoursePathHelper('L1', 'Physics', 'Classical_Mechanics', 'introduction', lang);
     }
     if (slug === 'quantum-physics' || slug === 'Physique_Test_L2' || c.id === 2) {
-      return `/${cleanPathSegment('L2')}/${cleanPathSegment('Physics')}/Physique_Test_L2/introduction`;
+      return getCoursePathHelper('L2', 'Physics', 'Physique_Test_L2', 'introduction', lang);
     }
     if (slug === 'cell-biology' || slug === 'Biologie_Test' || c.id === 3) {
-      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Biology')}/Cell_Biology/introduction`;
+      return getCoursePathHelper('L1', 'Biology', 'Cell_Biology', 'introduction', lang);
     }
     if (slug === 'molecular-genetics' || slug === 'Biologie_Test_L1' || c.id === 4) {
-      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Biology')}/Biologie_Test_L1/introduction`;
+      return getCoursePathHelper('L1', 'Biology', 'Biologie_Test_L1', 'introduction', lang);
     }
     if (slug === 'constitutional-law' || slug === 'Droit_Test' || c.id === 5) {
-      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Law')}/Droit_Test/introduction`;
+      return getCoursePathHelper('L1', 'Law', 'Droit_Test', 'introduction', lang);
     }
     if (slug === 'Maths_Test' || c.id === 7) {
-      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Mathematics')}/Maths_Test/introduction`;
+      return getCoursePathHelper('L1', 'Mathematics', 'Maths_Test', 'introduction', lang);
     }
     if (slug === 'Maths_Test_L1' || c.id === 8) {
-      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Mathematics')}/Maths_Test_L1/introduction`;
+      return getCoursePathHelper('L1', 'Mathematics', 'Maths_Test_L1', 'introduction', lang);
     }
     if (slug === 'Statistics' || c.id === 11) {
-      return `/${cleanPathSegment('L1')}/${cleanPathSegment('Mathematics')}/Statistics/introduction`;
+      return getCoursePathHelper('L1', 'Mathematics', 'Statistics', 'introduction', lang);
     }
-    return `/${cleanPathSegment(c.level || 'L1')}/${cleanPathSegment(c.subject || 'General')}/${c.slug}/introduction`;
+    return getCoursePathHelper(c.level || 'L1', c.subject || 'General', c.slug, 'introduction', lang);
   };
 
   const getLocalizedTitle = (c: any) => {
@@ -2923,7 +2923,7 @@ export default function CurriculumPage() {
               } catch (err) {
                 console.error("Error fetching first lesson slug:", err);
               }
-              const targetPath = `/${cleanPathSegment(courseToOpen.level)}/${cleanPathSegment(courseToOpen.subject)}/${courseToOpen.slug}/${resolvedSlug}`;
+              const targetPath = getCoursePathHelper(courseToOpen.level, courseToOpen.subject, courseToOpen.slug, resolvedSlug, lang);
 
               setTimeout(() => {
                 setEnrollmentSuccess(false);

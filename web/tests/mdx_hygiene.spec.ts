@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { preprocessMdx } from '../src/lib/content';
-import { stitchLessonContent } from '../src/lib/ai';
+import { stitchLessonContent, areComponentsDuplicate } from '../src/lib/ai';
 import { resolveAndPersistMedia } from '../src/lib/media-resolver';
 
 test.describe('MDX Structural Hygiene & HistoricalPerson Deduplication', () => {
@@ -538,6 +538,65 @@ But this one [is perfectly balanced]
       const stitched = stitchLessonContent(rawMdx, {}, false);
       expect(stitched).toContain('<Image caption="Figure 1 : This is a test image description" id="test_img" description="This is a test image description" />');
       expect(stitched).toContain('<ClimateImpactMap id="test_map" description="This is a test map description" />');
+    });
+  });
+
+  test.describe('Widget Parameter-Based Deduplication', () => {
+    test('should allow multiple distinct generic simulator widgets with different parameters', () => {
+      const c1 = {
+        componentType: 'FunctionPlotter',
+        props: {
+          formula: 'y = x^2',
+          title: 'Quadratic function'
+        }
+      };
+      const c2 = {
+        componentType: 'FunctionPlotter',
+        props: {
+          formula: 'y = sin(x)',
+          title: 'Sine function'
+        }
+      };
+
+      // Since their configuration properties differ, they should NOT be considered duplicates
+      expect(areComponentsDuplicate(c1, c2)).toBe(false);
+    });
+
+    test('should consider generic simulator widgets with identical parameters to be duplicates', () => {
+      const c1 = {
+        componentType: 'FunctionPlotter',
+        props: {
+          formula: 'y = x^2',
+          title: 'Quadratic function'
+        }
+      };
+      const c2 = {
+        componentType: 'FunctionPlotter',
+        props: {
+          formula: 'y = x^2',
+          title: 'Quadratic function',
+          id: 'plot_1'
+        }
+      };
+
+      expect(areComponentsDuplicate(c1, c2)).toBe(true);
+    });
+
+    test('should keep strict deduplication for content/media widgets', () => {
+      const q1 = {
+        componentType: 'Quiz',
+        props: {
+          questions: [{ q: 'What is 1+1?' }]
+        }
+      };
+      const q2 = {
+        componentType: 'Quiz',
+        props: {
+          questions: [{ q: 'What is 1+1?' }]
+        }
+      };
+
+      expect(areComponentsDuplicate(q1, q2)).toBe(true);
     });
   });
 });

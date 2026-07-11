@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { X, GraduationCap, Sparkles, Clock, ShieldCheck, ChevronRight, Rocket, Bookmark } from 'lucide-react';
-import { getLocalizedLabel, formatCourseLevel, UI_STRINGS, cleanPathSegment } from '@/lib/translations';
+import { getLocalizedLabel, formatCourseLevel, UI_STRINGS, cleanPathSegment, getCoursePath } from '@/lib/translations';
 import { dbService } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 
@@ -612,7 +612,7 @@ export const EnrollmentModal = ({
                   } catch (err) {
                     console.error("Error fetching first lesson slug:", err);
                   }
-                  window.location.href = `/${cleanPathSegment(activeCourse.level)}/${cleanPathSegment(activeCourse.subject)}/${activeCourse.slug}/${resolvedSlug}`;
+                  window.location.href = getCoursePath(activeCourse.level, activeCourse.subject, activeCourse.slug, resolvedSlug, targetLang);
                 }}
                 className="flex-1 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 cursor-pointer"
               >

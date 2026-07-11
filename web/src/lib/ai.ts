@@ -2816,11 +2816,11 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     content = content.trim() + glossaryStr;
   }
 
-  // Convert [refN] citations in the narrative text to WFTA Citation widget anchors
+  // Convert [refN] citations in the narrative text to WFTA Reference widget anchors
   content = content.replace(/\[ref[-_]?\s*(\d+)\]/gi, (match, numStr) => {
     const num = parseInt(numStr, 10);
     if (num > 0 && num <= widgets.references.length) {
-      return `[[WIDGET:Citation:${num}]]`;
+      return `[[WIDGET:Reference:${num}]]`;
     }
     return match;
   });
@@ -4043,7 +4043,7 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
         console.warn('[AI GENERATOR WARNING] referencesMetadata is empty — syllabus may have been loaded from cache without references. Scribe will self-generate citations.');
       }
       const referencesMetadata = courseReferences.length > 0
-        ? courseReferences.map((ref: string, idx: number) => `[ref${idx + 1}] ${ref}\n`).join('')
+        ? courseReferences.map((ref: string, idx: number) => `[[WIDGET:Reference:${idx + 1}]] ${ref}\n`).join('')
         : 'None provided. Please construct academic references for the discipline.';
 
       if (isTerminalEvaluation) {
@@ -4282,6 +4282,7 @@ Choose from the following options:
 10. [[WIDGET:RealPerson:unique_id:Person Name]] - Inline hover-card highlight for any person mentioned. (e.g. "...alors que [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque...")
 11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
 12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
+13. [[WIDGET:Quote:unique_id:description]] - Block widget for a famous quotation or author quote, including original/translation and source. Scribe must place this anchor on a separate blank line. (e.g. [[WIDGET:Quote:marie_curie_perseverance:Citation de Marie Curie sur la persévérance dans la recherche scientifique]])
 
 Please write them exactly in this anchor format [[WIDGET:Type:unique_id:description]] (or [[WIDGET:Type:unique_id]] where description is not applicable, or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
 
@@ -4296,13 +4297,13 @@ ${bIdx > 0 ? `Below is the text generated in the previous blocks. Do NOT repeat 
 ---
 
 ⚠️ CRITICAL MARKUP & XML/JSX COMPLIANCE RULES (MDX SAFETY MANDATE):
-1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup>) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors for all widgets, media, links, or elements. For references/citations, you MUST exclusively use [[WIDGET:Citation:num]] (e.g. [[WIDGET:Citation:1]]) instead of any HTML/JSX markup or brackets.
+1. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup>) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors for all widgets, media, links, or elements. For inline bibliographic reference citations, you MUST exclusively use [[WIDGET:Reference:num]] (e.g. [[WIDGET:Reference:1]]) instead of any HTML/JSX markup or brackets. Agent 3a must never attempt to output raw JSX/HTML tags; all features must strictly use [[WIDGET:id]] anchors.
 2. NO RAW HTML FOR LISTS. Use Markdown bullets/numbering.
 3. NO LITERAL CURLY BRACES in plain text. Wrap in LaTeX or backticks.
 4. NO STRAY import/export statements.
 5. NO WIDGET ANCHORS INSIDE LISTS OR TABLES. Place them on separate blank lines.
 6. Captions of images or Mermaid diagrams must NOT contain figure prefixes (like 'Figure 1:', 'Image A -'). CAPTIONS MUST ONLY contain the descriptive prose.
-7. ACADEMIC REFERENCES CITATION MANDATE: You MUST actively cite the references listed under "### GLOBAL CONTEXT:" (if any) throughout the prose. Cite them inline using the format [[WIDGET:Citation:1]], [[WIDGET:Citation:2]], etc., where [[WIDGET:Citation:1]] maps to the first reference in the Global Context list, [[WIDGET:Citation:2]] to the second, and so on. Absolute prohibition on raw HTML/JSX tags (like <sup> or <a>) or brackets (like [1], [ref1]) for citations in the text. Exclusively use [[WIDGET:Citation:id]] anchors. Do not define a bibliography section here; simply cite them inline in this format.
+7. ACADEMIC REFERENCES CITATION MANDATE: You MUST actively cite the references listed under "### GLOBAL CONTEXT:" (if any) throughout the prose. Cite them inline using the format [[WIDGET:Reference:1]], [[WIDGET:Reference:2]], etc., where [[WIDGET:Reference:1]] maps to the first reference in the Global Context list, [[WIDGET:Reference:2]] to the second, and so on. Exclusively use [[WIDGET:Reference:num]] anchors. Do not define a bibliography section here; simply cite them inline in this format.
 8. MANDATORY DESCRIPTION FOR MEDIA WIDGETS: For all media/visual widgets (including Image, CustomFigure, Video, Audio, and Mermaid), you MUST append the description/caption as the third parameter in the widget anchor: [[WIDGET:Type:id:description]]. Absolute prohibition on placing external descriptions, captions, or comments (such as "*Description: ...*", "Caption: ...", "Légende: ...") directly in the narrative prose outside the anchor.
 9. ABSOLUTE PROHIBITION ON RAW MERMAID DIAGRAMS. Never write raw Mermaid diagram code (e.g. wrapped in \`\`\`mermaid ... \`\`\`) directly in the narrative prose. Instead, you MUST only generate a widget anchor like \`[[WIDGET:Mermaid:id:description]]\` on a separate blank line, describing what the diagram should display in the description. The actual Mermaid diagram code will be generated later by the Widgets Architect (Agent 3b).
 ${pronunciationMandate}
@@ -4323,6 +4324,7 @@ Write the content for the specified sections. Return ONLY the markdown content. 
               let blockRawText = await callAIEngine(blockPrompt, null, 0.35, 0.25, 0.85);
               if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage1_narrative_block${bIdx + 1}_${item.slug}_iter${blockIteration}.md`, blockRawText); // [FIX G4/G5]
               cleanedBlockText = blockRawText.replace(/```json/gi, '').replace(/```mdx/gi, '').replace(/```/gi, '').trim();
+              cleanedBlockText = healNarrativeCitations(cleanedBlockText);
             }
 
             // Audit the block text using Critic (Agent 4A)
@@ -4335,7 +4337,7 @@ ${cleanedBlockText}
 Check checkpoints:
 1. Zero-placeholders.
 2. Accurate academic density and level-appropriate language.
-3. Strict MDX/JSX safety (absolutely no raw custom component or custom JSX/HTML tags like <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup> inline in prose. All interactive elements and special links must strictly use the [[WIDGET:id]] anchor format. For citations/references, they MUST strictly use the [[WIDGET:Citation:num]] anchor format, e.g. [[WIDGET:Citation:1]]. Reject any block containing raw HTML citation tags or raw bracketed citation anchors like [ref1], [1] in text. Reject any block containing raw Mermaid diagram code (e.g. wrapped in \`\`\`mermaid ... \`\`\`). All diagrams must be anchored as [[WIDGET:Mermaid:id:description]] anchors).
+3. Strict MDX/JSX safety (absolutely no raw custom component or custom JSX/HTML tags like <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup> inline in prose. All interactive elements and special links must strictly use the [[WIDGET:id]] anchor format. For bibliographic citations, they MUST strictly use the [[WIDGET:Reference:num]] anchor format, e.g. [[WIDGET:Reference:1]]. Reject any block containing raw HTML citation tags or raw bracketed citation anchors like [ref1], [1] in text. Reject any block containing raw Mermaid diagram code (e.g. wrapped in \`\`\`mermaid ... \`\`\`). All diagrams must be anchored as [[WIDGET:Mermaid:id:description]] anchors).
 4. No figure prefixes like "Figure 1:" in visual captions.
 5. NO EXTERNAL WIDGET CAPTIONS/DESCRIPTIONS IN NARRATIVE PROSE: REJECT the block if there are any external descriptions, comments, or caption text (such as "*Description: ...*", "Caption: ...", "Légende: ...") placed directly in the narrative prose outside, above, or below a widget anchor (like Image, CustomFigure, Video, Audio, Mermaid, etc.). The description must be strictly inside the anchor itself as the third parameter (e.g. [[WIDGET:Image:id:description]] or [[WIDGET:CustomFigure:id:description]] or [[WIDGET:Video:id:description]] or [[WIDGET:Audio:id:description]] or [[WIDGET:Mermaid:id:description]]).
 6. Presence of pedagogical widgets: Check that the block contains at least 2-3 inline hover-cards (ConceptLink, Glossary, RealPerson) and at least 1-2 block widgets (Image, CustomFigure, Mermaid, ComparisonSlider, InteractiveDiagram, DataChart, Video) as anchors. If completely missing, reject the block.
@@ -4431,7 +4433,7 @@ Return ONLY a valid JSON object matching blockNarrativeAuditSchema:
 We need to repair specific sections of the lesson narrative "${item.title}" (Block ${bIdx + 1}) that were rejected by the Narrative Critic (Agent 4A).
 
 [CRITICAL] CRITICAL MDX COMPLIANCE:
-- Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup>) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors. For references/citations, you MUST exclusively use [[WIDGET:Citation:num]] (e.g. [[WIDGET:Citation:1]]) instead of any HTML/JSX markup or brackets.
+- Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup>) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors. For bibliographic citations/references, you MUST exclusively use [[WIDGET:Reference:num]] (e.g. [[WIDGET:Reference:1]]) instead of any HTML/JSX markup or brackets. All features must strictly use [[WIDGET:id]] anchors.
 - Do NOT use raw HTML tags; use standard Markdown instead.
 - Do NOT use literal curly braces { } in plain text.
 
@@ -4462,7 +4464,7 @@ INSTRUCTIONS:
 1. Repair each rejected section to fully resolve its critique.
 2. Wrap each repaired section in: <revised_section heading="HEADING_EXACTLY_AS_SHOWN">[your repaired content]</revised_section>
 3. Preserve all [[WIDGET:id]] anchors exactly as they are in the current content.
-4. ACADEMIC REFERENCES CITATION MANDATE: Ensure that all inline citations in the format [[WIDGET:Citation:1]], [[WIDGET:Citation:2]], etc. mapping to the available global references are strictly preserved or added where necessary to support the academic rigor of the content. Absolute prohibition on raw HTML/JSX tags (like <sup> or <a>) or brackets (like [1], [ref1]) for citations in the text. Exclusively use [[WIDGET:Citation:id]] anchors. Do not define a bibliography section here; simply cite them inline in this format.
+4. ACADEMIC REFERENCES CITATION MANDATE: Ensure that all inline citations in the format [[WIDGET:Reference:1]], [[WIDGET:Reference:2]], etc. mapping to the available global references are strictly preserved or added where necessary to support the academic rigor of the content. Absolute prohibition on raw HTML/JSX tags (like <sup> or <a>) or brackets (like [1], [ref1]) for citations in the text. Exclusively use [[WIDGET:Reference:id]] anchors. Do not define a bibliography section here; simply cite them inline in this format.
 5. Do NOT include markdown code block wrappers or conversational text.`;
 
                     let scribeRepairOutput = await callAIEngine(promptJointRepair, null, 0.35, 0.25, 0.85);
@@ -4487,6 +4489,7 @@ INSTRUCTIONS:
                     }
 
                     cleanedBlockText = reconstructMarkdown(parsedSections);
+                    cleanedBlockText = healNarrativeCitations(cleanedBlockText);
                     needsScribeDraft = false; // Repaired section is ready for re-audit
                   } else {
                     blockFeedback = `[Block ${bIdx + 1}, Attempt ${blockIteration}] Failed to map rejected sections. Retrying globally.`; // [FIX G7]
@@ -4761,21 +4764,17 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 
       const activeCustomAnchors = activeAnchors.filter(a => !['prerequisites', 'diagnosticQuiz', 'learningObjectives', 'conclusionSummary', 'whatsNext', 'goingFurther', 'finalEvaluation', 'references'].includes(a.type));
 
-      const shouldSplit = activeCustomAnchors.length > 3;
-      const block2CustomAnchors = shouldSplit 
-        ? activeCustomAnchors.slice(0, Math.ceil(activeCustomAnchors.length / 2))
-        : activeCustomAnchors;
-      const block5CustomAnchors = shouldSplit
-        ? activeCustomAnchors.slice(Math.ceil(activeCustomAnchors.length / 2))
-        : [];
+      const block2Types = ['biography', 'realperson', 'historicalperson', 'conceptlink', 'eventlink', 'historicaleventlink', 'evenementhistorique', 'événementhistorique', 'location', 'glossary'];
+      const block2CustomAnchors = activeCustomAnchors.filter(a => block2Types.includes(a.type.toLowerCase()));
+      const block5CustomAnchors = activeCustomAnchors.filter(a => !block2Types.includes(a.type.toLowerCase()));
 
-      if (activeCustomAnchors.length === 0 || isTerminalEvaluation) {
-        await appendTaskLog(`[AI GENERATOR] No custom narrative widget anchors found. Skipping Widget Block 2.`);
+      if (block2CustomAnchors.length === 0 || isTerminalEvaluation) {
+        await appendTaskLog(`[AI GENERATOR] No enrichment hover card anchors found. Skipping Widget Block 2 (Enrichment).`);
         block2Approved = true;
         widgetBlock2Entry.approved = true;
       } else {
         const block2Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
-Your task is to design the JSON object for the interactive components of the lesson${shouldSplit ? ' (Part 1 of the interactive elements)' : ''}.
+Your task is to design the JSON object for the Enrichment Hover Cards / Entity Links of the lesson (biographies, persons, concepts, events, locations, and glossary terms).
 
 The narrative text contains the following custom widget anchors that you MUST define:
 ${block2CustomAnchors.map(a => `- Anchor: [[WIDGET:${a.type}:${a.id}${a.topic ? `:${a.topic}` : ''}]] (Type: "${a.type}", ID: "${a.id}", Topic: "${a.topic || ''}")`).join('\n')}
@@ -4790,50 +4789,33 @@ ${dynamicCatalogList}
    - "name": (string) Full name of the person.
    - "dates": (string) Lifespan dates, e.g. "1723-1790" or "1856-1939".
    - "description": (string) Detailed biographical summary focusing on their contributions (8-12 sentences).
-   - "wikipediaUrl": (string) Direct link to their English or French Wikipedia page.
-2. "Image":
-   - "description": (string) Detailed search/generation description for the image (at least 2-3 sentences of visual instructions). Do NOT generate sequential figure prefixes.
-   - "alt": (string) Short description for accessibility.
-   - "caption": (string) A detailed, italicized caption explaining academic relevance. Do NOT generate sequential figure numbers.
-   - "title": (string) Short title of the image.
-   - "searchQuery": (string) Highly canonical 1 to 3 search words (e.g. 'Claudio Monteverdi', 'Prise de la Bastille') to search in archives.
-3. "Video":
-   - "title": (string) Title of the video documentary or lecture segment.
-   - "duration": (string) Estimated duration, e.g. "3:15".
-4. "Audio":
-   - "title": (string) Short descriptive title for the audio.
-   - "duration": (string) e.g. "1:30".
-   - "description": (string) Detailed description/narration text.
-5. "Quiz":
-   - "limit": (integer) Number of questions to display.
-   - "questions": (array of objects) Each object must have:
-     - "q": (string) The question card text.
-     - "explanation": (string) Extremely concise, punchy explanation of the correct choice.
-     - "options": (array of objects) Each option must have:
-       - "text": (string) Option text.
-       - "correct": (boolean) Whether correct.
-6. "SolvedExercise":
-   - "title": (string) Exercise title.
-   - "problem": (string) The markdown-formatted problem statement.
-   - "solution": (string) Detailed step-by-step solution.
-7. "UnsolvedExercise":
-   - "title": (string) Exercise title.
-   - "problem": (string) Markdown problem statement.
-   - "correctAnswer": (string) The correct analytical answer or formula.
-8. "FillInBlanks":
-   - "sentence": (string) Sentence containing one or more blanks represented by five underscores (_____).
-   - "answer": (string) Correct comma-separated answers.
-9. "Mermaid":
-   - "chart": (string) Valid Mermaid chart notation starting with graph/sequenceDiagram/etc.
-10. "RealPerson" or "HistoricalPerson":
+   - "wikipediaUrl": (string) Direct canonical link to their English or French Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the biography on Wikipedia. MANDATORY.
+2. "RealPerson" or "HistoricalPerson":
    - "name": (string) Full name of the person (should match the Anchor Topic if provided).
    - "description": (string) Wikipedia-style hover card tooltip summary of this person (2-4 sentences).
-11. "ConceptLink":
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the person on Wikipedia. MANDATORY.
+3. "ConceptLink":
    - "name": (string) Name of the concept (should match the Anchor Topic if provided).
    - "description": (string) Wikipedia-style hover card tooltip summary of this concept (2-4 sentences).
-12. "Glossary":
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the concept on Wikipedia. MANDATORY.
+4. "EventLink", "HistoricalEventLink", "EvenementHistorique", or "ÉvénementHistorique":
+   - "name": (string) Name of the event (should match the Anchor Topic if provided).
+   - "description": (string) Wikipedia-style hover card tooltip summary of this event (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the event on Wikipedia. MANDATORY.
+5. "Location":
+   - "name": (string) Name of the location (should match the Anchor Topic if provided).
+   - "description": (string) Wikipedia-style hover card tooltip summary of this location (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the location on Wikipedia. MANDATORY.
+6. "Glossary":
    - "term": (string) Glossary vocabulary term.
    - "definition": (string) Detailed vocabulary definition (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the term on Wikipedia. MANDATORY.
 
 You must define the "interactiveComponents" array containing one object for each anchor listed above.
 For each component:
@@ -4857,34 +4839,6 @@ Return ONLY a valid JSON object matching this schema:
 \\\`\\\`\\\`
 Do NOT wrap your JSON response in markdown code blocks.`;
 
-        // Build list of existing interactive components for AI prompt exclusion
-        const existingCourseComponents: any[] = [];
-        try {
-          const courseSlugForFetch = cleanPathSegment(correctedCourseName);
-          const { data: dbLessons } = await supabaseAdmin
-            .from('lessons')
-            .select('content')
-            .eq('course_slug', courseSlugForFetch)
-            .neq('lesson_slug', item.slug)
-            .eq('lang', targetLang.toLowerCase());
-
-          if (dbLessons) {
-            for (const les of dbLessons) {
-              const extracted = extractInteractiveComponentsFromMdx(les.content || '');
-              existingCourseComponents.push(...extracted);
-            }
-          }
-        } catch (err) {
-          console.warn(`[AI GENERATOR] Failed to fetch other lessons for prompt exclusions:`, err);
-        }
-        
-        const allExistingComponents = [...existingCourseComponents, ...sharedCourseInteractiveComponents];
-        const excludedWidgetsSummary = allExistingComponents.map(comp => {
-          const type = comp.componentType || comp.type || '';
-          const nameOrTitle = comp.props?.name || comp.props?.title || comp.props?.question || comp.props?.sentence || comp.id || '';
-          return `- Type: ${type}, Identifier/Title: "${nameOrTitle}"`;
-        }).filter((val, idx, self) => self.indexOf(val) === idx).join('\n');
-
         while (!block2Approved && block2Iteration < maxBlock2Iterations) {
           block2Iteration++;
           lessonStats.widgetsAttempts++;
@@ -4892,9 +4846,6 @@ Do NOT wrap your JSON response in markdown code blocks.`;
           await appendTaskLog(`[AI GENERATOR] Generating Widget Block 2 (Attempt #${block2Iteration})...`);
 
           let block2PromptWithFeedback = block2Prompt;
-          if (excludedWidgetsSummary) {
-            block2PromptWithFeedback += `\n\n⚠️ EXCLUDED WIDGETS (Do NOT duplicate or recreate these as they already exist in other lessons of this course):\n${excludedWidgetsSummary}`;
-          }
           if (block2Feedback) {
             block2PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block2Feedback}"\nPlease fix these issues and regenerate.`;
           }
@@ -4974,15 +4925,15 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
         parsedWidgets.interactiveComponents = block2Parsed.interactiveComponents;
       }
 
-      // --- Block 5: Narrative / Interactive Components (Part 2) ---
-      if (shouldSplit && block5CustomAnchors.length > 0) {
+      // --- Block 5: Practice & Media ---
+      if (block5CustomAnchors.length > 0 && !isTerminalEvaluation) {
         let block5Approved = false;
         let block5Iteration = 0;
         const maxBlock5Iterations = 3;
         let block5Feedback = '';
 
         const widgetBlock5Entry = {
-          blockName: "Block 5: Interactive Part 2",
+          blockName: "Block 5: Practice & Media",
           attempts: 0,
           rejections: 0,
           approved: false
@@ -4990,7 +4941,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
         lessonStats.widgetBlockAttempts.push(widgetBlock5Entry);
 
         const block5Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
-Your task is to design the JSON object for the interactive components of the lesson (Part 2 of the interactive elements).
+Your task is to design the JSON object for the Practice Exercises, Visual Diagrams, and Multimedia components of the lesson (quizzes, exercises, charts, videos, and audios).
 
 The narrative text contains the following custom widget anchors that you MUST define in this block:
 ${block5CustomAnchors.map(a => `- Anchor: [[WIDGET:${a.type}:${a.id}${a.topic ? `:${a.topic}` : ''}]] (Type: "${a.type}", ID: "${a.id}", Topic: "${a.topic || ''}")`).join('\n')}
@@ -5001,29 +4952,23 @@ ${block5CustomAnchors.map(a => `- Anchor: [[WIDGET:${a.type}:${a.id}${a.topic ? 
 ${dynamicCatalogList}
 
 ### REQUIRED PROPS STRUCTURE per componentType:
-1. "Biography":
-   - "name": (string) Full name of the person.
-   - "dates": (string) Lifespan dates, e.g. "1723-1790" or "1856-1939".
-   - "description": (string) Detailed biographical summary focusing on their contributions (8-12 sentences).
-   - "wikipediaUrl": (string) Direct canonical link to their English or French Wikipedia page. MANDATORY.
-   - "searchQuery": (string) Canonical search query to find the biography on Wikipedia. MANDATORY.
-2. "Image":
+1. "Image":
    - "description": (string) Detailed search/generation description for the image (at least 2-3 sentences of visual instructions). Do NOT generate sequential figure prefixes.
    - "alt": (string) Short description for accessibility.
    - "caption": (string) A detailed, italicized caption explaining academic relevance. Do NOT generate sequential figure numbers.
    - "title": (string) Short title of the image.
    - "searchQuery": (string) Highly canonical 1 to 3 search words (e.g. 'Claudio Monteverdi', 'Prise de la Bastille') to search in archives.
-3. "Video":
+2. "Video":
    - "title": (string) Title of the video documentary or lecture segment.
    - "duration": (string) Estimated duration, e.g. "3:15".
    - "description": (string) Detailed description of the video's content, documentary topic, or lecture segment. MANDATORY.
    - "searchQuery": (string) Canonical search query to find this video on platforms like YouTube. MANDATORY.
-4. "Audio":
+3. "Audio":
    - "title": (string) Short descriptive title for the audio.
    - "duration": (string) e.g. "1:30".
    - "description": (string) Detailed description/narration text. MANDATORY.
    - "searchQuery": (string) Canonical search query to find this audio resource. MANDATORY.
-5. "Quiz":
+4. "Quiz":
    - "limit": (integer) Number of questions to display.
    - "questions": (array of objects) Each object must have:
      - "q": (string) The question card text.
@@ -5031,44 +4976,19 @@ ${dynamicCatalogList}
      - "options": (array of objects) Each option must have:
        - "text": (string) Option text.
        - "correct": (boolean) Whether correct.
-6. "SolvedExercise":
+5. "SolvedExercise":
    - "title": (string) Exercise title.
    - "problem": (string) The markdown-formatted problem statement.
    - "solution": (string) Detailed step-by-step solution.
-7. "UnsolvedExercise":
+6. "UnsolvedExercise":
    - "title": (string) Exercise title.
    - "problem": (string) Markdown problem statement.
    - "correctAnswer": (string) The correct analytical answer or formula.
-8. "FillInBlanks":
+7. "FillInBlanks":
    - "sentence": (string) Sentence containing one or more blanks represented by five underscores (_____).
    - "answer": (string) Correct comma-separated answers.
-9. "Mermaid":
+8. "Mermaid":
    - "chart": (string) Valid Mermaid chart notation starting with graph/sequenceDiagram/etc.
-10. "RealPerson" or "HistoricalPerson":
-   - "name": (string) Full name of the person (should match the Anchor Topic if provided).
-   - "description": (string) Wikipedia-style hover card tooltip summary of this person (2-4 sentences).
-   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
-   - "searchQuery": (string) Canonical search query to find the person on Wikipedia. MANDATORY.
-11. "ConceptLink":
-   - "name": (string) Name of the concept (should match the Anchor Topic if provided).
-   - "description": (string) Wikipedia-style hover card tooltip summary of this concept (2-4 sentences).
-   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
-   - "searchQuery": (string) Canonical search query to find the concept on Wikipedia. MANDATORY.
-12. "EventLink", "HistoricalEventLink", "EvenementHistorique", or "ÉvénementHistorique":
-   - "name": (string) Name of the event (should match the Anchor Topic if provided).
-   - "description": (string) Wikipedia-style hover card tooltip summary of this event (2-4 sentences).
-   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
-   - "searchQuery": (string) Canonical search query to find the event on Wikipedia. MANDATORY.
-13. "Location":
-   - "name": (string) Name of the location (should match the Anchor Topic if provided).
-   - "description": (string) Wikipedia-style hover card tooltip summary of this location (2-4 sentences).
-   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
-   - "searchQuery": (string) Canonical search query to find the location on Wikipedia. MANDATORY.
-14. "Glossary":
-   - "term": (string) Glossary vocabulary term.
-   - "definition": (string) Detailed vocabulary definition (2-4 sentences).
-   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
-   - "searchQuery": (string) Canonical search query to find the term on Wikipedia. MANDATORY.
 
 You must define the "interactiveComponents" array containing one object for each anchor listed above.
 For each component:
@@ -5076,6 +4996,12 @@ For each component:
 - "componentType": Must match the Type from the anchor.
 - "sectionAnchor": The markdown heading "## Section Name" where this widget is placed in the narrative.
 - "props": The specific properties required for the widget type as described above.
+
+⚠️ SPECIAL INSTRUCTION ON CONCURRENCY & REUSABLE SIMULATORS:
+- If this lesson requires a generic mathematical, chemical, or physics simulator (such as "FunctionPlotter", "FunctionManipulator", "DynamicSimulation", "BasicMathExplorer", "ChemicalStoichiometry", etc.):
+  - You CAN and are encouraged to use these generic simulation widget types multiple times in the same lesson or across lessons of the course.
+  - Since lessons might be generated in parallel concurrency, ALWAYS configure each instance of these widgets with DIFFERENT, highly topic-relevant parameters, formulas, or expressions (e.g. topic-specific math curves or specific molecular reactions).
+  - Never use generic, default placeholders (like "y = x^2") so that each widget remains uniquely customized and distinct.
 
 Return ONLY a valid JSON object matching this schema:
 \`\`\`json
@@ -5092,34 +5018,6 @@ Return ONLY a valid JSON object matching this schema:
 \`\`\`
 Do NOT wrap your JSON response in markdown code blocks.`;
 
-        // Build list of existing interactive components for AI prompt exclusion
-        const existingCourseComponents: any[] = [];
-        try {
-          const courseSlugForFetch = cleanPathSegment(correctedCourseName);
-          const { data: dbLessons } = await supabaseAdmin
-            .from('lessons')
-            .select('content')
-            .eq('course_slug', courseSlugForFetch)
-            .neq('lesson_slug', item.slug)
-            .eq('lang', targetLang.toLowerCase());
-
-          if (dbLessons) {
-            for (const les of dbLessons) {
-              const extracted = extractInteractiveComponentsFromMdx(les.content || '');
-              existingCourseComponents.push(...extracted);
-            }
-          }
-        } catch (err) {
-          console.warn(`[AI GENERATOR] Failed to fetch other lessons for prompt exclusions:`, err);
-        }
-        
-        const allExistingComponents = [...existingCourseComponents, ...sharedCourseInteractiveComponents];
-        const excludedWidgetsSummary = allExistingComponents.map(comp => {
-          const type = comp.componentType || comp.type || '';
-          const nameOrTitle = comp.props?.name || comp.props?.title || comp.props?.question || comp.props?.sentence || comp.id || '';
-          return `- Type: ${type}, Identifier/Title: "${nameOrTitle}"`;
-        }).filter((val, idx, self) => self.indexOf(val) === idx).join('\n');
-
         while (!block5Approved && block5Iteration < maxBlock5Iterations) {
           block5Iteration++;
           lessonStats.widgetsAttempts++;
@@ -5127,9 +5025,6 @@ Do NOT wrap your JSON response in markdown code blocks.`;
           await appendTaskLog(`[AI GENERATOR] Generating Widget Block 5 (Attempt #${block5Iteration})...`);
 
           let block5PromptWithFeedback = block5Prompt;
-          if (excludedWidgetsSummary) {
-            block5PromptWithFeedback += `\n\n⚠️ EXCLUDED WIDGETS (Do NOT duplicate or recreate these as they already exist in other lessons of this course):\n${excludedWidgetsSummary}`;
-          }
           if (block5Feedback) {
             block5PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block5Feedback}"\nPlease fix these issues and regenerate.`;
           }
@@ -6940,7 +6835,7 @@ INSTRUCTIONS:
 1. Revise the content of this section to fully address the global diagnosis/pre-critique.
 2. Maintain high academic density, rigor, and the target language of the lesson.
 3. If the heading is empty, this is the header/frontmatter block of the lesson. You must ONLY revise any prose or prerequisites/objectives text, and you must strictly preserve the "---" boundaries and YAML frontmatter at the very top.
-4. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, etc.) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors. For references/citations, you MUST exclusively use [[WIDGET:Citation:num]] (e.g. [[WIDGET:Citation:1]]) instead of any HTML/JSX markup or brackets.
+4. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, etc.) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors. For references/citations, you MUST exclusively use [[WIDGET:Reference:num]] (e.g. [[WIDGET:Reference:1]]) instead of any HTML/JSX markup or brackets.
 5. Preserve all existing [[WIDGET:id]] anchors exactly as they are in the current content.
 6. Return ONLY the revised section content. Do NOT include markdown code block wrappers or conversational text outside.`;
 
@@ -6953,6 +6848,7 @@ INSTRUCTIONS:
       }
 
       revisedMdx = reconstructMarkdown(revisedSections);
+      revisedMdx = healNarrativeCitations(revisedMdx);
     } else {
       console.log(`[REVISION AGENT] Performing targeted local revision...`);
       const parsedSections = parseMarkdownSections(cleanLessonContent);
@@ -6989,7 +6885,7 @@ INSTRUCTIONS:
 1. Revise the content of this section to address the local feedback.
 2. Maintain high academic density, rigor, and target language.
 3. If the heading is empty, preserve the frontmatter.
-4. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Use [[WIDGET:id]] anchors and [[WIDGET:Citation:num]] for citations.
+4. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Use [[WIDGET:id]] anchors and [[WIDGET:Reference:num]] for citations.
 5. Return ONLY the revised section content.`;
 
           const revisedSecContent = await callAIEngine(promptLocalSec, null, 0.35, 0.25, 0.85);
@@ -7058,6 +6954,7 @@ INSTRUCTIONS:
       }
 
       revisedMdx = reconstructMarkdown(parsedSections);
+      revisedMdx = healNarrativeCitations(revisedMdx);
     }
 
     if (!revisedMdx) {
@@ -7113,7 +7010,7 @@ Your validation checklist:
    - Regardless of discipline: Ensure any audio players ('<AudioPlayer />' or '<Audio />') or video players ('<Video />') from the original are preserved and not lost during revision.
 9. Section Interactivity and Interactive Sandboxes:
    - Ensure that every major conceptual section (demarcated by a '##' heading) still contains at least one interactive/active learning component (e.g. formative quizzes, fill-in-the-blanks, solved/unsolved exercises, or sandbox/simulation widgets like '<FunctionPlotter />', '<FunctionManipulator />', '<EquationManipulator />', '<Geometry2D />', '<CodeSandbox />', '<DataChart />', '<StructureViewer3D />', '<DynamicSimulation />', '<BasicMathExplorer />', or '<ChemicalStoichiometry />').
-10. Widgets-First Citation (WFTA) Compliance: Absolutely no custom JSX/HTML tags (such as <sup id="cite-...">(...)</sup> or <sup>(...)</sup>) or manual bracketed references (like [ref1], [1]) are allowed in the prose content. All citations/references in the prose must strictly use the [[WIDGET:Citation:num]] anchor format, e.g. [[WIDGET:Citation:1]]. Reject any revision containing non-compliant HTML/JSX citation markup or manual brackets.
+10. Widgets-First Citation (WFTA) Compliance: Absolutely no custom JSX/HTML tags (such as <sup id="cite-...">(...)</sup> or <sup>(...)</sup>) or manual bracketed references (like [ref1], [1]) are allowed in the prose content. All inline bibliographic citations/references in the prose must strictly use the [[WIDGET:Reference:num]] anchor format, e.g. [[WIDGET:Reference:1]]. Reject any revision containing non-compliant HTML/JSX citation markup or manual brackets.
 
 Your audit can be in dual-mode:
 - **"isGlobalRevision" MUST ONLY be set to true if the issues are widespread and catastrophic** (completely unparseable structure, severe length deficiency, or total failure of the revision requiring a complete full-JSON rewrite). If so, provide a comprehensive "globalCritique".
@@ -7244,7 +7141,7 @@ INSTRUCTIONS:
 1. Refine the content of this section to fully address the global critique.
 2. Maintain high academic density, rigor, and the target language.
 3. If the heading is empty, this is the header/frontmatter block of the lesson. You must ONLY revise any prose or prerequisites/objectives text, and you must strictly preserve the "---" boundaries and YAML frontmatter at the very top.
-4. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Use [[WIDGET:id]] anchors and [[WIDGET:Citation:num]] for citations.
+4. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Use [[WIDGET:id]] anchors and [[WIDGET:Reference:num]] for citations.
 5. Return ONLY the refined section content. Do NOT include markdown code block wrappers or conversational text outside.`;
 
             const refinedSecContent = await callAIEngine(promptRefineGlobalSection, null, 0.35, 0.25, 0.85);
@@ -7261,6 +7158,7 @@ INSTRUCTIONS:
 
           if (refineSuccess) {
             currentMdx = reconstructMarkdown(refinedSections);
+            currentMdx = healNarrativeCitations(currentMdx);
           } else {
             console.warn("[REVISION AGENT - AGENT 4] Global section refinement failed, continuing with current content.");
             revisedMdx = currentMdx;
@@ -7340,7 +7238,7 @@ INSTRUCTIONS:
    </revised_section>
 3. Do NOT include markdown code block wrappers (like \`\`\`md or \`\`\`mdx) around your entire output.
 4. Return ONLY the wrapped revised sections. Do not include any other conversational text or metadata outside the tags.
-5. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup>) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors. For references/citations, you MUST exclusively use [[WIDGET:Citation:num]] (e.g. [[WIDGET:Citation:1]]) instead of any HTML/JSX markup or brackets. Preserve all existing [[WIDGET:...]] anchors exactly as they are in the current content.`;
+5. ABSOLUTE PROHIBITION ON RAW INTERACTIVE OR CUSTOM JSX/HTML TAGS. Absolutely no custom JSX/HTML tags (such as <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup>) are allowed inline in prose. Exclusively use [[WIDGET:id]] anchors. For references/citations, you MUST exclusively use [[WIDGET:Reference:num]] (e.g. [[WIDGET:Reference:1]]) instead of any HTML/JSX markup or brackets. Preserve all existing [[WIDGET:...]] anchors exactly as they are in the current content.`;
 
             let scribeRepairOutput = '';
             let repairSuccess = false;
@@ -7412,6 +7310,7 @@ INSTRUCTIONS:
               }
 
               currentMdx = reconstructMarkdown(parsedSections);
+              currentMdx = healNarrativeCitations(currentMdx);
             } else {
               console.warn("[REVISION AGENT - AGENT 4] Localized repair failed, continuing with current content.");
               revisedMdx = currentMdx;
@@ -8810,7 +8709,7 @@ export async function validateMdxContent(
   if (legacyCitationRegex.test(content)) {
     return {
       success: false,
-      error: "MDX validation failed: Residual legacy citation artifacts (e.g. <sup>, [ref...]) detected. All citations must strictly use the [[WIDGET:Citation:...]] format."
+      error: "MDX validation failed: Residual legacy citation artifacts (e.g. <sup>, [ref...]) detected. All citations must strictly use the [[WIDGET:Reference:...]] format."
     };
   }
 
@@ -8960,7 +8859,7 @@ export function areMediaSimilar(fig1: any, fig2: any): boolean {
 function normType(t: string): string {
   t = t.toLowerCase().trim();
   if (t === 'minibio' || t === 'biography') return 'biography';
-  if (t === 'citation' || t === 'quoteblock' || t === 'interactivequote') return 'citation';
+  if (t === 'citation' || t === 'quoteblock' || t === 'interactivequote' || t === 'quote') return 'citation';
   if (t === 'climate_impact_map' || t === 'climateimpactmap') return 'climateimpactmap';
   if (t === 'textesatrous' || t === 'fillinblanks') return 'fillinblanks';
   if (t === 'exerciceresolut' || t === 'solvedexercise') return 'solvedexercise';
@@ -9019,6 +8918,25 @@ export function areComponentsDuplicate(c1: any, c2: any): boolean {
 
   const props1 = c1.props || {};
   const props2 = c2.props || {};
+
+  const REUSABLE_SIMULATORS = [
+    'functionplotter', 'functionmanipulator', 'dynamicsimulation', 'basicmathexplorer',
+    'chemicalstoichiometry', 'equationmanipulator', 'interactivediagram', 'structureviewer3d',
+    'geometry2d', 'codesandbox'
+  ];
+
+  if (REUSABLE_SIMULATORS.includes(t1)) {
+    const ignoreProps = ['id', 'lang', 'sectionid', 'targetsectionid', 'sectiontitle', 'islink', 'unresolved'];
+    const filterProps = (p: any) => Object.keys(p)
+      .filter(k => !ignoreProps.includes(k.toLowerCase()))
+      .reduce((obj: any, key: string) => {
+        obj[key] = p[key];
+        return obj;
+      }, {});
+    const f1 = filterProps(props1);
+    const f2 = filterProps(props2);
+    return JSON.stringify(f1) === JSON.stringify(f2);
+  }
 
   const cleanText = (txt: any) => String(txt || '').toLowerCase().replace(/[^a-z0-9]/gi, '').trim();
 
@@ -9256,6 +9174,48 @@ export async function deduplicateLessonWidgetsAndReferences(
   }
 
   return { widgets, narrativeMdx };
+}
+
+export function healNarrativeCitations(text: string): string {
+  if (!text) return text;
+
+  // 1. Temporarily extract and replace code blocks (```...```) to avoid corrupting code
+  const codeBlocks: string[] = [];
+  let processed = text.replace(/```[\s\S]*?```/g, (match) => {
+    codeBlocks.push(match);
+    return `__CODE_BLOCK_PLACEHOLDER_${codeBlocks.length - 1}__`;
+  });
+
+  // 2. Temporarily extract and replace inline code (`...`)
+  const inlineCodes: string[] = [];
+  processed = processed.replace(/`[^`\n]+`/g, (match) => {
+    inlineCodes.push(match);
+    return `__INLINE_CODE_PLACEHOLDER_${inlineCodes.length - 1}__`;
+  });
+
+  // 3. Heal the standard citation patterns
+  // Convert [ref1], [ref-1], [ref_1], [ref:1] -> [[WIDGET:Reference:1]]
+  processed = processed.replace(/\[ref[-_:]?\s*(\d+)\s*\]/gi, '[[WIDGET:Reference:$1]]');
+  
+  // Convert standard WIDGET formats like [[WIDGET:reference:1]] -> [[WIDGET:Reference:1]]
+  processed = processed.replace(/\[\s*(\d+)\s*\]\s*\(\s*#ref-\1\s*\)/gi, '[[WIDGET:Reference:$1]]');
+  processed = processed.replace(/\[\[?\s*WIDGET\s*:\s*(?:reference|referecne|citation|cite)\s*:\s*(\d+)\s*\]\]?/gi, '[[WIDGET:Reference:$1]]');
+
+  // Convert raw stand-alone digits inside brackets like [1], [2] safely to [[WIDGET:Reference:1]]
+  // (avoiding array indices or math ranges by requiring preceding non-alphanumeric boundaries)
+  processed = processed.replace(/(^|[^a-zA-Z0-9$_])\\[(\d+)\\]/g, '$1[[WIDGET:Reference:$2]]');
+
+  // 4. Restore inline code
+  processed = processed.replace(/__INLINE_CODE_PLACEHOLDER_(\d+)__/g, (match, idx) => {
+    return inlineCodes[parseInt(idx, 10)];
+  });
+
+  // 5. Restore code blocks
+  processed = processed.replace(/__CODE_BLOCK_PLACEHOLDER_(\d+)__/g, (match, idx) => {
+    return codeBlocks[parseInt(idx, 10)];
+  });
+
+  return processed;
 }
 
 

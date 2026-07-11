@@ -15,7 +15,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { dbService, progressService, isDatabaseConfigured, syncLocalStorageToSupabase } from '@/lib/db';
 import { CourseKiosk } from '../CourseKiosk';
 import { EnrollmentModal } from '../modals/EnrollmentModal';
-import { getLocalizedDiscipline, translateDisciplineQuery, cleanPathSegment } from '@/lib/translations';
+import { getLocalizedDiscipline, translateDisciplineQuery, cleanPathSegment, getCoursePath } from '@/lib/translations';
 import { validateEmail, detectPromptInjection, isSpam } from '@/lib/security';
 
 // ── Smart Empty State: No courses found ───────────────────────────────────────────
@@ -450,7 +450,7 @@ export const CatalogPage = () => {
       console.error("Error fetching first lesson slug:", err);
     }
 
-    const targetUrl = `/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/${resolvedSlug}`;
+    const targetUrl = getCoursePath(course.level, course.subject, course.slug, resolvedSlug, lang);
     if (redirectToSignup) {
       window.location.href = `/signup?redirect=${encodeURIComponent(targetUrl)}`;
     } else {

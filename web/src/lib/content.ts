@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from './matter';
-import { cleanPathSegment } from './translations';
+import { cleanPathSegment, getLocalizedLevelSlug, getCanonicalLevelFromSlug, getLocalizedSubjectSlug, getCanonicalSubjectFromSlug } from './translations';
 import { repairMediaOnRestitution } from './media-resolver';
 
 
@@ -482,7 +482,12 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
   const parts = dir.split('/').map(s => s ? cleanPathSegment(s) : s);
   
   if (parts.length === 3) {
-    const [level, subject, courseSlug] = parts;
+    const [rawLevel, rawSubject, courseSlug] = parts;
+    const canonicalLevel = getCanonicalLevelFromSlug(rawLevel, lang);
+    const canonicalSubject = getCanonicalSubjectFromSlug(rawSubject, lang);
+    const level = getLocalizedLevelSlug(canonicalLevel, lang);
+    const subject = getLocalizedSubjectSlug(canonicalSubject, lang);
+    
     let resolvedSandboxAllowed = false;
     try {
       const { cookies } = require('next/headers');
@@ -611,8 +616,8 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         return {
           meta: {
             title: dbLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-            subject: meta.subject || manualMeta.subject || slug[1],
-            level: meta.level || manualMeta.level || slug[0],
+            subject: meta.subject || manualMeta.subject || getCanonicalSubjectFromSlug(slug[1], lang),
+            level: meta.level || manualMeta.level || getCanonicalLevelFromSlug(slug[0], lang),
             module: meta.module || manualMeta.module || getLocalizedCoreModuleText(lang)
           },
           content: enriched
@@ -683,8 +688,8 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         return {
           meta: {
             title: fallbackLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-            subject: meta.subject || manualMeta.subject || slug[1],
-            level: meta.level || manualMeta.level || slug[0],
+            subject: meta.subject || manualMeta.subject || getCanonicalSubjectFromSlug(slug[1], lang),
+            level: meta.level || manualMeta.level || getCanonicalLevelFromSlug(slug[0], lang),
             module: meta.module || manualMeta.module || getLocalizedCoreModuleText(fallbackLesson.lang || lang)
           },
           content: enriched
@@ -3341,14 +3346,14 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   // Apply systematic healing first so high-fidelity content and components are injected automatically
   let processed = content;
 
-  // Convert legacy/manual citations into [[WIDGET:Citation:X]]
-  processed = processed.replace(/<sup\s+id="cite-(\d+)"[^>]*>\s*<a\s+href="#ref-\1"[^>]*>[\s\S]*?<\/a>\s*<\/sup>/gi, '[[WIDGET:Citation:$1]]');
-  processed = processed.replace(/<sup[^>]*>\s*<a\s+href="#ref-(\d+)"[^>]*>[\s\S]*?<\/a>\s*<\/sup>/gi, '[[WIDGET:Citation:$1]]');
-  processed = processed.replace(/<sup[^>]*>\s*\[\s*(\d+)\s*\]\s*<\/sup>/gi, '[[WIDGET:Citation:$1]]');
-  processed = processed.replace(/<sup[^>]*>\s*(\d+)\s*<\/sup>/gi, '[[WIDGET:Citation:$1]]');
-  processed = processed.replace(/\[\s*(\d+)\s*\]\s*\(\s*#ref-\1\s*\)/gi, '[[WIDGET:Citation:$1]]');
-  processed = processed.replace(/\[ref[-_:]\s*(\d+)\s*\]/gi, '[[WIDGET:Citation:$1]]');
-  processed = processed.replace(/\[\[?\s*WIDGET\s*:\s*(?:reference|referecne|citation|cite)\s*:\s*(\d+)\s*\]\]?/gi, '[[WIDGET:Citation:$1]]');
+  // Convert legacy/manual citations into [[WIDGET:Reference:X]]
+  processed = processed.replace(/<sup\s+id="cite-(\d+)"[^>]*>\s*<a\s+href="#ref-\1"[^>]*>[\s\S]*?<\/a>\s*<\/sup>/gi, '[[WIDGET:Reference:$1]]');
+  processed = processed.replace(/<sup[^>]*>\s*<a\s+href="#ref-(\d+)"[^>]*>[\s\S]*?<\/a>\s*<\/sup>/gi, '[[WIDGET:Reference:$1]]');
+  processed = processed.replace(/<sup[^>]*>\s*\[\s*(\d+)\s*\]\s*<\/sup>/gi, '[[WIDGET:Reference:$1]]');
+  processed = processed.replace(/<sup[^>]*>\s*(\d+)\s*<\/sup>/gi, '[[WIDGET:Reference:$1]]');
+  processed = processed.replace(/\[\s*(\d+)\s*\]\s*\(\s*#ref-\1\s*\)/gi, '[[WIDGET:Reference:$1]]');
+  processed = processed.replace(/\[ref[-_:]\s*(\d+)\s*\]/gi, '[[WIDGET:Reference:$1]]');
+  processed = processed.replace(/\[\[?\s*WIDGET\s*:\s*(?:reference|referecne|citation|cite|ref)\s*:\s*(\d+)\s*\]\]?/gi, '[[WIDGET:Reference:$1]]');
 
   // Pedagogical widgets and highlight hover cards are preserved in the MDX content to ensure they are rendered.
 
@@ -4407,8 +4412,8 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       updatedPreRef = updatedPreRef.replace(dupRefNumRegex, `refNum={${newNum}}`);
 
       // 6. Replace WFTA widget citations
-      const dupWidgetRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*Citation\\s*:\\s*${oldNum}\\b`, 'gi');
-      updatedPreRef = updatedPreRef.replace(dupWidgetRegex, `[[WIDGET:Citation:${newNum}`);
+      const dupWidgetRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*(?:Citation|Reference|Ref)\\s*:\\s*${oldNum}\\b`, 'gi');
+      updatedPreRef = updatedPreRef.replace(dupWidgetRegex, `[[WIDGET:Reference:${newNum}`);
     }
 
     if (finalItems.length > 0) {

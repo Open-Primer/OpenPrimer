@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dbService } from '@/lib/db';
-import { getLocalizedDiscipline, getLocalizedDisciplineDescription, cleanPathSegment, formatCourseLevel } from '@/lib/translations';
+import { getLocalizedDiscipline, getLocalizedDisciplineDescription, cleanPathSegment, formatCourseLevel, getCoursePath } from '@/lib/translations';
 
 interface CourseKioskProps {
   lang: string;
@@ -396,7 +396,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
                   const IconComponent = SUBJECT_ICONS[item.subject] || Book;
                   const localizedTitle = dbService.getLocalizedCourseTitle(item, lang) || item.title;
                   const levelText = formatCourseLevel(item.level, lang);
-                  const linkPath = `/${cleanPathSegment(item.level)}/${cleanPathSegment(item.subject)}/${item.slug}/introduction`;
+                  const linkPath = getCoursePath(item.level, item.subject, item.slug, 'introduction', lang);
 
                   const cardContent = (
                     <div className={`w-full h-full p-6 bg-gradient-to-b ${colors.bg} border ${colors.border} rounded-[28px] backdrop-blur-xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden group/card shadow-lg ${colors.shadow} h-[200px]`}>
@@ -483,7 +483,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
                         } catch (err) {
                           console.error("Error fetching first lesson slug:", err);
                         }
-                        window.location.href = `/${cleanPathSegment(item.level)}/${cleanPathSegment(item.subject)}/${item.slug}/${resolvedSlug}`;
+                        window.location.href = getCoursePath(item.level, item.subject, item.slug, resolvedSlug, lang);
                       }}
                       className="block w-full h-full cursor-pointer"
                     >

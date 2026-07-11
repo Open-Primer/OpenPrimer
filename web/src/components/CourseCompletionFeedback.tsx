@@ -6,7 +6,7 @@ import * as Icons from 'lucide-react';
 import Link from 'next/link';
 import { dbService, progressService } from '@/lib/db';
 import { sanitizeString, detectPromptInjection, isSpam } from '@/lib/security';
-import { STATIC_UI_STRINGS, cleanPathSegment } from '@/lib/translations';
+import { STATIC_UI_STRINGS, cleanPathSegment, getCoursePath } from '@/lib/translations';
 
 interface CourseCompletionFeedbackProps {
   courseId: string;
@@ -203,9 +203,9 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
                   if (prog < 100) {
                     dbService.getFirstLessonSlug(nextChildCourse.slug, lang).then(({ data: slug }) => {
                       const lessonSlug = slug || 'introduction';
-                      setNextCoursePath(`/${cleanPathSegment(nextChildCourse.level)}/${cleanPathSegment(nextChildCourse.subject)}/${nextChildCourse.slug}/${lessonSlug}`);
+                      setNextCoursePath(getCoursePath(nextChildCourse.level, nextChildCourse.subject, nextChildCourse.slug, lessonSlug, lang));
                     }).catch(() => {
-                      setNextCoursePath(`/${cleanPathSegment(nextChildCourse.level)}/${cleanPathSegment(nextChildCourse.subject)}/${nextChildCourse.slug}/introduction`);
+                      setNextCoursePath(getCoursePath(nextChildCourse.level, nextChildCourse.subject, nextChildCourse.slug, 'introduction', lang));
                     });
                     setNextCourseTitle(dbService.getLocalizedCourseTitle(nextChildCourse, lang));
                     return;
@@ -223,9 +223,9 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           if (nextChildCourse) {
             dbService.getFirstLessonSlug(nextChildCourse.slug, lang).then(({ data: slug }) => {
               const lessonSlug = slug || 'introduction';
-              setNextCoursePath(`/${cleanPathSegment(nextChildCourse.level)}/${cleanPathSegment(nextChildCourse.subject)}/${nextChildCourse.slug}/${lessonSlug}`);
+              setNextCoursePath(getCoursePath(nextChildCourse.level, nextChildCourse.subject, nextChildCourse.slug, lessonSlug, lang));
             }).catch(() => {
-              setNextCoursePath(`/${cleanPathSegment(nextChildCourse.level)}/${cleanPathSegment(nextChildCourse.subject)}/${nextChildCourse.slug}/introduction`);
+              setNextCoursePath(getCoursePath(nextChildCourse.level, nextChildCourse.subject, nextChildCourse.slug, 'introduction', lang));
             });
             setNextCourseTitle(dbService.getLocalizedCourseTitle(nextChildCourse, lang));
             return;

@@ -17,7 +17,7 @@ import { dbService, TutorPersonality, isDatabaseConfigured, isSandboxFallbackAll
 import { decryptApiKey } from '@/lib/crypto';
 
 // --- INTERNATIONALIZATION DICTIONARY (UI ONLY) ---
-import { STATIC_UI_STRINGS, cleanPathSegment, UI_STRINGS, getLocalizedLabel } from '@/lib/translations';
+import { STATIC_UI_STRINGS, cleanPathSegment, UI_STRINGS, getLocalizedLabel, getLocalizedLevelSlug, getCanonicalLevelFromSlug, getLocalizedSubjectSlug, getCanonicalSubjectFromSlug, getCoursePath } from '@/lib/translations';
 
 
 
@@ -2279,33 +2279,46 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname;
       const parts = pathname.split('/').filter(Boolean);
-      const isCoursePath = parts.includes('L1') || parts.includes('L2') || parts.includes('L3') || parts.includes('M1') || parts.includes('M2');
 
-      if (isCoursePath) {
-        const langLower = code.toLowerCase();
-        try {
-          // Check if this course page is available in the target language
-          const res = await fetch(`/api/content?slug=${parts.join(',')}&lang=${langLower}`);
-          if (res.ok) {
-            window.location.reload();
-            return;
+      // If we are on a course player page: /[level_slug]/[subject_slug]/[course_slug]/[lesson_slug]
+      if (parts.length >= 3) {
+        const [levelSlug, subjectSlug, courseSlug, lessonSlug] = parts;
+        const oldLang = lang ? lang.toUpperCase() : 'EN';
+        const targetLang = code.toUpperCase();
+        
+        const canonicalLevel = getCanonicalLevelFromSlug(levelSlug, oldLang);
+        const canonicalSubject = getCanonicalSubjectFromSlug(subjectSlug, oldLang);
+        
+        if (canonicalLevel && canonicalSubject) {
+          const newLevelSlug = getLocalizedLevelSlug(canonicalLevel, targetLang);
+          const newSubjectSlug = getLocalizedSubjectSlug(canonicalSubject, targetLang);
+          const targetLesson = lessonSlug || 'introduction';
+          const targetPath = `/${newLevelSlug}/${newSubjectSlug}/${courseSlug}/${targetLesson}`;
+          
+          try {
+            // Check if this course page is available in the target language
+            const res = await fetch(`/api/content?slug=${newLevelSlug},${newSubjectSlug},${courseSlug},${targetLesson}&lang=${targetLang.toLowerCase()}`);
+            if (res.ok) {
+              window.location.href = targetPath;
+              return;
+            }
+          } catch (e) {
+            console.error("Error verifying language availability:", e);
           }
-        } catch (e) {
-          console.error("Error verifying language availability:", e);
-        }
 
-        // If translation is missing:
-        const session = localStorage.getItem('op_session');
-        const loggedIn = session === 'true';
+          // If translation is missing:
+          const session = localStorage.getItem('op_session');
+          const loggedIn = session === 'true';
 
-        if (loggedIn) {
-          // Redirect to curriculum page
-          window.location.href = '/profile/curriculum';
-        } else {
-          // Redirect to catalog page
-          window.location.href = '/catalog';
+          if (loggedIn) {
+            // Redirect to curriculum page
+            window.location.href = '/profile/curriculum';
+          } else {
+            // Redirect to catalog page
+            window.location.href = '/catalog';
+          }
+          return;
         }
-        return;
       }
     }
     

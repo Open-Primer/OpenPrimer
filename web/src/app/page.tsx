@@ -12,7 +12,7 @@ import { UI_STRINGS } from '@/lib/translations';
 import { dbService, isDatabaseConfigured } from '@/lib/db';
 import { CourseKiosk } from '@/components/CourseKiosk';
 import { PasswordRequirements } from '@/components/PasswordRequirements';
-import { cleanPathSegment } from '@/lib/translations';
+import { cleanPathSegment, getCoursePath } from '@/lib/translations';
 
 const AUTH_STRINGS: Record<string, Record<string, string>> = {
   EN: {
@@ -1042,7 +1042,7 @@ export default function Home() {
             title={s.popular_curricula}
             subtitle={getLocalString('hero_subtitle', lang)}
             onCourseClick={(course) => {
-              const targetPath = `/${cleanPathSegment(course.level)}/${cleanPathSegment(course.subject)}/${course.slug}/introduction`;
+              const targetPath = getCoursePath(course.level, course.subject, course.slug, 'introduction', lang);
               console.log("[Client Navigation] Course clicked in kiosk. Navigating to:", targetPath);
               window.location.href = targetPath;
             }}

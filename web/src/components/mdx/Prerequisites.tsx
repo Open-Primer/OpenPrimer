@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePathname } from 'next/navigation';
 import { dbService } from '@/lib/db';
-import { cleanPathSegment } from '@/lib/translations';
+import { cleanPathSegment, getCoursePath } from '@/lib/translations';
 
 interface PrerequisiteItem {
   title: string;
@@ -158,7 +158,7 @@ export const Prerequisites = ({ items, itemsBase64 }: PrerequisitesProps) => {
           const title = item.title || 'Untitled Course';
 
           // Format course link
-          const path = `/${cleanPathSegment(level)}/${cleanPathSegment(subject)}/${item.slug || ''}/introduction`;
+          const path = getCoursePath(level, subject, item.slug || '', 'introduction', language);
           const exists = existingSlugs.has((item.slug || '').toLowerCase());
 
           return (
