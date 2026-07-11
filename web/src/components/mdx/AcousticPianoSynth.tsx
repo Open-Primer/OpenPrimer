@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Music, Radio, Sliders, Play, Volume2 } from 'lucide-react';
+import { Music, Radio, Sliders, Volume2, Sparkles, Layout, Eye } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface PianoKey {
@@ -39,36 +39,52 @@ export const AcousticPianoSynth = () => {
 
   const [waveType, setWaveType] = useState<OscillatorType>('sine');
   const [activeNote, setActiveNote] = useState<string | null>(null);
+  const [visualMode, setVisualMode] = useState<'oscilloscope' | 'spectrogram'>('spectrogram');
 
-  // ADSR Envelopes state
-  const [attack, setAttack] = useState<number>(0.1); // seconds
-  const [decay, setDecay] = useState<number>(0.2); // seconds
-  const [sustain, setSustain] = useState<number>(0.6); // multiplier 0-1
-  const [release, setRelease] = useState<number>(0.8); // seconds
+  // ADSR Envelopes
+  const [attack, setAttack] = useState<number>(0.1); 
+  const [decay, setDecay] = useState<number>(0.2); 
+  const [sustain, setSustain] = useState<number>(0.6); 
+  const [release, setRelease] = useState<number>(0.8); 
+
+  // Fourier Harmonics Sliders: Fundamental, H2, H3, H4, H5
+  const [h1, setH1] = useState<number>(1.0); // Fundamental
+  const [h2, setH2] = useState<number>(0.0); 
+  const [h3, setH3] = useState<number>(0.0); 
+  const [h4, setH4] = useState<number>(0.0); 
+  const [h5, setH5] = useState<number>(0.0); 
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const activeOscillatorsRef = useRef<Record<string, { osc: OscillatorNode; gain: GainNode }>>({});
+  
+  // Ref for active oscillators (each note can play up to 5 oscillators for additive overtones)
+  const activeOscillatorsRef = useRef<Record<string, { oscNodes: OscillatorNode[]; gainNodes: GainNode[]; masterGain: GainNode }>>({});
+  
+  // Waterfall spectrogram buffer history
+  const waterfallBufferRef = useRef<Uint8Array[]>([]);
+  const maxWaterfallRows = 70;
 
-  // Initialize Audio Context on demand (safeguard for browser autoplays)
+  // Initialize Web Audio
   const initAudio = () => {
     if (audioCtxRef.current) return;
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     const ctx = new AudioContextClass();
     const analyser = ctx.createAnalyser();
-    analyser.fftSize = 256;
+    
+    // 512 size gives solid resolution for low frequencies
+    analyser.fftSize = 512;
     analyser.connect(ctx.destination);
 
     audioCtxRef.current = ctx;
     analyserRef.current = analyser;
 
-    // Start oscilloscope render loop
-    startOscilloscope();
+    // Start rendering canvas
+    startVisualizationLoop();
   };
 
-  // Oscilloscope Canvas drawing loop
-  const startOscilloscope = () => {
+  // Live render loop combining Oscilloscope and scrolling 2D FFT spectrogram
+  const startVisualizationLoop = () => {
     const canvas = canvasRef.current;
     const analyser = analyserRef.current;
     if (!canvas || !analyser) return;
@@ -77,112 +93,186 @@ export const AcousticPianoSynth = () => {
     if (!ctx) return;
 
     const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
+    const timeDomainData = new Uint8Array(bufferLength);
+    const frequencyData = new Uint8Array(bufferLength);
 
     const draw = () => {
       requestAnimationFrame(draw);
-      analyser.getByteTimeDomainData(dataArray);
 
-      // Clean canvas with a dark cyber grid gradient
-      ctx.fillStyle = '#020617';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const width = canvas.width;
+      const height = canvas.height;
 
-      // Draw horizontal reference guide
-      ctx.strokeStyle = 'rgba(51, 65, 85, 0.2)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, canvas.height / 2);
-      ctx.lineTo(canvas.width, canvas.height / 2);
-      ctx.stroke();
+      if (visualMode === 'oscilloscope') {
+        // OSCILLOSCOPE TIME-DOMAIN VIEW
+        analyser.getByteTimeDomainData(timeDomainData);
 
-      // Plot acoustic waveform curves
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = '#6366f1'; // Premium Indigo curve
-      ctx.shadowColor = '#6366f1';
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, width, height);
 
-      const sliceWidth = canvas.width / bufferLength;
-      let x = 0;
+        // Grid lines
+        ctx.strokeStyle = 'rgba(51, 65, 85, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
 
-      for (let i = 0; i < bufferLength; i++) {
-        const v = dataArray[i] / 128.0;
-        const y = (v * canvas.height) / 2;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#6366f1'; // Glowing Indigo
+        ctx.shadowColor = '#6366f1';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
 
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
+        const sliceWidth = width / bufferLength;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          const v = timeDomainData[i] / 128.0;
+          const y = (v * height) / 2;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+          x += sliceWidth;
+        }
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+      } else {
+        // FFT WATERFALL SPECTROGRAM VIEW
+        analyser.getByteFrequencyData(frequencyData);
+
+        // Store active frame into circular buffer history (scrolling down)
+        const frame = new Uint8Array(frequencyData.slice(0, bufferLength / 1.5)); // Zoom low-mid frequencies
+        waterfallBufferRef.current.unshift(frame);
+        if (waterfallBufferRef.current.length > maxWaterfallRows) {
+          waterfallBufferRef.current.pop();
         }
 
-        x += sliceWidth;
-      }
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, width, height);
 
-      ctx.lineTo(canvas.width, canvas.height / 2);
-      ctx.stroke();
-      ctx.shadowBlur = 0; // reset shadow
+        const rows = waterfallBufferRef.current.length;
+        if (rows === 0) return;
+
+        const rowHeight = height / maxWaterfallRows;
+        const cols = frame.length;
+        const colWidth = width / cols;
+
+        // Render rolling heat-map rows
+        for (let r = 0; r < rows; r++) {
+          const rowData = waterfallBufferRef.current[r];
+          const y = r * rowHeight;
+
+          for (let c = 0; r < rows && c < cols; c++) {
+            const val = rowData[c];
+            if (val === 0) continue;
+
+            const x = c * colWidth;
+
+            // Heat-map palette index calculation: Dark violet -> Indigo -> Neon Pink -> Yellow-White
+            let fillCol = `rgba(15, 23, 42, 0)`;
+            if (val > 15) {
+              const rCol = Math.min(255, Math.floor(val * 1.1));
+              const gCol = Math.min(255, Math.floor(val * 0.2 + (val > 150 ? (val - 150) * 1.5 : 0)));
+              const bCol = Math.min(255, Math.floor(120 + val * 0.5));
+              fillCol = `rgb(${rCol}, ${gCol}, ${bCol})`;
+            }
+
+            ctx.fillStyle = fillCol;
+            ctx.fillRect(x, y, colWidth + 0.5, rowHeight + 0.5);
+          }
+        }
+
+        // Draw scale tags
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.font = '7px monospace';
+        ctx.fillText('0 Hz', 4, height - 6);
+        ctx.fillText('1000 Hz', width / 2 - 20, height - 6);
+        ctx.fillText('2000 Hz', width - 40, height - 6);
+      }
     };
 
     draw();
   };
 
-  // Synthesize and play target sound frequency
+  // Play Note implementing Fourier additive overtones (H1-H5 sliders)
   const playNote = (key: PianoKey) => {
     initAudio();
     const ctx = audioCtxRef.current;
     const analyser = analyserRef.current;
     if (!ctx || !analyser) return;
 
-    // Resume context if suspended
     if (ctx.state === 'suspended') {
       ctx.resume();
     }
 
-    // Stop note if already playing to prevent stacking
+    // Stop note if playing
     stopNote(key.note);
 
-    const osc = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-
-    osc.type = waveType;
-    osc.frequency.setValueAtTime(key.freq, ctx.currentTime);
-
-    // Map ADSR Amplitude Envelope Node
     const now = ctx.currentTime;
-    gainNode.gain.setValueAtTime(0, now);
     
-    // Attack phase: linear ramp from 0 to maximum volume
-    gainNode.gain.linearRampToValueAtTime(0.35, now + attack);
-    
-    // Decay phase: exponential decay down to Sustain level
-    gainNode.gain.exponentialRampToValueAtTime(0.35 * sustain, now + attack + decay);
+    // Master Gain for ADSR
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0, now);
+    masterGain.gain.linearRampToValueAtTime(0.35, now + attack);
+    masterGain.gain.exponentialRampToValueAtTime(0.35 * sustain, now + attack + decay);
 
-    // Connect node pipeline: Oscillator -> ADSR Gain -> Analyser (Scope)
-    osc.connect(gainNode);
-    gainNode.connect(analyser);
+    masterGain.connect(analyser);
 
-    osc.start();
+    const oscNodes: OscillatorNode[] = [];
+    const gainNodes: GainNode[] = [];
+
+    // Define harmonics overtones list [Fundamental, H2, H3, H4, H5]
+    const harmonics = [
+      { multiplier: 1, weight: h1 },
+      { multiplier: 2, weight: h2 },
+      { multiplier: 3, weight: h3 },
+      { multiplier: 4, weight: h4 },
+      { multiplier: 5, weight: h5 }
+    ];
+
+    harmonics.forEach(({ multiplier, weight }) => {
+      if (weight <= 0.01) return; // Skip zero overtones
+
+      const osc = ctx.createOscillator();
+      const overtoneGain = ctx.createGain();
+
+      osc.type = waveType;
+      osc.frequency.setValueAtTime(key.freq * multiplier, now);
+
+      // Map proportional overtone weight
+      overtoneGain.gain.setValueAtTime(weight, now);
+
+      osc.connect(overtoneGain);
+      overtoneGain.connect(masterGain);
+
+      osc.start();
+
+      oscNodes.push(osc);
+      gainNodes.push(overtoneGain);
+    });
+
     setActiveNote(key.note);
-
-    activeOscillatorsRef.current[key.note] = { osc, gain: gainNode };
+    activeOscillatorsRef.current[key.note] = { oscNodes, gainNodes, masterGain };
   };
 
-  // Release Phase triggered when mouse releases or key releases
   const stopNote = (note: string) => {
     const ctx = audioCtxRef.current;
     const active = activeOscillatorsRef.current[note];
     if (!ctx || !active) return;
 
     const now = ctx.currentTime;
-    const gainNode = active.gain;
-    const osc = active.osc;
+    const masterGain = active.masterGain;
 
-    // Schedule the release ramp
-    gainNode.gain.cancelScheduledValues(now);
-    gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + release);
+    // Trigger ADSR Release phase
+    masterGain.gain.cancelScheduledValues(now);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + release);
 
-    osc.stop(now + release);
+    // Stop all additive oscillators scheduled after release
+    active.oscNodes.forEach((osc) => {
+      osc.stop(now + release);
+    });
 
     delete activeOscillatorsRef.current[note];
     setActiveNote(null);
@@ -192,48 +282,71 @@ export const AcousticPianoSynth = () => {
     <div className="my-8 rounded-[40px] border border-slate-850 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
       <div className="absolute -right-16 -top-16 w-36 h-36 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
 
-      {/* Header element */}
+      {/* Header and Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-6 mb-6">
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
-            <span>{isFR ? 'Clavier de Synthétiseur ADSR' : 'Interactive ADSR Piano Synthesizer'}</span>
+            <span>{isFR ? 'Spectromètre & Synthétiseur de Fourier' : 'Fourier Synth & Spectrometer Lab'}</span>
           </h3>
           <p className="text-xs text-slate-400 mt-1 max-w-xl">
             {isFR 
-              ? "Jouez des notes pour observer les ondes sonores en temps réel sur l'oscilloscope et réglez l'enveloppe temporelle (ADSR)."
-              : "Play notes to analyze the physical acoustic wave patterns on the live oscilloscope while adjusting the ADSR amplitude envelope."}
+              ? "Manipulez les harmoniques de Fourier pour concevoir de nouveaux timbres acoustiques complexes et visualisez leur décomposition fréquentielle."
+              : "Vary the harmonic overtones to procedurally synthesize complex physical timbres and explore their frequency spectrum."}
           </p>
         </div>
 
-        {/* Waves Form selector */}
-        <div className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-850 p-1.5 rounded-2xl">
-          {(['sine', 'triangle', 'square', 'sawtooth'] as OscillatorType[]).map((type) => (
+        {/* Action Toggles */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Visual Mode selector */}
+          <div className="flex items-center gap-1 bg-slate-900/40 border border-slate-850 p-1 rounded-xl">
             <button
-              key={type}
-              onClick={() => setWaveType(type)}
-              className={`px-3 py-1.5 rounded-xl text-[10px] font-bold capitalize transition-all duration-300 cursor-pointer ${
-                waveType === type 
-                  ? 'bg-indigo-600 text-white shadow-md' 
-                  : 'text-slate-400 hover:text-slate-200'
+              onClick={() => setVisualMode('oscilloscope')}
+              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                visualMode === 'oscilloscope' ? 'bg-indigo-600 text-white' : 'text-slate-400'
               }`}
             >
-              {type}
+              Oscilloscope
             </button>
-          ))}
+            <button
+              onClick={() => setVisualMode('spectrogram')}
+              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                visualMode === 'spectrogram' ? 'bg-indigo-600 text-white' : 'text-slate-400'
+              }`}
+            >
+              Spectrographe FFT
+            </button>
+          </div>
+
+          {/* Wave Types */}
+          <div className="flex items-center gap-1 bg-slate-900/40 border border-slate-850 p-1 rounded-xl">
+            {(['sine', 'triangle', 'sawtooth'] as OscillatorType[]).map((type) => (
+              <button
+                key={type}
+                onClick={() => setWaveType(type)}
+                className={`px-2.5 py-1.5 rounded-lg text-[9px] font-black capitalize cursor-pointer ${
+                  waveType === type ? 'bg-slate-850 text-indigo-300' : 'text-slate-400'
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Main interface split */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+      {/* Main Grid Workspace */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-stretch">
         
-        {/* White and Black Interactive Piano Keyboard Keys representation */}
-        <div className="lg:col-span-8 flex flex-col justify-end">
-          <div className="relative rounded-3xl overflow-hidden border border-slate-850/80 bg-slate-900/20 p-4 w-full">
+        {/* Left Octaves Board */}
+        <div className="xl:col-span-8 flex flex-col justify-between gap-6">
+          
+          {/* Interactive Keyboard */}
+          <div className="relative rounded-3xl border border-slate-850 bg-slate-900/10 p-5">
             <div className="flex relative select-none" style={{ minHeight: '190px' }}>
               
-              {/* White Piano keys render */}
-              {PIANO_KEYS_DB.filter(k => !k.isBlack).map((key, idx) => {
+              {/* White keys */}
+              {PIANO_KEYS_DB.filter(k => !k.isBlack).map((key) => {
                 const isSelected = activeNote === key.note;
                 return (
                   <button
@@ -243,29 +356,25 @@ export const AcousticPianoSynth = () => {
                     onMouseLeave={() => stopNote(key.note)}
                     onTouchStart={() => playNote(key)}
                     onTouchEnd={() => stopNote(key.note)}
-                    className={`flex-1 rounded-b-xl border border-slate-800 bg-gradient-to-b from-white to-slate-200 relative transition-all duration-150 cursor-pointer ${
-                      isSelected 
-                        ? 'translate-y-1.5 shadow-inner from-indigo-500 to-indigo-600' 
-                        : 'hover:to-slate-100 shadow-md active:translate-y-1.5'
+                    className={`flex-1 rounded-b-xl border border-slate-850 bg-gradient-to-b from-white to-slate-200 relative transition-all cursor-pointer ${
+                      isSelected ? 'translate-y-1 shadow-inner from-indigo-500 to-indigo-600' : 'shadow-md active:translate-y-1'
                     }`}
                     style={{ minHeight: '180px' }}
                   >
-                    <span className={`absolute bottom-3 left-0 right-0 text-[10px] font-black text-center ${isSelected ? 'text-white' : 'text-slate-600'}`}>
+                    <span className={`absolute bottom-3 left-0 right-0 text-[9px] font-black text-center ${isSelected ? 'text-white' : 'text-slate-600'}`}>
                       {key.note}
                     </span>
                   </button>
                 );
               })}
 
-              {/* Floating Black Piano keys render overlay */}
+              {/* Black keys */}
               <div className="absolute top-0 left-0 right-0 pointer-events-none flex" style={{ height: '110px' }}>
                 {PIANO_KEYS_DB.map((key, idx) => {
                   if (!key.isBlack) return null;
 
-                  // Find previous white key index to offset black keys correctly
                   const whiteKeysBefore = PIANO_KEYS_DB.slice(0, idx).filter(k => !k.isBlack).length;
-                  const leftPercent = (whiteKeysBefore / 12) * 100 - 3.5; // (white_keys_count/total_white)*100 - adjustment
-
+                  const leftPercent = (whiteKeysBefore / 12) * 100 - 3.5;
                   const isSelected = activeNote === key.note;
 
                   return (
@@ -276,14 +385,12 @@ export const AcousticPianoSynth = () => {
                       onMouseLeave={() => stopNote(key.note)}
                       onTouchStart={() => playNote(key)}
                       onTouchEnd={() => stopNote(key.note)}
-                      className={`absolute w-7 rounded-b-lg bg-gradient-to-b from-slate-950 to-slate-800 border border-slate-900 transition-all duration-150 cursor-pointer pointer-events-auto shadow-lg z-20 ${
-                        isSelected 
-                          ? 'h-[104px] from-indigo-600 to-indigo-700 shadow-inner' 
-                          : 'h-[110px] hover:from-slate-900 active:h-[104px]'
+                      className={`absolute w-7 rounded-b-lg bg-gradient-to-b from-slate-950 to-slate-800 border border-slate-900 transition-all cursor-pointer pointer-events-auto shadow-lg z-20 ${
+                        isSelected ? 'h-[104px] from-indigo-600 to-indigo-700' : 'h-[110px] active:h-[104px]'
                       }`}
                       style={{ left: `${leftPercent}%` }}
                     >
-                      <span className="absolute bottom-2 left-0 right-0 text-[8px] font-black text-center text-slate-400">
+                      <span className="absolute bottom-2 left-0 right-0 text-[8px] font-bold text-center text-slate-400">
                         {key.note}
                       </span>
                     </button>
@@ -293,102 +400,115 @@ export const AcousticPianoSynth = () => {
 
             </div>
           </div>
-        </div>
 
-        {/* Right side: Oscilloscope Canvas & ADSR dials */}
-        <div className="lg:col-span-4 flex flex-col gap-5">
-          
-          {/* Real-time Oscilloscope */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col items-center">
-            <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-3.5 self-start">
-              <Radio className="w-4 h-4 text-indigo-400 animate-pulse" />
-              <span>{isFR ? "Aperçu Oscilloscope" : "Oscilloscope Waveform"}</span>
+          {/* Interactive Spectrogram / Oscilloscope screen rendering */}
+          <div className="rounded-3xl border border-slate-850 bg-[#020617] p-4 flex flex-col items-center">
+            <h4 className="text-[10px] font-black uppercase tracking-wider text-indigo-400 self-start mb-2.5 flex items-center gap-1.5">
+              <Radio className="w-3.5 h-3.5 animate-pulse" />
+              <span>{visualMode === 'oscilloscope' ? 'Oscilloscope (Amplitude Temporelle)' : 'Spectrogramme FFT Cascade (Fréquence over Time)'}</span>
             </h4>
-            <div className="w-full h-28 rounded-2xl overflow-hidden border border-slate-800 bg-[#020617]">
-              <canvas 
-                ref={canvasRef} 
-                width={300} 
-                height={110} 
-                className="w-full h-full block"
-              />
+            <div className="w-full h-36 rounded-2xl overflow-hidden border border-slate-900">
+              <canvas ref={canvasRef} width={500} height={140} className="w-full h-full block" />
             </div>
           </div>
 
-          {/* ADSR Sliders Panel */}
+        </div>
+
+        {/* Right Sliders Panel */}
+        <div className="xl:col-span-4 flex flex-col gap-6">
+          
+          {/* Fourier Mixer overtones */}
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-indigo-400" />
-              <span>{isFR ? "Modulateurs d'Amplitude ADSR" : "ADSR Amplitude Envelope"}</span>
+              <span>{isFR ? 'Mélangeur de Fourier (Harmoniques)' : 'Fourier Overtone Mixer'}</span>
+            </h4>
+
+            {/* H1 slider */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                <span>Fondamentale (1f₀)</span>
+                <span className="font-mono text-indigo-300">{Math.round(h1 * 100)}%</span>
+              </div>
+              <input type="range" min="0" max="1" step="0.05" value={h1} onChange={(e) => setH1(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+            </div>
+
+            {/* H2 slider */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                <span>Harmonique 2 (2f₀)</span>
+                <span className="font-mono text-indigo-300">{Math.round(h2 * 100)}%</span>
+              </div>
+              <input type="range" min="0" max="1" step="0.05" value={h2} onChange={(e) => setH2(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+            </div>
+
+            {/* H3 slider */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                <span>Harmonique 3 (3f₀)</span>
+                <span className="font-mono text-indigo-300">{Math.round(h3 * 100)}%</span>
+              </div>
+              <input type="range" min="0" max="1" step="0.05" value={h3} onChange={(e) => setH3(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+            </div>
+
+            {/* H4 slider */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                <span>Harmonique 4 (4f₀)</span>
+                <span className="font-mono text-indigo-300">{Math.round(h4 * 100)}%</span>
+              </div>
+              <input type="range" min="0" max="1" step="0.05" value={h4} onChange={(e) => setH4(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+            </div>
+
+            {/* H5 slider */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                <span>Harmonique 5 (5f₀)</span>
+                <span className="font-mono text-indigo-300">{Math.round(h5 * 100)}%</span>
+              </div>
+              <input type="range" min="0" max="1" step="0.05" value={h5} onChange={(e) => setH5(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+            </div>
+          </div>
+
+          {/* ADSR Envelope Modulator */}
+          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-3">
+            <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
+              <Sliders className="w-4 h-4 text-indigo-400" />
+              <span>Modulateur d'Enveloppe ADSR</span>
             </h4>
 
             {/* Attack Slider */}
             <div className="space-y-1">
               <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                <span>{isFR ? 'Attaque (A)' : 'Attack (A)'}</span>
+                <span>Attaque (A)</span>
                 <span className="font-mono text-indigo-300">{attack.toFixed(2)}s</span>
               </div>
-              <input 
-                type="range" 
-                min="0.01" 
-                max="1.5" 
-                step="0.05"
-                value={attack}
-                onChange={(e) => setAttack(parseFloat(e.target.value))}
-                className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-              />
-            </div>
-
-            {/* Decay Slider */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                <span>{isFR ? 'Décroissance (D)' : 'Decay (D)'}</span>
-                <span className="font-mono text-indigo-300">{decay.toFixed(2)}s</span>
-              </div>
-              <input 
-                type="range" 
-                min="0.05" 
-                max="1.8" 
-                step="0.05"
-                value={decay}
-                onChange={(e) => setDecay(parseFloat(e.target.value))}
-                className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-              />
-            </div>
-
-            {/* Sustain Slider */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                <span>{isFR ? 'Maintien (S)' : 'Sustain (S)'}</span>
-                <span className="font-mono text-indigo-300">{Math.round(sustain * 100)}%</span>
-              </div>
-              <input 
-                type="range" 
-                min="0.1" 
-                max="1.0" 
-                step="0.05"
-                value={sustain}
-                onChange={(e) => setSustain(parseFloat(e.target.value))}
-                className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-              />
+              <input type="range" min="0.01" max="1.0" step="0.05" value={attack} onChange={(e) => setAttack(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
             </div>
 
             {/* Release Slider */}
             <div className="space-y-1">
               <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                <span>{isFR ? 'Relâchement (R)' : 'Release (R)'}</span>
+                <span>Relâchement (R)</span>
                 <span className="font-mono text-indigo-300">{release.toFixed(2)}s</span>
               </div>
-              <input 
-                type="range" 
-                min="0.1" 
-                max="2.5" 
-                step="0.05"
-                value={release}
-                onChange={(e) => setRelease(parseFloat(e.target.value))}
-                className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-              />
+              <input type="range" min="0.1" max="2.0" step="0.05" value={release} onChange={(e) => setRelease(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
             </div>
           </div>
+
+          {/* Theoretical acoustics insight */}
+          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-4 text-center select-text">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center justify-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <span>{isFR ? "Théorème de Fourier" : "Fourier Synthesis"}</span>
+            </span>
+            <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed">
+              {isFR 
+                ? "Tout signal périodique se décompose en une somme d'ondes sinusoïdales pures. Dosez les harmoniques pour imiter le timbre d'une flûte (H1+H3) ou d'un hautbois (harmoniques riches)."
+                : "Any physical periodic wave comprises a sum of pure sine waves. Combine multiple harmonic fractions to shape clean acoustic timbres like woodwinds or brass."}
+            </p>
+          </div>
+
         </div>
 
       </div>
