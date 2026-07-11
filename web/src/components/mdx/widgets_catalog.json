@@ -1,0 +1,354 @@
+{
+  "StructureViewer3D": {
+    "nameFR": "Visualisateur 3D de structures moléculaires",
+    "nameEN": "3D Molecular Structure Viewer",
+    "descFR": "Représentation et manipulation en 3D interactive de réseaux cristallins et de molécules complexes.",
+    "descEN": "Interactive 3D representation and manipulation of molecular structures and crystal lattices.",
+    "levelFR": "Lycée / Université",
+    "levelEN": "High School / University",
+    "disciplines": [
+      "Chemistry",
+      "Physics"
+    ],
+    "description": "Interactive 3D representation and manipulation of molecular structures and crystal lattices.",
+    "searchQuery": "3D Molecular Structure Viewer"
+  },
+  "QuantumOrbitalExplorer": {
+    "nameFR": "Explorateur d'orbitales quantiques",
+    "nameEN": "Quantum Orbital Explorer",
+    "descFR": "Visualisation des fonctions d'onde et orbitales atomiques (s, p, d) avec phases de probabilités colorées.",
+    "descEN": "Wave function and atomic orbital (s, p, d) visualizer with colored probability phases.",
+    "levelFR": "Université (L3 / Master)",
+    "levelEN": "University (Junior / Master)",
+    "disciplines": [
+      "Physics",
+      "Chemistry"
+    ],
+    "description": "Wave function and atomic orbital (s, p, d) visualizer with colored probability phases.",
+    "searchQuery": "Quantum Orbital Explorer"
+  },
+  "DynamicSimulation": {
+    "nameFR": "Simulateur de physique dynamique",
+    "nameEN": "Dynamic Physics Simulator",
+    "descFR": "Simulation d'expériences physiques interactives (ex: projectile, pendule) avec variables ajustables (gravité, amortissement).",
+    "descEN": "Interactive physical experiment simulator (e.g. projectile, pendulum) with adjustable friction and gravity parameters.",
+    "levelFR": "Collège / Lycée / Université",
+    "levelEN": "Middle School / High School / University",
+    "disciplines": [
+      "Physics",
+      "Mathematics"
+    ],
+    "description": "Interactive physical experiment simulator (e.g. projectile, pendulum) with adjustable friction and gravity parameters.",
+    "searchQuery": "Dynamic Physics Simulator"
+  },
+  "ChemicalStoichiometry": {
+    "nameFR": "Équilibre stœchiométrique chimique",
+    "nameEN": "Chemical Stoichiometry Balancer",
+    "descFR": "Atelier d'équilibrage de réactions chimiques et calcul de proportions des réactifs/produits.",
+    "descEN": "Interactive chemical equation balancer and reactant-product proportion calculator.",
+    "levelFR": "Collège / Lycée",
+    "levelEN": "Middle School / High School",
+    "disciplines": [
+      "Chemistry"
+    ],
+    "description": "Interactive chemical equation balancer and reactant-product proportion calculator.",
+    "searchQuery": "Chemical Stoichiometry Balancer"
+  },
+  "BasicMathExplorer": {
+    "nameFR": "Laboratoire de mathématiques de base",
+    "nameEN": "Basic Math Explorer",
+    "descFR": "Manipulateur visuel interactif pour comprendre les fractions, les ratios, et les opérations fondamentales.",
+    "descEN": "Interactive visual tool to master fractions, ratios, percentages, and elementary calculations.",
+    "levelFR": "Collège / Lycée",
+    "levelEN": "Middle School / High School",
+    "disciplines": [
+      "Mathematics"
+    ],
+    "description": "Interactive visual tool to master fractions, ratios, percentages, and elementary calculations.",
+    "searchQuery": "Basic Math Explorer"
+  },
+  "FunctionPlotter": {
+    "nameFR": "Traceur de fonctions mathématiques 2D",
+    "nameEN": "2D Cartesian Function Plotter",
+    "descFR": "Outil graphique interactif permettant de tracer des équations mathématiques complexes en temps réel.",
+    "descEN": "Interactive Cartesian plotting tool to render complex mathematical functions and curves.",
+    "levelFR": "Lycée / Université",
+    "levelEN": "High School / University",
+    "disciplines": [
+      "Mathematics",
+      "Physics"
+    ],
+    "description": "Interactive Cartesian plotting tool to render complex mathematical functions and curves.",
+    "searchQuery": "2D Cartesian Function Plotter"
+  },
+  "ComparisonSlider": {
+    "nameFR": "Glisseur de comparaison visuelle",
+    "nameEN": "Visual Comparison Slider",
+    "descFR": "Comparateur d'images côte à côte avec séparateur interactif (idéal pour la biologie ou la géologie).",
+    "descEN": "Side-by-side image comparison with interactive slider handle, perfect for biology and earth sciences.",
+    "levelFR": "Tous niveaux",
+    "levelEN": "All levels",
+    "disciplines": [
+      "Biology",
+      "History",
+      "Geography",
+      "Humanities / Letters"
+    ],
+    "description": "Side-by-side image comparison with interactive slider handle, perfect for biology and earth sciences.",
+    "searchQuery": "Visual Comparison Slider"
+  },
+  "CodeSandbox": {
+    "nameFR": "Bac à sable de programmation JS",
+    "nameEN": "JavaScript Code Sandbox",
+    "descFR": "Éditeur de code léger avec console d'exécution JavaScript temps réel intégrée.",
+    "descEN": "Lightweight online coding workspace with reactive JavaScript runtime and terminal console.",
+    "levelFR": "Lycée / Université",
+    "levelEN": "High School / University",
+    "disciplines": [
+      "Computer Science"
+    ],
+    "description": "Lightweight online coding workspace with reactive JavaScript runtime and terminal console.",
+    "searchQuery": "JavaScript Code Sandbox"
+  },
+  "DataChart": {
+    "nameFR": "Analyseur de données graphiques",
+    "nameEN": "Experimental Data Chart Analyzer",
+    "descFR": "Outil interactif de nuages de points et courbes de régression pour analyser des jeux de données réels.",
+    "descEN": "Plot experimental data points, adjust trends, and perform basic regression/correlation analysis.",
+    "levelFR": "Lycée / Université",
+    "levelEN": "High School / University",
+    "disciplines": [
+      "Economics",
+      "Physics",
+      "Geography",
+      "Social Sciences"
+    ],
+    "description": "Plot experimental data points, adjust trends, and perform basic regression/correlation analysis.",
+    "searchQuery": "Experimental Data Chart Analyzer"
+  },
+  "Mermaid": {
+    "nameFR": "Moteur de diagrammes Mermaid",
+    "nameEN": "Mermaid Diagram Engine",
+    "descFR": "Générateur dynamique de schémas, organigrammes et frises chronologiques à partir d'une syntaxe déclarative.",
+    "descEN": "Render rich flowcharts, timelines, and concept maps from descriptive text markup.",
+    "levelFR": "Tous niveaux",
+    "levelEN": "All levels",
+    "disciplines": [
+      "All Disciplines"
+    ],
+    "description": "Render rich flowcharts, timelines, and concept maps from descriptive text markup.",
+    "searchQuery": "Mermaid Diagram Engine"
+  },
+  "InteractiveDiagram": {
+    "nameFR": "Schéma anatomique interactif",
+    "nameEN": "Anatomical Interactive Diagram",
+    "descFR": "Schéma d'exploration de systèmes complexes avec fiches explicatives détaillées au survol (anatomie, géographie).",
+    "descEN": "Explore anatomy system or maps using visual hot-spots that display educational summary cards on hover.",
+    "levelFR": "Lycée / Université",
+    "levelEN": "High School / University",
+    "disciplines": [
+      "Biology",
+      "Medicine",
+      "Geography",
+      "Social Sciences"
+    ],
+    "description": "Explore anatomy system or maps using visual hot-spots that display educational summary cards on hover.",
+    "searchQuery": "Anatomical Interactive Diagram"
+  },
+  "FunctionManipulator": {
+    "nameFR": "Manipulateur de coefficients de fonction",
+    "nameEN": "Interactive Function Manipulator",
+    "descFR": "Ajustez les coefficients a, b, c et observez instantanément la déformation des courbes quadratiques/sinusoïdales.",
+    "descEN": "Vary sliders for parameters a, b, c to dynamically observe changes in mathematical curves.",
+    "levelFR": "Lycée / Université",
+    "levelEN": "High School / University",
+    "disciplines": [
+      "Mathematics"
+    ],
+    "description": "Vary sliders for parameters a, b, c to dynamically observe changes in mathematical curves.",
+    "searchQuery": "Interactive Function Manipulator"
+  },
+  "EquationManipulator": {
+    "nameFR": "Résolveur pas à pas d'équations",
+    "nameEN": "Step-by-Step Equation Manipulator",
+    "descFR": "Visualiseur algébrique permettant de déplacer des termes d'une équation pour assimiler les règles de calcul.",
+    "descEN": "Drag and drop algebraic elements to learn algebraic balance rules visually.",
+    "levelFR": "Collège / Lycée / Université",
+    "levelEN": "Middle School / High School / University",
+    "disciplines": [
+      "Mathematics",
+      "Physics"
+    ],
+    "description": "Drag and drop algebraic elements to learn algebraic balance rules visually.",
+    "searchQuery": "Step-by-Step Equation Manipulator"
+  },
+  "Geometry2D": {
+    "nameFR": "Laboratoire de géométrie plane interactif",
+    "nameEN": "2D Interactive Geometry Canvas",
+    "descFR": "Dessinez et mesurez dynamiquement des angles, des lignes parallèles, des polygones et des triangles.",
+    "descEN": "Draw circles, compute angles, trace parallel lines, and manipulate dynamic polygons interactively.",
+    "levelFR": "Collège / Lycée",
+    "levelEN": "Middle School / High School",
+    "disciplines": [
+      "Mathematics"
+    ],
+    "description": "Draw circles, compute angles, trace parallel lines, and manipulate dynamic polygons interactively.",
+    "searchQuery": "2D Interactive Geometry Canvas"
+  },
+  "GestaltInteractive": {
+    "nameFR": "Laboratoire de psychologie de la Gestalt",
+    "nameEN": "Gestalt Psychology Laboratory",
+    "descFR": "Expériences interactives pour explorer les illusions d'optique et les lois de perception de la Gestalt.",
+    "descEN": "Interactive visual illusions to demonstrate proximity, similarity, and closure laws.",
+    "levelFR": "Lycée / Université",
+    "levelEN": "High School / University",
+    "disciplines": [
+      "Social Sciences",
+      "Humanities / Letters"
+    ],
+    "description": "Interactive visual illusions to demonstrate proximity, similarity, and closure laws.",
+    "searchQuery": "Gestalt Psychology Laboratory"
+  },
+  "LogicGateSimulator": {
+    "nameFR": "Laboratoire interactif de portes logiques",
+    "nameEN": "Interactive Digital Logic Gate Laboratory",
+    "descFR": "Simulateur interactif pour concevoir et expérimenter avec des circuits et des portes logiques binaires.",
+    "descEN": "Interactive sandbox to build, toggle, and analyze logic circuits and truth tables.",
+    "levelFR": "Collège / Lycée / Université",
+    "levelEN": "Middle School / High School / University",
+    "disciplines": [
+      "Computer Science",
+      "Engineering",
+      "Mathematics"
+    ],
+    "description": "Interactive sandbox to build, toggle, and analyze logic circuits and truth tables.",
+    "searchQuery": "Interactive Digital Logic Gate Laboratory"
+  },
+  "GeneticsPedigreeLab": {
+    "nameFR": "Laboratoire de génétique et pedigree",
+    "nameEN": "Genetics Pedigree Lab",
+    "descFR": "Carré de Punnett interactif et arbre généalogique de transmission de traits (dominance, récessivité, liage au sexe).",
+    "descEN": "Interactive Punnett Square and pedigree tree for simulating dominant, recessive, and sex-linked inheritance.",
+    "levelFR": "Collège / Lycée / Université",
+    "levelEN": "Middle School / High School / University",
+    "disciplines": [
+      "Biology",
+      "Medicine"
+    ],
+    "description": "Interactive Punnett Square and pedigree tree for simulating dominant, recessive, and sex-linked inheritance.",
+    "searchQuery": "Genetics Pedigree Lab"
+  },
+  "OrbitalMechanicsSim": {
+    "nameFR": "Simulateur de mécanique orbitale 2D",
+    "nameEN": "2D Orbital Mechanics Simulator",
+    "descFR": "Bac à sable gravitationnel en 2D: placer des étoiles, planètes, satellites et observer les orbites de Kepler.",
+    "descEN": "2D Newtonian gravity sandbox: place stars, planets and satellites to observe Keplerian orbits and gravitational decay.",
+    "levelFR": "Lycée / Université",
+    "levelEN": "High School / University",
+    "disciplines": [
+      "Physics",
+      "Astronomy"
+    ],
+    "description": "2D Newtonian gravity sandbox: place stars, planets and satellites to observe Keplerian orbits and gravitational decay.",
+    "searchQuery": "2D Orbital Mechanics Simulator"
+  },
+  "ClimateImpactMap": {
+    "nameFR": "Carte d'impact climatique",
+    "nameEN": "Climate Impact Map",
+    "descFR": "Carte interactive illustrant les impacts régionaux projetés du changement climatique sur différents systèmes naturels et humains.",
+    "descEN": "Interactive map illustrating projected regional impacts of climate change on natural and human systems.",
+    "levelFR": "Lycée / Université",
+    "levelEN": "High School / University",
+    "disciplines": [
+      "Geography",
+      "Biology",
+      "Social Sciences"
+    ],
+    "description": "Interactive map illustrating projected regional impacts of climate change on natural and human systems.",
+    "searchQuery": "Climate Impact Map"
+  },
+  "PeriodicTable": {
+    "nameFR": "Tableau périodique des éléments",
+    "nameEN": "Interactive Periodic Table",
+    "descFR": "Classification périodique interactive avec curseur de température, états physiques et structure électronique animée de Bohr.",
+    "descEN": "Interactive chemical periodic table with a temperature slider, states of matter highlights, and animated 2D Bohr orbits.",
+    "levelFR": "Collège / Lycée / Université",
+    "levelEN": "Middle School / High School / University",
+    "disciplines": [
+      "Chemistry",
+      "Physics"
+    ],
+    "description": "Interactive chemical periodic table with a temperature slider, states of matter highlights, and animated 2D Bohr orbits.",
+    "searchQuery": "Interactive Periodic Table"
+  },
+  "SolarSystemOrrery": {
+    "nameFR": "Planétarium du système solaire",
+    "nameEN": "Keplerian Solar System Orrery",
+    "descFR": "Simulateur 2D de mécanique orbitale képlérienne avec fiches physiques et vitesses de révolution configurables.",
+    "descEN": "2D Keplerian orbit planetarium simulator on HTML5 canvas with orbital speeds, scale adjustments, and structural planet data.",
+    "levelFR": "Collège / Lycée / Université",
+    "levelEN": "Middle School / High School / University",
+    "disciplines": [
+      "Physics",
+      "Astronomy"
+    ],
+    "description": "2D Keplerian orbit planetarium simulator on HTML5 canvas with orbital speeds, scale adjustments, and structural planet data.",
+    "searchQuery": "Keplerian Solar System Orrery"
+  },
+  "FinancialChart": {
+    "nameFR": "Graphique financier en chandeliers",
+    "nameEN": "OHLC Candlestick Financial Chart",
+    "descFR": "Graphique boursier en bougies OHLC, volumes, courbes SMA et indicateurs de bandes de Bollinger en temps réel.",
+    "descEN": "Japanese candlestick (OHLC) financial chart with a built-in price trends generator, SMA, and Bollinger Bands overlays.",
+    "levelFR": "Lycée / Université",
+    "levelEN": "High School / University",
+    "disciplines": [
+      "Economics",
+      "Mathematics"
+    ],
+    "description": "Japanese candlestick (OHLC) financial chart with a built-in price trends generator, SMA, and Bollinger Bands overlays.",
+    "searchQuery": "OHLC Candlestick Financial Chart"
+  },
+  "WaveInterferenceSim": {
+    "nameFR": "Simulateur d'interférence d'ondes",
+    "nameEN": "Wave Double-Source Interference Tank",
+    "descFR": "Cuve à ondes circulaire en 2D simulant les interférences constructives et destructives de deux sources déplaçables.",
+    "descEN": "2D wave/ripple tank double-source interference simulator using high-performance canvas rendering and drag-to-adjust handles.",
+    "levelFR": "Lycée / Université",
+    "levelEN": "High School / University",
+    "disciplines": [
+      "Physics",
+      "Mathematics"
+    ],
+    "description": "2D wave/ripple tank double-source interference simulator using high-performance canvas rendering and drag-to-adjust handles.",
+    "searchQuery": "Wave Double-Source Interference Tank"
+  },
+  "AcousticPianoSynth": {
+    "nameFR": "Clavier synthétiseur & Oscilloscope",
+    "nameEN": "ADSR Piano Synth & Oscilloscope",
+    "descFR": "Synthétiseur Web Audio avec enveloppe d'amplitude ADSR ajustable, oscillateur multi-ondes et oscilloscope temps réel.",
+    "descEN": "Web Audio API-driven piano synth with ADSR envelopes, waveform selectors, and a real-time wave oscilloscope visualizer.",
+    "levelFR": "Collège / Lycée / Université",
+    "levelEN": "Middle School / High School / University",
+    "disciplines": [
+      "Physics",
+      "Music"
+    ],
+    "description": "Web Audio API-driven piano synth with ADSR envelopes, waveform selectors, and a real-time wave oscilloscope visualizer.",
+    "searchQuery": "ADSR Piano Synth & Oscilloscope"
+  },
+  "SankeyDiagram": {
+    "nameFR": "Diagramme de flux de Sankey",
+    "nameEN": "Sankey Flow Diagram",
+    "descFR": "Représentation vectorielle de flux énergétiques ou de ressources avec poignées d'ajustement interactives.",
+    "descEN": "Interactive vector SVG Sankey flow diagram with drag-to-adjust source/target handles.",
+    "levelFR": "Lycée / Université",
+    "levelEN": "High School / University",
+    "disciplines": [
+      "Physics",
+      "Economics"
+    ],
+    "description": "Interactive vector SVG Sankey flow diagram with drag-to-adjust source/target handles.",
+    "searchQuery": "Sankey Flow Diagram"
+  }
+}

@@ -29,6 +29,12 @@ import { GestaltInteractive } from '../../../../components/mdx/GestaltInteractiv
 import { LogicGateSimulator } from '../../../../components/mdx/LogicGateSimulator';
 import { GeneticsPedigreeLab } from '../../../../components/mdx/GeneticsPedigreeLab';
 import { OrbitalMechanicsSim } from '../../../../components/mdx/OrbitalMechanicsSim';
+import { PeriodicTable } from '../../../../components/mdx/PeriodicTable';
+import { SolarSystemOrrery } from '../../../../components/mdx/SolarSystemOrrery';
+import { FinancialChart } from '../../../../components/mdx/FinancialChart';
+import { WaveInterferenceSim } from '../../../../components/mdx/WaveInterferenceSim';
+import { AcousticPianoSynth } from '../../../../components/mdx/AcousticPianoSynth';
+import { SankeyDiagram } from '../../../../components/mdx/SankeyDiagram';
 
 
 interface Widget {
@@ -1137,6 +1143,12 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       LogicGateSimulator,
       GeneticsPedigreeLab,
       OrbitalMechanicsSim,
+      PeriodicTable,
+      SolarSystemOrrery,
+      FinancialChart,
+      WaveInterferenceSim,
+      AcousticPianoSynth,
+      SankeyDiagram,
     };
 
     const WidgetComponent = componentMap[selectedWidget.id];

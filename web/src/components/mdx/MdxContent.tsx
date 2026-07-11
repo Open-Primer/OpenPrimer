@@ -48,6 +48,12 @@ import { ChemicalStoichiometry } from './ChemicalStoichiometry';
 import { BasicMathExplorer } from './BasicMathExplorer';
 import { GeneticsPedigreeLab } from './GeneticsPedigreeLab';
 import { OrbitalMechanicsSim } from './OrbitalMechanicsSim';
+import { PeriodicTable } from './PeriodicTable';
+import { SolarSystemOrrery } from './SolarSystemOrrery';
+import { FinancialChart } from './FinancialChart';
+import { WaveInterferenceSim } from './WaveInterferenceSim';
+import { AcousticPianoSynth } from './AcousticPianoSynth';
+import { SankeyDiagram } from './SankeyDiagram';
 import { AlertTriangle, Info, ShieldAlert, CheckCircle2, AlertOctagon, Target, BookOpen, Key, Compass, Award, FileText, Calendar, Send, HelpCircle, PenTool, RefreshCw, Play, Timer, Lock, ClipboardCheck } from 'lucide-react';
 import { CriticalThinking } from './CriticalThinking';
 import { DidYouKnow } from './DidYouKnow';
@@ -3159,6 +3165,18 @@ const components = {
   OrbitalMechanicsSim,
   SimulateurOrbiteMecanique: OrbitalMechanicsSim,
   SimulateurOrbital: OrbitalMechanicsSim,
+  PeriodicTable,
+  TableauPeriodique: PeriodicTable,
+  SolarSystemOrrery,
+  SystemeSolaire: SolarSystemOrrery,
+  FinancialChart,
+  GraphiqueFinancier: FinancialChart,
+  WaveInterferenceSim,
+  SimulateurOndes: WaveInterferenceSim,
+  AcousticPianoSynth,
+  SynthetiseurPiano: AcousticPianoSynth,
+  SankeyDiagram,
+  DiagrammeSankey: SankeyDiagram,
   ClimateImpactMap,
   climate_impact_map: ClimateImpactMap,
   CarteImpactClimatique: ClimateImpactMap,

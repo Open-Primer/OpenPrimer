@@ -1,0 +1,417 @@
+"use client";
+
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Thermometer } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+
+interface ElementData {
+  num: number;
+  symbol: string;
+  nameFR: string;
+  nameEN: string;
+  mass: number;
+  category: 'nonmetal' | 'noble' | 'alkali' | 'alkaline' | 'metalloid' | 'halogen' | 'transition' | 'post-transition' | 'lanthanide' | 'actinide';
+  row: number; // 1-10 (9-10 are Lanthanide/Actinide rows below)
+  col: number; // 1-18
+  shells: number[];
+  melting: number | null; // in Kelvin
+  boiling: number | null; // in Kelvin
+  electronegativity: number | null;
+}
+
+const ELEMENTS_DATABASE: ElementData[] = [
+  // Period 1
+  { num: 1, symbol: 'H', nameFR: 'Hydrogène', nameEN: 'Hydrogen', mass: 1.008, category: 'nonmetal', row: 1, col: 1, shells: [1], melting: 14.01, boiling: 20.28, electronegativity: 2.20 },
+  { num: 2, symbol: 'He', nameFR: 'Hélium', nameEN: 'Helium', mass: 4.0026, category: 'noble', row: 1, col: 18, shells: [2], melting: 0.95, boiling: 4.22, electronegativity: null },
+  
+  // Period 2
+  { num: 3, symbol: 'Li', nameFR: 'Lithium', nameEN: 'Lithium', mass: 6.94, category: 'alkali', row: 2, col: 1, shells: [2, 1], melting: 453.69, boiling: 1615, electronegativity: 0.98 },
+  { num: 4, symbol: 'Be', nameFR: 'Béryllium', nameEN: 'Beryllium', mass: 9.0122, category: 'alkaline', row: 2, col: 2, shells: [2, 2], melting: 1560, boiling: 2742, electronegativity: 1.57 },
+  { num: 5, symbol: 'B', nameFR: 'Bore', nameEN: 'Boron', mass: 10.81, category: 'metalloid', row: 2, col: 13, shells: [2, 3], melting: 2349, boiling: 4200, electronegativity: 2.04 },
+  { num: 6, symbol: 'C', nameFR: 'Carbone', nameEN: 'Carbon', mass: 12.011, category: 'nonmetal', row: 2, col: 14, shells: [2, 4], melting: 3823, boiling: 4300, electronegativity: 2.55 },
+  { num: 7, symbol: 'N', nameFR: 'Azote', nameEN: 'Nitrogen', mass: 14.007, category: 'nonmetal', row: 2, col: 15, shells: [2, 5], melting: 63.15, boiling: 77.36, electronegativity: 3.04 },
+  { num: 8, symbol: 'O', nameFR: 'Oxygène', nameEN: 'Oxygen', mass: 15.999, category: 'nonmetal', row: 2, col: 16, shells: [2, 6], melting: 54.36, boiling: 90.20, electronegativity: 3.44 },
+  { num: 9, symbol: 'F', nameFR: 'Fluor', nameEN: 'Fluorine', mass: 18.998, category: 'halogen', row: 2, col: 17, shells: [2, 7], melting: 53.53, boiling: 85.03, electronegativity: 3.98 },
+  { num: 10, symbol: 'Ne', nameFR: 'Néon', nameEN: 'Neon', mass: 20.180, category: 'noble', row: 2, col: 18, shells: [2, 8], melting: 24.56, boiling: 27.07, electronegativity: null },
+
+  // Period 3
+  { num: 11, symbol: 'Na', nameFR: 'Sodium', nameEN: 'Sodium', mass: 22.990, category: 'alkali', row: 3, col: 1, shells: [2, 8, 1], melting: 370.87, boiling: 1156, electronegativity: 0.93 },
+  { num: 12, symbol: 'Mg', nameFR: 'Magnésium', nameEN: 'Magnesium', mass: 24.305, category: 'alkaline', row: 3, col: 2, shells: [2, 8, 2], melting: 923, boiling: 1363, electronegativity: 1.31 },
+  { num: 13, symbol: 'Al', nameFR: 'Aluminium', nameEN: 'Aluminium', mass: 26.982, category: 'post-transition', row: 3, col: 13, shells: [2, 8, 3], melting: 933.47, boiling: 2792, electronegativity: 1.61 },
+  { num: 14, symbol: 'Si', nameFR: 'Silicium', nameEN: 'Silicon', mass: 28.085, category: 'metalloid', row: 3, col: 14, shells: [2, 8, 4], melting: 1687, boiling: 3538, electronegativity: 1.90 },
+  { num: 15, symbol: 'P', nameFR: 'Phosphore', nameEN: 'Phosphorus', mass: 30.974, category: 'nonmetal', row: 3, col: 15, shells: [2, 8, 5], melting: 317.30, boiling: 553.60, electronegativity: 2.19 },
+  { num: 16, symbol: 'S', nameFR: 'Soufre', nameEN: 'Sulfur', mass: 32.06, category: 'nonmetal', row: 3, col: 16, shells: [2, 8, 6], melting: 388.36, boiling: 717.80, electronegativity: 2.58 },
+  { num: 17, symbol: 'Cl', nameFR: 'Chlore', nameEN: 'Chlorine', mass: 35.45, category: 'halogen', row: 3, col: 17, shells: [2, 8, 7], melting: 171.60, boiling: 239.11, electronegativity: 3.16 },
+  { num: 18, symbol: 'Ar', nameFR: 'Argon', nameEN: 'Argon', mass: 39.948, category: 'noble', row: 3, col: 18, shells: [2, 8, 8], melting: 83.80, boiling: 87.30, electronegativity: null },
+
+  // Period 4
+  { num: 19, symbol: 'K', nameFR: 'Potassium', nameEN: 'Potassium', mass: 39.098, category: 'alkali', row: 4, col: 1, shells: [2, 8, 8, 1], melting: 336.5, boiling: 1032, electronegativity: 0.82 },
+  { num: 20, symbol: 'Ca', nameFR: 'Calcium', nameEN: 'Calcium', mass: 40.078, category: 'alkaline', row: 4, col: 2, shells: [2, 8, 8, 2], melting: 1115, boiling: 1757, electronegativity: 1.00 },
+  { num: 21, symbol: 'Sc', nameFR: 'Scandium', nameEN: 'Scandium', mass: 44.956, category: 'transition', row: 4, col: 3, shells: [2, 8, 9, 2], melting: 1814, boiling: 3109, electronegativity: 1.36 },
+  { num: 22, symbol: 'Ti', nameFR: 'Titane', nameEN: 'Titanium', mass: 47.867, category: 'transition', row: 4, col: 4, shells: [2, 8, 10, 2], melting: 1941, boiling: 3560, electronegativity: 1.54 },
+  { num: 23, symbol: 'V', nameFR: 'Vanadium', nameEN: 'Vanadium', mass: 50.942, category: 'transition', row: 4, col: 5, shells: [2, 8, 11, 2], melting: 2183, boiling: 3680, electronegativity: 1.63 },
+  { num: 24, symbol: 'Cr', nameFR: 'Chrome', nameEN: 'Chromium', mass: 51.996, category: 'transition', row: 4, col: 6, shells: [2, 8, 13, 1], melting: 2180, boiling: 2944, electronegativity: 1.66 },
+  { num: 25, symbol: 'Mn', nameFR: 'Manganèse', nameEN: 'Manganese', mass: 54.938, category: 'transition', row: 4, col: 7, shells: [2, 8, 13, 2], melting: 1519, boiling: 2334, electronegativity: 1.55 },
+  { num: 26, symbol: 'Fe', nameFR: 'Fer', nameEN: 'Iron', mass: 55.845, category: 'transition', row: 4, col: 8, shells: [2, 8, 14, 2], melting: 1811, boiling: 3134, electronegativity: 1.83 },
+  { num: 27, symbol: 'Co', nameFR: 'Cobalt', nameEN: 'Cobalt', mass: 58.933, category: 'transition', row: 4, col: 9, shells: [2, 8, 15, 2], melting: 1768, boiling: 3200, electronegativity: 1.88 },
+  { num: 28, symbol: 'Ni', nameFR: 'Nickel', nameEN: 'Nickel', mass: 58.693, category: 'transition', row: 4, col: 10, shells: [2, 8, 16, 2], melting: 1728, boiling: 3186, electronegativity: 1.91 },
+  { num: 29, symbol: 'Cu', nameFR: 'Cuivre', nameEN: 'Copper', mass: 63.546, category: 'transition', row: 4, col: 11, shells: [2, 8, 18, 1], melting: 1357.77, boiling: 2835, electronegativity: 1.90 },
+  { num: 30, symbol: 'Zn', nameFR: 'Zinc', nameEN: 'Zinc', mass: 65.38, category: 'transition', row: 4, col: 12, shells: [2, 8, 18, 2], melting: 692.68, boiling: 1180, electronegativity: 1.65 },
+  { num: 31, symbol: 'Ga', nameFR: 'Gallium', nameEN: 'Gallium', mass: 69.723, category: 'post-transition', row: 4, col: 13, shells: [2, 8, 18, 3], melting: 302.91, boiling: 2673, electronegativity: 1.81 },
+  { num: 32, symbol: 'Ge', nameFR: 'Germanium', nameEN: 'Germanium', mass: 72.630, category: 'metalloid', row: 4, col: 14, shells: [2, 8, 18, 4], melting: 1211.40, boiling: 3106, electronegativity: 2.01 },
+  { num: 33, symbol: 'As', nameFR: 'Arsenic', nameEN: 'Arsenic', mass: 74.922, category: 'metalloid', row: 4, col: 15, shells: [2, 8, 18, 5], melting: 1090, boiling: 887, electronegativity: 2.18 },
+  { num: 34, symbol: 'Se', nameFR: 'Sélénium', nameEN: 'Selenium', mass: 78.971, category: 'nonmetal', row: 4, col: 16, shells: [2, 8, 18, 6], melting: 494, boiling: 958, electronegativity: 2.55 },
+  { num: 35, symbol: 'Br', nameFR: 'Brome', nameEN: 'Bromine', mass: 79.904, category: 'halogen', row: 4, col: 17, shells: [2, 8, 18, 7], melting: 265.8, boiling: 332, electronegativity: 2.96 },
+  { num: 36, symbol: 'Kr', nameFR: 'Krypton', nameEN: 'Krypton', mass: 83.798, category: 'noble', row: 4, col: 18, shells: [2, 8, 18, 8], melting: 115.79, boiling: 119.93, electronegativity: 3.00 },
+
+  // Representative Heavy Elements
+  { num: 37, symbol: 'Rb', nameFR: 'Rubidium', nameEN: 'Rubidium', mass: 85.468, category: 'alkali', row: 5, col: 1, shells: [2, 8, 18, 8, 1], melting: 312.46, boiling: 961, electronegativity: 0.82 },
+  { num: 38, symbol: 'Sr', nameFR: 'Strontium', nameEN: 'Strontium', mass: 87.62, category: 'alkaline', row: 5, col: 2, shells: [2, 8, 18, 8, 2], melting: 1050, boiling: 1655, electronegativity: 0.95 },
+  { num: 39, symbol: 'Y', nameFR: 'Yttrium', nameEN: 'Yttrium', mass: 88.906, category: 'transition', row: 5, col: 3, shells: [2, 8, 18, 9, 2], melting: 1799, boiling: 3609, electronegativity: 1.22 },
+  { num: 40, symbol: 'Zr', nameFR: 'Zirconium', nameEN: 'Zirconium', mass: 91.224, category: 'transition', row: 5, col: 4, shells: [2, 8, 18, 10, 2], melting: 2128, boiling: 4682, electronegativity: 1.33 },
+  { num: 41, symbol: 'Nb', nameFR: 'Niobium', nameEN: 'Niobium', mass: 92.906, category: 'transition', row: 5, col: 5, shells: [2, 8, 18, 12, 1], melting: 2750, boiling: 5017, electronegativity: 1.6 },
+  { num: 42, symbol: 'Mo', nameFR: 'Molybdène', nameEN: 'Molybdenum', mass: 95.95, category: 'transition', row: 5, col: 6, shells: [2, 8, 18, 13, 1], melting: 2896, boiling: 4912, electronegativity: 2.16 },
+  
+  // Silver & Gold group
+  { num: 47, symbol: 'Ag', nameFR: 'Argent', nameEN: 'Silver', mass: 107.87, category: 'transition', row: 5, col: 11, shells: [2, 8, 18, 18, 1], melting: 1234.93, boiling: 2435, electronegativity: 1.93 },
+  { num: 50, symbol: 'Sn', nameFR: 'Étain', nameEN: 'Tin', mass: 118.71, category: 'post-transition', row: 5, col: 14, shells: [2, 8, 18, 18, 4], melting: 505.08, boiling: 2875, electronegativity: 1.96 },
+  { num: 53, symbol: 'I', nameFR: 'Iode', nameEN: 'Iodine', mass: 126.90, category: 'halogen', row: 5, col: 17, shells: [2, 8, 18, 18, 7], melting: 386.85, boiling: 457.4, electronegativity: 2.66 },
+  { num: 54, symbol: 'Xe', nameFR: 'Xénon', nameEN: 'Xenon', mass: 131.29, category: 'noble', row: 5, col: 18, shells: [2, 8, 18, 18, 8], melting: 161.4, boiling: 165.03, electronegativity: 2.6 },
+
+  // Period 6 (Lanthanides representative)
+  { num: 55, symbol: 'Cs', nameFR: 'Césium', nameEN: 'Cesium', mass: 132.91, category: 'alkali', row: 6, col: 1, shells: [2, 8, 18, 18, 8, 1], melting: 301.59, boiling: 944, electronegativity: 0.79 },
+  { num: 56, symbol: 'Ba', nameFR: 'Baryum', nameEN: 'Barium', mass: 137.33, category: 'alkaline', row: 6, col: 2, shells: [2, 8, 18, 18, 8, 2], melting: 1000, boiling: 2170, electronegativity: 0.89 },
+  
+  // Lanthanides (offset below, row 9)
+  { num: 57, symbol: 'La', nameFR: 'Lanthane', nameEN: 'Lanthanum', mass: 138.91, category: 'lanthanide', row: 9, col: 4, shells: [2, 8, 18, 18, 9, 2], melting: 1193, boiling: 3737, electronegativity: 1.1 },
+  { num: 58, symbol: 'Ce', nameFR: 'Cérium', nameEN: 'Cerium', mass: 140.12, category: 'lanthanide', row: 9, col: 5, shells: [2, 8, 18, 19, 9, 2], melting: 1068, boiling: 3716, electronegativity: 1.12 },
+  { num: 59, symbol: 'Pr', nameFR: 'Praséodyme', nameEN: 'Praseodymium', mass: 140.91, category: 'lanthanide', row: 9, col: 6, shells: [2, 8, 18, 21, 8, 2], melting: 1208, boiling: 3793, electronegativity: 1.13 },
+  { num: 60, symbol: 'Nd', nameFR: 'Néodyme', nameEN: 'Neodymium', mass: 144.24, category: 'lanthanide', row: 9, col: 7, shells: [2, 8, 18, 22, 8, 2], melting: 1297, boiling: 3347, electronegativity: 1.14 },
+
+  // Gold, Platinum, Lead
+  { num: 74, symbol: 'W', nameFR: 'Tungstène', nameEN: 'Tungsten', mass: 183.84, category: 'transition', row: 6, col: 6, shells: [2, 8, 18, 32, 12, 2], melting: 3695, boiling: 6203, electronegativity: 2.36 },
+  { num: 78, symbol: 'Pt', nameFR: 'Platine', nameEN: 'Platinum', mass: 195.08, category: 'transition', row: 6, col: 10, shells: [2, 8, 18, 32, 17, 1], melting: 2041.4, boiling: 4098, electronegativity: 2.28 },
+  { num: 79, symbol: 'Au', nameFR: 'Or', nameEN: 'Gold', mass: 196.97, category: 'transition', row: 6, col: 11, shells: [2, 8, 18, 32, 18, 1], melting: 1337.33, boiling: 3129, electronegativity: 2.54 },
+  { num: 80, symbol: 'Hg', nameFR: 'Mercure', nameEN: 'Mercury', mass: 200.59, category: 'transition', row: 6, col: 12, shells: [2, 8, 18, 32, 18, 2], melting: 234.32, boiling: 629.88, electronegativity: 2.00 },
+  { num: 82, symbol: 'Pb', nameFR: 'Plomb', nameEN: 'Lead', mass: 207.2, category: 'post-transition', row: 6, col: 14, shells: [2, 8, 18, 32, 18, 4], melting: 600.61, boiling: 2022, electronegativity: 2.33 },
+  { num: 86, symbol: 'Rn', nameFR: 'Radon', nameEN: 'Radon', mass: 222, category: 'noble', row: 6, col: 18, shells: [2, 8, 18, 32, 18, 8], melting: 202, boiling: 211.3, electronegativity: 2.2 },
+
+  // Period 7 (Actinides representative)
+  { num: 87, symbol: 'Fr', nameFR: 'Francium', nameEN: 'Francium', mass: 223, category: 'alkali', row: 7, col: 1, shells: [2, 8, 18, 32, 18, 8, 1], melting: 300, boiling: 950, electronegativity: 0.79 },
+  { num: 88, symbol: 'Ra', nameFR: 'Radium', nameEN: 'Radium', mass: 226, category: 'alkaline', row: 7, col: 2, shells: [2, 8, 18, 32, 18, 8, 2], melting: 973, boiling: 2010, electronegativity: 0.9 },
+
+  // Actinides (offset below, row 10)
+  { num: 90, symbol: 'Th', nameFR: 'Thorium', nameEN: 'Thorium', mass: 232.04, category: 'actinide', row: 10, col: 4, shells: [2, 8, 18, 32, 18, 10, 2], melting: 2115, boiling: 5061, electronegativity: 1.3 },
+  { num: 92, symbol: 'U', nameFR: 'Uranium', nameEN: 'Uranium', mass: 238.03, category: 'actinide', row: 10, col: 6, shells: [2, 8, 18, 32, 21, 9, 2], melting: 1405.3, boiling: 4404, electronegativity: 1.38 }
+];
+
+const CATEGORY_COLORS: Record<string, { border: string; bg: string; text: string; labelFR: string; labelEN: string }> = {
+  nonmetal: { border: 'border-emerald-500/40', bg: 'bg-emerald-950/20', text: 'text-emerald-400', labelFR: 'Non-métaux', labelEN: 'Reactive Nonmetals' },
+  noble: { border: 'border-purple-500/40', bg: 'bg-purple-950/20', text: 'text-purple-400', labelFR: 'Gaz nobles', labelEN: 'Noble Gases' },
+  alkali: { border: 'border-red-500/40', bg: 'bg-red-950/20', text: 'text-red-400', labelFR: 'Métaux alcalins', labelEN: 'Alkali Metals' },
+  alkaline: { border: 'border-orange-500/40', bg: 'bg-orange-950/20', text: 'text-orange-400', labelFR: 'Métaux alcalino-terreux', labelEN: 'Alkaline Earth Metals' },
+  metalloid: { border: 'border-yellow-500/40', bg: 'bg-yellow-950/20', text: 'text-yellow-400', labelFR: 'Métalloïdes', labelEN: 'Metalloids' },
+  halogen: { border: 'border-blue-500/40', bg: 'bg-blue-950/20', text: 'text-blue-400', labelFR: 'Halogènes', labelEN: 'Reactive Halogens' },
+  transition: { border: 'border-sky-500/40', bg: 'bg-sky-950/20', text: 'text-sky-400', labelFR: 'Métaux de transition', labelEN: 'Transition Metals' },
+  'post-transition': { border: 'border-teal-500/40', bg: 'bg-teal-950/20', text: 'text-teal-400', labelFR: 'Métaux pauvres', labelEN: 'Post-transition Metals' },
+  lanthanide: { border: 'border-pink-500/40', bg: 'bg-pink-950/20', text: 'text-pink-400', labelFR: 'Lanthanides', labelEN: 'Lanthanides' },
+  actinide: { border: 'border-rose-500/40', bg: 'bg-rose-950/20', text: 'text-rose-400', labelFR: 'Actinides', labelEN: 'Actinides' }
+};
+
+export const PeriodicTable = () => {
+  const { language } = useLanguage();
+  const isFR = language === 'FR';
+
+  const [selectedNum, setSelectedNum] = useState<number>(6); // Default: Carbon
+  const [temperature, setTemperature] = useState<number>(298); // 298 K = 25°C
+  const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
+
+  const activeElement = useMemo(() => {
+    return ELEMENTS_DATABASE.find(el => el.num === selectedNum) || ELEMENTS_DATABASE[0];
+  }, [selectedNum]);
+
+  // Helpers for states
+  const getElementState = (el: ElementData, temp: number): 'solid' | 'liquid' | 'gas' | 'unknown' => {
+    if (el.melting === null) return 'unknown';
+    if (temp < el.melting) return 'solid';
+    if (el.boiling === null || temp < el.boiling) return 'liquid';
+    return 'gas';
+  };
+
+  const getStateColor = (state: 'solid' | 'liquid' | 'gas' | 'unknown') => {
+    switch (state) {
+      case 'solid': return 'bg-slate-800/80 border-slate-700/80 text-slate-100';
+      case 'liquid': return 'bg-amber-950/40 border-amber-600/50 text-amber-300';
+      case 'gas': return 'bg-rose-950/40 border-rose-600/50 text-rose-300';
+      default: return 'bg-slate-900 border-slate-800 text-slate-500';
+    }
+  };
+
+  return (
+    <div className="my-8 rounded-[40px] border border-slate-850 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
+      <div className="absolute -right-16 -top-16 w-36 h-36 rounded-full bg-purple-500/5 blur-3xl pointer-events-none" />
+      
+      {/* Header Row */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-6 mb-6">
+        <div>
+          <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
+            <span>{isFR ? 'Classification Périodique' : 'Periodic Table of Elements'}</span>
+          </h3>
+          <p className="text-xs text-slate-400 mt-1 max-w-xl">
+            {isFR 
+              ? "Explorez les propriétés chimiques des éléments et découvrez l'impact de la température sur leur état physique en temps réel."
+              : "Explore the chemical properties of elements and witness the physical state transitions based on temperature."}
+          </p>
+        </div>
+
+        {/* Temperature Controller */}
+        <div className="flex items-center gap-4 bg-slate-900/50 border border-slate-850 p-3 rounded-2xl min-w-[260px]">
+          <Thermometer className="w-5 h-5 text-indigo-400 shrink-0" />
+          <div className="flex-1 space-y-1">
+            <div className="flex justify-between text-[11px] font-black tracking-wider text-slate-400">
+              <span className="uppercase">{isFR ? 'Température' : 'Temperature'}</span>
+              <span className="font-mono text-indigo-300">
+                {temperature} K ({Math.round(temperature - 273.15)} °C)
+              </span>
+            </div>
+            <input 
+              type="range" 
+              min="0" 
+              max="6000" 
+              value={temperature}
+              onChange={(e) => setTemperature(parseInt(e.target.value))}
+              className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Main Layout Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* Left Side: Periodic Grid representation */}
+        <div className="lg:col-span-8 overflow-x-auto pb-4">
+          <div className="min-w-[700px] grid grid-cols-18 gap-1.5 select-none relative">
+            
+            {/* Elements database layout */}
+            {ELEMENTS_DATABASE.map((el) => {
+              const elState = getElementState(el, temperature);
+              const stateStyle = getStateColor(elState);
+              const catInfo = CATEGORY_COLORS[el.category];
+              const isSelected = selectedNum === el.num;
+              const isDimmed = highlightedCategory && highlightedCategory !== el.category;
+
+              return (
+                <div
+                  key={el.num}
+                  style={{ gridRow: el.row, gridColumn: el.col }}
+                  onClick={() => setSelectedNum(el.num)}
+                  onMouseEnter={() => setHighlightedCategory(el.category)}
+                  onMouseLeave={() => setHighlightedCategory(null)}
+                  className={`aspect-square rounded-lg border flex flex-col items-center justify-between p-1 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
+                    isSelected 
+                      ? 'ring-2 ring-indigo-500 scale-105 z-10 shadow-lg shadow-indigo-500/20' 
+                      : isDimmed 
+                        ? 'opacity-20 scale-95' 
+                        : 'hover:scale-105 hover:shadow-md'
+                  } ${stateStyle}`}
+                >
+                  {/* Category mini stripe */}
+                  <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${catInfo?.bg || 'bg-slate-700'}`} />
+
+                  <span className="text-[7.5px] font-bold text-slate-400 self-end mr-0.5">{el.num}</span>
+                  <span className="text-[12.5px] font-black tracking-tight leading-none text-slate-100 group-hover:text-indigo-300 transition-colors">
+                    {el.symbol}
+                  </span>
+                  <span className="text-[6.5px] font-medium text-slate-400 tracking-tight text-center leading-none">
+                    {isFR ? el.nameFR : el.nameEN}
+                  </span>
+                </div>
+              );
+            })}
+
+            {/* Gap labels */}
+            <div className="absolute text-[8px] font-black text-slate-600 uppercase tracking-widest top-12 left-[12%] pointer-events-none">
+              s-block
+            </div>
+            <div className="absolute text-[8px] font-black text-slate-600 uppercase tracking-widest top-12 left-[48%] pointer-events-none">
+              d-block
+            </div>
+            <div className="absolute text-[8px] font-black text-slate-600 uppercase tracking-widest top-12 left-[78%] pointer-events-none">
+              p-block
+            </div>
+          </div>
+
+          {/* Group Legends */}
+          <div className="flex flex-wrap gap-2.5 mt-8 border-t border-slate-850 pt-5">
+            {Object.entries(CATEGORY_COLORS).map(([key, info]) => {
+              const isHighlighted = highlightedCategory === key;
+              return (
+                <div
+                  key={key}
+                  onMouseEnter={() => setHighlightedCategory(key)}
+                  onMouseLeave={() => setHighlightedCategory(null)}
+                  className={`px-3 py-1.5 rounded-full border text-[10px] font-bold flex items-center gap-2 cursor-pointer transition-all duration-300 ${info.border} ${info.bg} ${info.text} ${
+                    isHighlighted ? 'scale-105 shadow-md shadow-slate-900' : 'opacity-80 hover:opacity-100'
+                  }`}
+                >
+                  <div className={`w-1.5 h-1.5 rounded-full bg-current`} />
+                  <span>{isFR ? info.labelFR : info.labelEN}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right Side: Detailed Bohr Atom Animation and Card metrics */}
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          
+          {/* Main Selected Element Card */}
+          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-6 flex flex-col relative overflow-hidden">
+            <div className="absolute -left-12 -bottom-12 w-28 h-28 rounded-full bg-indigo-500/5 blur-2xl pointer-events-none" />
+
+            {/* Header info */}
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="px-2.5 py-1 text-[8.5px] font-black uppercase tracking-widest bg-slate-950 rounded-lg text-slate-500 border border-slate-850">
+                  Z = {activeElement.num}
+                </span>
+                <h4 className="text-xl font-black text-slate-100 mt-2 leading-none">
+                  {isFR ? activeElement.nameFR : activeElement.nameEN}
+                </h4>
+                <span className="text-[10px] font-bold uppercase text-indigo-400 tracking-wider">
+                  {isFR ? CATEGORY_COLORS[activeElement.category]?.labelFR : CATEGORY_COLORS[activeElement.category]?.labelEN}
+                </span>
+              </div>
+              <div className="text-4xl font-black text-indigo-400 select-text leading-none bg-indigo-500/5 border border-indigo-500/10 p-4 rounded-2xl min-w-[70px] text-center">
+                {activeElement.symbol}
+              </div>
+            </div>
+
+            {/* Physical metrics list */}
+            <div className="grid grid-cols-2 gap-3.5 my-6 text-xs">
+              <div className="bg-slate-950/40 p-3 rounded-2xl border border-slate-850/80">
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{isFR ? 'Masse Atomique' : 'Atomic Mass'}</span>
+                <div className="font-mono font-bold text-slate-200 mt-0.5">{activeElement.mass.toFixed(4)} u</div>
+              </div>
+              <div className="bg-slate-950/40 p-3 rounded-2xl border border-slate-850/80">
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{isFR ? 'Électronégativité' : 'Electronegativity'}</span>
+                <div className="font-mono font-bold text-slate-200 mt-0.5">
+                  {activeElement.electronegativity !== null ? activeElement.electronegativity.toFixed(2) : '--'}
+                </div>
+              </div>
+              <div className="bg-slate-950/40 p-3 rounded-2xl border border-slate-850/80">
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{isFR ? 'Fusion' : 'Melting Point'}</span>
+                <div className="font-mono font-bold text-slate-200 mt-0.5">
+                  {activeElement.melting !== null ? `${activeElement.melting} K` : '--'}
+                </div>
+              </div>
+              <div className="bg-slate-950/40 p-3 rounded-2xl border border-slate-850/80">
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{isFR ? 'Ébullition' : 'Boiling Point'}</span>
+                <div className="font-mono font-bold text-slate-200 mt-0.5">
+                  {activeElement.boiling !== null ? `${activeElement.boiling} K` : '--'}
+                </div>
+              </div>
+            </div>
+
+            {/* Current temperature physical state highlight */}
+            <div className="flex items-center gap-3 bg-slate-950/30 p-3 rounded-2xl border border-slate-850/60 text-xs">
+              <Thermometer className="w-4 h-4 text-indigo-400" />
+              <div className="flex-1 flex justify-between items-center">
+                <span className="text-slate-400 font-bold">{isFR ? "État à cette température" : "State at selected temp"} :</span>
+                <span className="font-black capitalize text-slate-200">
+                  {(() => {
+                    const state = getElementState(activeElement, temperature);
+                    if (state === 'solid') return isFR ? 'Solide 🧊' : 'Solid 🧊';
+                    if (state === 'liquid') return isFR ? 'Liquide 💧' : 'Liquid 💧';
+                    if (state === 'gas') return isFR ? 'Gaz 💨' : 'Gas 💨';
+                    return '--';
+                  })()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 2D Bohr Atom Animated Shell Visualizer */}
+          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-6 flex flex-col items-center relative overflow-hidden">
+            <h5 className="text-[10px] font-black tracking-widest uppercase text-slate-400 mb-4 self-start flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <span>{isFR ? 'Structure électronique de Bohr' : 'Bohr Atomic Structure'}</span>
+            </h5>
+
+            <div className="w-48 h-48 relative flex items-center justify-center">
+              
+              {/* Nucleus */}
+              <div className="w-8 h-8 rounded-full bg-indigo-600 flex flex-col items-center justify-center text-white text-[9px] font-black shadow-lg shadow-indigo-500/40 relative z-10 border border-indigo-400">
+                <span>{activeElement.symbol}</span>
+                <span className="text-[6.5px] font-bold opacity-80 leading-none">+{activeElement.num}</span>
+              </div>
+
+              {/* Concentric Energy Shells */}
+              {activeElement.shells.map((electronCount, shellIdx) => {
+                const shellRadius = 32 + shellIdx * 18;
+                return (
+                  <React.Fragment key={shellIdx}>
+                    {/* Circular orbit path */}
+                    <div 
+                      className="absolute border border-slate-800/80 rounded-full pointer-events-none"
+                      style={{ 
+                        width: `${shellRadius * 2}px`, 
+                        height: `${shellRadius * 2}px`,
+                      }}
+                    />
+
+                    {/* Orbiting electrons */}
+                    {Array.from({ length: electronCount }).map((_, eIdx) => {
+                      const angleOffset = (eIdx * 360) / electronCount;
+                      const animationDuration = 5 + shellIdx * 3 + eIdx * 0.2;
+                      return (
+                        <motion.div
+                          key={eIdx}
+                          className="absolute w-2 h-2 rounded-full bg-emerald-400 border border-emerald-300 shadow-md shadow-emerald-500/50 pointer-events-none"
+                          style={{
+                            originX: 'center',
+                            originY: 'center',
+                            transform: `rotate(${angleOffset}deg) translateY(-${shellRadius}px)`,
+                          }}
+                          animate={{
+                            rotate: [angleOffset, angleOffset + 360],
+                          }}
+                          transition={{
+                            duration: animationDuration,
+                            repeat: Infinity,
+                            ease: 'linear',
+                          }}
+                        />
+                      );
+                    })}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+
+            {/* Electron shell config details */}
+            <div className="mt-4 flex gap-2.5 items-center select-text">
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                {isFR ? 'Couches :' : 'Shells :'}
+              </span>
+              <div className="flex gap-1">
+                {activeElement.shells.map((count, idx) => (
+                  <span 
+                    key={idx} 
+                    className="w-5 h-5 rounded-md bg-slate-950 flex items-center justify-center text-[10px] font-bold text-emerald-400 border border-slate-850"
+                  >
+                    {count}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
