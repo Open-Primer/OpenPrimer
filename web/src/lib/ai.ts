@@ -754,7 +754,8 @@ const lessonWidgetsSchema = {
                   name: { type: "string", description: "Full name of the person." },
                   dates: { type: "string", description: "Lifespan dates, e.g., '1856-1939' or '1723-1790'." },
                   description: { type: "string", description: "Detailed biographical summary focusing on their contributions (8-12 sentences)." },
-                  wikipediaUrl: { type: "string", description: "Direct link to their English Wikipedia page." }
+                  wikipediaUrl: { type: "string", description: "Direct link to their English Wikipedia page." },
+                  searchQuery: { type: "string", description: "Canonical search query to find the biography on Wikipedia." }
                 },
                 required: ["name", "dates", "description", "wikipediaUrl"]
               }
@@ -1039,7 +1040,18 @@ const lessonWidgetsSchema = {
               id: { type: "string" },
               componentType: { type: "string" },
               sectionAnchor: { type: "string" },
-              props: { type: "object" }
+              props: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  term: { type: "string" },
+                  dates: { type: "string" },
+                  description: { type: "string" },
+                  definition: { type: "string" },
+                  wikipediaUrl: { type: "string" },
+                  searchQuery: { type: "string" }
+                }
+              }
             },
             required: ["id", "componentType", "sectionAnchor", "props"]
           }
@@ -7855,7 +7867,7 @@ function isBookReference(text: string): boolean {
   return bookScore >= articleScore;
 }
 
-async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'): Promise<string> {
+export async function validateAndFixBibliography(mdx: string, targetLang: string = 'fr'): Promise<string> {
   // Find the bibliography section to isolate it from inline body citations
   const refHeaderRegex = /(?:^|\n)(?:#{2,4})\s*(?:R[eé]f[eé]rences|References|Bibliographie)\b/i;
   const matchHeader = mdx.match(refHeaderRegex);
@@ -8208,7 +8220,7 @@ async function isLinkReachable(url: string): Promise<boolean> {
   return isUrlReachable(url);
 }
 
-async function validateAndFixExternalResources(mdx: string, targetLang: string = 'fr'): Promise<string> {
+export async function validateAndFixExternalResources(mdx: string, targetLang: string = 'fr'): Promise<string> {
   // 0. Do not strip media/image/hover-card tags before validation to preserve pedagogical components.
   let updatedMdx = mdx;
 
