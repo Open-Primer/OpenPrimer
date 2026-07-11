@@ -25,11 +25,13 @@ if (fs.existsSync(envLocalPath)) {
 async function run() {
   const { getPageContent } = await import('./src/lib/content.ts');
 
-  const slug = ["L2", "Musicologie_et_Acoustique_Physique", "Acoustique_musicale_et_organologie", "nature-physique-son-propagation-ondes"];
+  const slug = ["L1", "algorithmique_fondamentale", "algorithmique_fondamentale", "art-resolution-problemes-genese-algorithmes"];
   
   console.log("--- Testing getPageContent with lang = 'fr' ---");
   try {
+    console.time("FR Load Time");
     const resultFr = await getPageContent(slug, 'fr');
+    console.timeEnd("FR Load Time");
     console.log("Result (FR):", resultFr ? { meta: resultFr.meta, contentLength: resultFr.content.length } : "null");
   } catch (err) {
     console.error("Error with FR:", err);
@@ -37,7 +39,9 @@ async function run() {
 
   console.log("\n--- Testing getPageContent with lang = 'en' ---");
   try {
+    console.time("EN Load Time");
     const resultEn = await getPageContent(slug, 'en');
+    console.timeEnd("EN Load Time");
     console.log("Result (EN):", resultEn ? { meta: resultEn.meta, contentLength: resultEn.content.length } : "null");
   } catch (err) {
     console.error("Error with EN:", err);

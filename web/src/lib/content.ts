@@ -20,6 +20,10 @@ export function stripOuterCodeFences(content: string): string {
 let wikipediaCache: Record<string, { url: string | null; fetchedAt: number }> = {};
 const cachePath = path.join(process.cwd(), 'src/lib/wikipedia-cache.json');
 
+// In-memory runtime cache for checkWikipediaPage: avoids repeated file-cache
+// lookups and network calls for the same glossary term within the same process.
+const wikiUrlRuntimeCache = new Map<string, string | null>();
+
 function loadCache() {
   try {
     if (fs.existsSync(cachePath)) {
@@ -62,9 +66,17 @@ loadCache();
 async function fetchWikiUrl(term: string, lang: string): Promise<string | null> {
   try {
     const url = `https://${lang.toLowerCase()}.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=${encodeURIComponent(term)}`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'OpenPrimer/1.0 (contact@openprimer.app)' }
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        headers: { 'User-Agent': 'OpenPrimer/1.0 (contact@openprimer.app)' },
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
     if (res.ok) {
       const data = await res.json();
       const pages = data.query?.pages;
@@ -77,7 +89,10 @@ async function fetchWikiUrl(term: string, lang: string): Promise<string | null> 
       }
     }
   } catch (e) {
-    console.error(`Wikipedia API error for term "${term}" (${lang}):`, e);
+    // includes AbortError on timeout
+    if (!(e instanceof Error && e.name === 'AbortError')) {
+      console.error(`Wikipedia API error for term "${term}" (${lang}):`, e);
+    }
   }
   return null;
 }
@@ -89,9 +104,16 @@ export async function checkWikipediaPage(term: string, lang: string): Promise<st
   const now = Date.now();
   const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
 
+  // 1. In-memory runtime cache (fastest)
+  if (wikiUrlRuntimeCache.has(cacheKey)) {
+    return wikiUrlRuntimeCache.get(cacheKey)!;
+  }
+
+  // 2. File-based 30-day cache
   if (cacheKey in wikipediaCache) {
     const entry = wikipediaCache[cacheKey];
     if (now - entry.fetchedAt < thirtyDaysMs) {
+      wikiUrlRuntimeCache.set(cacheKey, entry.url);
       return entry.url;
     }
   }
@@ -113,10 +135,8 @@ export async function checkWikipediaPage(term: string, lang: string): Promise<st
     }
   }
 
-  wikipediaCache[cacheKey] = {
-    url: resolvedUrl,
-    fetchedAt: now
-  };
+  wikiUrlRuntimeCache.set(cacheKey, resolvedUrl);
+  wikipediaCache[cacheKey] = { url: resolvedUrl, fetchedAt: now };
   saveCache();
   return resolvedUrl;
 }
@@ -550,7 +570,8 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         const isSummative = !!(meta?.summative === true || meta?.summative === 'true' || manualMeta?.summative === 'true' || manualMeta?.summative === true);
         const processedContent = preprocessMdx(repairedBody, lang, isSummative, lessonSlug, dbLesson.order);
         const { resolvedContent } = await resolvePrecompiledAnchors(processedContent, lang);
-        const enriched = await enrichGlossaryWithWikipediaLinks(resolvedContent, lang);
+        const enrichedEntities = await enrichEntityTagsWithWikipedia(resolvedContent, lang);
+        const enriched = await enrichGlossaryWithWikipediaLinks(enrichedEntities, lang);
         return {
           meta: {
             title: dbLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -601,7 +622,8 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         const isSummative = !!(meta?.summative === true || meta?.summative === 'true' || manualMeta?.summative === 'true' || manualMeta?.summative === true);
         const processedContent = preprocessMdx(repairedBody, fallbackLesson.lang || lang, isSummative, lessonSlug, fallbackLesson.order);
         const { resolvedContent } = await resolvePrecompiledAnchors(processedContent, fallbackLesson.lang || lang);
-        const enriched = await enrichGlossaryWithWikipediaLinks(resolvedContent, fallbackLesson.lang || lang);
+        const enrichedEntities = await enrichEntityTagsWithWikipedia(resolvedContent, fallbackLesson.lang || lang);
+        const enriched = await enrichGlossaryWithWikipediaLinks(enrichedEntities, fallbackLesson.lang || lang);
         return {
           meta: {
             title: fallbackLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -3206,7 +3228,7 @@ function deduplicateOriginalQuotes(mdx: string): string {
       }
     }
     
-    const bracketRegex = /\[(["'“‘«]?\s*([^\]]{15,})\s*["'”’»]?)\](?!\()/g;
+    const bracketRegex = /\[(["'“‘«]?\s*(?!.*WIDGET:)([^\]]{15,})\s*["'”’»]?)\](?!\()/gi;
     const bracketMatch = bracketRegex.exec(line);
     
     if (bracketMatch && lastQuoteNormalized) {
@@ -3302,7 +3324,12 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     }
 
     if (evalWidgets.length > 0) {
-      processed = frontmatter + evalWidgets.join('\n\n');
+      const needsWrapper = !evalWidgets.some(w => w.startsWith('<SummativeEvaluation') || w.startsWith('<EvaluationSommative'));
+      if (needsWrapper) {
+        processed = frontmatter + `<SummativeEvaluation>\n${evalWidgets.join('\n\n')}\n</SummativeEvaluation>`;
+      } else {
+        processed = frontmatter + evalWidgets.join('\n\n');
+      }
     }
 
     // Hardening: Purge references, glossary lists, hover cards, and citation tags inside summative evaluations
@@ -3502,6 +3529,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = processed.replace(/<InteractiveTimeline\b[^>]*>\s*[\s\S]*?<\/InteractiveTimeline>/gi, '');
   processed = processed.replace(/<DragAndDropActivity\b[^>]*>\s*[\s\S]*?<\/DragAndDropActivity>/gi, '');
   processed = processed.replace(/<Flowchart\b[^>]*>\s*[\s\S]*?<\/Flowchart>/gi, '');
+
 
   processed = healUnclosedInlineTags(processed);
   processed = escapeCurlyBracesAndLessThanInText(processed);
@@ -5181,6 +5209,10 @@ interface WikiDetails {
 let wikipediaCacheExtended: Record<string, WikiDetails & { fetchedAt: number }> = {};
 const extendedCachePath = path.join(process.cwd(), 'src/lib/wikipedia-extended-cache.json');
 
+// In-memory runtime cache: survives for the lifetime of the Node process,
+// eliminates redundant concurrent or repeated calls within the same request.
+const wikiDetailsRuntimeCache = new Map<string, WikiDetails | null>();
+
 function loadExtendedCache() {
   try {
     if (fs.existsSync(extendedCachePath)) {
@@ -5258,7 +5290,14 @@ function extractDatesOrCentury(desc: string | null, extract: string | null): str
 async function fetchWikiDetailsFromRest(title: string, lang: string): Promise<WikiDetails | null> {
   try {
     const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'OpenPrimer/1.0 (contact@openprimer.app)' } });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    let res: Response;
+    try {
+      res = await fetch(url, { headers: { 'User-Agent': 'OpenPrimer/1.0 (contact@openprimer.app)' }, signal: controller.signal });
+    } finally {
+      clearTimeout(timeoutId);
+    }
     if (res.ok) {
       const data = await res.json();
       if (data.type === 'disambiguation') {
@@ -5272,7 +5311,7 @@ async function fetchWikiDetailsFromRest(title: string, lang: string): Promise<Wi
       };
     }
   } catch (e) {
-    // ignore
+    // ignore (includes AbortError on timeout)
   }
   return null;
 }
@@ -5346,47 +5385,59 @@ export async function resolveWikiDetails(
   const langCode = lang.toLowerCase().trim();
   const origLang = originalLang.toLowerCase().trim();
 
-  // Try to check cache first
   const cacheKey = `${langCode}:${type}:${formattedName.toLowerCase()}`;
+
+  // 1. In-memory runtime cache (fastest — avoids all I/O)
+  if (wikiDetailsRuntimeCache.has(cacheKey)) {
+    return wikiDetailsRuntimeCache.get(cacheKey)!;
+  }
+
+  // 2. File-based 30-day cache
   if (cacheKey in wikipediaCacheExtended) {
     const cached = wikipediaCacheExtended[cacheKey];
     const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
     if (Date.now() - cached.fetchedAt < thirtyDaysMs) {
+      wikiDetailsRuntimeCache.set(cacheKey, cached);
       return cached;
     }
   }
 
+  // Helper to commit and cache at both levels
+  const commit = (result: WikiDetails) => {
+    if (type === 'person' || type === 'character') {
+      result.dates = extractDatesOrCentury(result.description, result.summary);
+    }
+    wikipediaCacheExtended[cacheKey] = { ...result, fetchedAt: Date.now() };
+    wikiDetailsRuntimeCache.set(cacheKey, result);
+    saveExtendedCache();
+    return result;
+  };
+
+  // Stage 1: REST on activeLang — also used to resolve the canonical title.
+  // We do ONE fetch here and reuse the result (fixes the previous double-fetch
+  // where an initial probe + Stage 1 made two identical requests).
   let resolvedTitle = formattedName;
+  let stage1Result: WikiDetails | null = null;
   try {
     const initialRes = await fetchWikiDetailsFromRest(formattedName, langCode);
-    if (!initialRes) {
+    if (initialRes) {
+      // Cache-hit on first try — commit and return immediately
+      return commit(initialRes);
+    } else {
+      // Not found directly — try a fuzzy search to get the canonical title
       const searched = await fetchSearchFirstMatchTitle(name, langCode, type);
-      if (searched) resolvedTitle = searched;
+      if (searched) {
+        resolvedTitle = searched;
+        // Re-fetch with the canonical title
+        stage1Result = await fetchWikiDetailsFromRest(resolvedTitle, langCode);
+      }
     }
   } catch (_) {
     const searched = await fetchSearchFirstMatchTitle(name, langCode, type);
     if (searched) resolvedTitle = searched;
   }
 
-  // Helper to commit and cache
-  const commit = (result: WikiDetails) => {
-    // Extract dates if person/character
-    if (type === 'person' || type === 'character') {
-      result.dates = extractDatesOrCentury(result.description, result.summary);
-    }
-    wikipediaCacheExtended[cacheKey] = {
-      ...result,
-      fetchedAt: Date.now()
-    };
-    saveExtendedCache();
-    return result;
-  };
-
-  // Stage 1: REST on activeLang
-  try {
-    const r = await fetchWikiDetailsFromRest(resolvedTitle, langCode);
-    if (r) return commit(r);
-  } catch (_) {}
+  if (stage1Result) return commit(stage1Result);
 
   // Stage 2: Action API on activeLang
   try {
@@ -5500,6 +5551,51 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
     return m ? m[1] : null;
   };
 
+  // ── Pre-fetch all unique entity queries in parallel ──────────────────────
+  // Build a deduplicated map of (queryName → resolvedType) so we can fire all
+  // Wikipedia lookups concurrently instead of serially.
+  const uniqueQueries = new Map<string, string>(); // queryName → resolvedType
+  for (const item of tagMatches) {
+    const nameVal = parseAttr(item.attrsString, 'name') || parseAttr(item.attrsString, 'term') || parseAttr(item.attrsString, 'word');
+    const descVal = parseAttr(item.attrsString, 'description') || parseAttr(item.attrsString, 'definition');
+    const urlVal  = parseAttr(item.attrsString, 'url') || parseAttr(item.attrsString, 'href') || parseAttr(item.attrsString, 'wikipediaUrl') || parseAttr(item.attrsString, 'wikipedia');
+    const queryName = (nameVal || item.innerText || '').trim();
+    if (!queryName) continue;
+    // Skip if the tag already has both URL and description — no need to fetch
+    if (urlVal && descVal) continue;
+    if (uniqueQueries.has(queryName)) continue;
+
+    const tagLower = item.tagName.toLowerCase();
+    let resolvedType = 'entity';
+    if (['realperson', 'historicalperson'].includes(tagLower)) resolvedType = 'person';
+    else if (tagLower === 'fictionalcharacter') resolvedType = 'character';
+    else if (tagLower === 'location') resolvedType = 'location';
+    else if (tagLower === 'artwork') resolvedType = 'artwork';
+    else if (['eventlink', 'historicaleventlink', 'evenementhistorique', 'événementhistorique'].includes(tagLower)) resolvedType = 'event';
+    else if (['conceptlink', 'conceptlien', 'glossary'].includes(tagLower)) resolvedType = 'concept';
+    else if (['theoremlink', 'theoremelien', 'théorèmelien'].includes(tagLower)) resolvedType = 'theorem';
+    else if (['institutionlink', 'institutionlien'].includes(tagLower)) resolvedType = 'institution';
+    else if (['specieslink', 'specieslien', 'especelien', 'espècelien', 'organismelien'].includes(tagLower)) resolvedType = 'species';
+    else if (['chemicallink', 'chemicallien', 'moleculeslien', 'moleculelien', 'chimielien'].includes(tagLower)) resolvedType = 'chemical';
+    else if (['celestiallink', 'celestiallien', 'corpsceleste', 'corpscéleste', 'astrolien'].includes(tagLower)) resolvedType = 'celestial';
+    uniqueQueries.set(queryName, resolvedType);
+  }
+
+  // Fire all lookups concurrently
+  const wikiDetailsMap = new Map<string, WikiDetails | null>();
+  await Promise.all(
+    Array.from(uniqueQueries.entries()).map(async ([queryName, resolvedType]) => {
+      try {
+        const details = await resolveWikiDetails(queryName, resolvedType, lang);
+        wikiDetailsMap.set(queryName, details);
+      } catch (err) {
+        console.error(`[enrichEntityTagsWithWikipedia] Error resolving "${queryName}":`, err);
+        wikiDetailsMap.set(queryName, null);
+      }
+    })
+  );
+  // ─────────────────────────────────────────────────────────────────────────
+
   for (const item of tagMatches) {
     enriched += content.substring(lastIndex, item.index);
     lastIndex = item.index + item.fullMatch.length;
@@ -5527,36 +5623,40 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
 
     if (queryName) {
       try {
-        const details = await resolveWikiDetails(queryName, resolvedType, lang);
+        // Use pre-fetched result from the parallel fan-out above; fall back to
+        // a direct call only for tags that were skipped (already fully enriched).
+        const details = wikiDetailsMap.has(queryName)
+          ? wikiDetailsMap.get(queryName)!
+          : await resolveWikiDetails(queryName, resolvedType, lang);
         if (details) {
           let newAttrs = item.attrsString.trim();
 
           const finalUrl = urlVal || details.url;
           if (finalUrl) {
             if (tagLower === 'glossary') {
-              newAttrs = newAttrs.replace(/\\b(wikipediaUrl|wikipedia|url|href)=\"[^\"]+\"/gi, '').trim();
+              newAttrs = newAttrs.replace(/\b(wikipediaUrl|wikipedia|url|href)=["'][^"']*["']/gi, '').trim();
               newAttrs += ` wikipediaUrl="${finalUrl}"`;
             } else {
-              newAttrs = newAttrs.replace(/\\b(url|href|wikipediaUrl|wikipedia)=\"[^\"]+\"/gi, '').trim();
+              newAttrs = newAttrs.replace(/\b(url|href|wikipediaUrl|wikipedia)=["'][^"']*["']/gi, '').trim();
               newAttrs += ` url="${finalUrl}"`;
             }
           }
 
           const finalDesc = descVal || details.summary || details.description;
           if (finalDesc) {
-            const escDesc = finalDesc.replace(/\"/g, '&quot;').replace(/\\n/g, ' ').trim();
+            const escDesc = finalDesc.replace(/"/g, '&quot;').replace(/\n/g, ' ').trim();
             if (tagLower === 'glossary') {
-              newAttrs = newAttrs.replace(/\\b(definition|description)=\"[^\"]+\"/gi, '').trim();
+              newAttrs = newAttrs.replace(/\b(definition|description)=["'][^"']*["']/gi, '').trim();
               newAttrs += ` definition="${escDesc}"`;
             } else {
-              newAttrs = newAttrs.replace(/\\bdescription=\"[^\"]+\"/gi, '').trim();
+              newAttrs = newAttrs.replace(/\bdescription=["'][^"']*["']/gi, '').trim();
               newAttrs += ` description="${escDesc}"`;
             }
           }
 
           const finalDates = datesVal || details.dates;
           if (finalDates) {
-            newAttrs = newAttrs.replace(/\\b(dates|lifespan)=\"[^\"]+\"/gi, '').trim();
+            newAttrs = newAttrs.replace(/\b(dates|lifespan)=["'][^"']*["']/gi, '').trim();
             newAttrs += ` dates="${finalDates}"`;
           }
 

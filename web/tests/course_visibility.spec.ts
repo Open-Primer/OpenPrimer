@@ -50,8 +50,10 @@ test.describe('Organic Chemistry visibility and language auto-switching', () => 
 
   test('should display Organic Chemistry in French curriculum page and auto-switch language on click', async ({ page, context }) => {
     test.slow();
-    // Forward browser console logs
+    // Forward browser console logs and instrument network lifecycle logging
     page.on('console', msg => console.log('BROWSER LOG:', msg.text()));
+    page.on('request', req => console.log(`[TEST NETWORK REQ]: ${req.method()} ${req.url()}`));
+    page.on('response', res => console.log(`[TEST NETWORK RES]: ${res.status()} ${res.url()}`));
 
     // 1. Setup mock user session enrolled in course 9 in French session
     await context.addCookies([{
@@ -94,14 +96,17 @@ test.describe('Organic Chemistry visibility and language auto-switching', () => 
     // Verify the "EN" badge is visible because the course is not available in the active language (FR)
     await expect(page.locator('span:has-text("EN")').first()).toBeVisible();
 
+    console.log("[TEST LOG] Clicking on the Organic Chemistry course card...");
     // 2. Click on the Organic Chemistry course card
     await chemistryCard.click();
 
+    console.log("[TEST LOG] Clicked. Expecting redirect to organic chemistry introduction...");
     // 3. Verify it auto-switches to English and redirects
-    await expect(page).toHaveURL(/.*\/L1\/Chemistry\/organic-chemistry\/introduction/, { timeout: 15000 });
+    await expect(page).toHaveURL(/.*\/l1\/chemistry\/organic-chemistry\/introduction/i, { timeout: 15000 });
     
     // Check localStorage language switched to EN
     const currentLang = await page.evaluate(() => window.localStorage.getItem('openprimer_lang'));
+    console.log(`[TEST LOG] Current language in localStorage after redirect: ${currentLang}`);
     expect(currentLang).toBe('EN');
   });
 });

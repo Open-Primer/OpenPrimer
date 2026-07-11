@@ -135,6 +135,32 @@ This lesson covers:
         error: null
       };
     }
+    if (courseSlug.toLowerCase() === 'test_widgets' && lessonSlug.toLowerCase() === 'evaluations_quiz') {
+      return {
+        data: {
+          course_slug: courseSlug,
+          lesson_slug: lessonSlug,
+          lang: lang.toLowerCase(),
+          title: "4. Évaluations, Quiz & Feedback Interactifs",
+          content: `---
+title: "4. Évaluations, Quiz & Feedback Interactifs"
+subject: "Computer_Science"
+level: "L1"
+module: "Sandbox de Test"
+order: 4
+---
+# 4. Évaluations, Quiz & Feedback Interactifs
+
+<EssayEvaluation 
+  prompt="Expliquez la différence fondamentale entre les protocoles de communication TCP et UDP, en détaillant la notion de connexion, de contrôle de flux et de congestion, ainsi que leurs cas d'usage respectifs." 
+  gradingSystem="0/20" 
+  subject="Réseaux Informatiques" 
+/>
+`
+        },
+        error: null
+      };
+    }
     if (typeof window !== 'undefined') {
       const stored = window.localStorage.getItem('openprimer_lessons');
       if (stored) {

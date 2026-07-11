@@ -2256,6 +2256,15 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
   if (!widgets.references || !Array.isArray(widgets.references)) {
     widgets.references = [];
   }
+  if (!widgets.interactiveComponents || !Array.isArray(widgets.interactiveComponents)) {
+    widgets.interactiveComponents = [];
+  }
+  if (!widgets.whatsNext) {
+    widgets.whatsNext = { steps: [] };
+  }
+  if (!widgets.conclusionSummary) {
+    widgets.conclusionSummary = { items: [] };
+  }
 
   // Pre-process goingFurther items to construct bibliographic references if author/year are present
   if (widgets.goingFurther && Array.isArray(widgets.goingFurther.items)) {
@@ -2826,11 +2835,20 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     content = content.trim() + referencesStr;
   }
 
-  // Replace unresolved suffix-augmented inline interactive elements (RealPerson, ConceptLink, Glossary) with fallback tags
-  content = content.replace(/\[\[\s*WIDGET\s*:\s*(RealPerson|HistoricalPerson|ConceptLink|Glossary|Biography|Image|Video|Audio|Mermaid|Quiz|SolvedExercise|UnsolvedExercise|FillInBlanks)\s*:\s*([^:\s\]]+)\s*(?::\s*([^\]]*?))?\s*\]\]/gi, (match, type, id, topic) => {
+  // Replace unresolved suffix-augmented block widgets (Image, CustomFigure, Video, Audio, Mermaid, ClimateImpactMap)
+  // with self-closing tags carrying a `description` prop so that renumberFiguresAndCaptions can process them correctly.
+  const blockWidgetTypes = /^(Image|CustomFigure|Video|Audio|Mermaid|ClimateImpactMap|climate_impact_map)$/i;
+  content = content.replace(/\[\[\s*WIDGET\s*:\s*([^:\s\]]+)\s*:\s*([^:\s\]]+)\s*(?::\s*([^\]]*?))?\s*\]\]/gi, (match, type, id, topic) => {
+    const canonicalType = /^climate_impact_map$/i.test(type) ? 'ClimateImpactMap' : type;
+    if (blockWidgetTypes.test(type)) {
+      const description = topic ? topic.trim() : id.replace(/_/g, ' ');
+      const safeDesc = description.replace(/"/g, '&quot;');
+      return `<${canonicalType} id="${id}" description="${safeDesc}" />`;
+    }
+    // Inline hover-card widgets: emit non-self-closing tags
     const displayVal = topic ? topic.trim() : id.replace(/_/g, ' ');
     const cleanDisplay = displayVal.replace(/"/g, '&quot;');
-    return `<${type} id="${id}" name="${cleanDisplay}" term="${cleanDisplay}">${displayVal}</${type}>`;
+    return `<${canonicalType} id="${id}" name="${cleanDisplay}" term="${cleanDisplay}">${displayVal}</${canonicalType}>`;
   });
 
   // Clean up any remaining unresolved [[WIDGET:...]] placeholders
@@ -4247,13 +4265,13 @@ ${formattedCatalogList || 'None pre-existing.'}
 To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
 You are REQUIRED to include:
 - At least 2-3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
-- At least 1-2 block widgets/media (using [[WIDGET:Image:id]], [[WIDGET:Mermaid:id]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], or [[WIDGET:Video:id]]) placed on separate blank lines.
+- At least 1-2 block widgets/media (using [[WIDGET:Image:id:description]], [[WIDGET:CustomFigure:id:description]], [[WIDGET:Mermaid:id:description]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], or [[WIDGET:Video:id:description]]) placed on separate blank lines.
 Choose from the following options:
 1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
-2. [[WIDGET:Image:unique_id]] - For relevant paintings, historical photos, maps, diagrams, or illustrations. (e.g. [[WIDGET:Image:prise_bastille]])
-3. [[WIDGET:Video:unique_id]] - For relevant documentaries, video archives, or animations. (e.g. [[WIDGET:Video:revolution_francaise]])
-4. [[WIDGET:Audio:unique_id]] - For audio speeches, narrations, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits]])
-5. [[WIDGET:Mermaid:unique_id]] - For timelines, flowcharts, or structural diagrams. (e.g. [[WIDGET:Mermaid:timeline_causes]])
+2. [[WIDGET:Image:unique_id:description]] (or [[WIDGET:CustomFigure:unique_id:description]]) - For relevant paintings, historical photos, maps, diagrams, or illustrations. Note: in the generated MDX component catalog, this maps to the CustomFigure component. (e.g. [[WIDGET:Image:prise_bastille:La prise de la Bastille le 14 juillet 1789]])
+3. [[WIDGET:Video:unique_id:description]] - For relevant documentaries, video archives, or animations. (e.g. [[WIDGET:Video:revolution_francaise:Documentaire sur les grandes étapes de la Révolution française]])
+4. [[WIDGET:Audio:unique_id:description]] - For audio speeches, narrations, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits:Enregistrement sonore de la Déclaration des droits]])
+5. [[WIDGET:Mermaid:unique_id:description]] - For timelines, flowcharts, or structural diagrams. (e.g. [[WIDGET:Mermaid:timeline_causes:Chronologie des causes de la Révolution]])
 6. [[WIDGET:Quiz:unique_id]] - For formative multiple-choice quizzes to verify student comprehension.
 7. [[WIDGET:SolvedExercise:unique_id]] - For step-by-step resolved exercises, coding snippets, or analytical case studies.
 8. [[WIDGET:UnsolvedExercise:unique_id]] - For unsolved application exercises or practice questions.
@@ -4262,7 +4280,7 @@ Choose from the following options:
 11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
 12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
 
-Please write them exactly in this anchor format [[WIDGET:Type:unique_id]] (or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
+Please write them exactly in this anchor format [[WIDGET:Type:unique_id:description]] (or [[WIDGET:Type:unique_id]] where description is not applicable, or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
 
 ---
 
@@ -4282,8 +4300,10 @@ ${bIdx > 0 ? `Below is the text generated in the previous blocks. Do NOT repeat 
 5. NO WIDGET ANCHORS INSIDE LISTS OR TABLES. Place them on separate blank lines.
 6. Captions of images or Mermaid diagrams must NOT contain figure prefixes (like 'Figure 1:', 'Image A -'). CAPTIONS MUST ONLY contain the descriptive prose.
 7. ACADEMIC REFERENCES CITATION MANDATE: You MUST actively cite the references listed under "### GLOBAL CONTEXT:" (if any) throughout the prose. Cite them inline using the format [[WIDGET:Citation:1]], [[WIDGET:Citation:2]], etc., where [[WIDGET:Citation:1]] maps to the first reference in the Global Context list, [[WIDGET:Citation:2]] to the second, and so on. Absolute prohibition on raw HTML/JSX tags (like <sup> or <a>) or brackets (like [1], [ref1]) for citations in the text. Exclusively use [[WIDGET:Citation:id]] anchors. Do not define a bibliography section here; simply cite them inline in this format.
+8. MANDATORY DESCRIPTION FOR MEDIA WIDGETS: For all media/visual widgets (including Image, CustomFigure, Video, Audio, and Mermaid), you MUST append the description/caption as the third parameter in the widget anchor: [[WIDGET:Type:id:description]]. Absolute prohibition on placing external descriptions, captions, or comments (such as "*Description: ...*", "Caption: ...", "Légende: ...") directly in the narrative prose outside the anchor.
+9. ABSOLUTE PROHIBITION ON RAW MERMAID DIAGRAMS. Never write raw Mermaid diagram code (e.g. wrapped in \`\`\`mermaid ... \`\`\`) directly in the narrative prose. Instead, you MUST only generate a widget anchor like \`[[WIDGET:Mermaid:id:description]]\` on a separate blank line, describing what the diagram should display in the description. The actual Mermaid diagram code will be generated later by the Widgets Architect (Agent 3b).
 ${pronunciationMandate}
-${bIdx === blocks.length - 1 ? `8. Since this is the LAST block, you MUST end with the ## Conclusion section containing at least two comprehensive academic paragraphs, and all conclusion widgets in this exact order:
+${bIdx === blocks.length - 1 ? `10. Since this is the LAST block, you MUST end with the ## Conclusion section containing at least two comprehensive academic paragraphs, and all conclusion widgets in this exact order:
   [[WIDGET:conclusionSummary]]
   [[WIDGET:whatsNext]]
   [[WIDGET:goingFurther]]
@@ -4312,10 +4332,11 @@ ${cleanedBlockText}
 Check checkpoints:
 1. Zero-placeholders.
 2. Accurate academic density and level-appropriate language.
-3. Strict MDX/JSX safety (absolutely no raw custom component or custom JSX/HTML tags like <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup> inline in prose. All interactive elements and special links must strictly use the [[WIDGET:id]] anchor format. For citations/references, they MUST strictly use the [[WIDGET:Citation:num]] anchor format, e.g. [[WIDGET:Citation:1]]. Reject any block containing raw HTML citation tags or raw bracketed citation anchors like [ref1], [1] in text).
+3. Strict MDX/JSX safety (absolutely no raw custom component or custom JSX/HTML tags like <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup> inline in prose. All interactive elements and special links must strictly use the [[WIDGET:id]] anchor format. For citations/references, they MUST strictly use the [[WIDGET:Citation:num]] anchor format, e.g. [[WIDGET:Citation:1]]. Reject any block containing raw HTML citation tags or raw bracketed citation anchors like [ref1], [1] in text. Reject any block containing raw Mermaid diagram code (e.g. wrapped in \`\`\`mermaid ... \`\`\`). All diagrams must be anchored as [[WIDGET:Mermaid:id:description]] anchors).
 4. No figure prefixes like "Figure 1:" in visual captions.
-5. Presence of pedagogical widgets: Check that the block contains at least 2-3 inline hover-cards (ConceptLink, Glossary, RealPerson) and at least 1-2 block widgets (Image, Mermaid, ComparisonSlider, InteractiveDiagram, DataChart, Video) as anchors. If completely missing, reject the block.
-${bIdx === blocks.length - 1 ? `6. Valid ## Conclusion section with at least two paragraphs and the required conclusion widgets.` : ''}
+5. NO EXTERNAL WIDGET CAPTIONS/DESCRIPTIONS IN NARRATIVE PROSE: REJECT the block if there are any external descriptions, comments, or caption text (such as "*Description: ...*", "Caption: ...", "Légende: ...") placed directly in the narrative prose outside, above, or below a widget anchor (like Image, CustomFigure, Video, Audio, Mermaid, etc.). The description must be strictly inside the anchor itself as the third parameter (e.g. [[WIDGET:Image:id:description]] or [[WIDGET:CustomFigure:id:description]] or [[WIDGET:Video:id:description]] or [[WIDGET:Audio:id:description]] or [[WIDGET:Mermaid:id:description]]).
+6. Presence of pedagogical widgets: Check that the block contains at least 2-3 inline hover-cards (ConceptLink, Glossary, RealPerson) and at least 1-2 block widgets (Image, CustomFigure, Mermaid, ComparisonSlider, InteractiveDiagram, DataChart, Video) as anchors. If completely missing, reject the block.
+${bIdx === blocks.length - 1 ? `7. Valid ## Conclusion section with at least two paragraphs and the required conclusion widgets.` : ''}
 
 Your audit must be in dual-mode:
 - **"isGlobalRevision" MUST ONLY be set to true if the issues are widespread and catastrophic** (completely unparseable structure, severe length deficiency, or total failure of the block narrative requiring a complete full-text rewrite). If so, provide a comprehensive "globalCritique".
@@ -4413,7 +4434,8 @@ We need to repair specific sections of the lesson narrative "${item.title}" (Blo
 
 [CRITICAL] RICH MARKDOWN TABLES AND MERMAID DIAGRAMS (MANDATORY FOR UNIVERSITY LEVELS):
 - If the academic level is University/Higher Education (L1, L2, L3, M1, M2):
-  * Ensure that if the section or heading is criticized for lacking structured comparative data or visual flows, you design and insert 1 to 2 rich Markdown tables (using standard \`| Column 1 | Column 2 |\` format) and/or 1 to 2 Mermaid diagrams (wrapped in standard triple-backticks \`\`\`mermaid ... \`\`\`) to visually model the concepts.
+  * Ensure that if the section or heading is criticized for lacking structured comparative data or visual flows, you design and insert 1 to 2 rich Markdown tables (using standard \`| Column 1 | Column 2 |\` format) and/or 1 to 2 Mermaid diagrams.
+  * ABSOLUTE PROHIBITION ON RAW MERMAID CODE: Never write raw Mermaid diagram code (e.g. wrapped in \`\`\`mermaid ... \`\`\`) in the text. Instead, you MUST only insert a widget anchor like \`[[WIDGET:Mermaid:id:description]]\` on a separate blank line, describing exactly what the diagram should model. The actual Mermaid diagram code will be generated later by the Widgets Architect (Agent 3b).
 
 CONTEXT:
 Course: "${correctedCourseName}" | Level: "${getDescriptiveLevelForPrompt(levelInput)}" | Language: "${targetLang.toUpperCase()}"
@@ -4623,7 +4645,14 @@ Do NOT wrap your JSON response in markdown code blocks.`;
       };
       lessonStats.widgetBlockAttempts.push(widgetBlock1Entry);
 
-      while (!block1Approved && block1Iteration < maxBlock1Iterations) {
+      if (isTerminalEvaluation) {
+        block1Approved = true;
+        widgetBlock1Entry.approved = true;
+        parsedWidgets.prerequisites = null;
+        parsedWidgets.diagnosticQuiz = null;
+        parsedWidgets.learningObjectives = null;
+      } else {
+        while (!block1Approved && block1Iteration < maxBlock1Iterations) {
         block1Iteration++;
         lessonStats.widgetsAttempts++;
         widgetBlock1Entry.attempts = block1Iteration;
@@ -4710,7 +4739,8 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
         parsedWidgets.learningObjectives = block1Parsed.learningObjectives;
       }
 
-      // --- Block 2: Narrative / Interactive Components ---
+
+      }      // --- Block 2: Narrative / Interactive Components ---
       let block2Approved = false;
       let block2Iteration = 0;
       const maxBlock2Iterations = 3;
@@ -4973,7 +5003,15 @@ Return ONLY a valid JSON object matching this schema:
 \\\`\\\`\\\`
 Do NOT wrap your JSON response in markdown code blocks.`;
 
-      while (!block3Approved && block3Iteration < maxBlock3Iterations) {
+      if (isTerminalEvaluation) {
+        block3Approved = true;
+        widgetBlock3Entry.approved = true;
+        parsedWidgets.conclusionSummary = '';
+        parsedWidgets.whatsNext = null;
+        parsedWidgets.goingFurther = null;
+        parsedWidgets.glossary = [];
+      } else {
+        while (!block3Approved && block3Iteration < maxBlock3Iterations) {
         block3Iteration++;
         lessonStats.widgetsAttempts++;
         widgetBlock3Entry.attempts = block3Iteration;
@@ -5062,7 +5100,8 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
       }
 
 
-      // --- Block 4: Evaluation & Bibliography References ---
+
+      }      // --- Block 4: Evaluation & Bibliography References ---
       let block4Approved = false;
       let block4Iteration = 0;
       const maxBlock4Iterations = 3;
@@ -5086,8 +5125,10 @@ Language: "${targetLang.toUpperCase()}"
 Citation Style: "${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}"
 
 You must define the following JSON properties:
-1. "finalEvaluation": ${isTerminalEvaluation ? 'A comprehensive course-level final exam. Provide a Quiz containing exactly 15 questions covering the entire course.' : 'A lesson-level final quiz. Provide a Quiz containing 5-10 questions covering this lesson.'}
-2. "references": An array of 3-5 authoritative academic bibliography entries in the requested citation style.
+1. "finalEvaluation": ${isTerminalEvaluation ? 'A comprehensive course-level final exam. Provide a Quiz containing exactly 15 questions covering the entire course. Do not use any hover card tags like RealPerson, ConceptLink, etc., inside quiz questions or options.' : 'A lesson-level final quiz. Provide a Quiz containing 5-10 questions covering this lesson.'}
+2. "references": ${isTerminalEvaluation ? 'An empty array ([]) due to the No-Ref policy.' : 'An array of 3-5 authoritative academic bibliography entries in the requested citation style.'}
+
+${isTerminalEvaluation ? 'SPECIAL INSTRUCTION: Prohibit references, citations, glossaries, and hover cards on this page. Media (images/audio/video) or Mermaid diagrams are strictly prohibited unless they are functional to the assessment itself (i.e. used directly inside the quiz questions or options as a building block for the question itself). Do not include any decorative or non-essential media/diagrams.' : ''}
 
 Return ONLY a valid JSON object matching this schema:
 \\\`\\\`\\\`json
@@ -5135,6 +5176,9 @@ Ensure:
 2. Quizzes are mathematically/scientifically accurate.
 3. No HTML or custom Hover-Card tags inside quiz strings.
 4. Absolutely ZERO placeholders or generic filler text (like "Option A", "Option B", "Option", etc.) are allowed in the quiz questions or options. All questions and options must contain actual high-quality academic content in the target language. Reject if any question has dummy options.
+5. If this is a terminal evaluation (isTerminalEvaluation is ${isTerminalEvaluation}), the "references" array must be strictly empty ([]).
+6. If this is a terminal evaluation, no media (images, video, audio) or Mermaid diagrams are allowed in the quiz questions/explanations unless they are absolutely functional to the assessment itself (e.g. diagram-based logic puzzles). Decorative images or non-essential diagrams must be rejected.
+7. If this is a terminal evaluation, no hover cards (RealPerson, ConceptLink, Glossary) are allowed in the quiz questions/explanations.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 \`\`\`json
@@ -5190,6 +5234,68 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
       }
 
       if (block4Parsed) {
+        if (isTerminalEvaluation) {
+          block4Parsed.references = [];
+          if (block4Parsed.finalEvaluation) {
+            const cleanText = (str: string): string => {
+              if (!str) return '';
+              let cleaned = str;
+              const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)';
+              const entityRegex = new RegExp('<(' + entityTagsPattern + ')\\b[^>]*?>([\\s\\S]*?)<\\/\\1>', 'gi');
+              for (let i = 0; i < 3; i++) {
+                cleaned = cleaned.replace(entityRegex, '$2');
+              }
+              cleaned = cleaned.replace(new RegExp('<(' + entityTagsPattern + ')\\b[^>]*?\\/>', 'gi'), '');
+              cleaned = cleaned.replace(/\[\[\s*WIDGET\s*:\s*(?:Citation|Reference|Ref)\s*:\s*\d+\s*\]\]/gi, '');
+              cleaned = cleaned.replace(/sup\s*>\s*<a\b[^>]*?id="ref-src-\d+"[^>]*?>\s*\d+\s*<\/a>\s*<\/sup>/gi, '');
+              cleaned = cleaned.replace(/\[ref[-_]?\s*(\d+)\]/gi, '');
+              cleaned = cleaned.replace(/sup\s*>\s*\[?(\d+)\]?\s*<\/sup>/gi, '');
+              return cleaned;
+            };
+
+            const fe = block4Parsed.finalEvaluation;
+            if (fe.props) {
+              if (fe.props.prompt) fe.props.prompt = cleanText(fe.props.prompt);
+              if (fe.props.subject) fe.props.subject = cleanText(fe.props.subject);
+              if (Array.isArray(fe.props.questions)) {
+                fe.props.questions = fe.props.questions.map((q: any) => {
+                  const newQ = { ...q };
+                  if (newQ.q) newQ.q = cleanText(newQ.q);
+                  if (newQ.question) newQ.question = cleanText(newQ.question);
+                  if (newQ.explanation) newQ.explanation = cleanText(newQ.explanation);
+                  if (Array.isArray(newQ.options)) {
+                    newQ.options = newQ.options.map((o: any) => {
+                      if (typeof o === 'string') return cleanText(o);
+                      if (o && typeof o === 'object') {
+                        return { ...o, text: cleanText(o.text || '') };
+                      }
+                      return o;
+                    });
+                  }
+                  return newQ;
+                });
+              }
+            }
+            if (Array.isArray(fe.questions)) {
+              fe.questions = fe.questions.map((q: any) => {
+                const newQ = { ...q };
+                if (newQ.q) newQ.q = cleanText(newQ.q);
+                if (newQ.question) newQ.question = cleanText(newQ.question);
+                if (newQ.explanation) newQ.explanation = cleanText(newQ.explanation);
+                if (Array.isArray(newQ.options)) {
+                  newQ.options = newQ.options.map((o: any) => {
+                    if (typeof o === 'string') return cleanText(o);
+                    if (o && typeof o === 'object') {
+                      return { ...o, text: cleanText(o.text || '') };
+                    }
+                    return o;
+                  });
+                }
+                return newQ;
+              });
+            }
+          }
+        }
         parsedWidgets.finalEvaluation = block4Parsed.finalEvaluation;
         parsedWidgets.references = block4Parsed.references;
       }

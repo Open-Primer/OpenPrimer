@@ -825,6 +825,28 @@ export const mockCourses: MockCourse[] = [
       DE: { title: "Grundstudium L1 Naturwissenschaften", description: "Grundstudiums-Curriculum der Naturwissenschaften im 1. Jahr. Kombiniert Klassische Mechanik (Newton), Integral- und Differentialrechnung sowie Zellbiologie." },
       ZH: { title: "一年级理科公共核心课程", description: "一年级理科公共核心课程，涵盖经典力学（牛顿）、微积分与积分学以及细胞生物学，适合医学、工程及基础科学专业学生。" }
     }
+  },
+  {
+    id: 9999,
+    title: "Sandbox de Test",
+    slug: "test_widgets",
+    level: "L1",
+    subject: "Computer_Science",
+    description: "Sandbox for widgets testing",
+    languages: ["fr", "en"],
+    langs: ["fr", "en"],
+    ects: 0,
+    popularity: 100,
+    is_active: true,
+    isActive: true,
+    archivingLevel: 0,
+    created_at: new Date(2026, 5, 21).toISOString(),
+    isCurriculum: false,
+    childCourses: [],
+    translations: {
+      FR: { title: "Sandbox de Test", description: "Sandbox pour tester les widgets" },
+      EN: { title: "Test Sandbox", description: "Sandbox for testing widgets" }
+    }
   }
 ];
 

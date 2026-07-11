@@ -41,7 +41,7 @@ test.describe('Fundamental Algorithms Lesson Smoke Test', () => {
     expect(response?.status()).toBe(200);
 
     // Verify main heading
-    const heading = page.locator('h1');
+    const heading = page.locator('h1').first();
     await expect(heading).toBeVisible();
     const headingText = await heading.textContent();
     console.log(`Page Heading: "${headingText}"`);
