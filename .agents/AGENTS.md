@@ -77,4 +77,23 @@ For tasks outputting strict schemas, JSON arrays, key-value mappings, and progra
 Translation and localization tasks must maintain absolute structure, mapping exact MDX components and attributes, while translating only the natural text.
 - **Temperature**: `0.1`
 
+---
 
+## 6. Directory Governance & Script Sandbox Rules
+
+To prevent accidental deletion of critical system files or deployment scripts (such as `prebuild.js` or database utilities), all AI agents must strictly adhere to the following directory boundaries:
+
+### A. The AI Sandbox Directory (`web/scratch/` and `scratch/`)
+- **Primary AI Sandbox**: `web/scratch/` is the **only** directory where AI agents are allowed to write, test, execute, or manage temporary, draft, or experimental scripts. 
+- **Freedom of Use**: Agents may create, edit, or delete files in `web/scratch/` without restriction. This directory is treated as transient and can be completely wiped at any time.
+
+### B. Production Web Scripts Directory (`web/scripts/` - RESTRICTED)
+- **Role**: This directory contains **production-critical machine scripts** used by the Next.js server, CI/CD, or deployment pipelines (e.g., `prebuild.js`, `export_db.js`, `import_mdx.js`, `export_mdx.js`).
+- **Strict Prohibitions**:
+  - **No Temporary Files**: Under no circumstances should any agent write temporary, test, or experimental files to `web/scripts/`.
+  - **No Automated Mass-Cleanups**: Agents must never run automated cleanups, wildcard deletions, or script sweeps in `web/scripts/`.
+  - **No Overwriting Build Assets**: Critical build and utilities scripts must never be moved or deleted unless explicitly requested.
+
+### C. Human-Facing Admin Scripts Directory (`scripts/` at root - RESTRICTED)
+- **Role**: This directory is reserved for human-facing admin tools, wrapper scripts, and high-level platform scripts.
+- **Strict Prohibition**: Agents must never use the root `scripts/` directory as a sandbox for temporary files.
