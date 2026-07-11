@@ -161,6 +161,41 @@ order: 4
         error: null
       };
     }
+    if (courseSlug.toLowerCase() === 'geographie_physique_et_climatologie' && lessonSlug.toLowerCase() === 'evaluation-terminale') {
+      return {
+        data: {
+          course_slug: courseSlug,
+          lesson_slug: lessonSlug,
+          lang: lang.toLowerCase(),
+          title: "Évaluation Terminale",
+          content: `---
+title: "Évaluation Terminale"
+subject: "Géographie physique et climatologie"
+level: "L3"
+module: "Évaluation Terminale"
+order: 7
+summative: true
+---
+
+<Quiz isFinal={true} durationLimit={300} limit={1}>
+    <Question q="Quel est le principal objectif de la geographie physique?" explanation="La geographie physique se concentre sur l'etude des processus naturels et des formes de la surface terrestre, y compris le climat, les sols, la vegetation et les eaux.">
+  <Option text="L'etude des populations humaines et de leurs cultures." correct={false} />
+  <Option text="L'analyse des systèmes economiques mondiaux." correct={false} />
+  <Option text="L'etude des processus naturels et des formes de la surface terrestre." correct={true} />
+  <Option text="La cartographie des frontieres politiques." correct={false} />
+</Question>
+    <Question q="Lequel des éléments suivants NE fait PAS partie du système climatique terrestre?" explanation="Le système climatique terrestre comprend l'atmosphere, l'hydrosphere, la cryosphere, la lithosphere et la biosphere. Les satellites sont des outils d'observation, pas des composants intrinseques du système.">
+  <Option text="L'atmosphere" correct={false} />
+  <Option text="Les oceans (hydrosphere)" correct={false} />
+  <Option text="Les satellites d'observation" correct={true} />
+  <Option text="Les calottes glaciaires (cryosphere)" correct={false} />
+</Question>
+</Quiz>
+`
+        },
+        error: null
+      };
+    }
     if (typeof window !== 'undefined') {
       const stored = window.localStorage.getItem('openprimer_lessons');
       if (stored) {

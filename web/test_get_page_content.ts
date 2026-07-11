@@ -25,7 +25,7 @@ if (fs.existsSync(envLocalPath)) {
 async function run() {
   const { getPageContent } = await import('./src/lib/content.ts');
 
-  const slug = ["L1", "algorithmique_fondamentale", "algorithmique_fondamentale", "art-resolution-problemes-genese-algorithmes"];
+  const slug = ["L1", "histoire_contemporaine", "histoire_contemporaine", "sources-temps-present-histoire-contemporaine"];
   
   console.log("--- Testing getPageContent with lang = 'fr' ---");
   try {

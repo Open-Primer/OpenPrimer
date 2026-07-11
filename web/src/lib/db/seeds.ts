@@ -847,6 +847,28 @@ export const mockCourses: MockCourse[] = [
       FR: { title: "Sandbox de Test", description: "Sandbox pour tester les widgets" },
       EN: { title: "Test Sandbox", description: "Sandbox for testing widgets" }
     }
+  },
+  {
+    id: 355,
+    title: "Géographie physique et climatologie",
+    slug: "geographie_physique_et_climatologie",
+    level: "L3",
+    subject: "Geography",
+    description: "Syllabus de géographie physique et climatologie.",
+    languages: ["fr"],
+    langs: ["fr"],
+    ects: 6,
+    popularity: 500,
+    is_active: true,
+    isActive: true,
+    archivingLevel: 0,
+    created_at: new Date(2026, 5, 21).toISOString(),
+    isCurriculum: false,
+    childCourses: [],
+    translations: {
+      FR: { title: "Géographie physique et climatologie", description: "Syllabus de géographie physique et climatologie." },
+      EN: { title: "Physical Geography and Climatology", description: "Syllabus of physical geography and climatology." }
+    }
   }
 ];
 

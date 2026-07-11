@@ -500,6 +500,20 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
           path: '/' + [level, subject, courseSlug, 'newtons_laws_of_motion'].join('/')
         }];
       }
+      if (courseSlug.toLowerCase() === 'geographie_physique_et_climatologie') {
+        return [{
+          name: "Évaluation Terminale",
+          type: 'file',
+          path: '/' + [level, subject, courseSlug, 'evaluation-terminale'].join('/')
+        }];
+      }
+      if (courseSlug.toLowerCase() === 'test_widgets') {
+        return [{
+          name: "4. Évaluations, Quiz & Feedback Interactifs",
+          type: 'file',
+          path: '/' + [level, subject, courseSlug, 'evaluations_quiz'].join('/')
+        }];
+      }
       return [{
         name: "Introduction",
         type: 'file',
@@ -571,6 +585,28 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         const processedContent = preprocessMdx(repairedBody, lang, isSummative, lessonSlug, dbLesson.order);
         const { resolvedContent } = await resolvePrecompiledAnchors(processedContent, lang);
         const enrichedEntities = await enrichEntityTagsWithWikipedia(resolvedContent, lang);
+
+        // Write enriched entity attributes back to DB asynchronously.
+        // We patch the attrs into the original repairedBody (pre-preprocessMdx) so the
+        // stored content stays processable on next load without double-transformation.
+        if (enrichedEntities !== resolvedContent) {
+          const patchedSource = patchEntityAttrsIntoSource(repairedBody, enrichedEntities);
+          if (patchedSource !== repairedBody) {
+            const { supabaseAdmin } = require('./supabase');
+            const enrichedDbContent = matter.stringify(patchedSource, meta || {});
+            supabaseAdmin
+              .from('lessons')
+              .update({ content: enrichedDbContent })
+              .ilike('course_slug', courseSlug)
+              .ilike('lesson_slug', lessonSlug)
+              .eq('lang', lang.toLowerCase())
+              .then(({ error }: any) => {
+                if (error) console.error('[Entity Enrichment] DB write-back failed:', error);
+                else console.log(`[Entity Enrichment] Wrote enriched entity attrs to DB for ${courseSlug}/${lessonSlug}`);
+              });
+          }
+        }
+
         const enriched = await enrichGlossaryWithWikipediaLinks(enrichedEntities, lang);
         return {
           meta: {
@@ -623,6 +659,26 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         const processedContent = preprocessMdx(repairedBody, fallbackLesson.lang || lang, isSummative, lessonSlug, fallbackLesson.order);
         const { resolvedContent } = await resolvePrecompiledAnchors(processedContent, fallbackLesson.lang || lang);
         const enrichedEntities = await enrichEntityTagsWithWikipedia(resolvedContent, fallbackLesson.lang || lang);
+
+        // Write enriched entity attributes back to DB asynchronously (fallback lang).
+        if (enrichedEntities !== resolvedContent) {
+          const patchedSource = patchEntityAttrsIntoSource(repairedBody, enrichedEntities);
+          if (patchedSource !== repairedBody) {
+            const { supabaseAdmin } = require('./supabase');
+            const enrichedDbContent = matter.stringify(patchedSource, meta || {});
+            supabaseAdmin
+              .from('lessons')
+              .update({ content: enrichedDbContent })
+              .ilike('course_slug', courseSlug)
+              .ilike('lesson_slug', lessonSlug)
+              .eq('lang', fallbackLesson.lang)
+              .then(({ error }: any) => {
+                if (error) console.error('[Entity Enrichment Fallback] DB write-back failed:', error);
+                else console.log(`[Entity Enrichment Fallback] Wrote enriched entity attrs to DB for ${courseSlug}/${lessonSlug}`);
+              });
+          }
+        }
+
         const enriched = await enrichGlossaryWithWikipediaLinks(enrichedEntities, fallbackLesson.lang || lang);
         return {
           meta: {
@@ -3279,7 +3335,7 @@ function deduplicateOriginalQuotes(mdx: string): string {
 }
 
 export function preprocessMdx(content: string, lang: string = 'en', isSummative: boolean = false, lessonSlug?: string, lessonOrder?: number): string {
-  if (lessonSlug === 'evaluation-finale' || lessonSlug === 'final-evaluation') {
+  if (lessonSlug === 'evaluation-finale' || lessonSlug === 'final-evaluation' || lessonSlug === 'evaluation-terminale') {
     isSummative = true;
   }
   // Apply systematic healing first so high-fidelity content and components are injected automatically
@@ -5515,7 +5571,44 @@ export async function resolveWikiDetails(
   return null;
 }
 
+/**
+ * Patches enriched entity tag attributes (url, description, dates) back into
+ * the original source body (pre-preprocessMdx) by matching tags on their name/term.
+ * Returns the patched source, or the original if nothing changed.
+ * This lets us persist enriched attrs to DB without storing post-processed content.
+ */
+function patchEntityAttrsIntoSource(sourceBody: string, enrichedBody: string): string {
+  const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)';
+  const tagRegex = new RegExp(`<(${entityTagsPattern})\\b([^>]*?)>([\\s\\S]*?)<\\/\\1>`, 'gi');
+
+  // Build a map from (tagName:queryName) → enriched attrs string
+  const enrichedAttrsMap = new Map<string, string>();
+  let m: RegExpExecArray | null;
+  while ((m = tagRegex.exec(enrichedBody)) !== null) {
+    const tagName = m[1];
+    const attrsStr = m[2];
+    const nameMatch = attrsStr.match(/\b(?:name|term|word)="([^"]+)"/i);
+    const queryName = nameMatch ? nameMatch[1] : m[3].trim();
+    if (queryName) {
+      enrichedAttrsMap.set(`${tagName.toLowerCase()}:${queryName.toLowerCase()}`, attrsStr);
+    }
+  }
+  if (enrichedAttrsMap.size === 0) return sourceBody;
+
+  // Apply enriched attrs to matching tags in sourceBody
+  const sourceRegex = new RegExp(`<(${entityTagsPattern})\\b([^>]*?)>([\\s\\S]*?)<\\/\\1>`, 'gi');
+  return sourceBody.replace(sourceRegex, (fullMatch, tagName, attrsStr, innerText) => {
+    const nameMatch = attrsStr.match(/\b(?:name|term|word)="([^"]+)"/i);
+    const queryName = nameMatch ? nameMatch[1] : innerText.trim();
+    const key = `${tagName.toLowerCase()}:${queryName.toLowerCase()}`;
+    const enrichedAttrs = enrichedAttrsMap.get(key);
+    if (!enrichedAttrs || enrichedAttrs === attrsStr) return fullMatch;
+    return `<${tagName}${enrichedAttrs}>${innerText}</${tagName}>`;
+  });
+}
+
 export async function enrichEntityTagsWithWikipedia(content: string, lang: string): Promise<string> {
+
   const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)';
   const tagRegex = new RegExp(`<(${entityTagsPattern})\\b([^>]*?)>([\\s\\S]*?)<\\/\\1>`, 'gi');
 
@@ -5561,6 +5654,8 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
     const urlVal  = parseAttr(item.attrsString, 'url') || parseAttr(item.attrsString, 'href') || parseAttr(item.attrsString, 'wikipediaUrl') || parseAttr(item.attrsString, 'wikipedia');
     const queryName = (nameVal || item.innerText || '').trim();
     if (!queryName) continue;
+    // Skip if already flagged unresolved — validation already failed in repairMediaOnRestitution
+    if (item.attrsString.includes('unresolved={true}') || item.attrsString.includes('unresolved="true"')) continue;
     // Skip if the tag already has both URL and description — no need to fetch
     if (urlVal && descVal) continue;
     if (uniqueQueries.has(queryName)) continue;
@@ -5606,6 +5701,15 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
     const datesVal = parseAttr(item.attrsString, 'dates') || parseAttr(item.attrsString, 'lifespan');
 
     const queryName = (nameVal || item.innerText || "").trim();
+
+    if (item.attrsString.includes('unresolved={true}') || item.attrsString.includes('unresolved="true"')) {
+      enriched += item.fullMatch;
+      continue;
+    }
+    if (urlVal && descVal) {
+      enriched += item.fullMatch;
+      continue;
+    }
 
     let resolvedType = 'entity';
     const tagLower = item.tagName.toLowerCase();

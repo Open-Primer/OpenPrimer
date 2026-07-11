@@ -112,7 +112,7 @@ async function run() {
       console.warn(`⚠️ Widgets JSON file not found at ${widgetsPath}. Stitched with empty widgets.`);
     }
 
-    const isTerminalEvaluation = slug === 'evaluation-finale' || slug === 'final-evaluation';
+    const isTerminalEvaluation = slug === 'evaluation-finale' || slug === 'final-evaluation' || slug === 'evaluation-terminale';
     const isSummative = meta.summative === 'true' || meta.summative === true;
 
     // 1. Stitch narrative and widgets

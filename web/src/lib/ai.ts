@@ -833,9 +833,10 @@ const lessonWidgetsSchema = {
                   duration: { type: "string", description: "Estimated duration, e.g. '1:30' or '2:45'." },
                   unresolved: { type: "boolean", description: "Whether the resource is unresolved/needs backend matching. Defaults to true." },
                   alt: { type: "string", description: "Short accessibility text." },
-                  description: { type: "string", description: "Detailed description of the audio track's content, narration, or pronunciation details." }
+                  description: { type: "string", description: "Detailed description of the audio track's content, narration, or pronunciation details." },
+                  searchQuery: { type: "string", description: "Canonical search query to find this audio resource." }
                 },
-                required: ["title"]
+                required: ["title", "description", "searchQuery"]
               }
             },
             required: ["id", "componentType", "sectionAnchor", "props"]
@@ -854,9 +855,11 @@ const lessonWidgetsSchema = {
                   id: { type: "string", description: "Optional video platform ID." },
                   provider: { type: "string", enum: ["youtube", "vimeo", "direct"] },
                   duration: { type: "string", description: "Estimated duration, e.g. '3:15'." },
-                  unresolved: { type: "boolean", description: "Whether the resource is unresolved/needs backend matching. Defaults to true." }
+                  unresolved: { type: "boolean", description: "Whether the resource is unresolved/needs backend matching. Defaults to true." },
+                  description: { type: "string", description: "Detailed description of the video's content, documentary topic, or lecture segment." },
+                  searchQuery: { type: "string", description: "Canonical search query to find this video on platforms like YouTube." }
                 },
-                required: ["title"]
+                required: ["title", "description", "searchQuery"]
               }
             },
             required: ["id", "componentType", "sectionAnchor", "props"]
@@ -3419,7 +3422,7 @@ You must follow these strict structural guidelines:
    * The penultimate item in the 'lessons' array (the last core teaching lesson) must be a core content lesson, but its technical depth/description must specify that it also integrates a complete **general conclusion** for the entire course, synthesizing all main lessons and concepts.
 
 3. **Terminal Evaluation (Detached Evaluation Chapter):**
-   * The ultimate item in the 'lessons' array must be the Terminal Evaluation (title: "Évaluation Terminale" or "Final Evaluation" or equivalent in the target language "${targetLang}", slug: "evaluation-finale" or "final-evaluation").
+   * The ultimate item in the 'lessons' array must be the Terminal Evaluation (title: "Évaluation Terminale" or "Final Evaluation" or equivalent in the target language "${targetLang}", slug: "evaluation-finale" or "final-evaluation" or "evaluation-terminale").
    * This chapter is **not** a standard lesson. It must contain **only** the assessment/questions/summative validation itself (with no new lesson content, no narrative text, and no core textbook content).
 
 ---
@@ -4012,9 +4015,9 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
         return resultText;
       };
 
-      const isTerminalEvaluation = item.slug === 'evaluation-finale' || item.slug === 'final-evaluation';
+      const isTerminalEvaluation = item.slug === 'evaluation-finale' || item.slug === 'final-evaluation' || item.slug === 'evaluation-terminale';
       // Penultimate lesson = immediately before the terminal evaluation
-      const terminalIdx = lessonsList.findIndex((l: any) => l.slug === 'evaluation-finale' || l.slug === 'final-evaluation');
+      const terminalIdx = lessonsList.findIndex((l: any) => l.slug === 'evaluation-finale' || l.slug === 'final-evaluation' || l.slug === 'evaluation-terminale');
       const penultimateIdx = terminalIdx !== -1 ? terminalIdx - 1 : originalSyllabusLessonsLength - 2;
       const isPenultimateLesson = !isTerminalEvaluation && realIndex === penultimateIdx;
       let approvedNarrativeText = '';
@@ -4746,6 +4749,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
       const maxBlock2Iterations = 3;
       let block2Feedback = '';
       let block2Parsed: any = null;
+      let block5Parsed: any = null;
 
       const widgetBlock2Entry = {
         blockName: "Block 2: Interactive",
@@ -4757,16 +4761,24 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 
       const activeCustomAnchors = activeAnchors.filter(a => !['prerequisites', 'diagnosticQuiz', 'learningObjectives', 'conclusionSummary', 'whatsNext', 'goingFurther', 'finalEvaluation', 'references'].includes(a.type));
 
+      const shouldSplit = activeCustomAnchors.length > 3;
+      const block2CustomAnchors = shouldSplit 
+        ? activeCustomAnchors.slice(0, Math.ceil(activeCustomAnchors.length / 2))
+        : activeCustomAnchors;
+      const block5CustomAnchors = shouldSplit
+        ? activeCustomAnchors.slice(Math.ceil(activeCustomAnchors.length / 2))
+        : [];
+
       if (activeCustomAnchors.length === 0 || isTerminalEvaluation) {
         await appendTaskLog(`[AI GENERATOR] No custom narrative widget anchors found. Skipping Widget Block 2.`);
         block2Approved = true;
         widgetBlock2Entry.approved = true;
       } else {
         const block2Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
-Your task is to design the JSON object for the interactive components of the lesson.
+Your task is to design the JSON object for the interactive components of the lesson${shouldSplit ? ' (Part 1 of the interactive elements)' : ''}.
 
 The narrative text contains the following custom widget anchors that you MUST define:
-${activeCustomAnchors.map(a => `- Anchor: [[WIDGET:${a.type}:${a.id}${a.topic ? `:${a.topic}` : ''}]] (Type: "${a.type}", ID: "${a.id}", Topic: "${a.topic || ''}")`).join('\n')}
+${block2CustomAnchors.map(a => `- Anchor: [[WIDGET:${a.type}:${a.id}${a.topic ? `:${a.topic}` : ''}]] (Type: "${a.type}", ID: "${a.id}", Topic: "${a.topic || ''}")`).join('\n')}
 
 ---
 
@@ -4960,6 +4972,244 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 
       if (block2Parsed && Array.isArray(block2Parsed.interactiveComponents)) {
         parsedWidgets.interactiveComponents = block2Parsed.interactiveComponents;
+      }
+
+      // --- Block 5: Narrative / Interactive Components (Part 2) ---
+      if (shouldSplit && block5CustomAnchors.length > 0) {
+        let block5Approved = false;
+        let block5Iteration = 0;
+        const maxBlock5Iterations = 3;
+        let block5Feedback = '';
+
+        const widgetBlock5Entry = {
+          blockName: "Block 5: Interactive Part 2",
+          attempts: 0,
+          rejections: 0,
+          approved: false
+        };
+        lessonStats.widgetBlockAttempts.push(widgetBlock5Entry);
+
+        const block5Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+Your task is to design the JSON object for the interactive components of the lesson (Part 2 of the interactive elements).
+
+The narrative text contains the following custom widget anchors that you MUST define in this block:
+${block5CustomAnchors.map(a => `- Anchor: [[WIDGET:${a.type}:${a.id}${a.topic ? `:${a.topic}` : ''}]] (Type: "${a.type}", ID: "${a.id}", Topic: "${a.topic || ''}")`).join('\n')}
+
+---
+
+### CATALOG AND GUIDELINES:
+${dynamicCatalogList}
+
+### REQUIRED PROPS STRUCTURE per componentType:
+1. "Biography":
+   - "name": (string) Full name of the person.
+   - "dates": (string) Lifespan dates, e.g. "1723-1790" or "1856-1939".
+   - "description": (string) Detailed biographical summary focusing on their contributions (8-12 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their English or French Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the biography on Wikipedia. MANDATORY.
+2. "Image":
+   - "description": (string) Detailed search/generation description for the image (at least 2-3 sentences of visual instructions). Do NOT generate sequential figure prefixes.
+   - "alt": (string) Short description for accessibility.
+   - "caption": (string) A detailed, italicized caption explaining academic relevance. Do NOT generate sequential figure numbers.
+   - "title": (string) Short title of the image.
+   - "searchQuery": (string) Highly canonical 1 to 3 search words (e.g. 'Claudio Monteverdi', 'Prise de la Bastille') to search in archives.
+3. "Video":
+   - "title": (string) Title of the video documentary or lecture segment.
+   - "duration": (string) Estimated duration, e.g. "3:15".
+   - "description": (string) Detailed description of the video's content, documentary topic, or lecture segment. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find this video on platforms like YouTube. MANDATORY.
+4. "Audio":
+   - "title": (string) Short descriptive title for the audio.
+   - "duration": (string) e.g. "1:30".
+   - "description": (string) Detailed description/narration text. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find this audio resource. MANDATORY.
+5. "Quiz":
+   - "limit": (integer) Number of questions to display.
+   - "questions": (array of objects) Each object must have:
+     - "q": (string) The question card text.
+     - "explanation": (string) Extremely concise, punchy explanation of the correct choice.
+     - "options": (array of objects) Each option must have:
+       - "text": (string) Option text.
+       - "correct": (boolean) Whether correct.
+6. "SolvedExercise":
+   - "title": (string) Exercise title.
+   - "problem": (string) The markdown-formatted problem statement.
+   - "solution": (string) Detailed step-by-step solution.
+7. "UnsolvedExercise":
+   - "title": (string) Exercise title.
+   - "problem": (string) Markdown problem statement.
+   - "correctAnswer": (string) The correct analytical answer or formula.
+8. "FillInBlanks":
+   - "sentence": (string) Sentence containing one or more blanks represented by five underscores (_____).
+   - "answer": (string) Correct comma-separated answers.
+9. "Mermaid":
+   - "chart": (string) Valid Mermaid chart notation starting with graph/sequenceDiagram/etc.
+10. "RealPerson" or "HistoricalPerson":
+   - "name": (string) Full name of the person (should match the Anchor Topic if provided).
+   - "description": (string) Wikipedia-style hover card tooltip summary of this person (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the person on Wikipedia. MANDATORY.
+11. "ConceptLink":
+   - "name": (string) Name of the concept (should match the Anchor Topic if provided).
+   - "description": (string) Wikipedia-style hover card tooltip summary of this concept (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the concept on Wikipedia. MANDATORY.
+12. "EventLink", "HistoricalEventLink", "EvenementHistorique", or "ÉvénementHistorique":
+   - "name": (string) Name of the event (should match the Anchor Topic if provided).
+   - "description": (string) Wikipedia-style hover card tooltip summary of this event (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the event on Wikipedia. MANDATORY.
+13. "Location":
+   - "name": (string) Name of the location (should match the Anchor Topic if provided).
+   - "description": (string) Wikipedia-style hover card tooltip summary of this location (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the location on Wikipedia. MANDATORY.
+14. "Glossary":
+   - "term": (string) Glossary vocabulary term.
+   - "definition": (string) Detailed vocabulary definition (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the term on Wikipedia. MANDATORY.
+
+You must define the "interactiveComponents" array containing one object for each anchor listed above.
+For each component:
+- "id": Must match the ID from the anchor.
+- "componentType": Must match the Type from the anchor.
+- "sectionAnchor": The markdown heading "## Section Name" where this widget is placed in the narrative.
+- "props": The specific properties required for the widget type as described above.
+
+Return ONLY a valid JSON object matching this schema:
+\`\`\`json
+{
+  "interactiveComponents": [
+    {
+      "id": "string",
+      "componentType": "string",
+      "sectionAnchor": "string",
+      "props": {}
+    }
+  ]
+}
+\`\`\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+        // Build list of existing interactive components for AI prompt exclusion
+        const existingCourseComponents: any[] = [];
+        try {
+          const courseSlugForFetch = cleanPathSegment(correctedCourseName);
+          const { data: dbLessons } = await supabaseAdmin
+            .from('lessons')
+            .select('content')
+            .eq('course_slug', courseSlugForFetch)
+            .neq('lesson_slug', item.slug)
+            .eq('lang', targetLang.toLowerCase());
+
+          if (dbLessons) {
+            for (const les of dbLessons) {
+              const extracted = extractInteractiveComponentsFromMdx(les.content || '');
+              existingCourseComponents.push(...extracted);
+            }
+          }
+        } catch (err) {
+          console.warn(`[AI GENERATOR] Failed to fetch other lessons for prompt exclusions:`, err);
+        }
+        
+        const allExistingComponents = [...existingCourseComponents, ...sharedCourseInteractiveComponents];
+        const excludedWidgetsSummary = allExistingComponents.map(comp => {
+          const type = comp.componentType || comp.type || '';
+          const nameOrTitle = comp.props?.name || comp.props?.title || comp.props?.question || comp.props?.sentence || comp.id || '';
+          return `- Type: ${type}, Identifier/Title: "${nameOrTitle}"`;
+        }).filter((val, idx, self) => self.indexOf(val) === idx).join('\n');
+
+        while (!block5Approved && block5Iteration < maxBlock5Iterations) {
+          block5Iteration++;
+          lessonStats.widgetsAttempts++;
+          widgetBlock5Entry.attempts = block5Iteration;
+          await appendTaskLog(`[AI GENERATOR] Generating Widget Block 5 (Attempt #${block5Iteration})...`);
+
+          let block5PromptWithFeedback = block5Prompt;
+          if (excludedWidgetsSummary) {
+            block5PromptWithFeedback += `\n\n⚠️ EXCLUDED WIDGETS (Do NOT duplicate or recreate these as they already exist in other lessons of this course):\n${excludedWidgetsSummary}`;
+          }
+          if (block5Feedback) {
+            block5PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block5Feedback}"\nPlease fix these issues and regenerate.`;
+          }
+
+          try {
+            block5Parsed = await generateAndParseWidgetBlock(block5PromptWithFeedback, widgetBlock2Schema, 'Block 5 Interactive Part 2');
+          } catch (e) {
+            await appendTaskLog(`[AI GENERATOR] Widget Block 5 failed to parse. Retrying...`);
+            continue;
+          }
+
+          // Critique block 5
+          await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 5...`);
+          const block5CriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 5:
+${JSON.stringify(block5Parsed, null, 2)}
+
+Ensure:
+1. Every anchor specified in the prompt is mapped.
+2. Captions and descriptions have no sequential figure prefixes like "Figure 1:".
+3. Biography component details (dates, Wikipedia link) are correct.
+4. ZERO placeholders, draft markers, bracketed texts, or template values are present. Biographies, interactive elements, figures, and diagrams must be fully populated with real, high-quality, professional educational content in the target language. Absolutely no fake URLs, lorem ipsum text, or incomplete fields. Reject the block if any placeholder or skeletal text is detected.
+
+Return ONLY a valid JSON object matching widgetBlockAuditSchema:
+\`\`\`json
+{
+  "approved": boolean,
+  "critique": "detailed feedback explaining what to fix globally, or empty if approved",
+  "fields": [
+    // If approved is false, list ONLY the fields/keys that are rejected. Do NOT include approved fields.
+    {
+      "field": "name of the field (e.g., 'interactiveComponents')",
+      "approved": false,
+      "critique": "detailed feedback explaining what to fix in this specific field"
+    }
+  ]
+}
+\`\`\`
+
+[REJECT-ONLY REPORTING MANDATE]
+1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
+2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
+
+          if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block5_${item.slug}_iter${block5Iteration}.md`, block5PromptWithFeedback);
+          if (block5Parsed) {
+            if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block5_${item.slug}_iter${block5Iteration}.json`, JSON.stringify(block5Parsed, null, 2));
+          }
+          if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block5_critique_${item.slug}_iter${block5Iteration}.md`, block5CriticPrompt);
+
+          const criticJsonStr = await callAIEngine(block5CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
+          if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block5_${item.slug}_iter${block5Iteration}.json`, criticJsonStr);
+          const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
+          let auditResult = { approved: true, critique: '', fields: [] as any[] };
+          try {
+            auditResult = safeJsonParse(cleanCritic, 'Widget Block 5 Audit Parsing');
+          } catch (e) {
+            console.warn(`[AI GENERATOR] Failed to parse Block 5 critique:`, e);
+          }
+
+          if (auditResult.approved) {
+            await appendTaskLog(`[AI GENERATOR] Widget Block 5 approved by Critique Agent!`);
+            block5Approved = true;
+            widgetBlock5Entry.approved = true;
+          } else {
+            let critiqueMsg = auditResult.critique || 'Widget Block 5 rejected.';
+            if (auditResult.fields && auditResult.fields.length > 0) {
+              critiqueMsg += '\nDetailed errors:\n' + auditResult.fields.map((f: any) => `- Field "${f.field}": ${f.critique}`).join('\n');
+            }
+            await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 5 REJECTED. Critique: "${critiqueMsg}".`);
+            lessonStats.widgetsRejections++;
+            widgetBlock5Entry.rejections++;
+            block5Feedback = critiqueMsg;
+          }
+        }
+      }
+
+      if (block5Parsed && Array.isArray(block5Parsed.interactiveComponents)) {
+        parsedWidgets.interactiveComponents = [
+          ...(parsedWidgets.interactiveComponents || []),
+          ...block5Parsed.interactiveComponents
+        ];
       }
 
       // --- Block 3: Conclusion, What's Next & Glossary ---

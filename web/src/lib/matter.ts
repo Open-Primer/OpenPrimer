@@ -13,6 +13,14 @@ export const sanitizeFrontmatterYaml = (str: string): string => {
   if (!match) return str;
   
   const yamlBlock = match[1];
+  try {
+    // If the original YAML is already valid, do not modify/sanitize it!
+    yaml.load(yamlBlock);
+    return str;
+  } catch (e) {
+    // If it's invalid, fall back to our naive regex-based cleaning
+  }
+  
   const lines = yamlBlock.split(/\r?\n/);
   const cleanedLines = lines.map((line: string) => {
     const colonIndex = line.indexOf(':');

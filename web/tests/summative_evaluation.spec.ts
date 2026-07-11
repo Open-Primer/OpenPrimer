@@ -5,18 +5,26 @@ const BASE_URL = 'http://localhost:3000';
 test.describe('Summative Evaluation Gating and Warnings', () => {
 
   test.beforeEach(async ({ page, context }) => {
-    await context.addCookies([{
-      name: 'openprimer_lang',
-      value: 'FR',
-      url: BASE_URL
-    }]);
+    await context.addCookies([
+      {
+        name: 'openprimer_lang',
+        value: 'FR',
+        url: BASE_URL
+      },
+      {
+        name: 'op_allow_sandbox',
+        value: 'true',
+        url: BASE_URL
+      }
+    ]);
     await page.addInitScript(() => {
       window.localStorage.setItem('openprimer_lang', 'FR');
+      window.localStorage.setItem('op_allow_sandbox', 'true');
     });
   });
 
   test('should display the single-attempt warning checklist on the start screen for a summative quiz/essay', async ({ page }) => {
-    await page.goto(`${BASE_URL}/fr/l3/geographie_physique_et_climatologie/evaluation-terminale`);
+    await page.goto(`${BASE_URL}/fr/l7/geographie_physique_et_climatologie/evaluation-terminale`);
 
     const evaluationHeading = page.locator('h3:has-text("Évaluation sommative")').first();
     await expect(evaluationHeading).toBeVisible({ timeout: 10000 });
@@ -30,7 +38,7 @@ test.describe('Summative Evaluation Gating and Warnings', () => {
   });
 
   test('start screen shows evaluation mode info card with format, time, and retry policy', async ({ page }) => {
-    await page.goto(`${BASE_URL}/fr/l3/geographie_physique_et_climatologie/evaluation-terminale`);
+    await page.goto(`${BASE_URL}/fr/l7/geographie_physique_et_climatologie/evaluation-terminale`);
 
     // The mode info card should show evaluation format label
     const modeLabel = page.locator("text=Format de l'évaluation").first();
@@ -42,16 +50,6 @@ test.describe('Summative Evaluation Gating and Warnings', () => {
   });
 
   test('offline-blocked: shows service unavailable screen and no grade when AI returns 503', async ({ page, context }) => {
-    // Enable sandbox mode/mock provider for this test
-    await context.addCookies([{
-      name: 'op_allow_sandbox',
-      value: 'true',
-      url: BASE_URL
-    }]);
-    await page.addInitScript(() => {
-      window.localStorage.setItem('op_allow_sandbox', 'true');
-    });
-
     // Intercept the evaluate API and return an offline 503 response
     await page.route('**/api/tutor/evaluate', async (route) => {
       await route.fulfill({

@@ -103,6 +103,10 @@ async function run() {
 
   // History / contemporary
   await runForSlug('histoire_contemporaine', 'sources-temps-present-histoire-contemporaine', 'fr');
+
+  // History / contemporary - Run 2 (Warm process cache test)
+  console.log('\n--- WARM IN-PROCESS CACHE RUN ---');
+  await runForSlug('histoire_contemporaine', 'sources-temps-present-histoire-contemporaine', 'fr');
 }
 
 run().then(() => process.exit(0)).catch(err => {

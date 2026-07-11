@@ -901,7 +901,8 @@ async function searchCascade(
   queryEnglish: string,
   lang: string,
   discipline?: string,
-  validationDesc?: string
+  validationDesc?: string,
+  allowUnsplash: boolean = true
 ): Promise<{ url: string; sourceLabel: string; sourceUrl?: string } | null> {
   // 1. Wikidata P18 — canonical, most reliable for named entities
   const wdImage = await fetchWikidataImage(query, lang);
@@ -1021,13 +1022,15 @@ async function searchCascade(
   }
 
   // 9. Unsplash fallback
-  const unsplashResult = await fetchUnsplashImage(queryEnglish);
-  if (unsplashResult) {
-    return {
-      url: unsplashResult.url,
-      sourceLabel: unsplashResult.sourceLabel,
-      sourceUrl: unsplashResult.url
-    };
+  if (allowUnsplash) {
+    const unsplashResult = await fetchUnsplashImage(queryEnglish);
+    if (unsplashResult) {
+      return {
+        url: unsplashResult.url,
+        sourceLabel: unsplashResult.sourceLabel,
+        sourceUrl: unsplashResult.url
+      };
+    }
   }
 
   return null;
@@ -1047,8 +1050,8 @@ export async function resolveImageFromSources(
   const queryEnglish = lang.startsWith('en') ? query : await optimizeQueryWithGemini(originalQuery, lang, true);
   console.log(`[MEDIA-RESOLVER] Original query: "${originalQuery}" | Optimized search query: "${query}" | English query: "${queryEnglish}"`);
 
-  // Try specific search first
-  let result = await searchCascade(query, queryEnglish, lang, discipline, validationDesc);
+  // Try specific search first — skip Unsplash (allowUnsplash = false) to prevent aberrant lifestyle stock photos for specific queries
+  let result = await searchCascade(query, queryEnglish, lang, discipline, validationDesc, false);
   if (result) {
     return result;
   }
@@ -1062,9 +1065,10 @@ export async function resolveImageFromSources(
     console.log(`[MEDIA-RESOLVER] Generic query generated: "${genericQuery}" | Optimized: "${genericOptimized}" | English: "${genericEnglish}"`);
     
     // We validate the generic image against the generic query name to make it easier to match
-    const genericResult = await searchCascade(genericOptimized, genericEnglish, lang, discipline, genericQuery);
+    // and we DO allow Unsplash here since the query is simple and generic
+    const genericResult = await searchCascade(genericOptimized, genericEnglish, lang, discipline, genericQuery, true);
     if (genericResult) {
-      console.log(`[MEDIA-RESOLVER] Generic fallback succeeded. Generating description for image: ${genericResult.url}`);
+      console.log(`[MEDIA-RESOLVER] Generic fallback succeeded. Generating description for image to align content: ${genericResult.url}`);
       const newDescription = await describeImageWithGemini(genericResult.url, lang);
       if (newDescription) {
         return {
@@ -1073,6 +1077,24 @@ export async function resolveImageFromSources(
         };
       }
       return genericResult;
+    }
+  }
+
+  // Last-resort Unsplash fallback strictly on the simplified/generic query if everything else fails
+  const finalUnsplashQuery = genericQuery || originalQuery;
+  if (finalUnsplashQuery) {
+    const finalUnsplashOptimized = await optimizeQueryWithGemini(finalUnsplashQuery, lang, true);
+    console.log(`[MEDIA-RESOLVER] Ultimate fallback to Unsplash for generic query: "${finalUnsplashOptimized}"`);
+    const unsplashResult = await fetchUnsplashImage(finalUnsplashOptimized);
+    if (unsplashResult) {
+      console.log(`[MEDIA-RESOLVER] Unsplash ultimate fallback succeeded. Generating description to align content: ${unsplashResult.url}`);
+      const newDescription = await describeImageWithGemini(unsplashResult.url, lang);
+      return {
+        url: unsplashResult.url,
+        sourceLabel: unsplashResult.sourceLabel,
+        sourceUrl: unsplashResult.url,
+        description: newDescription || undefined
+      };
     }
   }
 
@@ -2191,27 +2213,34 @@ export async function resolveAndPersistMedia(
   return updatedContent;
 }
 
+const mediaValidationCache = new Map<string, boolean>();
+
 export async function validateMediaUrl(url: string): Promise<boolean> {
   if (!url || url.includes('example.com') || url.includes('placeholder') || url.startsWith('placeholder')) {
     return false;
+  }
+  if (mediaValidationCache.has(url)) {
+    return mediaValidationCache.get(url)!;
   }
   // Local/public assets
   if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('//')) {
     try {
       const localPath = path.join(process.cwd(), 'public', url.startsWith('/') ? url : `/${url}`);
-      return fs.existsSync(localPath);
+      const exists = fs.existsSync(localPath);
+      mediaValidationCache.set(url, exists);
+      return exists;
     } catch {
       return false;
     }
   }
   try {
     const res = await fetchWithTimeout(url, { method: 'HEAD' }, 2000);
-    if (res.status === 404) {
-      return false;
-    }
-    return true;
+    const exists = res.status !== 404;
+    mediaValidationCache.set(url, exists);
+    return exists;
   } catch (err) {
     // Timeout/network issue: assume true to avoid false positive overrides
+    mediaValidationCache.set(url, true);
     return true;
   }
 }
