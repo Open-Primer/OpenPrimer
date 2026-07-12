@@ -19,6 +19,7 @@ import { DiagnosticQuiz } from './DiagnosticQuiz';
 import { AudioPlayer } from './AudioPlayer';
 import { PronunciationSandbox } from './PronunciationSandbox';
 import { References } from './References';
+import { Reference } from './Reference';
 import { BiophysicsSimulator } from './BiophysicsSimulator';
 import { LogicGateSimulator } from './LogicGateSimulator';
 import { CardSort } from './CardSort';
@@ -2463,6 +2464,7 @@ const components = {
   
   // Registering New Interactivity Widgets
   References,
+  Reference,
   Mermaid,
   FunctionPlotter,
   InteractiveDiagram,
@@ -3158,7 +3160,9 @@ function stripJsxAndRender(rawMdx: string) {
       const attrsStr = match[1];
       const optionsBlock = match[2];
       
-      const qMatch = attrsStr.match(/\bq=["']([^"']+)["']/i) || attrsStr.match(/\btext=["']([^"']+)["']/i) || attrsStr.match(/\bquestion=["']([^"']+)["']/i);
+      const qMatch = attrsStr.match(/\bq="([^"]*)"/i) || attrsStr.match(/\bq='([^']*)'/i) ||
+                     attrsStr.match(/\btext="([^"]*)"/i) || attrsStr.match(/\btext='([^']*)'/i) ||
+                     attrsStr.match(/\bquestion="([^"]*)"/i) || attrsStr.match(/\bquestion='([^']*)'/i);
       const questionText = qMatch ? qMatch[1] : 'Question';
       
       questionsText += `\n**Question ${qCount} : ${questionText}**\n`;
@@ -3169,7 +3173,7 @@ function stripJsxAndRender(rawMdx: string) {
         const optAttrsStr = optMatch[1];
         const optBody = optMatch[2] || '';
         
-        const optTextMatch = optAttrsStr.match(/\btext=["']([^"']+)["']/i);
+        const optTextMatch = optAttrsStr.match(/\btext="([^"]*)"/i) || optAttrsStr.match(/\btext='([^']*)'/i);
         const optionText = optTextMatch ? optTextMatch[1] : optBody.trim();
         
         const isCorrect = optAttrsStr.includes('correct={true}') || optAttrsStr.includes('correct="true"') || optAttrsStr.includes('correct=true');
