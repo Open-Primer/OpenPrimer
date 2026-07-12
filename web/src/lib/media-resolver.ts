@@ -1046,14 +1046,15 @@ async function searchCascade(
   }
 
   // 2. Wikipedia/Wikimedia Commons search
-  const wikiImage = await fetchWikipediaImage(query, lang);
-  if (wikiImage) {
+  const wikiImageResult = await fetchWikipediaImage(query, lang);
+  if (wikiImageResult) {
+    const wikiImage = wikiImageResult.url;
     const { valid, soft } = await validateWithSoftFallback(wikiImage, validationDesc || query, query);
     if (valid) {
       return { 
          url: wikiImage, 
          sourceLabel: 'Wikimedia Commons',
-         sourceUrl: getWikimediaPageUrl(wikiImage) || undefined,
+         sourceUrl: wikiImageResult.fallbackUrl || getWikimediaPageUrl(wikiImage) || undefined,
          isSoftValidated: soft ? true : undefined
       };
     }
@@ -1271,34 +1272,39 @@ export async function resolveImageFromSources(
 }
 
 // Media-specific search prioritising Wikimedia Commons search first, and Wikipedia Search API second with English fallback
-async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<string | null> {
+async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<{ url: string; fallbackUrl: string; pageTitle: string } | null> {
   try {
     const cleanTitle = title.trim();
     
     // Step A: Search Wikimedia Commons API (media repository) first
     const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanTitle)}&gsrnamespace=6&prop=imageinfo&iiprop=url&format=json&origin=*`;
     try {
-      const commRes = await fetchWithTimeout(commonsUrl, {}, 4000);
-      if (commRes.ok) {
-        const commJson = await commRes.json();
-        const pages = commJson.query?.pages;
-        if (pages) {
-          for (const key of Object.keys(pages)) {
-            const imgInfo = pages[key]?.imageinfo?.[0];
-            const fileUrl = imgInfo?.url;
-            if (fileUrl && (
-              fileUrl.endsWith('.jpg') || 
-              fileUrl.endsWith('.jpeg') || 
-              fileUrl.endsWith('.png') || 
-              fileUrl.endsWith('.svg') || 
-              fileUrl.endsWith('.webp')
-            )) {
-              console.log(`[WIKIMEDIA-SEARCH] Found direct media URL for "${cleanTitle}": ${fileUrl}`);
-              return fileUrl;
-            }
-          }
-        }
-      }
+       const commRes = await fetchWithTimeout(commonsUrl, {}, 4000);
+       if (commRes.ok) {
+         const commJson = await commRes.json();
+         const pages = commJson.query?.pages;
+         if (pages) {
+           for (const key of Object.keys(pages)) {
+             const imgInfo = pages[key]?.imageinfo?.[0];
+             const fileUrl = imgInfo?.url;
+             if (fileUrl && (
+               fileUrl.endsWith('.jpg') || 
+               fileUrl.endsWith('.jpeg') || 
+               fileUrl.endsWith('.png') || 
+               fileUrl.endsWith('.svg') || 
+               fileUrl.endsWith('.webp')
+             )) {
+               console.log(`[WIKIMEDIA-SEARCH] Found direct media URL for "${cleanTitle}": ${fileUrl}`);
+               const pageUrl = getWikimediaPageUrl(fileUrl) || `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(fileUrl.substring(fileUrl.lastIndexOf('/') + 1))}`;
+               return {
+                 url: fileUrl,
+                 fallbackUrl: pageUrl,
+                 pageTitle: cleanTitle
+               };
+             }
+           }
+         }
+       }
     } catch (err) {
       console.warn(`[WIKIMEDIA-SEARCH] Direct Commons search failed for "${cleanTitle}":`, err);
     }
@@ -1332,7 +1338,14 @@ async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<
     const pageId = Object.keys(pages)[0];
     if (pageId === '-1') return null;
     
-    return pages[pageId]?.original?.source || pages[pageId]?.thumbnail?.source || null;
+    const sourceUrl = pages[pageId]?.original?.source || pages[pageId]?.thumbnail?.source;
+    if (!sourceUrl) return null;
+    const fallbackUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/\s/g, '_'))}`;
+    return {
+      url: sourceUrl,
+      fallbackUrl: fallbackUrl,
+      pageTitle: pageTitle
+    };
   } catch (err) {
     console.warn(`[MEDIA-RESOLVER] fetchWikipediaImage failed for "${title}":`, err);
     return null;
@@ -2552,11 +2565,12 @@ async function searchMediaImageCascade(
     }
   }
 
-  const wikiUrl = await fetchWikipediaImage(queryName, lang);
-  if (wikiUrl) {
+  const wikiImageResult = await fetchWikipediaImage(queryName, lang);
+  if (wikiImageResult) {
+    const wikiUrl = wikiImageResult.url;
     const isValid = await validateImageWithGemini(wikiUrl, queryName);
     if (isValid) {
-      const fallbackUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(queryName.replace(/\s/g, '_'))}`;
+      const fallbackUrl = wikiImageResult.fallbackUrl;
       return { url: wikiUrl, fallbackUrl, sourceLabel: 'Wikimedia Commons' };
     } else {
       console.log(`[MEDIA-RESOLVER] Wikipedia page image rejected by Gemini for query "${queryName}". Trying fallback...`);

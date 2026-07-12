@@ -4224,6 +4224,13 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
                             correctedCourseName.toLowerCase().includes('obligations') ||
                             correctedCourseName.toLowerCase().includes('responsabilité');
 
+        const isAbstractDiscipline = isLawCourse ||
+                            (courseContext.discipline || '').toLowerCase().includes('philosophy') ||
+                            (courseContext.discipline || '').toLowerCase().includes('philology') ||
+                            (courseContext.discipline || '').toLowerCase().includes('literature') ||
+                            correctedCourseName.toLowerCase().includes('philosophie') ||
+                            correctedCourseName.toLowerCase().includes('littérature');
+
         if (isLawCourse) {
           lawMandate = `
 =============================================================================
@@ -4448,8 +4455,11 @@ ${formattedCatalogList || 'None pre-existing.'}
 ### PEDAGOGICAL WIDGETS MANDATE (CRITICAL):
 To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
 You are REQUIRED to include:
-- At least 2-3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
+${isAbstractDiscipline ? `- At least 2-3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
+- DECORATIVE or generic images/photos (like [[WIDGET:Image]] or [[WIDGET:CustomFigure]]) are STRICTLY PROHIBITED for abstract textual disciplines like Law or Philosophy to maintain professional academic quality! If there is no highly specific real-world historical illustration (like a portrait or map), do NOT insert random decorative images. Instead, you are only encouraged to include highly structured block widgets, such as comparative/analytical tables, flowchart diagrams (using [[WIDGET:Mermaid:id:description]]), or quizzes ([[WIDGET:Quiz:id]]).
+- ABSOLUTE PROHIBITION ON HORIZONTAL SEPARATOR LINES (like \`---\` or \`___\`) immediately below or above any widget.` : `- At least 2-3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
 - At least 1-2 block widgets/media (using [[WIDGET:Image:id:description]], [[WIDGET:CustomFigure:id:description]], [[WIDGET:Mermaid:id:description]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], or [[WIDGET:Video:id:description]]) placed on separate blank lines.
+- ABSOLUTE PROHIBITION ON HORIZONTAL SEPARATOR LINES (like \`---\` or \`___\`) immediately below or above any widget.`}
 Choose from the following options:
 1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
 2. [[WIDGET:Image:unique_id:description]] (or [[WIDGET:CustomFigure:unique_id:description]]) - For relevant paintings, historical photos, maps, diagrams, or illustrations. Note: in the generated MDX component catalog, this maps to the CustomFigure component. (e.g. [[WIDGET:Image:prise_bastille:La prise de la Bastille le 14 juillet 1789]])
@@ -4522,7 +4532,7 @@ Check checkpoints:
 3. Strict MDX/JSX safety (absolutely no raw custom component or custom JSX/HTML tags like <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup> inline in prose. All interactive elements and special links must strictly use the [[WIDGET:id]] anchor format. For bibliographic citations, they MUST strictly use the [[WIDGET:Reference:num]] anchor format, e.g. [[WIDGET:Reference:1]]. Reject any block containing raw HTML citation tags or raw bracketed citation anchors like [ref1], [1] in text. Reject any block containing raw Mermaid diagram code (e.g. wrapped in \`\`\`mermaid ... \`\`\`). All diagrams must be anchored as [[WIDGET:Mermaid:id:description]] anchors).
 4. No figure prefixes like "Figure 1:" in visual captions.
 5. NO EXTERNAL WIDGET CAPTIONS/DESCRIPTIONS IN NARRATIVE PROSE: REJECT the block if there are any external descriptions, comments, or caption text (such as "*Description: ...*", "Caption: ...", "Légende: ...") placed directly in the narrative prose outside, above, or below a widget anchor (like Image, CustomFigure, Video, Audio, Mermaid, etc.). The description must be strictly inside the anchor itself as the third parameter (e.g. [[WIDGET:Image:id:description]] or [[WIDGET:CustomFigure:id:description]] or [[WIDGET:Video:id:description]] or [[WIDGET:Audio:id:description]] or [[WIDGET:Mermaid:id:description]]).
-6. Presence of pedagogical widgets: Check that the block contains at least 2-3 inline hover-cards (ConceptLink, Glossary, RealPerson) and at least 1-2 block widgets (Image, CustomFigure, Mermaid, ComparisonSlider, InteractiveDiagram, DataChart, Video) as anchors. If completely missing, reject the block.
+${isAbstractDiscipline ? `6. Presence of pedagogical widgets: Check that the block contains at least 2-3 inline hover-cards (ConceptLink, Glossary, RealPerson). Ensure that there are NO decorative, random, or generic images/photos (like [[WIDGET:Image]] or [[WIDGET:CustomFigure]]) generated, and reject the block if any generic/unrelated decorative images are found. Ensure that there are NO horizontal separator lines (like \`---\`) adjacent to widgets.` : `6. Presence of pedagogical widgets: Check that the block contains at least 2-3 inline hover-cards (ConceptLink, Glossary, RealPerson) and at least 1-2 block widgets (Image, CustomFigure, Mermaid, ComparisonSlider, InteractiveDiagram, DataChart, Video) as anchors. If completely missing, reject the block.`}
 ${lawCriticMandate}
 ${bIdx === blocks.length - 1 ? `8. Valid ## Conclusion section with at least two paragraphs and the required conclusion widgets.` : ''}
 
@@ -5877,12 +5887,35 @@ async function performSectionBasedTranslation(
   apiKey: string | undefined | null,
   stats?: any
 ): Promise<{ translatedMdx: string; transSuccess: boolean; transTitle: string; registry: Record<string, any> }> {
-  const { content: isolatedContent, registry } = isolateJsxForTranslation(lesson.content);
+  let frontmatter: Record<string, any> = {};
+  let hasFrontmatter = false;
+  let remainingContent = lesson.content;
+
+  const frontmatterMatch = lesson.content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  if (frontmatterMatch) {
+    hasFrontmatter = true;
+    const rawYaml = frontmatterMatch[1];
+    remainingContent = lesson.content.substring(frontmatterMatch[0].length);
+    rawYaml.split(/\r?\n/).forEach(line => {
+      const parts = line.split(':');
+      if (parts.length >= 2) {
+        const key = parts[0].trim();
+        let val = parts.slice(1).join(':').trim();
+        if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
+        else if (val.startsWith("'") && val.endsWith("'")) val = val.slice(1, -1);
+        frontmatter[key] = val;
+      }
+    });
+  }
+
+  const { content: isolatedContent, registry } = isolateJsxForTranslation(remainingContent);
 
   // 1. Translate Title first to use as context
-  let transTitle = lesson.title;
+  let transTitle = frontmatter.title || lesson.title;
+  let transModule = frontmatter.module || '';
+
   try {
-    const promptTitle = `Translate the lesson title "${lesson.title}" to "${targetLang.toUpperCase()}". Return only the translated string.`;
+    const promptTitle = `Translate the lesson title "${transTitle}" to "${targetLang.toUpperCase()}". Return only the translated string.`;
     let transTitleSuccess = false;
     if (isVertexConfigured()) {
       try {
@@ -5893,7 +5926,7 @@ async function performSectionBasedTranslation(
         });
         if (resTitle && resTitle.ok) {
           const tJson = await resTitle.json();
-          transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
+          transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || transTitle).trim();
           transTitleSuccess = true;
           if (stats) {
             const usage = tJson.usageMetadata || {};
@@ -5919,7 +5952,7 @@ async function performSectionBasedTranslation(
         });
         if (resTitle.ok) {
           const tJson = await resTitle.json();
-          transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || lesson.title).trim();
+          transTitle = (tJson.candidates?.[0]?.content?.parts?.[0]?.text || transTitle).trim();
           transTitleSuccess = true;
           const durationMs = Date.now() - startTime;
           const usage = tJson.usageMetadata || {};
@@ -5937,6 +5970,67 @@ async function performSectionBasedTranslation(
     }
   } catch (e) {
     console.warn(`[AI GENERATOR] Title translation failed:`, e);
+  }
+
+  // 1b. Translate Module name if present
+  if (transModule) {
+    try {
+      const promptModule = `Translate the course module name "${transModule}" to "${targetLang.toUpperCase()}". Return only the translated string.`;
+      let transModuleSuccess = false;
+      if (isVertexConfigured()) {
+        try {
+          const resModule = await callVertexAI({
+            task: 'course_translation',
+            contents: [{ role: 'user', parts: [{ text: promptModule }] }],
+            generationConfig: { temperature: 0.1 }
+          });
+          if (resModule && resModule.ok) {
+            const mJson = await resModule.json();
+            transModule = (mJson.candidates?.[0]?.content?.parts?.[0]?.text || transModule).trim();
+            transModuleSuccess = true;
+            if (stats) {
+              const usage = mJson.usageMetadata || {};
+              stats.tokenMetrics.promptTokens += usage.promptTokenCount || 0;
+              stats.tokenMetrics.candidatesTokens += usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+            }
+          }
+        } catch (err) {
+          console.warn("[AI GENERATOR] Vertex module translation call failed:", err);
+        }
+      }
+      
+      if (!transModuleSuccess && apiKey) {
+        const startTime = Date.now();
+        try {
+          const compressedModule = compressPromptText(promptModule);
+          const resModule = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: compressedModule }] }]
+            })
+          });
+          if (resModule.ok) {
+            const mJson = await resModule.json();
+            transModule = (mJson.candidates?.[0]?.content?.parts?.[0]?.text || transModule).trim();
+            transModuleSuccess = true;
+            const durationMs = Date.now() - startTime;
+            const usage = mJson.usageMetadata || {};
+            const promptTokens = usage.promptTokenCount || 0;
+            const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
+            if (stats) {
+              stats.tokenMetrics.promptTokens += promptTokens;
+              stats.tokenMetrics.candidatesTokens += candidatesTokens;
+            }
+            await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedModule);
+          }
+        } catch (err) {
+          console.error(`[AI GENERATOR] AI Studio module translation fetch exception:`, err);
+        }
+      }
+    } catch (e) {
+      console.warn(`[AI GENERATOR] Module translation failed:`, e);
+    }
   }
 
   // 2. Split isolated content into sections
@@ -6044,8 +6138,27 @@ ${sectionToTranslate}`;
 
   // Reconstruct and restore JSX
   const reconstructedIsolatedMdx = reconstructMarkdown(translatedSections);
-  const translatedMdx = restoreJsxAfterTranslation(reconstructedIsolatedMdx, registry, targetLang);
+  let translatedMdx = restoreJsxAfterTranslation(reconstructedIsolatedMdx, registry, targetLang);
   
+  if (hasFrontmatter) {
+    let reconstructedFrontmatter = `---\n`;
+    reconstructedFrontmatter += `title: "${transTitle.replace(/"/g, '\\"')}"\n`;
+    if (frontmatter.subject) {
+      reconstructedFrontmatter += `subject: "${frontmatter.subject.replace(/"/g, '\\"')}"\n`;
+    }
+    if (frontmatter.level) {
+      reconstructedFrontmatter += `level: "${frontmatter.level.replace(/"/g, '\\"')}"\n`;
+    }
+    if (transModule) {
+      reconstructedFrontmatter += `module: "${transModule.replace(/"/g, '\\"')}"\n`;
+    }
+    if (frontmatter.order !== undefined) {
+      reconstructedFrontmatter += `order: ${frontmatter.order}\n`;
+    }
+    reconstructedFrontmatter += `---\n\n`;
+    translatedMdx = reconstructedFrontmatter + translatedMdx;
+  }
+
   // [FIX T6] Return registry so the critic-refine loop reuses the same JSX placeholder keys.
   return {
     translatedMdx,

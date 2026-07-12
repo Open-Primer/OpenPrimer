@@ -72,6 +72,8 @@ async function run() {
   }
 
   let exportedCount = 0;
+  const clearedFolders = new Set();
+
   for (const lesson of lessons) {
     const courseSlug = lesson.course_slug.toLowerCase();
     const mapping = courseMap[courseSlug] || { level: 'Beginner', subject: 'General' };
@@ -81,8 +83,13 @@ async function run() {
     const subjectFolder = mapping.subject;
     
     const courseFolder = path.join(CONTENT_PATH, levelFolder, subjectFolder, lesson.course_slug);
-    if (!fs.existsSync(courseFolder)) {
+    if (!clearedFolders.has(courseFolder)) {
+      if (fs.existsSync(courseFolder)) {
+        console.log(`🧹 Clearing old contents in stale course folder: ${courseFolder}`);
+        fs.rmSync(courseFolder, { recursive: true, force: true });
+      }
       fs.mkdirSync(courseFolder, { recursive: true });
+      clearedFolders.add(courseFolder);
     }
 
     const lang = (lesson.lang || 'en').toLowerCase();

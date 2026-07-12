@@ -52,6 +52,19 @@ export const LawLink = ({
   const params = useParams();
   const isFr = (language || 'en').toLowerCase().startsWith('fr');
   const [open, setOpen] = useState(false);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = () => {
+    if (timeoutId) clearTimeout(timeoutId);
+    setOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    const id = setTimeout(() => {
+      setOpen(false);
+    }, 400);
+    setTimeoutId(id);
+  };
 
   // Fallback for reference string
   const resolvedReference = reference || name || term || id || '';
@@ -111,8 +124,8 @@ export const LawLink = ({
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
         <span
-          onMouseEnter={() => setOpen(true)}
-          onMouseLeave={() => setOpen(false)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           className={cn(
             "underline transition-all duration-300",
             config.textColor,
@@ -128,9 +141,9 @@ export const LawLink = ({
           side="top"
           align="center"
           sideOffset={8}
-          className="z-50 pointer-events-auto"
-          onMouseEnter={() => setOpen(true)}
-          onMouseLeave={() => setOpen(false)}
+          className="z-50 pointer-events-auto outline-none"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
           <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -139,46 +152,56 @@ export const LawLink = ({
             transition={{ duration: 0.2, ease: "easeOut" }}
             className={cn(
               "w-80 md:w-[350px] p-5 rounded-2xl border backdrop-blur-xl shadow-2xl relative overflow-hidden bg-gradient-to-b text-slate-100",
-              config.bgGrad
+              config.bgGrad,
+              "[.theme-paper_&]:from-[#faf8f0] [.theme-paper_&]:to-[#faf8f0] [.theme-paper_&]:border-[#dbd5be] [.theme-paper_&]:text-slate-800 [.theme-paper_&]:shadow-lg"
             )}
           >
             {/* Ambient background glow of the flag/custom color */}
-            <div className={cn("absolute -top-12 -right-12 w-28 h-28 bg-gradient-to-tr opacity-10 rounded-full blur-2xl pointer-events-none", config.themeColor)} />
+            <div className={cn("absolute -top-12 -right-12 w-28 h-28 bg-gradient-to-tr opacity-10 rounded-full blur-2xl pointer-events-none", config.themeColor, "[.theme-paper_&]:opacity-5")} />
             
             {/* Header with Icon, Db Name and Jurisdiction */}
             <div className="flex items-start gap-3.5 mb-4 select-none">
-              <div className={cn("p-2 rounded-xl border flex items-center justify-center shadow-md", config.badgeBg)}>
-                <Icon className={cn("w-5 h-5", config.badgeText)} />
+              <div className={cn(
+                "p-2 rounded-xl border flex items-center justify-center shadow-md",
+                config.badgeBg,
+                "[.theme-paper_&]:bg-slate-100 [.theme-paper_&]:border-slate-200"
+              )}>
+                <Icon className={cn(
+                  "w-5 h-5",
+                  config.badgeText,
+                  `[.theme-paper_&]:text-${targetDbKey === 'fr' ? 'blue' : targetDbKey === 'us' ? 'amber' : 'emerald'}-700`
+                )} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-black tracking-wide text-white truncate">
+                  <h4 className="text-sm font-black tracking-wide text-white truncate [.theme-paper_&]:text-slate-900">
                     {resolvedReference}
                   </h4>
-                  <span className="text-[8px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded border-none bg-slate-900/40 text-slate-400">
+                  <span className="text-[8px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded border-none bg-slate-900/40 text-slate-400 [.theme-paper_&]:bg-slate-100 [.theme-paper_&]:text-slate-600">
                     {displayName}
                   </span>
                 </div>
-                <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider">
+                <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider [.theme-paper_&]:text-slate-500">
                   {jurisdiction}
                 </p>
               </div>
             </div>
 
             {/* Excerpt Body */}
-            <div className="text-xs leading-relaxed text-slate-300 mb-4 bg-slate-900/20 p-3 rounded-lg border border-slate-900/30">
+            <div className="text-xs leading-relaxed text-slate-300 mb-4 bg-slate-900/20 p-3 rounded-lg border border-slate-900/30 [.theme-paper_&]:bg-slate-50 [.theme-paper_&]:border-slate-200/60 [.theme-paper_&]:text-slate-650">
               {finalExcerpt}
             </div>
 
             {/* External Link Action Button */}
-            <div className="pt-3 border-t border-slate-800/80">
+            <div className="pt-3 border-t border-slate-800/80 [.theme-paper_&]:border-slate-200">
               <a
                 href={finalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
                   "inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider transition-colors",
-                  config.textColor
+                  config.textColor,
+                  `[.theme-paper_&]:text-${targetDbKey === 'fr' ? 'blue' : targetDbKey === 'us' ? 'amber' : 'emerald'}-700`
                 )}
               >
                 {actionText}
@@ -186,7 +209,7 @@ export const LawLink = ({
               </a>
             </div>
 
-            <Popover.Arrow className="fill-slate-900 border-none" />
+            <Popover.Arrow className="fill-slate-950 border-none [.theme-paper_&]:fill-[#faf8f0]" />
           </motion.div>
         </Popover.Content>
       </Popover.Portal>
