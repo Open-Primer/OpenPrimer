@@ -519,6 +519,26 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
           path: '/' + [level, subject, courseSlug, 'evaluations_quiz'].join('/')
         }];
       }
+      if (courseSlug.toLowerCase() === 'cryptography') {
+        const lessons = lang.toLowerCase() === 'es' ? [
+          { name: "1. Cifrados Históricos y Fundamentos", slug: "historical_ciphers" },
+          { name: "2. Cifrado Simétrico y Entropía", slug: "symmetric_algorithms" },
+          { name: "3. Criptografía de Clave Pública e Intercambio de Claves", slug: "asymmetric_key_exchange" },
+          { name: "4. El Criptosistema RSA y Firmas Digitales", slug: "asymmetric_rsa" },
+          { name: "5. Evaluación Final Sumativa", slug: "final_evaluation" }
+        ] : [
+          { name: "1. Historical Ciphers & Foundations", slug: "historical_ciphers" },
+          { name: "2. Symmetric Encryption & Entropy", slug: "symmetric_algorithms" },
+          { name: "3. Public Key Cryptography & Key Exchange", slug: "asymmetric_key_exchange" },
+          { name: "4. The RSA Cryptosystem & Digital Signatures", slug: "asymmetric_rsa" },
+          { name: "5. Final Summative Evaluation", slug: "final_evaluation" }
+        ];
+        return lessons.map(l => ({
+          name: l.name,
+          type: 'file',
+          path: '/' + [level, subject, courseSlug, l.slug].join('/')
+        }));
+      }
       return [{
         name: "Introduction",
         type: 'file',
@@ -552,7 +572,7 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
   return [];
 }
 
-export async function getPageContent(slug: string[], lang: string = 'en') {
+export async function getPageContent(slug: string[], lang: string = 'en', strict: boolean = false) {
   slug = slug.map(s => cleanPathSegment(decodeURIComponent(s)));
   if (slug.length >= 3) {
     const courseSlug = slug[2];
@@ -622,6 +642,10 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
           },
           content: enriched
         };
+      }
+
+      if (strict) {
+        return null;
       }
 
       // 2. Fallback: lesson exists in DB but in a different language — fetch any available lang
@@ -4233,6 +4257,40 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
       // 3. Clean up spaces and punctuation
       processedRest = processedRest.replace(/\s+/g, ' ').trim();
+
+      // Heuristic to handle "by [Author]" metadata suffix
+      const byRegex = /\bby\s+([A-Za-zÀ-ÿ'’.–-]+(?:\s+[A-Za-zÀ-ÿ'’.–-]+)*)/i;
+      const byMatch = processedRest.match(byRegex);
+      if (byMatch) {
+        let author = byMatch[1].trim();
+        // Clean up any trailing punctuation from author name
+        author = author.replace(/[,.;\s\-()]+$/, '').trim();
+        
+        // Fix ALL CAPS in author name (e.g. PETER -> Peter)
+        author = fixAllCaps(author);
+        
+        // Title part is everything before "by"
+        const index = processedRest.search(/\bby\s+/i);
+        let titlePart = processedRest.substring(0, index).trim();
+        titlePart = titlePart.replace(/[,.;\s\-()]+$/, '').trim();
+        
+        // Check if there is already an author before "by"
+        // If it contains a year (like 2017) or a comma, it probably has an author/metadata at the start (avoiding colon to preserve title-subtitle)
+        const hasAuthorAtStart = /,\s*/.test(titlePart) || /\b(18\d{2}|19\d{2}|20\d{2})\b/.test(titlePart);
+        
+        if (hasAuthorAtStart) {
+          // Just strip the "by [Author]" part and ensure title is capitalized properly if ALL CAPS
+          processedRest = fixAllCaps(titlePart);
+        } else {
+          // No author at start, so reformat to: Author, *Title*
+          titlePart = fixAllCaps(titlePart);
+          processedRest = `${author}, *${titlePart}*`;
+        }
+      } else {
+        // If there's no "by" match, but the text is ALL CAPS, let's fix it
+        processedRest = fixAllCaps(processedRest);
+      }
+
       processedRest = processedRest.replace(/[,;|.\s\-]+$/, '').trim();
       if (processedRest && !processedRest.endsWith('.')) {
         processedRest += '.';
@@ -4606,6 +4664,12 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
 
   let processed = mdx;
 
+  // Step -2: Strip and ignore the frontmatter block at the start of the file to protect it from translation
+  const frontmatterMatch = processed.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/);
+  if (frontmatterMatch) {
+    processed = processed.substring(frontmatterMatch[0].length);
+  }
+
   // Step -1: Isolate the references block at the end of the file to prevent translation
   const refsRegex = /(\n\n\n###?\s*(?:References|R[eé]f[eé]rences)\b[\s\S]*)$/i;
   const refsMatch = processed.match(refsRegex);
@@ -4664,6 +4728,9 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
       ChemicalLink: ['name', 'description'],
       CelestialLink: ['name', 'description'],
       GoingFurtherItem: ['title', 'description'],
+      SocraticInput: ['question', 'idealAnswer'],
+      CardSort: ['pairsString'],
+      Timeline: ['itemsString'],
     };
 
     const attrsToTranslate = TRANSLATABLE_ATTRS[tagName]?.filter(attr => attrs[attr]);
@@ -4689,7 +4756,7 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
       'GestaltInteractive', 'GestaltLab', 'PreCodeInterceptor'
     ];
 
-    if (selfClosingIsolated.includes(tagName) || (isSelfClosing && !['FillInBlanks', 'Glossary', 'EssayEvaluation', 'HistoricalPerson', 'Artwork', 'Option', 'Question', 'DiagnosticQuiz', 'Summary'].includes(tagName))) {
+    if (selfClosingIsolated.includes(tagName) || (isSelfClosing && !TRANSLATABLE_ATTRS[tagName] && !['FillInBlanks', 'Glossary', 'EssayEvaluation', 'HistoricalPerson', 'Artwork', 'Option', 'Question', 'DiagnosticQuiz', 'Summary'].includes(tagName))) {
       const placeholder = `__JSX_SELF_${tagName}_${placeholderId}__`;
       registry[placeholder] = { type: 'self', tagName, original: match };
       return placeholder;
@@ -5036,6 +5103,52 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
   }
 
   return processed;
+}
+
+function fixAllCaps(text: string): string {
+  if (typeof text !== 'string') return text;
+  
+  // Count alphabetic characters and uppercase alphabetic characters
+  const alphas = text.replace(/[^a-zA-ZÀ-ÿ]/g, '');
+  if (alphas.length < 4) {
+    return text;
+  }
+  
+  const uppercaseCount = alphas.replace(/[^A-ZÀ-Ý]/g, '').length;
+  // If more than 85% of alphabetic characters are uppercase
+  if (uppercaseCount / alphas.length > 0.85) {
+    const lowercaseWords = new Set([
+      'a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'in', 'at', 'to', 'by', 'of', 'with', 'from',
+      'un', 'une', 'le', 'la', 'les', 'du', 'des', 'de', 'et', 'ou', 'dans', 'en', 'par', 'pour', 'avec', 'sur'
+    ]);
+    
+    return text.toLowerCase().split(/\s+/).map((word, idx) => {
+      if (!word) return '';
+      
+      // Keep lowercase for minor words, but always capitalize the first word
+      const cleanWord = word.replace(/[^a-zà-ÿ]/g, '');
+      if (idx > 0 && lowercaseWords.has(cleanWord)) {
+        return word;
+      }
+      
+      // Handle words starting with l', d', etc. (e.g. l'univers -> L'Univers or l'Univers)
+      const apostropheMatch = word.match(/^([a-z])'([a-zà-ÿ]+)/i);
+      if (apostropheMatch) {
+        const prefix = apostropheMatch[1].toUpperCase();
+        const main = apostropheMatch[2];
+        return prefix + "'" + main.charAt(0).toUpperCase() + main.slice(1);
+      }
+      
+      // Handle hyphenated words (e.g. fine-tuning -> Fine-Tuning)
+      if (word.includes('-')) {
+        return word.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('-');
+      }
+      
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
+  }
+  
+  return text;
 }
 
 function isBookReference(text: string): boolean {
