@@ -1957,7 +1957,15 @@ function escapeCurlyBracesAndLessThanInText(mdx: string): string {
   // PascalCase regex: </?[A-Z][A-Za-z0-9]* preserves ALL custom MDX components regardless of name
   const allowedTagsPattern = allowedTags.join('|');
   const splitRegex = new RegExp(
-    `(\\$\\$[\\s\\S]*?\\$\\$|(?<!\\d)\\$(?=\\S)[^$\\n]*?\\$(?!\\d)|\`\`\`[\\s\\S]*?\`\`\`|\`[^\`]*\`|<\\/?(?:${allowedTagsPattern}|[A-Z][A-Za-z0-9]*)\\b(?:[^'"\`>]|"(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*'|\`(?:[^\`\\\\]|\\\\.)*\`)*?>)`,
+    '(' +
+    /\\\[[\s\S]*?\\\]/.source + '|' + // matches \\[ ... \\]
+    /\\\([\s\S]*?\\\)/.source + '|' + // matches \\( ... \\)
+    /\$\$[\s\S]*?\$\$/.source + '|' + // matches $$ ... $$
+    /(?<!\d)\$(?=\S)[^$\n]*?\$(?!\d)/.source + '|' + // matches $ ... $
+    /```[\s\S]*?```/.source + '|' + // matches ``` ... ```
+    /`[^`]*`/.source + '|' + // matches ` ... `
+    '<\\/?(?:' + allowedTagsPattern + '|[A-Z][A-Za-z0-9]*)\\b(?:[^\'"\\`>]|"(?:[^"\\\\\\\\]|\\\\\\\\.)*"|\'(?:[^\'\\\\\\\\]|\\\\\\\\.)*\'|\\`(?:[^\`\\\\\\\\]|\\\\\\\\.)*\\`)*?>' +
+    ')',
     'gi'
   );
   const parts = mdx.split(splitRegex);
@@ -3345,6 +3353,15 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   }
   // Apply systematic healing first so high-fidelity content and components are injected automatically
   let processed = content;
+
+  // Convert LaTeX delimiters: \[ -> $$ and \] -> $$ and \( -> $ and \) -> $
+  // This allows remark-math to natively parse all math blocks and inline equations,
+  // preventing curly braces inside equations from being incorrectly parsed as JSX expressions.
+  processed = processed
+    .replace(/\\\[/g, '$$$$')
+    .replace(/\\\]/g, '$$$$')
+    .replace(/\\\(/g, '$')
+    .replace(/\\\)/g, '$');
 
   // Convert legacy/manual citations into [[WIDGET:Reference:X]]
   processed = processed.replace(/<sup\s+id="cite-(\d+)"[^>]*>\s*<a\s+href="#ref-\1"[^>]*>[\s\S]*?<\/a>\s*<\/sup>/gi, '[[WIDGET:Reference:$1]]');

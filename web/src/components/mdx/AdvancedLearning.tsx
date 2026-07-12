@@ -308,7 +308,7 @@ export const Summary = ({ items, itemsString }: { items?: string[]; itemsString?
   const t = ADVANCED_STRINGS[language as keyof typeof ADVANCED_STRINGS] || ADVANCED_STRINGS.EN;
   
   let safeItems: string[] = [];
-  if (itemsString) {
+  if (itemsString && itemsString !== 'undefined' && itemsString !== 'null') {
     safeItems = itemsString.split('|||').map(s => s.trim()).filter(Boolean);
   } else if (Array.isArray(items)) {
     safeItems = items;
@@ -321,6 +321,7 @@ export const Summary = ({ items, itemsString }: { items?: string[]; itemsString?
   const sanitizedItems = safeItems.map(item => {
     if (!item) return '';
     let cleaned = item.trim();
+    if (cleaned.toLowerCase() === 'undefined' || cleaned.toLowerCase() === 'null') return '';
     cleaned = cleaned.replace(/^[•\-\*\+◦▪▫\d\.\)\'\"]+\s*/, '');
     return cleaned.trim();
   }).filter(Boolean);
