@@ -1,0 +1,178 @@
+---
+title: « Applications médicales, nanorobotique et considérations éthiques »
+subject: « Introduction aux nanotechnologies et à l'ingénierie moléculaire »
+level: « L3 »
+module: « Applications médicales, nanorobotique et considérations éthiques »
+order: 2
+---
+
+
+
+<DiagnosticQuiz question="Quel est l'avantage principal de l'utilisation des nanomateriaux dans les systèmes de delivrance de medicaments par rapport aux méthodes conventionnelles ?" options="Augmentation de la solubilite du medicament|||Delivrance ciblee et reduction des effets secondaires|||Couts de production reduits|||Absorption plus rapide dans l'estomac" correctIndex="1" targetSectionId="introduction-nanomedecine" sectionTitle="Introduction aux concepts de la nanomedecine" />
+
+
+
+## Introduction aux nanotechnologies médicales et à la nanorobotique
+
+Les nanotechnologies, définies par la manipulation de la matière à l'échelle atomique et moléculaire (généralement entre 1 et 100 nanomètrès), ont ouvert des perspectives révolutionnaires dans de nombreux domaines, et la médecine ne fait pas exception. L'application de ces principes à la biologie et à la médecine, souvent désignée sous le terme de nanomédecine, vise à diagnostiquer, traiter et prévenir les maladies à un niveau fondamentallement nouveau <Reference id="3" name="3" term="3">3</Reference>. L'idée de manipuler la matière à cette échelle a été popularisée par <RealPerson id="feynman" name="Richard Feynman" term="Richard Feynman">Richard Feynman</RealPerson> dès 1959, qui envisageait la possibilité de construire des machines miniatures capables d'opérer au sein même de la matière <Reference id="1" name="1" term="1">1</Reference>.
+
+Au cœur de la nanomédecine se trouve le concept de nanorobotique, qui implique la conception et la fabrication de dispositifs à l'échelle nanométrique capables d'effectuer des tâches spécifiques dans des environnements biologiques complexes. Ces nanorobots, qu'ils soient autonomes ou télécommandés, promettent des avancées spectaculaires, notamment pour la livraison ciblée de médicaments, la détection précoce de maladies, la chirurgie de précision à l'échelle cellulaire, et même la réparation tissulaire. L'ingénierie à l'échelle nanométrique est cruciale car elle permet de concevoir des systèmes dont les propriétés physiques et chimiques sont radicalement différentes de celles des matériaux macroscopiques, influençant directement leur interaction avec les systèmes biologiques.
+
+<Mermaid caption="Figure 1 : Diagramme conceptuel des applications des nanotechnologies en medecine" id="nanomedicine_scope" description="Diagramme conceptuel des applications des nanotechnologies en medecine" />
+
+L'efficacité de ces nanodispositifs dépend intrinsèquement de deux facteurs majeurs : la <ConceptLink id="diffusion_cinetique" name="diffusion cinetique" term="diffusion cinetique" unresolved={true}>diffusion cinétique</ConceptLink> et la biocompatibilité. La diffusion cinétique régit la manière dont les nanoparticules se déplacent et interagissent dans les fluides biologiques, tandis que la biocompatibilité détermine leur acceptation par l'organisme hôte sans provoquer de réactions indésirables. Ces aspects sont fondamentaux pour le développement de toute application nanotechnologique en médecine et seront explorés en détail dans les sections suivantes.
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les principes de fonctionnement des nanorobots médicaux et leurs applications potentielles.</li>
+      <li>Évaluer les différentes approches des nanotechnologies en diagnostic et thérapie.</li>
+      <li>Évaluer les implications éthiques et sociétales de la nanorobotique et de l'ingénierie moléculaire. &#123;/* [FIX A3] */&#125;</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Concevoir des stratégies de délivrance de médicaments basées sur les nanotechnologies pour des pathologies spécifiques.</li>
+      <li>Évaluer la faisabilité et les risques associés aux nouvelles applications nanorobotiques.</li>
+      <li>Proposer des solutions pour atténuer les dilemmes éthiques posés par les avancées en nanotechnologie médicale.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Développer une approche critique face aux promesses et aux limites des nanotechnologies médicales.</li>
+      <li>Adopter une posture responsable concernant les implications éthiques de l'ingénierie moléculaire.</li>
+      <li>Valoriser la collaboration interdisciplinaire pour aborder les défis complexes de la nanomédecine.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Ingénierie de la diffusion cinétique et biocompatibilité des nanomatériaux
+
+La compréhension et la maîtrise de la diffusion cinétique à l'échelle nanométrique sont primordiales pour le succès des applications médicales des nanomatériaux. Dans les systèmes biologiques, les nanoparticules sont soumises à des forces complexes, incluant le mouvement brownien, les interactions électrostatiques, les forces de van der Waals, et les flux sanguins ou lymphatiques. La taille, la forme et la charge de surface des nanomatériaux influencent directement leur vitesse de diffusion, leur capacité à traverser les barrières biologiques (comme la barrière hémato-encéphalique) et leur distribution dans les tissus <Reference id="4" name="4" term="4">4</Reference>. Par exemple, des particules plus petites diffusent généralement plus rapidement et peuvent pénétrer plus facilement dans des espaces intercellulaires restreints, mais sont aussi plus sujettes à l'élimination rénale.
+
+La <Glossary id="biocompatibilite" name="biocompatibilite" term="biocompatibilite">biocompatibilité</Glossary> des nanomatériaux est un défi majeur. Un nanodispositif doit pouvoir fonctionner dans l'organisme sans induire de toxicité, d'inflammation, de thrombose ou de réponse immunitaire excessive. Les interactions hôte-matériau sont principalement déterminées par la chimie de surface des nanomatériaux. Une surface non modifiée peut rapidement être recouverte de protéines plasmatiques (phénomène de « coronisation »), altérant ses propriétés et pouvant déclencher une réponse immunitaire ou une élimination rapide par le système réticulo-endothélial.
+
+
+
+Les solutions à ces défis résident souvent dans l'ingénierie de surface. La fonctionnalisation de la surface des nanomatériaux avec des polymères biocompatibles (comme le polyéthylène glycol, PEG), des ligands spécifiques (pour un ciblage cellulaire précis) ou des revêtements bio-inerte peut améliorer considérablement leur biocompatibilité et leur durée de circulation dans l'organisme. Ces modifications de surface permettent de masquer la nanoparticule du système immunitaire, de réduire l'adsorption non spécifique de protéines et de diriger activement le nanodispositif vers des cellules ou tissus malades. La conception de nanomatériaux « intelligents » capables de répondre à des stimuli internes (pH, température, enzymes) ou externes (lumière, champs magnétiques) pour libérer leur charge utile de manière contrôlée représente une voie de recherche prometteuse <Reference id="5" name="5" term="5">5</Reference>.
+
+## Conception et applications des nanorobots en médecine
+
+L'avènement des nanotechnologies a ouvert la voie à la conception de machines à l'échelle nanométrique, les nanorobots, dont le potentiel révolutionnaire en médecine est immense. Ces dispositifs, souvent de la taille d'une cellule ou d'un virus, sont conçus pour opérer avec une précision inégalée au sein du corps humain. Leur architecture est intrinsèquement liée à leur fonction, intégrant des composants pour la détection, l'actuation, la propulsion et le transport de charges utiles.
+
+Les architectures des nanorobots varient considérablement. Certains sont inspirés du vivant, adoptant des formes biomimétiques pour interagir naturellement avec les systèmes biologiques, comme des structures flagellaires pour la motilité ou des capsules virales pour le transport. D'autres sont entièrement synthétiques, construits à partir de polymères, de métaux ou de matériaux hybrides, et peuvent être modulaires, permettant l'intégration de capteurs spécifiques, de systèmes de libération de médicaments et de mécanismes de propulsion. L'ingénierie avancée permet de concevoir des nanorobots capables d'<Glossary id="auto_assemblage" name="auto-assemblage" term="auto-assemblage">auto-assemblage</Glossary> ou de s'adapter à leur environnement.
+
+La propulsion est un défi majeur à l'échelle nanométrique, où les forces de viscosité dominent sur les forces d'inertie. Plusieurs mécanismes sont explorés :
+*   **Propulsion chimique :** Basée sur des réactions catalytiques qui génèrent des bulles ou des gradients de concentration, poussant le nanorobot. Des enzymes peuvent également être utilisées pour convertir des substrats biologiques en énergie motrice.
+*   **Propulsion physique :** Utilisation de champs externes tels que les champs magnétiques (pour les nanorobots magnétiques), les ondes acoustiques, la lumière ou les gradients thermiques pour diriger et mouvoir les dispositifs.
+*   **Propulsion biologique :** Exploitation de moteurs moléculaires biologiques ou de l'interaction avec des cellules pour un mouvement « passif » ou « actif » au sein de l'organisme.
+
+Le <ConceptLink id="mouvement_brownien" name="mouvement brownien" term="mouvement brownien">mouvement brownien</ConceptLink>, omniprésent à cette échelle, doit être pris en compte et peut même être exploité pour certains types de mouvement aléatoire contrôlé <Reference id="3" name="3" term="3">3</Reference>. Les visions pionnières de scientifiques comme <RealPerson id="k_eric_drexler" name="K. Eric Drexler" term="K. Eric Drexler">K. Eric Drexler</RealPerson> ont jeté les bases conceptuelles de ces machines complexes <Reference id="2" name="2" term="2">2</Reference>.
+
+<Mermaid caption="Figure 2 : Architecture conceptuelle d'un nanorobot medical illustrant ses composants cles et mecanismes de propulsion" id="nanorobot_architecture" description="Architecture conceptuelle d'un nanorobot medical illustrant ses composants cles et mecanismes de propulsion" />
+
+Les applications potentielles des nanorobots en médecine sont vastes et transformatrices :
+*   **Diagnostic précoce et précis :** Les nanorobots peuvent être conçus pour détecter des biomarqueurs de maladies (comme les cellules cancéreuses ou les agents pathogènes) à des stades très précoces, bien avant l'apparition des symptômes, en naviguant dans le sang ou les tissus. Ils peuvent également améliorer l'imagerie moléculaire en fournissant des contrastes ultra-spécifiques.
+*   **Administration de médicaments ciblée :** L'une des promesses les plus significatives est la capacité à délivrer des agents thérapeutiques (chimiothérapies, gènes, protéines) directement aux cellules ou tissus malades, minimisant ainsi les effets secondaires systémiques sur les tissus sains. Cette approche augmente l'efficacité du traitement tout en réduisant la toxicité.
+*   **Chirurgie minimale invasive :** À l'échelle microscopique, les nanorobots pourraient effectuer des réparations tissulaires précises, désobstruer des vaisseaux sanguins, détruire des tumeurs localisées par hyperthermie ou même réaliser des micro-assemblages pour la régénération tissulaire. Leur capacité à atteindre des zones inaccessibles par la chirurgie conventionnelle ouvre de nouvelles perspectives pour des interventions moins traumatisantes et plus efficaces.
+
+Ces avancées reposent sur une ingénierie multidisciplinaire, combinant la physique, la chimie, la biologie et l'informatique pour créer des systèmes autonomes et intelligents capables de fonctionner dans l'environnement complexe du corps humain.
+
+## Enjeux éthiques et seuils de nanotoxicologie
+
+L'intégration des nanotechnologies et de la nanorobotique en médecine, bien que prometteuse, soulève des questions éthiques, sociétales et réglementaires complexes qui nécessitent une attention rigoureuse. La capacité à manipuler la matière à l'échelle atomique, comme l'avait envisagé Richard Feynman <Reference id="1" name="1" term="1">1</Reference>, implique une responsabilité scientifique et sociétale considérable.
+
+Sur le plan **éthique**, l'utilisation de nanorobots dans le corps humain pose des défis liés au consentement éclairé, notamment pour des technologies dont les effets à long terme sont encore inconnus. La question de l'équité d'accès à ces traitements de pointe est également cruciale, risquant d'exacerber les inégalités de santé. De plus, la distinction entre thérapie (restaurer une fonction) et amélioration humaine (augmenter les capacités) devient floue, soulevant des débats sur la nature de l'humanité et les limites de l'intervention technologique. La collecte potentielle de données biologiques par des nanorobots soulève des préoccupations majeures en matière de vie privée et de sécurité des informations.
+
+Les **implications sociétales** sont également profondes. L'acceptation publique des nanorobots dépendra de la confiance dans leur sécurité et leur efficacité. Il existe des craintes, parfois irrationnelles, de « nanopollution » ou de scénarios de « nanoterrorisme » qui doivent être gérées par une communication transparente et une recherche responsable. L'impact sur l'emploi dans le secteur de la santé, avec l'automatisation de certaines tâches diagnostiques ou chirurgicales, est une autre considération.
+
+Sur le plan **réglementaire**, les cadres existants pour les médicaments et les dispositifs médicaux ne sont pas toujours adaptés aux spécificités des nanomatériaux et des nanorobots. La diversité des nanomatériaux, leurs propriétés uniques et leurs interactions complexes avec les systèmes biologiques exigent le développement de nouvelles directives et de processus d'approbation spécifiques. Le <ConceptLink id="principe_de_precaution" name="principe de precaution" term="principe de precaution">principe de précaution</ConceptLink> est souvent invoqué, appelant à une prudence accrue face aux incertitudes potentielles.
+
+L'évaluation de la <Glossary id="nanotoxicologie" name="nanotoxicologie" term="nanotoxicologie">nanotoxicologie</Glossary> est donc primordiale. Il s'agit d'étudier les effets indésirables des nanomatériaux sur les systèmes biologiques et l'environnement. Les méthodes d'évaluation comprennent :
+*   **Tests in vitro :** Utilisation de cultures cellulaires pour évaluer la cytotoxicité, le stress oxydatif, l'inflammation et les effets génotoxiques.
+*   **Tests in vivo :** Études sur des modèles animaux pour comprendre la biodistribution, la persistance, la dégradation, l'excrétion et les effets systémiques à court et long terme.
+*   **Caractérisation physico-chimique :** Une compréhension approfondie de la taille, de la forme, de la surface, de la charge et de la composition des nanomatériaux est essentielle, car ces propriétés influencent directement leur toxicité.
+
+L'établissement de **seuils de sécurité** est complexe en raison de la grande variabilité des nanomatériaux et de leurs interactions biologiques. Contrairement aux substances chimiques classiques, la toxicité des nanomatériaux n'est pas toujours directement proportionnelle à la dose massique. Des approches basées sur le risque, tenant compte de l'exposition, de la dangerosité intrinsèque et de la vulnérabilité des populations, sont nécessaires. La recherche responsable est cruciale pour développer des méthodes d'évaluation standardisées, comprendre les mécanismes de nanotoxicité et établir des seuils de sécurité fiables, garantissant ainsi que les bénéfices des nanotechnologies médicales l'emportent sur les risques potentiels.
+
+<DataChart id="nanotoxicology_data" description="Exemple de donnees de nanotoxicologie montrant la relation dose-reponse pour differents nanomateriaux" />
+
+## Conclusion
+Cette leçon nous a plongés au cœur des applications médicales des nanotechnologies et de la nanorobotique, révélant leur potentiel révolutionnaire pour transformer la médecine moderne. Nous avons exploré comment ces technologies, opérant à l'échelle atomique et moléculaire, promettent des avancées sans précédent en matière de diagnostic ultra-précoce, de délivrance ciblée de médicaments, et même d'interventions chirurgicales minimalement invasives. Parallèlement, nous avons examiné les considérations éthiques, sociétales et réglementaires cruciales qui accompagnent ces innovations, soulignant l'importance de la nanotoxicologie et d'une approche prudente pour garantir la sécurité et l'acceptation publique.
+
+En regardant vers l'avenir, le domaine des nanotechnologies médicales est à l'aube de transformations majeures, portées par la convergence avec l'intelligence artificielle, la biologie synthétique et les matériaux avancés. Nous pouvons anticiper le développement de nanorobots encore plus sophistiqués, capables d'opérer de manière autonome et adaptative au sein du corps humain, ouvrant la voie à une <ConceptLink id="medecine_personnalisee" name="medecine personnalisee" term="medecine personnalisee" unresolved={true}>médecine personnalisée</ConceptLink> hyper-précise. Ces avancées pourraient inclure des systèmes de surveillance continue de la santé, des thérapies géniques ciblées *in vivo*, et des interfaces neuronales avancées, concrétisant ainsi une partie des visions audacieuses initialement esquissées par des pionniers comme K. Eric Drexler <Reference id="2" name="2" term="2">2</Reference>. La capacité à manipuler la matière à l'échelle nanométrique, comme l'avait imaginé Richard Feynman <Reference id="1" name="1" term="1">1</Reference>, continue de stimuler l'innovation et la recherche fondamentale <Reference id="3" name="3" term="3">3</Reference>.
+
+<Mermaid caption="Figure 3 : Feuille de route conceptuelle pour le developpement et l'integration des nanotechnologies medicales" id="nanomedicine_roadmap" description="Feuille de route conceptuelle pour le developpement et l'integration des nanotechnologies medicales" />
+
+Cependant, le chemin vers une adoption généralisée est jalonné de défis scientifiques, techniques et éthiques substantiels. Sur le plan scientifique et technique, la conception de nanorobots dotés d'une biocompatibilité parfaite, d'une capacité de navigation précise dans des environnements biologiques complexes, et d'une source d'énergie fiable et durable reste un objectif majeur. La production à grande échelle de ces dispositifs complexes et la garantie de leur fiabilité à long terme sont également des obstacles techniques à surmonter. Éthiquement, des questions fondamentales persistent concernant l'équité d'accès à ces thérapies potentiellement coûteuses, le risque de « double usage » (applications militaires ou non thérapeutiques), et les implications profondes sur la définition même de la santé humaine et de l'amélioration. Une recherche responsable, une réglementation proactive et un dialogue sociétal continu seront essentiels pour naviguer ces défis et s'assurer que les nanotechnologies médicales servent le bien-être de l'humanité.
+
+
+
+
+
+
+<Summary itemsString="Cette lecon a explore les applications revolutionnaires des nanotechnologies dans le domaine medical, allant du diagnostic precoce a la delivrance ciblee de medicaments et a l'imagerie avancee.|||Nous avons detaille le potentiel transformateur de la nanorobotique, capable d'effectuer des interventions chirurgicales de precision et des therapies ultra-ciblees au niveau cellulaire.|||Parallelement, une attention particuliere a ete portee aux considerations ethiques cruciales, telles que la vie privee, la securite des patients, l'equite d'acces et l'impact societal de ces technologies emergentes.|||Il est imperatif de developper des cadres reglementaires robustes et d'encourager un dialogue public eclaire pour guider le developpement responsable des nanotechnologies.|||En somme, les nanotechnologies offrent des perspectives medicales sans precedent, mais leur integration reussie dependra d'une approche equilibree entre innovation scientifique et responsabilite ethique." />
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+    <Question q="Quelle est l'une des principales applications des nanotechnologies en medecine?" explanation="Les nanotechnologies permettent de developper des systèmes de livraison de medicaments qui ciblent specifiquement les cellules malades, minimisant les effets secondaires sur les tissus sains.">
+  <Option text="La construction de gratte-ciel." correct={false} />
+  <Option text="La livraison ciblee de medicaments." correct={true} />
+  <Option text="La production d'énergie nucleaire." correct={false} />
+  <Option text="La fabrication de vetements." correct={false} />
+</Question>
+    <Question q="Qu'est-ce que la nanorobotique medicale?" explanation="La nanorobotique medicale implique la creation de dispositifs minuscules capables d'effectuer des taches précises a l'interieur du corps, comme la detection de maladies ou la reparation de tissus.">
+  <Option text="L'etude des robots geants." correct={false} />
+  <Option text="La conception de robots a l'echelle macroscopique pour la chirurgie." correct={false} />
+  <Option text="Le developpement de machines a l'echelle nanometrique ou micrometrique pour des applications biomedicales." correct={true} />
+  <Option text="La fabrication de jouets robotiques." correct={false} />
+</Question>
+    <Question q="Parmi les considerations ethiques liees aux nanotechnologies medicales, laquelle est la plus pertinente concernant l'amelioration humaine?" explanation="L'amelioration humaine par les nanotechnologies souleve des questions ethiques importantes sur qui aura acces a ces technologies et si cela pourrait créer de nouvelles inegalites sociales.">
+  <Option text="Le cout eleve des traitements." correct={false} />
+  <Option text="La question de l'equite d'acces aux technologies d'amelioration." correct={true} />
+  <Option text="La difficulte de stockage des nanomateriaux." correct={false} />
+  <Option text="L'impact sur l'environnement." correct={false} />
+</Question>
+    <Question q="Quel est le concept de &quot;theranostique&quot; en nanomedecine?" explanation="La theranostique utilise des nanomateriaux pour combiner des capacites de diagnostic (imagerie) et de traitement (livraison de medicaments) au sein d'une meme plateforme.">
+  <Option text="Une méthode de diagnostic uniquement." correct={false} />
+  <Option text="Une combinaison de therapie et de diagnostic dans une seule approche." correct={true} />
+  <Option text="Une nouvelle forme de therapie genique." correct={false} />
+  <Option text="L'etude des effets secondaires des medicaments." correct={false} />
+</Question>
+    <Question q="Quel est un defi majeur pour l'application des nanorobots in vivo?" explanation="L'alimentation, la navigation et le controle précis des nanorobots dans l'environnement complexe du corps humain sont des defis techniques majeurs.">
+  <Option text="Leur taille trop grande." correct={false} />
+  <Option text="La difficulte de les alimenter en énergie et de les controler une fois a l'interieur du corps." correct={true} />
+  <Option text="Le manque de materiaux disponibles pour leur fabrication." correct={false} />
+  <Option text="Leur incapacite a interagir avec les cellules." correct={false} />
+</Question>
+    <Question q="Comment les nanoparticules peuvent-elles ameliorer l'imagerie medicale?" explanation="Les nanoparticules peuvent etre concues pour s'accumuler dans des zones specifiques (par exemple, des tumeurs) et ameliorer le contraste dans diverses modalites d'imagerie comme l'IRM ou la tomographie.">
+  <Option text="En rendant les images floues." correct={false} />
+  <Option text="En agissant comme agents de contraste pour ameliorer la visibilite des structures." correct={true} />
+  <Option text="En augmentant la dose de radiation necessaire." correct={false} />
+  <Option text="En remplacant completement les equipements d'imagerie existants." correct={false} />
+</Question>
+    <Question q="Quelle est une preoccupation ethique majeure concernant la vie privee et les nanotechnologies medicales?" explanation="Les nanodispositifs implantables ou ingerables pourraient potentiellement collecter des informations très sensibles sur la sante d'un individu, soulevant des questions sur la protection de la vie privee et le consentement.">
+  <Option text="Le cout des nanomateriaux." correct={false} />
+  <Option text="La possibilite de collecter des donnees biometriques très detaillees sans consentement." correct={true} />
+  <Option text="La difficulte de recycler les nanodispositifs." correct={false} />
+  <Option text="Le risque de contamination environnementale." correct={false} />
+</Question>
+</Quiz>
+
+### Glossaire
+#
+
+- **Bioéthique** : Discipline qui étudie les problèmes moraux soulevés par les progrès de la biologie et de la médecine, y compris ceux liés aux nanotechnologies et à leurs applications sur le vivant.
+- **Nanomédecine** : Application des nanotechnologies à la médecine, incluant le diagnostic, le traitement, la prévention des maladies, et l'amélioration de la santé humaine à l'échelle moléculaire et cellulaire.
+- **Nanorobotique** : Branche de la nanotechnologie qui conçoit et construit des machines ou des robots à l'échelle nanométrique (généralement de 1 à 100 nanomètrès) capables d'effectuer des tâches spécifiques, notamment dans le domaine médical.
+- **Nanotoxicité** : Étude des effets nocifs potentiels des nanoparticules et des nanomatériaux sur les systèmes biologiques et l'environnement, essentielle pour évaluer la sécurité des applications nanotechnologiques.
+
+
+#
+
+### Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiV2hhdCBpcyBuYW5vbWVkaWNpbmU/IGJ5IEZyZWl0YXMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDE2L2oubmFuby4yMDA0LjExLjAwMyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjIsInRleHQiOiJNaWNyb3JvYm90cyBmb3IgTWluaW1hbGx5IEludmFzaXZlIE1lZGljaW5lIGJ5IE5lbHNvbi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9TWljcm9yb2JvdHMlMjBmb3IlMjBNaW5pbWFsbHklMjBJbnZhc2l2ZSUyME1lZGljaW5lJTIwYnklMjBOZWxzb24lMjAlMjJNaWNyb3JvYm90cyUyMGZvciUyME1pbmltYWxseSUyMEludmFzaXZlJTIwTWVkaWNpbmUlMjBieSUyME5lbHNvbi4lMjIiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MywidGV4dCI6IkV0aGljcyBpbiBOYW5vbWVkaWNpbmUgYnkgUmVzbmlrLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1FdGhpY3MlMjBpbiUyME5hbm9tZWRpY2luZSUyMGJ5JTIwUmVzbmlrJTIwJTIyRXRoaWNzJTIwaW4lMjBOYW5vbWVkaWNpbmUlMjBieSUyMFJlc25pay4lMjIiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6NCwidGV4dCI6IkNhbmNlciBuYW5vbWVkaWNpbmU6IGlzIHRhcmdldGluZyBvdXIgdGFyZ2V0PyBieSBMYW1tZXJzLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAzOC9uYXRyZXZtYXRzLjIwMTYuNjkiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo1LCJ0ZXh0IjoiUHJpbmNpcGVzIGRlIGJvbm5lcyBwcmF0aXF1ZXMgZGUgbGFib3JhdG9pcmUgZXQgdsOpcmlmaWNhdGlvbiBkdSByZXNwZWN0IGRlIGNlcyBwcmluY2lwZXMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVByaW5jaXBlcyUyMGRlJTIwYm9ubmVzJTIwcHJhdGlxdWVzJTIwZGUlMjBsYWJvcmF0b2lyZSUyMGV0JTIwdiVDMyVBOXJpZmljYXRpb24lMjBkdSUyMHJlc3BlY3QlMjBkZSUyMGNlcyUyMHByaW5jaXBlcyUyMCUyMlByaW5jaXBlcyUyMGRlJTIwYm9ubmVzJTIwcHJhdGlxdWVzJTIwZGUlMjBsYWJvcmF0b2lyZSUyMGV0JTIwdiVDMyVBOXJpZmljYXRpb24lMjIiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6NiwidGV4dCI6IlNvY2nDqXTDqSBzdWlzc2UgZGUgbcOpZGVjaW5lIGludGVybmUgZ8OpbsOpcmFsZSA6IHVuZSBub3V2ZWxsZSBlbnRpdMOpIHBvdXIgdW5lIG3DqWRlY2luZSBlbiDDqXZvbHV0aW9uIGJ5IEJhbGF2b2luZS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjUzNzM4L3Jldm1lZC4yMDE2LjEyLjUwMi4wMTE4Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6NywidGV4dCI6IlJhcHBvcnQgZGVzIEFjYWTDqW1pZXMgbmF0aW9uYWxlcyBkZSBtw6lkZWNpbmUgZXQgZGUgcGhhcm1hY2llLiBMYSBiaW9sb2dpZSBtw6lkaWNhbGUgZW4gRnJhbmNlIDogw6l2b2x1dGlvbnMgZXQgZW5qZXV4LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTY4NC9hYmMuMjAyMi4xNzc1Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjp0cnVlfV0=" />
+

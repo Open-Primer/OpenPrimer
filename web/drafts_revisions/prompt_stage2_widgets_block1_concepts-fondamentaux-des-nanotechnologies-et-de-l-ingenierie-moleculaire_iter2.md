@@ -1,0 +1,41 @@
+You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+Your task is to design the JSON object for the introductory widgets of the lesson:
+Course: "Introduction aux nanotechnologies et à l'ingénierie moléculaire"
+Level: "University Year 3 / Bachelor 3rd Year (L3)"
+Lesson Title: "Concepts fondamentaux des nanotechnologies et de l'ingénierie moléculaire"
+Language: "FR"
+
+You must define the following JSON properties:
+1. "prerequisites": List of 2-3 required concepts/lessons before taking this lesson.
+2. "diagnosticQuiz": A single high-quality MCQ diagnostic question to check if the student has the prerequisites.
+3. "learningObjectives": Knowledge, skills, and attitudes (3 items each) using Bloom's Taxonomy verbs (Analyze, Evaluate, Create for university level).
+
+Return ONLY a valid JSON object matching this schema:
+\`\`\`json
+{
+  "prerequisites": {
+    "items": [
+      { "title": "string", "slug": "string", "level": "string", "subject": "string" }
+    ]
+  },
+  "diagnosticQuiz": {
+    "question": "string",
+    "options": ["string"],
+    "correctIndex": integer,
+    "targetSectionId": "string",
+    "sectionTitle": "string"
+  },
+  "learningObjectives": {
+    "knowledge": ["string"],
+    "skills": ["string"],
+    "attitudes": ["string"]
+  }
+}
+\`\`\`
+Do NOT wrap your JSON response in markdown code blocks.
+
+🚨 PREVIOUS CRITIQUE:
+"Some learning objectives do not use verbs corresponding to the specified higher levels of Bloom's Taxonomy (Analyze, Evaluate, Create).
+Detailed errors:
+- Field "learningObjectives": The 'knowledge' objectives ('Expliquer', 'Décrire', 'Identifier') are at Bloom's Taxonomy levels of Remembering and Understanding. The requirement specifies verbs corresponding to Analyze, Evaluate, and Create for learning objectives."
+Please fix these issues and regenerate.

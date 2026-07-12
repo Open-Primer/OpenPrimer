@@ -189,8 +189,8 @@ export const DEFAULT_LEVEL_CONSTRAINTS: Record<string, LevelConstraints> = {
     "minHoverCardsPerBlock": 3,
     "minBlockWidgetsPerBlock": 2,
     "globalWidgetsTarget": 12,
-    "minGlossaryCount": 6,
-    "minReferencesCount": 5,
+    "minGlossaryCount": 12,
+    "minReferencesCount": 10,
     "minBiographiesCount": 2,
     "minConceptLinksCount": 8,
     "mandatedWidgetTypes": ["HistoricalAnecdote", "Quiz", "Image", "Mermaid", "SolvedExercise", "UnsolvedExercise", "DataChart"],
@@ -202,8 +202,8 @@ export const DEFAULT_LEVEL_CONSTRAINTS: Record<string, LevelConstraints> = {
     "minHoverCardsPerBlock": 4,
     "minBlockWidgetsPerBlock": 2,
     "globalWidgetsTarget": 16,
-    "minGlossaryCount": 8,
-    "minReferencesCount": 8,
+    "minGlossaryCount": 15,
+    "minReferencesCount": 15,
     "minBiographiesCount": 3,
     "minConceptLinksCount": 12,
     "mandatedWidgetTypes": ["Quiz", "Image", "Mermaid", "SolvedExercise", "UnsolvedExercise", "DataChart", "InteractiveDiagram"],
@@ -215,24 +215,7 @@ let loadedConstraints: Record<string, LevelConstraints> = DEFAULT_LEVEL_CONSTRAI
 
 export async function loadLevelConstraintsFromDb(): Promise<Record<string, LevelConstraints>> {
   try {
-    const { data } = await supabaseAdmin
-      .from('system_parameters')
-      .select('value')
-      .eq('key', 'academic_level_constraints')
-      .maybeSingle();
-      
-    if (data?.value) {
-      try {
-        const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
-        if (parsed && typeof parsed === 'object') {
-          return parsed;
-        }
-      } catch (e) {
-        console.warn("[LevelConstraints] Failed to parse JSON from DB, seeding/using defaults", e);
-      }
-    }
-
-    // Seed defaults to Supabase if not present
+    // Always upsert defaults to Supabase to keep constraints synchronized with the codebase
     await supabaseAdmin
       .from('system_parameters')
       .upsert({
@@ -242,7 +225,7 @@ export async function loadLevelConstraintsFromDb(): Promise<Record<string, Level
       }, { onConflict: 'key' });
 
   } catch (err) {
-    console.warn("[LevelConstraints] Supabase query failed, using static defaults:", err);
+    console.warn("[LevelConstraints] Supabase query/upsert failed, using static defaults:", err);
   }
   return DEFAULT_LEVEL_CONSTRAINTS;
 }
@@ -1049,6 +1032,40 @@ const lessonWidgetsSchema = {
                   searchQuery: { type: "string", description: "Canonical search query to find the term on Wikipedia." }
                 },
                 required: ["term", "definition", "wikipediaUrl", "searchQuery"]
+              }
+            },
+            required: ["id", "componentType", "sectionAnchor", "props"]
+          },
+          {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              componentType: { type: "string", enum: ["DataChart"] },
+              sectionAnchor: { type: "string" },
+              props: {
+                type: "object",
+                properties: {
+                  title: { type: "string", description: "The title of the data chart." },
+                  type: { type: "string", enum: ["bar", "pie", "donut", "line", "scatter"], description: "The type of visualization chart." },
+                  data: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        label: { type: "string", description: "Label for the data point." },
+                        value: { type: "number", description: "Numerical value for the data point." },
+                        color: { type: "string", description: "Optional custom color hex or code." }
+                      },
+                      required: ["label", "value"]
+                    },
+                    description: "Dataset for the chart."
+                  },
+                  xAxisLabel: { type: "string", description: "Label for X axis." },
+                  yAxisLabel: { type: "string", description: "Label for Y axis." },
+                  unit: { type: "string", description: "Unit of measurement (e.g. '%', 'nm', 'ppm')." },
+                  gradeLevel: { type: "string", enum: ["middle_school", "high_school", "university"] }
+                },
+                required: ["title", "type", "data"]
               }
             },
             required: ["id", "componentType", "sectionAnchor", "props"]
@@ -2890,7 +2907,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
 
   // Replace unresolved suffix-augmented block widgets (Image, CustomFigure, Video, Audio, Mermaid, ClimateImpactMap)
   // with self-closing tags carrying a `description` prop so that renumberFiguresAndCaptions can process them correctly.
-  const blockWidgetTypes = /^(Image|CustomFigure|Video|Audio|Mermaid|ClimateImpactMap|climate_impact_map)$/i;
+  const blockWidgetTypes = /^(Image|CustomFigure|Video|Audio|Mermaid|ClimateImpactMap|climate_impact_map|DataChart|StructureViewer3D|FunctionPlotter|FunctionManipulator|DynamicSimulation)$/i;
   content = content.replace(/\[\[\s*WIDGET\s*:\s*([^:\s\]]+)\s*:\s*([^:\s\]]+)\s*(?::\s*([^\]]*?))?\s*\]\]/gi, (match, type, id, topic) => {
     const canonicalType = /^climate_impact_map$/i.test(type) ? 'ClimateImpactMap' : type;
     if (blockWidgetTypes.test(type)) {
@@ -2941,7 +2958,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       }
       
       let cleanCaption = captionText.trim();
-      const prefixRegex = /^(?:figure|fig|illustration|abbildung|abb|image|custom\s*figure)\s*(?:\d+(?:\.\d+)*|[a-z])?\s*(?:[:：\-–—]\s*)*/i;
+      const prefixRegex = /^(?:figure|fig|illustration|abbildung|abb|image|custom\s*figure)\s*(?:\d+(?:\.\d+)*[a-z]?|\b(?![a-z]')([a-z])\b)?\s*(?:[:：\-–—]\s*)*/i;
       cleanCaption = cleanCaption.replace(prefixRegex, '').trim();
       
       let prefix = `Figure ${counter} : `;
@@ -3400,6 +3417,19 @@ export async function generateCourseContent(courseName: string, levelInput: stri
   const discipline = extra.subject || 'General';
   const volume = extra.volume || '15h';
 
+  const constraintKey = getConstraintKeyForLevel(levelInput);
+  const constraint = loadedConstraints[constraintKey] || DEFAULT_LEVEL_CONSTRAINTS[constraintKey] || DEFAULT_LEVEL_CONSTRAINTS.university_undergrad;
+
+  let syllabusRefsMin = 5;
+  let syllabusRefsMax = 8;
+  if (constraintKey === 'university_grad') {
+    syllabusRefsMin = 15;
+    syllabusRefsMax = 20;
+  } else if (constraintKey === 'university_undergrad') {
+    syllabusRefsMin = 10;
+    syllabusRefsMax = 15;
+  }
+
   // 1. Generate syllabus (lesson titles and slugs)
   const promptSyllabus = `You are the Primary Pedagogical Architect Agent (Agent 1 & 2).
 Your mission is to design the structure, lesson titles, and cognitive strategy of the course titled "${correctedCourseName}" for the level "${getDescriptiveLevelForPrompt(level)}". You do not write the course content; you construct its pure, highly-adapted computational and educational backbone.
@@ -3511,7 +3541,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
 * **No Generic Outlines or Fillers:** A syllabus outline that uses generic academic blocks (e.g., I. Introduction, II. History, III. Conclusion) is strictly prohibited. The syllabus must be **complete, specific, and highly authentic**, matching a real-world curriculum you would find in actual academic or professional training, without being overly eccentric.
 * **Exhaustiveness of Chapters:** You must specify the exact number of distinct lessons appropriate for the level and volume (maximum of 3 for Primary level, 4 to 6 for Middle/High school, 6 to 10 for University). The writing agent (Agent 3) must have clear, actionable guidelines with zero need for outline extrapolation.
 * **Detached Evaluation Content:** Under no circumstances should the Terminal Evaluation contain instructional content. It must focus purely on testing.
-* **Mandatory Reference Registry:** You MUST generate a list of EXACTLY 5 to 8 authoritative academic references in the \`references\` array. These must represent the absolute canon of the course's discipline. Do NOT use placeholder references or list generic URLs. They must be formatted strictly according to the citation style of the discipline, but without markdown bold/italics symbols (no asterisks).`;
+* **Mandatory Reference Registry:** You MUST generate a list of EXACTLY ${syllabusRefsMin} to ${syllabusRefsMax} authoritative academic references in the \`references\` array. These must represent the absolute canon of the course's discipline. Do NOT use placeholder references or list generic URLs. They must be formatted strictly according to the citation style of the discipline, but without markdown bold/italics symbols (no asterisks).`;
 
   try {
     let parsedSyllabus: any = null;
@@ -7918,7 +7948,7 @@ export async function validateAndFixBibliography(mdx: string, targetLang: string
   const bodyText = mdx.slice(0, headerIndex);
   const referencesText = mdx.slice(headerIndex);
 
-  const refRegex = /(?:<a\s+id="ref-(\d+)"[^>]*><\/a>)?\s*\[(\d+)\]\s*([\s\S]*?)(?=\n\s*(?:<a\s+id="ref-\d+"|\[\d+\]|###|---\s*|$))/g;
+  const refRegex = /(?:<a\s+id="ref-(\d+)"[^>]*><\/a>)?\[(\d+)\]\s*([\s\S]*?)(?=\r?\n\s*(?:<a\s+id="ref-\d+"|\[\d+\]|###|---\s*|$)|$)/g;
   let match;
   const replacements: { original: string; replacement: string; refId: string }[] = [];
   let networkDisabled = false;
@@ -8090,6 +8120,12 @@ export async function validateAndFixBibliography(mdx: string, targetLang: string
     if (rep.replacement === '') {
       const footnoteRegex = new RegExp(`<sup><a\\b[^>]*href=["']#ref-${rep.refId}["'][^>]*>.*?</a></sup>`, 'g');
       updatedMdx = updatedMdx.replace(footnoteRegex, '');
+      
+      const widgetRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*(?:Citation|Reference|Ref)\\s*:\\s*${rep.refId}\\b\\s*\\]\\]`, 'gi');
+      updatedMdx = updatedMdx.replace(widgetRegex, '');
+      
+      const elementRegex = new RegExp(`<Reference\\b[^>]*?\\bid=["']?${rep.refId}\\b[^>]*?>(?:<\\/Reference>)?`, 'gi');
+      updatedMdx = updatedMdx.replace(elementRegex, '');
     }
   }
 

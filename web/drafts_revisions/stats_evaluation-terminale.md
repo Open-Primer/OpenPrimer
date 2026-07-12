@@ -1,16 +1,16 @@
 # 📊 Generation Statistics: Évaluation Terminale
 
-- **Course Name**: Droit des Obligations et Responsabilité Civile
+- **Course Name**: Introduction aux nanotechnologies et à l'ingénierie moléculaire
 - **Lesson Title**: Évaluation Terminale
 - **Lesson Slug**: evaluation-terminale
-- **Academic Level**: L2
+- **Academic Level**: L3
 - **Target Language**: FR
-- **Generation Date**: 11/07/2026 22:17:18
+- **Generation Date**: 12/07/2026 16:04:15
 - **Status**: ✅ SUCCESS
 
 
 ## ⏱️ Performance Metrics
-- **Total Duration**: 45 seconds
+- **Total Duration**: 49 seconds
 - **Syllabus Generation Attempts**: 1
 - **Syllabus Critic Rejections**: 0
 - **Narrative Blocks Total**: 0
@@ -31,8 +31,8 @@
 
 
 ## 🪙 Token & Cost Estimation
-- **Prompt Tokens**: 4 399
-- **Candidates Tokens**: 3 456
-- **Total Tokens**: 7 855
-- **Estimated Cost (Gemini 2.5 Flash)**: **$0.001367**
+- **Prompt Tokens**: 4 215
+- **Candidates Tokens**: 3 259
+- **Total Tokens**: 7 474
+- **Estimated Cost (Gemini 2.5 Flash)**: **$0.001294**
   *(Based on official pricing: $0.075/1M prompt tokens, $0.30/1M output tokens)*

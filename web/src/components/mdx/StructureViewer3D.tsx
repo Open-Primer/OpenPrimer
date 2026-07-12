@@ -30,6 +30,7 @@ interface Preset {
 
 interface StructureViewer3DProps {
   presetId?: string;
+  id?: string;
   name?: string;
   description?: string;
   atoms?: Atom[];
@@ -41,6 +42,7 @@ interface StructureViewer3DProps {
   showMenu?: boolean;
   gradeLevel?: 'middle_school' | 'high_school' | 'university';
 }
+
 
 // Generate NaCl grid
 const generateNaCl = (): { atoms: Atom[]; bonds: Bond[] } => {
@@ -533,7 +535,8 @@ const parseXYZ = (xyzString: string): { atoms: Atom[]; bonds: Bond[] } | null =>
 };
 
 export const StructureViewer3D = ({
-  presetId = "h2o",
+  presetId,
+  id,
   name,
   description,
   atoms,
@@ -549,11 +552,13 @@ export const StructureViewer3D = ({
   const { language } = useLanguage();
   const t = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
 
+  const resolvedPresetId = presetId || id || "h2o";
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [activePreset, setActivePreset] = useState<Preset>(() => {
-    const found = PRESETS.find(p => p.id === presetId) || PRESETS[0];
+    const found = PRESETS.find(p => p.id === resolvedPresetId) || PRESETS[0];
     
     let xyzContent = xyz;
     if (xyzBase64) {
@@ -618,6 +623,50 @@ export const StructureViewer3D = ({
 
   const projectedAtomsRef = useRef<Array<{ sx: number; sy: number; sz: number; drawRadius: number; atom: Atom; index: number }>>([]);
 
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return;
+
+    setIsLoading(true);
+    setErrorMsg(null);
+    setSelectedAtomIndex(null);
+
+    try {
+      const res = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(query)}/record/SDF/?record_type=3d`);
+      if (!res.ok) {
+        throw new Error(language === "fr" 
+          ? `Molécule "${query}" introuvable ou indisponible en 3D sur PubChem.` 
+          : `Molecule "${query}" not found or unavailable in 3D on PubChem.`);
+      }
+      const sdfText = await res.text();
+      const parsed = parseSDF(sdfText);
+      if (parsed && parsed.atoms.length > 0) {
+        const centeredAtoms = centerCoordinates(parsed.atoms);
+        setActivePreset({
+          name: query.charAt(0).toUpperCase() + query.slice(1),
+          id: query,
+          description: language === "fr"
+            ? `Modèle moléculaire de ${query} chargé automatiquement en temps réel via la base de données PubChem.`
+            : `Molecular model of ${query} automatically loaded in real-time via the PubChem database.`,
+          atoms: centeredAtoms,
+          bonds: parsed.bonds
+        });
+      } else {
+        throw new Error(language === "fr"
+          ? "Impossible de lire les coordonnées tridimensionnelles de cette molécule."
+          : "Unable to parse 3D coordinates for this molecule.");
+      }
+    } catch (err: any) {
+      console.error("[PubChem search failure]:", err);
+      setErrorMsg(err.message || (language === "fr" ? "Erreur lors du chargement de la molécule." : "Error loading molecule."));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // React to preset updates from MDX props, and dynamically fetch from PubChem if not a built-in preset
   useEffect(() => {
     let resolvedAtoms = atoms;
@@ -637,13 +686,13 @@ export const StructureViewer3D = ({
       setSelectedAtomIndex(null);
     } else {
       const builtInIds = ["h2o", "co2", "ch4", "ch3cl", "ethanol", "nacl", "graphene"];
-      if (!builtInIds.includes(presetId) && presetId !== 'custom') {
+      if (!builtInIds.includes(resolvedPresetId) && resolvedPresetId !== 'custom') {
         setIsLoading(true);
         setErrorMsg(null);
         
-        fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(presetId)}/record/SDF/?record_type=3d`)
+        fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(resolvedPresetId)}/record/SDF/?record_type=3d`)
           .then(res => {
-            if (!res.ok) throw new Error(`Molécule "${presetId}" introuvable ou indisponible en 3D sur PubChem.`);
+            if (!res.ok) throw new Error(`Molécule "${resolvedPresetId}" introuvable ou indisponible en 3D sur PubChem.`);
             return res.text();
           })
           .then(sdfText => {
@@ -651,9 +700,9 @@ export const StructureViewer3D = ({
             if (parsed && parsed.atoms.length > 0) {
               const centeredAtoms = centerCoordinates(parsed.atoms);
               setActivePreset({
-                name: name || presetId.charAt(0).toUpperCase() + presetId.slice(1),
-                id: presetId,
-                description: description || `Modèle moléculaire de ${presetId} chargé automatiquement en temps réel via la base de données PubChem.`,
+                name: name || resolvedPresetId.charAt(0).toUpperCase() + resolvedPresetId.slice(1),
+                id: resolvedPresetId,
+                description: description || `Modèle moléculaire de ${resolvedPresetId} chargé automatiquement en temps réel via la base de données PubChem.`,
                 atoms: centeredAtoms,
                 bonds: parsed.bonds
               });
@@ -670,14 +719,14 @@ export const StructureViewer3D = ({
             setIsLoading(false);
           });
       } else {
-        const found = PRESETS.find(p => p.id === presetId);
+        const found = PRESETS.find(p => p.id === resolvedPresetId);
         if (found) {
           setActivePreset(found);
           setSelectedAtomIndex(null);
         }
       }
     }
-  }, [presetId, name, description, atoms, bonds, atomsBase64, bondsBase64]);
+  }, [resolvedPresetId, name, description, atoms, bonds, atomsBase64, bondsBase64]);
 
   // Canvas Drawing & Rendering Logic
   useEffect(() => {
@@ -941,7 +990,7 @@ export const StructureViewer3D = ({
   };
 
   // Determine if we should show the preset selection list
-  const isCustomOrSpecific = presetId !== "h2o" || atomsBase64 !== undefined || atoms !== undefined;
+  const isCustomOrSpecific = resolvedPresetId !== "h2o" || atomsBase64 !== undefined || atoms !== undefined;
   const shouldShowPresetsMenu = showMenu !== undefined ? showMenu : !isCustomOrSpecific;
 
   const selectedAtom = selectedAtomIndex !== null ? activePreset.atoms[selectedAtomIndex] : null;
@@ -962,27 +1011,46 @@ export const StructureViewer3D = ({
           </p>
         </div>
 
-        {/* Preset pill list */}
-        {shouldShowPresetsMenu && (
-          <div className="flex flex-wrap gap-1.5">
-            {PRESETS.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => {
-                  setActivePreset(p);
-                  setSelectedAtomIndex(null);
-                }}
-                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
-                  activePreset.id === p.id
-                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
-                    : "bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                {(t[p.name] || p.name).split(' ')[0]}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Preset pill list & Search Bar container */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {shouldShowPresetsMenu && (
+            <div className="flex flex-wrap gap-1.5">
+              {PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => {
+                    setActivePreset(p);
+                    setSelectedAtomIndex(null);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
+                    activePreset.id === p.id
+                      ? "bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                      : "bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  {(t[p.name] || p.name).split(' ')[0]}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Real-time search/load from PubChem */}
+          <form onSubmit={handleSearch} className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/80 rounded-xl p-1 shrink-0">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={language === 'fr' ? "Rechercher (ex: caféine, aspirine, C60...)" : "Search (e.g. caffeine, aspirin, C60...)"}
+              className="bg-transparent text-[10px] text-slate-200 placeholder-slate-500 font-bold px-2.5 py-1 focus:outline-none w-[170px] sm:w-[190px]"
+            />
+            <button
+              type="submit"
+              className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_10px_rgba(245,158,11,0.2)] hover:scale-[1.02]"
+            >
+              {language === 'fr' ? "Charger" : "Load"}
+            </button>
+          </form>
+        </div>
       </div>
 
       {/* Main interactive viewport container */}

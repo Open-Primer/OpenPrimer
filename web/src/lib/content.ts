@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from './matter';
-import { cleanPathSegment, getLocalizedLevelSlug, getCanonicalLevelFromSlug, getLocalizedSubjectSlug, getCanonicalSubjectFromSlug } from './translations';
+import { cleanPathSegment, getLocalizedLevelSlug, getCanonicalLevelFromSlug, getLocalizedSubjectSlug, getCanonicalSubjectFromSlug, sanitizeMetadataValue } from './translations';
 import { repairMediaOnRestitution } from './media-resolver';
 
 
@@ -615,10 +615,10 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         const enriched = await enrichGlossaryWithWikipediaLinks(enrichedEntities, lang);
         return {
           meta: {
-            title: dbLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-            subject: meta.subject || manualMeta.subject || getCanonicalSubjectFromSlug(slug[1], lang),
-            level: meta.level || manualMeta.level || getCanonicalLevelFromSlug(slug[0], lang),
-            module: meta.module || manualMeta.module || getLocalizedCoreModuleText(lang)
+            title: sanitizeMetadataValue(dbLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())),
+            subject: sanitizeMetadataValue(meta.subject || manualMeta.subject || getCanonicalSubjectFromSlug(slug[1], lang)),
+            level: sanitizeMetadataValue(meta.level || manualMeta.level || getCanonicalLevelFromSlug(slug[0], lang)),
+            module: sanitizeMetadataValue(meta.module || manualMeta.module || getLocalizedCoreModuleText(lang))
           },
           content: enriched
         };
@@ -687,10 +687,10 @@ export async function getPageContent(slug: string[], lang: string = 'en') {
         const enriched = await enrichGlossaryWithWikipediaLinks(enrichedEntities, fallbackLesson.lang || lang);
         return {
           meta: {
-            title: fallbackLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-            subject: meta.subject || manualMeta.subject || getCanonicalSubjectFromSlug(slug[1], lang),
-            level: meta.level || manualMeta.level || getCanonicalLevelFromSlug(slug[0], lang),
-            module: meta.module || manualMeta.module || getLocalizedCoreModuleText(fallbackLesson.lang || lang)
+            title: sanitizeMetadataValue(fallbackLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())),
+            subject: sanitizeMetadataValue(meta.subject || manualMeta.subject || getCanonicalSubjectFromSlug(slug[1], lang)),
+            level: sanitizeMetadataValue(meta.level || manualMeta.level || getCanonicalLevelFromSlug(slug[0], lang)),
+            module: sanitizeMetadataValue(meta.module || manualMeta.module || getLocalizedCoreModuleText(fallbackLesson.lang || lang))
           },
           content: enriched
         };
@@ -5141,9 +5141,10 @@ function isReferenceUsed(num: number, preRefText: string): boolean {
   const citeIdRegex = new RegExp(`\\bcite-${num}\\b`, 'i');
   const refIdRegex = new RegExp(`\\bref-${num}\\b`, 'i');
   const refNumRegex = new RegExp(`\\brefNum=\\{${num}\\}`, 'i');
-  const widgetRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*Citation\\s*:\\s*${num}\\b`, 'i');
+  const widgetRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*(?:Citation|Reference|Ref)\\s*:\\s*${num}\\b`, 'i');
+  const elementRegex = new RegExp(`<Reference\\b[^>]*?\\bid=["']?${num}\\b`, 'i');
   
-  return citeIdRegex.test(preRefText) || refIdRegex.test(preRefText) || refNumRegex.test(preRefText) || widgetRegex.test(preRefText);
+  return citeIdRegex.test(preRefText) || refIdRegex.test(preRefText) || refNumRegex.test(preRefText) || widgetRegex.test(preRefText) || elementRegex.test(preRefText);
 }
 
 function simplifyCitationQuery(citationText: string): string {

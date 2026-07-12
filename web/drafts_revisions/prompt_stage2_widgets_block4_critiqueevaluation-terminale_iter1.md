@@ -5,337 +5,337 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
     "props": {
       "questions": [
         {
-          "q": "Selon le droit français, quelles sont les conditions essentielles de validité d'un contrat, telles qu'énoncées par le Code civil ?",
-          "explanation": "L'article 1128 du Code civil dispose que sont nécessaires à la validité d'un contrat : le consentement des parties, leur capacité de contracter et un contenu licite et certain.",
+          "q": "Quelle est l'échelle de grandeur typique des nanomatériaux ?",
+          "explanation": "Les nanomatériaux sont généralement définis comme ayant au moins une dimension comprise entre 1 et 100 nanomètres.",
           "options": [
             {
-              "text": "Le consentement des parties, leur capacité de contracter, un contenu licite et certain.",
+              "text": "1 à 100 micromètres",
+              "correct": false
+            },
+            {
+              "text": "1 à 100 nanomètres",
               "correct": true
             },
             {
-              "text": "L'accord de volonté, la forme écrite, la présence de témoins.",
+              "text": "1 à 100 picomètres",
               "correct": false
             },
             {
-              "text": "La bonne foi des parties, l'équilibre des prestations, l'enregistrement notarié.",
-              "correct": false
-            },
-            {
-              "text": "La publicité du contrat, l'absence de vice caché, la signature électronique.",
+              "text": "1 à 100 angströms",
               "correct": false
             }
           ]
         },
         {
-          "q": "En droit des contrats, qu'est-ce qu'une erreur sur les qualités essentielles de la prestation due ?",
-          "explanation": "L'erreur sur les qualités essentielles est une cause de nullité du contrat si elle est déterminante du consentement et excusable. Elle porte sur les qualités de la prestation qui ont été expressément ou tacitement convenues et en considération desquelles les parties ont contracté.",
+          "q": "La lithographie est une technique de fabrication qui relève principalement de quelle approche ?",
+          "explanation": "La lithographie est une technique 'top-down' où des structures sont créées en enlevant de la matière ou en la modifiant à partir d'un matériau plus grand.",
           "options": [
             {
-              "text": "Une erreur qui porte sur la valeur économique du bien ou du service.",
+              "text": "Bottom-up",
               "correct": false
             },
             {
-              "text": "Une erreur qui porte sur la personne du cocontractant, quelle que soit son importance.",
-              "correct": false
-            },
-            {
-              "text": "Une erreur qui, si elle avait été connue, aurait empêché la partie de contracter.",
+              "text": "Top-down",
               "correct": true
             },
             {
-              "text": "Une erreur qui est toujours inexcusable et ne peut jamais entraîner la nullité.",
+              "text": "Auto-assemblage",
+              "correct": false
+            },
+            {
+              "text": "Synthèse chimique",
               "correct": false
             }
           ]
         },
         {
-          "q": "Qu'est-ce que le dol en droit des contrats français ?",
-          "explanation": "Le dol est une cause de nullité du contrat s'il est prouvé que, sans ces manœuvres, l'autre partie n'aurait pas contracté ou aurait contracté à des conditions substantiellement différentes. Il s'agit d'une tromperie intentionnelle.",
+          "q": "Quel microscope est le plus approprié pour visualiser la topographie de surface d'un échantillon à l'échelle nanométrique sans nécessiter de préparation conductrice ?",
+          "explanation": "Le Microscope à Force Atomique (MFA) permet d'obtenir des images topographiques de surface à l'échelle nanométrique, même pour des échantillons non conducteurs, en mesurant les forces d'interaction entre une pointe et la surface.",
           "options": [
             {
-              "text": "Une simple négligence d'une partie dans l'exécution de ses obligations.",
+              "text": "Microscope Électronique à Transmission (MET)",
               "correct": false
             },
             {
-              "text": "Une erreur spontanée et involontaire commise par l'une des parties.",
+              "text": "Microscope Électronique à Balayage (MEB)",
               "correct": false
             },
             {
-              "text": "Une manœuvre frauduleuse, un mensonge ou une réticence dolosive ayant provoqué le consentement de l'autre partie.",
+              "text": "Microscope à Force Atomique (MFA)",
               "correct": true
             },
             {
-              "text": "Une contrainte physique ou morale exercée sur l'une des parties.",
+              "text": "Microscope Optique",
               "correct": false
             }
           ]
         },
         {
-          "q": "La violence, en tant que vice du consentement, peut-elle être exercée par un tiers au contrat ?",
-          "explanation": "L'article 1142 du Code civil dispose que la violence est une cause de nullité qu'elle émane du cocontractant ou d'un tiers.",
+          "q": "Quelle est la propriété exceptionnelle des nanotubes de carbone qui les rend intéressants pour l'électronique ?",
+          "explanation": "Les nanotubes de carbone possèdent une conductivité électrique et thermique exceptionnellement élevée, ce qui les rend prometteurs pour des applications en électronique et en transfert de chaleur.",
           "options": [
             {
-              "text": "Non, la violence doit impérativement émaner du cocontractant lui-même.",
+              "text": "Leur faible conductivité thermique",
               "correct": false
             },
             {
-              "text": "Oui, la violence exercée par un tiers est également une cause de nullité du contrat.",
+              "text": "Leur transparence optique",
+              "correct": false
+            },
+            {
+              "text": "Leur conductivité électrique et thermique élevée",
               "correct": true
             },
             {
-              "text": "Seulement si le cocontractant avait connaissance de cette violence.",
-              "correct": false
-            },
-            {
-              "text": "Uniquement si le tiers est un représentant légal du cocontractant.",
+              "text": "Leur faible rapport surface/volume",
               "correct": false
             }
           ]
         },
         {
-          "q": "Qui est, en principe, capable de contracter selon le droit français ?",
-          "explanation": "Toute personne physique peut contracter si elle n'est pas déclarée incapable par la loi. Les majeurs protégés (tutelle, curatelle) et les mineurs non émancipés sont des exemples d'incapables.",
+          "q": "Qu'est-ce que l'auto-assemblage en ingénierie moléculaire ?",
+          "explanation": "L'auto-assemblage est un processus où des composants pré-programmés (molécules, nanoparticules) s'organisent spontanément en structures plus grandes et fonctionnelles grâce à des interactions non-covalentes.",
           "options": [
             {
-              "text": "Toute personne physique, sans exception.",
+              "text": "Un processus où des molécules sont manipulées individuellement par un robot.",
               "correct": false
             },
             {
-              "text": "Toute personne majeure et non protégée par la loi.",
+              "text": "Un processus où des composants désordonnés forment spontanément des structures organisées grâce à des interactions locales.",
               "correct": true
             },
             {
-              "text": "Seules les personnes morales.",
+              "text": "Une technique de fabrication 'top-down' utilisant des lasers.",
               "correct": false
             },
             {
-              "text": "Les mineurs émancipés uniquement pour les actes de la vie courante.",
+              "text": "La création de molécules complexes par synthèse organique.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Que signifie l'exigence d'un 'contenu licite et certain' pour la validité d'un contrat ?",
-          "explanation": "Le contenu du contrat doit être licite (non contraire à l'ordre public et aux bonnes mœurs) et certain (la prestation doit être déterminée ou déterminable).",
+          "q": "Comment les nanotechnologies peuvent-elles améliorer l'administration de médicaments ?",
+          "explanation": "Les nanotechnologies permettent de concevoir des nanovecteurs (nanoparticules, liposomes) qui peuvent encapsuler des médicaments et les délivrer de manière ciblée à des cellules ou tissus spécifiques, réduisant ainsi les effets secondaires et augmentant l'efficacité.",
           "options": [
             {
-              "text": "Que le contrat doit être rédigé par un notaire pour être valide.",
+              "text": "En augmentant la taille des molécules médicamenteuses.",
               "correct": false
             },
             {
-              "text": "Que les obligations des parties doivent être équilibrées et justes.",
-              "correct": false
-            },
-            {
-              "text": "Que la prestation doit être possible, déterminée ou déterminable, et que le but du contrat ne doit pas être contraire à l'ordre public ou aux bonnes mœurs.",
+              "text": "En permettant une libération ciblée et contrôlée des médicaments.",
               "correct": true
             },
             {
-              "text": "Que le contrat doit obligatoirement prévoir une clause pénale.",
+              "text": "En rendant les médicaments plus solubles dans l'eau uniquement.",
+              "correct": false
+            },
+            {
+              "text": "En diminuant l'efficacité des principes actifs.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quel principe fondamental du droit des contrats est exprimé par l'adage 'Pacta sunt servanda' ?",
-          "explanation": "Pacta sunt servanda signifie que les contrats doivent être respectés. C'est le principe de la force obligatoire des contrats, consacré par l'article 1103 du Code civil.",
+          "q": "Quel est l'un des principaux défis liés à l'évaluation des risques des nanomatériaux pour la santé humaine et l'environnement ?",
+          "explanation": "Les propriétés uniques des nanomatériaux, différentes de celles de leurs homologues macroscopiques, rendent leur évaluation toxicologique complexe et peuvent entraîner des effets inattendus sur les systèmes biologiques et l'environnement.",
           "options": [
             {
-              "text": "Le principe de la liberté contractuelle.",
+              "text": "Leur grande taille les rend facilement détectables.",
               "correct": false
             },
             {
-              "text": "Le principe de la bonne foi dans l'exécution des contrats.",
+              "text": "Leur réactivité chimique est toujours la même que celle de leurs homologues macroscopiques.",
               "correct": false
             },
             {
-              "text": "Le principe de la force obligatoire des contrats, signifiant que les conventions légalement formées tiennent lieu de loi à ceux qui les ont faites.",
+              "text": "Leurs propriétés uniques (taille, surface, forme) peuvent entraîner des interactions biologiques et environnementales imprévues.",
               "correct": true
             },
             {
-              "text": "Le principe de l'effet relatif des contrats.",
+              "text": "Ils sont toujours biodégradables et non toxiques.",
               "correct": false
             }
           ]
         },
         {
-          "q": "En cas d'inexécution contractuelle, quelle sanction n'est PAS une option pour le créancier selon le droit français ?",
-          "explanation": "Le droit français ne prévoit pas l'emprisonnement pour inexécution contractuelle. Les sanctions possibles incluent l'exécution forcée, la réduction du prix, la résolution, la suspension de l'exécution et les dommages et intérêts.",
+          "q": "Le graphène est un matériau 2D composé d'une seule couche d'atomes de carbone. Quelle est sa structure cristalline ?",
+          "explanation": "Le graphène est caractérisé par une structure cristalline hexagonale, où les atomes de carbone sont arrangés en un réseau en nid d'abeille.",
           "options": [
             {
-              "text": "L'exécution forcée en nature.",
+              "text": "Cubique à faces centrées",
               "correct": false
             },
             {
-              "text": "La réduction du prix.",
-              "correct": false
-            },
-            {
-              "text": "La résolution du contrat.",
-              "correct": false
-            },
-            {
-              "text": "L'emprisonnement du débiteur défaillant.",
-              "correct": true
-            }
-          ]
-        },
-        {
-          "q": "Quelles sont les trois conditions cumulatives pour engager la responsabilité civile délictuelle (ou extracontractuelle) en droit français ?",
-          "explanation": "Pour qu'il y ait responsabilité civile délictuelle, il faut la réunion d'un fait générateur (faute, fait des choses, fait d'autrui), d'un préjudice et d'un lien de causalité entre le fait générateur et le préjudice.",
-          "options": [
-            {
-              "text": "Un contrat, une faute, un préjudice.",
-              "correct": false
-            },
-            {
-              "text": "Un fait générateur, un préjudice, un lien de causalité.",
+              "text": "Hexagonale",
               "correct": true
             },
             {
-              "text": "Une intention de nuire, un dommage, une assurance.",
+              "text": "Tétragonale",
               "correct": false
             },
             {
-              "text": "Une loi, une victime, un coupable.",
+              "text": "Amorphe",
               "correct": false
             }
           ]
         },
         {
-          "q": "En matière de responsabilité civile pour faute, qu'est-ce qui caractérise la faute ?",
-          "explanation": "La faute peut être intentionnelle ou non. Elle se caractérise par un comportement qui s'écarte de celui qu'aurait eu une personne raisonnable placée dans les mêmes circonstances. Elle peut être une action ou une omission.",
+          "q": "Qu'est-ce que la plasmonique ?",
+          "explanation": "La plasmonique est un domaine qui étudie l'interaction entre la lumière et les plasmons de surface (oscillations collectives d'électrons libres) dans les nanostructures métalliques, permettant de confiner la lumière à l'échelle nanométrique.",
           "options": [
             {
-              "text": "Une intention de nuire systématique.",
+              "text": "L'étude des propriétés optiques des matériaux à l'échelle macroscopique.",
               "correct": false
             },
             {
-              "text": "Un comportement illicite ou une abstention, qu'il soit intentionnel ou non, et qui cause un dommage à autrui.",
+              "text": "L'étude de l'interaction entre la lumière et les électrons libres dans les métaux à l'échelle nanométrique.",
               "correct": true
             },
             {
-              "text": "Uniquement la violation d'une disposition légale ou réglementaire.",
+              "text": "La fabrication de lasers à l'aide de nanomatériaux.",
               "correct": false
             },
             {
-              "text": "Un acte commis par une personne incapable de discernement.",
+              "text": "L'utilisation de la lumière pour manipuler des atomes individuels.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Dans le régime de responsabilité du fait des choses, qui est présumé responsable du dommage causé par une chose ?",
-          "explanation": "L'article 1242 al. 1er du Code civil pose le principe général de la responsabilité du fait des choses, dont le gardien est présumé responsable. Le gardien est celui qui a les pouvoirs d'usage, de direction et de contrôle sur la chose.",
+          "q": "Comment les nanotechnologies peuvent-elles améliorer les biosenseurs ?",
+          "explanation": "Les nanotechnologies permettent de concevoir des biosenseurs avec une surface de détection accrue, une meilleure affinité pour les cibles et des signaux amplifiés, conduisant à une détection plus rapide, plus sensible et plus spécifique de biomolécules.",
           "options": [
             {
-              "text": "Le propriétaire de la chose, sans exception.",
+              "text": "En diminuant leur sensibilité et leur spécificité.",
               "correct": false
             },
             {
-              "text": "Le gardien de la chose, c'est-à-dire celui qui en a l'usage, la direction et le contrôle.",
+              "text": "En augmentant la taille des éléments de détection.",
+              "correct": false
+            },
+            {
+              "text": "En permettant une détection plus rapide, plus sensible et plus spécifique de biomolécules.",
               "correct": true
             },
             {
-              "text": "Le fabricant de la chose.",
-              "correct": false
-            },
-            {
-              "text": "La victime elle-même, si elle a été imprudente.",
+              "text": "En les rendant uniquement utilisables en laboratoire.",
               "correct": false
             }
           ]
         },
         {
-          "q": "La responsabilité des parents du fait de leurs enfants mineurs est-elle une responsabilité pour faute prouvée ou une responsabilité de plein droit ?",
-          "explanation": "La jurisprudence a établi que la responsabilité des parents du fait de leurs enfants mineurs est une responsabilité de plein droit, fondée sur l'autorité parentale, et non sur une faute de surveillance ou d'éducation.",
+          "q": "Quel est un enjeu éthique majeur lié au développement des nanotechnologies ?",
+          "explanation": "Les nanotechnologies soulèvent des questions éthiques importantes, notamment en ce qui concerne la vie privée, la surveillance, l'équité d'accès aux bénéfices, et les risques potentiels pour la santé et l'environnement.",
           "options": [
             {
-              "text": "C'est une responsabilité pour faute prouvée des parents.",
+              "text": "Le coût de production des nanomatériaux.",
               "correct": false
             },
             {
-              "text": "C'est une responsabilité de plein droit, qui n'exige pas la preuve d'une faute des parents.",
+              "text": "La difficulté de trouver des applications pratiques.",
+              "correct": false
+            },
+            {
+              "text": "Les préoccupations concernant la vie privée et la surveillance si les nanotechnologies sont utilisées pour des dispositifs de suivi.",
               "correct": true
             },
             {
-              "text": "Elle dépend de la gravité de la faute commise par l'enfant.",
-              "correct": false
-            },
-            {
-              "text": "Elle n'est engagée que si les parents étaient présents au moment du dommage.",
+              "text": "Le manque de personnel qualifié dans le domaine.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Qu'est-ce que le lien de causalité en droit de la responsabilité civile ?",
-          "explanation": "Le lien de causalité est la condition essentielle qui établit que le dommage est bien la conséquence du fait générateur. Sans ce lien, il n'y a pas de responsabilité.",
+          "q": "Quel est un avantage clé de l'approche 'bottom-up' par rapport à l'approche 'top-down' pour la fabrication de nanostructures ?",
+          "explanation": "L'approche 'bottom-up', notamment via l'auto-assemblage moléculaire, permet de construire des structures avec une précision atomique ou moléculaire, créant des architectures complexes et fonctionnelles à partir de composants de base.",
           "options": [
             {
-              "text": "Le lien juridique qui unit les parties à un contrat.",
+              "text": "Elle permet de créer des structures plus grandes et moins précises.",
               "correct": false
             },
             {
-              "text": "Le rapport direct et nécessaire entre le fait générateur du dommage et le préjudice subi.",
+              "text": "Elle est généralement plus coûteuse et moins efficace.",
+              "correct": false
+            },
+            {
+              "text": "Elle permet un contrôle atomique ou moléculaire précis et la création de structures complexes à partir de blocs de construction.",
               "correct": true
             },
             {
-              "text": "La relation affective entre la victime et l'auteur du dommage.",
-              "correct": false
-            },
-            {
-              "text": "La preuve de l'intention de nuire de l'auteur du dommage.",
+              "text": "Elle est limitée aux matériaux inorganiques.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quel type de préjudice n'est PAS réparable en droit français ?",
-          "explanation": "Pour être réparable, le préjudice doit être certain, direct, personnel et légitime. Un préjudice purement hypothétique ou éventuel n'est pas indemnisable.",
+          "q": "Pourquoi les nanoparticules d'or peuvent-elles apparaître de couleurs différentes (rouge, bleu, etc.) alors que l'or macroscopique est jaune ?",
+          "explanation": "Les nanoparticules d'or présentent des propriétés optiques uniques, notamment des résonances plasmoniques de surface, qui dépendent fortement de leur taille, de leur forme et de leur environnement, entraînant des couleurs différentes de celles de l'or massif.",
           "options": [
             {
-              "text": "Le préjudice corporel.",
+              "text": "À cause de la présence d'impuretés.",
               "correct": false
             },
             {
-              "text": "Le préjudice moral.",
+              "text": "En raison de la diffraction de la lumière.",
               "correct": false
             },
             {
-              "text": "Le préjudice matériel.",
-              "correct": false
-            },
-            {
-              "text": "Le préjudice purement hypothétique et incertain.",
+              "text": "En raison de leurs propriétés plasmoniques de surface qui dépendent fortement de leur taille et de leur forme.",
               "correct": true
+            },
+            {
+              "text": "C'est une illusion d'optique.",
+              "correct": false
             }
           ]
         },
         {
-          "q": "Quel est l'objectif principal de la loi Badinter du 5 juillet 1985 ?",
-          "explanation": "La loi Badinter vise à favoriser l'indemnisation des victimes d'accidents de la circulation en instaurant un régime spécial de responsabilité, souvent plus favorable aux victimes.",
+          "q": "Qu'est-ce qu'une machine moléculaire ?",
+          "explanation": "Une machine moléculaire est une entité moléculaire capable d'effectuer des mouvements mécaniques (rotation, translation, etc.) en réponse à des stimuli spécifiques (lumière, pH, température, etc.), transformant l'énergie en travail mécanique.",
           "options": [
             {
-              "text": "Régir la responsabilité du fait des produits défectueux.",
+              "text": "Un robot macroscopique utilisé pour manipuler des molécules.",
               "correct": false
             },
             {
-              "text": "Améliorer l'indemnisation des victimes d'accidents de la circulation.",
+              "text": "Une molécule ou un assemblage de molécules capable d'effectuer des mouvements mécaniques en réponse à des stimuli externes.",
               "correct": true
             },
             {
-              "text": "Établir un régime de responsabilité sans faute pour les dommages environnementaux.",
+              "text": "Un ordinateur quantique.",
               "correct": false
             },
             {
-              "text": "Encadrer la responsabilité des professionnels de santé.",
+              "text": "Un dispositif de purification d'eau à l'échelle nanométrique.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Comment les nanotechnologies peuvent-elles contribuer à la remédiation environnementale ?",
+          "explanation": "Les nanotechnologies offrent des solutions pour la nanoremédiation, où des nanoparticules (par exemple, de fer zéro-valent) sont utilisées pour dégrader, adsorber ou transformer des polluants dans l'eau, le sol ou l'air.",
+          "options": [
+            {
+              "text": "En augmentant la pollution des sols et de l'eau.",
+              "correct": false
+            },
+            {
+              "text": "En utilisant des nanoparticules pour dégrader ou adsorber des polluants.",
+              "correct": true
+            },
+            {
+              "text": "En rendant les processus de filtration moins efficaces.",
+              "correct": false
+            },
+            {
+              "text": "En créant de nouveaux polluants.",
               "correct": false
             }
           ]
         }
       ],
-      "durationLimit": 3600
+      "durationLimit": 1800
     }
   },
   "references": []
