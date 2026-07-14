@@ -393,7 +393,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
               {pageItems.map((item, idx) => {
                 if (mode === 'courses') {
                   const colors = KIOSK_COLORS[(startIndex + idx) % KIOSK_COLORS.length];
-                  const IconComponent = SUBJECT_ICONS[item.subject] || Book;
+                  const IconComponent = item.isCurriculum ? GraduationCap : Book;
                   const localizedTitle = dbService.getLocalizedCourseTitle(item, lang) || item.title;
                   const levelText = formatCourseLevel(item.level, lang);
                   const linkPath = getCoursePath(item.level, item.subject, item.slug, 'introduction', lang);
@@ -408,7 +408,7 @@ export const CourseKiosk = ({ lang, mode = 'courses', onCourseClick, onDisciplin
                         {/* Top Header Row */}
                         <div className="flex justify-between items-start mb-4">
                           <div className={`w-10 h-10 rounded-xl bg-slate-950/60 border border-slate-800/40 flex items-center justify-center ${colors.text} group-hover/card:scale-110 transition-transform duration-300`}>
-                            {item.isCurriculum ? <GraduationCap className="w-5 h-5" /> : <IconComponent className="w-5 h-5" />}
+                            <IconComponent className="w-5 h-5" />
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="px-2 py-0.5 bg-slate-950/80 border border-slate-800 rounded-lg text-[7px] font-black uppercase text-slate-400 tracking-wider">
