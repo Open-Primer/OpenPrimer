@@ -340,7 +340,7 @@ async function uploadToSupabaseStorage(fileName: string, buffer: Buffer, mimeTyp
   }
 }
 
-async function searchYouTubeVideo(query: string): Promise<string | null> {
+export async function searchYouTubeVideo(query: string): Promise<string | null> {
   try {
     const rawQuery = query.trim();
     const cleanQuery = await optimizeQueryWithGemini(rawQuery);
@@ -1527,7 +1527,7 @@ async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<
 }
 
 // Wikimedia Commons Audio Fetcher
-async function fetchWikimediaAudio(title: string): Promise<string | null> {
+export async function fetchWikimediaAudio(title: string): Promise<string | null> {
   try {
     const rawTitle = title.trim();
     const cleanTitle = await optimizeQueryWithGemini(rawTitle);

@@ -2,10 +2,10 @@ import { dbService } from './db';
 import { supabase, supabaseAdmin } from './supabase';
 import { callVertexAI, isVertexConfigured, recordMetrics, compressPromptText } from './vertex-client';
 import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation, resolvePrecompiledAnchors, rehypeMdxSanitizer } from './content';
-import { resolveAndPersistMedia } from './media-resolver';
+import { resolveAndPersistMedia, resolveMediaImage, searchYouTubeVideo, fetchWikimediaAudio } from './media-resolver';
 import { cleanPathSegment } from './translations';
 import { TASK_MODELS } from './ai-config';
-import { resolvePersonDates, isPlaceholderDates, formatPersonDates } from './wikidata-resolver';
+import { resolvePersonDates, isPlaceholderDates, formatPersonDates, resolveEventDates, resolveChemicalData, resolveScientificFormula, resolveGoingFurtherResource } from './wikidata-resolver';
 import fs from 'fs';
 import path from 'path';
 
@@ -1910,6 +1910,93 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
         }
       }
 
+      // [FIX IC-2b] Resolve dates for EventLink / HistoricalEventLink / EvenementHistorique / ÉvénementHistorique components via Wikidata.
+      if (comp.componentType === "EventLink" || comp.componentType === "HistoricalEventLink" || comp.componentType === "EvenementHistorique" || comp.componentType === "ÉvénementHistorique") {
+        const eventName: string = (props.name || '').trim();
+        const currentYear: string = (props.year || props.dates || '').trim();
+        if (eventName && isPlaceholderDates(currentYear)) {
+          try {
+            const targetLang = (lang || 'en').toLowerCase().split('-')[0];
+            const resolved = await resolveEventDates(eventName, targetLang);
+            if (resolved && resolved.formatted) {
+              if (props.year !== undefined) {
+                props.year = resolved.formatted;
+              }
+              if (props.dates !== undefined) {
+                props.dates = resolved.formatted;
+              }
+              if (props.year === undefined && props.dates === undefined) {
+                props.dates = resolved.formatted;
+              }
+              console.log(`[EVENT DATE RESOLVER] Resolved dates for "${eventName}": ${resolved.formatted}`);
+            } else {
+              if (isPlaceholderDates(props.year)) delete props.year;
+              if (isPlaceholderDates(props.dates)) delete props.dates;
+            }
+          } catch (err) {
+            console.error(`[EVENT DATE RESOLVER] Error resolving dates for "${eventName}":`, err);
+            if (isPlaceholderDates(props.year)) delete props.year;
+            if (isPlaceholderDates(props.dates)) delete props.dates;
+          }
+        }
+      }
+
+      // [FIX IC-2c] Resolve chemical formula and SMILES for ConceptLink / Molecule / ChemicalLink components.
+      if (comp.componentType === "ConceptLink" || comp.componentType === "Molecule" || comp.componentType === "ChemicalLink") {
+        const entityName: string = (props.name || props.term || '').trim();
+        if (entityName && entityName.length > 2) {
+          const lowerName = entityName.toLowerCase();
+          const isChemicalTerm = 
+            lowerName.includes('acide') || lowerName.includes('acid') || lowerName.includes('dioxyde') || 
+            lowerName.includes('dioxide') || lowerName.includes('sulfate') || lowerName.includes('hydroxyde') || 
+            lowerName.includes('hydroxide') || lowerName.includes('chlorure') || lowerName.includes('chloride') || 
+            lowerName.includes('eau') || lowerName.includes('water') || lowerName.includes('éthanol') || 
+            lowerName.includes('ethanol') || lowerName.includes('méthane') || lowerName.includes('methane') ||
+            lowerName.includes('benzène') || lowerName.includes('benzene') || lowerName.includes('glucose') ||
+            comp.componentType === "Molecule" || comp.componentType === "ChemicalLink";
+
+          if (isChemicalTerm) {
+            try {
+              const targetLang = (lang || 'en').toLowerCase().split('-')[0];
+              const resolved = await resolveChemicalData(entityName, targetLang);
+              if (resolved && resolved.formula) {
+                props.formula = resolved.formula;
+                if (resolved.smiles) props.smiles = resolved.smiles;
+                
+                if (props.description && !props.description.includes(resolved.formula)) {
+                  const formulaSuffix = targetLang === 'fr' 
+                    ? ` (formule chimique : ${resolved.formula})` 
+                    : ` (chemical formula: ${resolved.formula})`;
+                  props.description = props.description.trim() + formulaSuffix;
+                }
+                console.log(`[CHEMICAL RESOLVER] Resolved formula for "${entityName}": ${resolved.formula}`);
+              }
+            } catch (err) {
+              console.error(`[CHEMICAL RESOLVER] Error for "${entityName}":`, err);
+            }
+          }
+        }
+      }
+
+      // [FIX IC-2d] Resolve LaTeX formula for general scientific concepts.
+      if (comp.componentType === "ConceptLink") {
+        const conceptName: string = (props.name || props.term || '').trim();
+        if (conceptName && !props.formula) {
+          try {
+            const targetLang = (lang || 'en').toLowerCase().split('-')[0];
+            const resolved = await resolveScientificFormula(conceptName, targetLang);
+            if (resolved && resolved.formula) {
+              props.formula = resolved.formula;
+              console.log(`[FORMULA RESOLVER] Resolved LaTeX formula for "${conceptName}": ${resolved.formula}`);
+            }
+          } catch (err) {
+            console.error(`[FORMULA RESOLVER] Error for "${conceptName}":`, err);
+          }
+        }
+      }
+
+
+
       // Intelligent biography healing (description + dates)
       if (comp.componentType === "Biography") {
         let name = (props.name || "").trim();
@@ -2031,7 +2118,7 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
         if (detectLanguageLeakage(props.description, lang)) {
           props.description = await translateText(props.description, lang);
         }
-      } else if (comp.componentType === "Image") {
+      } else if (comp.componentType === "Image" || comp.componentType === "CustomFigure") {
         if (detectLanguageLeakage(props.description, lang)) {
           props.description = await translateText(props.description, lang);
         }
@@ -2040,6 +2127,64 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
         }
         if (props.caption && detectLanguageLeakage(props.caption, lang)) {
           props.caption = await translateText(props.caption, lang);
+        }
+        
+        // Resolve Image/CustomFigure URL programmatically via search query
+        const queryName = (props.searchQuery || props.alt || props.title || "").trim();
+        const hasDummyUrl = !props.url && !props.src || 
+          (props.url && /placeholder|dummy|example\.com|localhost/i.test(props.url)) ||
+          (props.src && /placeholder|dummy|example\.com|localhost/i.test(props.src));
+        
+        if (hasDummyUrl && queryName) {
+          try {
+            const targetLang = (lang || 'en').toLowerCase().split('-')[0];
+            const resolution = await resolveMediaImage(queryName, targetLang);
+            if (resolution && resolution.url) {
+              props.url = resolution.url;
+              props.src = resolution.url; // set both for safety
+              if (resolution.description && (!props.caption || props.caption.includes('placeholder'))) {
+                const sourceLabel = resolution.sourceLabel || 'Wikimedia Commons';
+                props.caption = `${resolution.description} — Source: ${sourceLabel}`;
+              }
+              console.log(`[WIDGET MEDIA RESOLVER] Resolved Image "${queryName}" -> URL: ${props.url}`);
+            }
+          } catch (err) {
+            console.error(`[WIDGET MEDIA RESOLVER] Error for Image "${queryName}":`, err);
+          }
+        }
+      } else if (comp.componentType === "Video" || comp.componentType === "VideoPlayer") {
+        const queryName = (props.title || props.searchQuery || "").trim();
+        const hasDummyUrl = !props.url || /placeholder|dummy|example\.com|localhost/i.test(props.url);
+        
+        if (hasDummyUrl && queryName) {
+          try {
+            const targetLang = (lang || 'en').toLowerCase().split('-')[0];
+            const searchQuery = `${queryName} cours education ${targetLang === 'fr' ? 'français' : 'english'}`;
+            const videoId = await searchYouTubeVideo(searchQuery);
+            if (videoId) {
+              props.id = videoId;
+              props.url = `https://www.youtube.com/watch?v=${videoId}`;
+              console.log(`[WIDGET MEDIA RESOLVER] Resolved Video "${queryName}" -> URL: ${props.url}`);
+            }
+          } catch (err) {
+            console.error(`[WIDGET MEDIA RESOLVER] Error for Video "${queryName}":`, err);
+          }
+        }
+      } else if (comp.componentType === "Audio" || comp.componentType === "AudioPlayer") {
+        const queryName = (props.title || props.text || "").trim();
+        const hasDummyUrl = !props.url || /placeholder|dummy|example\.com|localhost/i.test(props.url);
+        
+        if (hasDummyUrl && queryName) {
+          try {
+            const audioUrl = await fetchWikimediaAudio(queryName);
+            if (audioUrl) {
+              props.url = audioUrl;
+              props.src = audioUrl;
+              console.log(`[WIDGET MEDIA RESOLVER] Resolved Audio "${queryName}" -> URL: ${props.url}`);
+            }
+          } catch (err) {
+            console.error(`[WIDGET MEDIA RESOLVER] Error for Audio "${queryName}":`, err);
+          }
         }
       } else if (comp.componentType === "Citation") {
         if (detectLanguageLeakage(props.quote, lang)) {
@@ -2125,6 +2270,21 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       }
       if (item.author && detectLanguageLeakage(item.author, lang)) {
         item.author = await translateText(item.author, lang);
+      }
+
+      // [RESOURCE RESOLVER] Deterministic reading resource resolution via Google Books & CrossRef APIs
+      try {
+        const targetLang = (lang || 'en').toLowerCase().split('-')[0];
+        const resolved = await resolveGoingFurtherResource(item.title, item.author, item.type, targetLang);
+        if (resolved) {
+          if (resolved.url) item.url = resolved.url;
+          if (resolved.year) item.year = resolved.year;
+          if (resolved.author) item.author = resolved.author;
+          if (resolved.title) item.title = resolved.title;
+          console.log(`[RESOURCE RESOLVER] Successfully resolved "${item.title}" (${item.type}) -> URL: ${item.url}, Year: ${item.year}`);
+        }
+      } catch (err) {
+        console.error(`[RESOURCE RESOLVER] Error for "${item.title}":`, err);
       }
     }
   } else {
@@ -2322,7 +2482,40 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
     widgets.glossary = [];
   }
 
-  if (!Array.isArray(widgets.references)) {
+  if (Array.isArray(widgets.references)) {
+    const resolvedRefs: string[] = [];
+    for (const ref of widgets.references) {
+      const trimmedRef = String(ref).trim();
+      if (!trimmedRef) continue;
+      
+      // Check if it's a placeholder
+      if (/placeholder|todo|tbd|tbc|lorem|ipsum|ref\d+/i.test(trimmedRef)) {
+        continue;
+      }
+      
+      try {
+        const targetLang = (lang || 'en').toLowerCase().split('-')[0];
+        // Treat citation as an article/book type to fetch canonical details
+        const resolved = await resolveGoingFurtherResource(trimmedRef, null, 'article', targetLang);
+        if (resolved) {
+          // Format as a standardized, high-authority citation string
+          const authorStr = resolved.author ? resolved.author : (targetLang === 'fr' ? 'Auteur inconnu' : 'Unknown Author');
+          const yearStr = resolved.year ? ` (${resolved.year})` : '';
+          const titleStr = resolved.title ? `. *${resolved.title}*` : '';
+          const urlStr = resolved.url ? `. URL : ${resolved.url}` : '';
+          const formatted = `${authorStr}${yearStr}${titleStr}${urlStr}`;
+          resolvedRefs.push(formatted);
+          console.log(`[REFERENCE RESOLVER] Resolved "${trimmedRef}" -> "${formatted}"`);
+        } else {
+          resolvedRefs.push(trimmedRef);
+        }
+      } catch (err) {
+        console.error(`[REFERENCE RESOLVER] Error for "${trimmedRef}":`, err);
+        resolvedRefs.push(trimmedRef);
+      }
+    }
+    widgets.references = resolvedRefs;
+  } else {
     widgets.references = [];
   }
 
@@ -8070,106 +8263,7 @@ INSTRUCTIONS:
   return repairedMdx;
 }
 
-// Recursive ytInitialData parser to extract search result videos
-async function searchYouTubeVideo(query: string): Promise<string | null> {
-  try {
-    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
-    const res = await fetchWithTimeout(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7'
-      }
-    }, 5000);
-    if (!res.ok) return null;
-    const html = await res.text();
-    
-    // Extract ytInitialData
-    let ytInitialData = null;
-    const jsonMatch = html.match(/ytInitialData\s*=\s*({[\s\S]+?});/);
-    if (jsonMatch) {
-      try {
-        ytInitialData = JSON.parse(jsonMatch[1]);
-      } catch (e) {
-        // Fallback brace matching if parsing failed
-        const startIdx = html.indexOf('ytInitialData = {');
-        if (startIdx !== -1) {
-          const start = html.indexOf('{', startIdx);
-          let braceCount = 1;
-          let i = start + 1;
-          while (i < html.length && braceCount > 0) {
-            if (html[i] === '{') braceCount++;
-            else if (html[i] === '}') braceCount--;
-            i++;
-          }
-          if (braceCount === 0) {
-            try {
-              ytInitialData = JSON.parse(html.substring(start, i));
-            } catch {}
-          }
-        }
-      }
-    }
-
-    const videos: any[] = [];
-
-    if (ytInitialData) {
-      const findRenderers = (obj: any) => {
-        if (!obj || typeof obj !== 'object') return;
-        if (obj.videoRenderer) {
-          const vr = obj.videoRenderer;
-          const videoId = vr.videoId;
-          let title = '';
-          if (vr.title?.runs?.[0]?.text) title = vr.title.runs[0].text;
-          else if (vr.title?.simpleText) title = vr.title.simpleText;
-
-          let viewStr = '';
-          if (vr.viewCountText?.simpleText) viewStr = vr.viewCountText.simpleText;
-          else if (vr.shortViewCountText?.simpleText) viewStr = vr.shortViewCountText.simpleText;
-
-          let durationStr = '';
-          if (vr.lengthText?.simpleText) durationStr = vr.lengthText.simpleText;
-
-          if (videoId && videoId.length === 11) {
-            let multiplier = 1;
-            const cleanStr = viewStr.toLowerCase().replace(/[^0-9kmy\s.,]/g, '').trim();
-            if (cleanStr.includes('k')) multiplier = 1000;
-            else if (cleanStr.includes('m')) multiplier = 1000000;
-            else if (cleanStr.includes('b') || cleanStr.includes('g')) multiplier = 1000000000;
-            else if (cleanStr.includes('mille')) multiplier = 1000;
-            else if (cleanStr.includes('million')) multiplier = 1000000;
-
-            const valMatch = cleanStr.match(/([0-9]+(?:[.,][0-9]+)?)/);
-            const viewCount = valMatch ? parseFloat(valMatch[1].replace(',', '.')) * multiplier : 0;
-
-            videos.push({ videoId, title, viewCount, duration: durationStr });
-          }
-          return;
-        }
-        for (const key of Object.keys(obj)) {
-          findRenderers(obj[key]);
-        }
-      };
-
-      findRenderers(ytInitialData);
-    }
-
-    if (videos.length > 0) {
-      const topCandidates = videos.slice(0, 5);
-      topCandidates.sort((a, b) => b.viewCount - a.viewCount);
-      console.log(`[YOUTUBE-SCRAPER] Sorted top candidates by viewCount:`, topCandidates.map(v => `${v.videoId} (${v.viewCount} views): "${v.title}"`));
-      return topCandidates[0].videoId;
-    }
-
-    const fallbackMatch = html.match(/"videoId"\s*:\s*"([\w-]{11})"/);
-    if (fallbackMatch && fallbackMatch[1]) {
-      return fallbackMatch[1];
-    }
-    return null;
-  } catch (err) {
-    console.warn(`[MEDIA-RESOLVER] YouTube search failed for query "${query}":`, err);
-    return null;
-  }
-}
+// searchYouTubeVideo is imported from './media-resolver' to ensure single source of truth resolution.
 
 async function findAlternativeVideo(title: string, lang: string): Promise<{ id?: string; url?: string; provider?: string } | null> {
   console.log(`[ALTERNATIVE SEARCH] Searching alternative video for title: "${title}" (${lang})...`);

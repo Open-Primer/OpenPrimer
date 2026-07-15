@@ -29,19 +29,36 @@ export interface PersonDates {
   wikidataId: string | null;
 }
 
+export interface EventDates {
+  startYear: number | null;
+  endYear: number | null;
+  formatted: string;
+  wikidataId: string | null;
+}
+
+export interface ChemicalData {
+  formula: string | null;
+  smiles: string | null;
+  wikidataId: string | null;
+}
+
 interface ExtendedCacheEntry {
   url: string | null;
   summary: string | null;
   description: string | null;
-  /** Formatted dates string cached from a previous resolution */
+  /** Formatted dates/formula string cached from a previous resolution */
   dates: string | null;
   fetchedAt: number;
   /** Wikidata QID */
   wikidataId?: string | null;
-  /** Raw birth year from Wikidata */
+  /** Raw birth year / start year from Wikidata */
   birthYear?: number | null;
-  /** Raw death year from Wikidata, null means still alive */
+  /** Raw death year / end year from Wikidata, null means still alive or ongoing */
   deathYear?: number | null;
+  /** Chemical formula raw string */
+  formula?: string | null;
+  /** Chemical SMILES raw string */
+  smiles?: string | null;
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -74,7 +91,7 @@ function saveCache(cache: Record<string, ExtendedCacheEntry>): void {
   }
 }
 
-function cacheKey(lang: string, type: 'person' | 'concept' | 'location' | 'institution', name: string): string {
+function cacheKey(lang: string, type: 'person' | 'concept' | 'location' | 'institution' | 'event' | 'chemical' | 'resource', name: string): string {
   const normalized = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '');
   return `${lang}:${type}:${normalized}`;
 }
@@ -235,6 +252,134 @@ async function resolvePersonViaWikidata(name: string): Promise<{ qid: string; bi
 
   return { qid, birthYear, deathYear };
 }
+
+/**
+ * Searches Wikidata for a historical event by name and returns its start/end years.
+ */
+async function resolveEventViaWikidata(name: string, lang: string = 'en'): Promise<{ qid: string; startYear: number | null; endYear: number | null } | null> {
+  const targetLang = lang.toLowerCase().split('-')[0];
+  const langs = targetLang === 'en' ? ['en'] : [targetLang, 'en'];
+  
+  let searchData = null;
+  for (const l of langs) {
+    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(name)}&language=${l}&format=json&type=item&limit=5`;
+    searchData = await fetchJson(searchUrl);
+    if (searchData?.search?.length) break;
+  }
+  if (!searchData?.search?.length) return null;
+
+  const eventEntry = searchData.search.find((e: any) => {
+    const desc = (e.description || '').toLowerCase();
+    return (
+      desc.includes('event') || desc.includes('battle') || desc.includes('war') ||
+      desc.includes('revolution') || desc.includes('treaty') || desc.includes('conference') ||
+      desc.includes('bataille') || desc.includes('guerre') || desc.includes('révolution') ||
+      desc.includes('traité') || desc.includes('conflit') || desc.includes('conflict') ||
+      desc.includes('history') || desc.includes('historique')
+    );
+  }) || searchData.search[0];
+
+  const qid: string = eventEntry.id;
+  if (!qid) return null;
+
+  const sparqlQuery = `
+    SELECT ?pointInTime ?startDate ?endDate WHERE {
+      OPTIONAL { wd:${qid} wdt:P585 ?pointInTime . }
+      OPTIONAL { wd:${qid} wdt:P580 ?startDate . }
+      OPTIONAL { wd:${qid} wdt:P582 ?endDate . }
+    }
+    LIMIT 1
+  `;
+
+  const sparqlUrl = `${WIKIDATA_SPARQL_URL}?query=${encodeURIComponent(sparqlQuery)}&format=json`;
+  const sparqlData = await fetchJson(sparqlUrl);
+
+  const bindings = sparqlData?.results?.bindings;
+  if (!bindings?.length) return { qid, startYear: null, endYear: null };
+
+  const row = bindings[0];
+  const pitYear = parseWikidataYear(row.pointInTime?.value);
+  const startYear = parseWikidataYear(row.startDate?.value) || pitYear;
+  const endYear = parseWikidataYear(row.endDate?.value);
+
+  return { qid, startYear, endYear };
+}
+
+/**
+ * Searches Wikidata for a chemical compound by name and returns formula and SMILES.
+ */
+async function resolveChemicalViaWikidata(name: string, lang: string = 'en'): Promise<{ qid: string; formula: string | null; smiles: string | null } | null> {
+  const targetLang = lang.toLowerCase().split('-')[0];
+  const langs = targetLang === 'en' ? ['en'] : [targetLang, 'en'];
+
+  let searchData = null;
+  for (const l of langs) {
+    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(name)}&language=${l}&format=json&type=item&limit=5`;
+    searchData = await fetchJson(searchUrl);
+    if (searchData?.search?.length) break;
+  }
+  if (!searchData?.search?.length) return null;
+
+  const chemEntry = searchData.search.find((e: any) => {
+    const desc = (e.description || '').toLowerCase();
+    return (
+      desc.includes('chemical compound') || desc.includes('compound') || desc.includes('molecule') ||
+      desc.includes('substance') || desc.includes('acid') || desc.includes('composé') ||
+      desc.includes('molécule') || desc.includes('chimie') || desc.includes('substance chimique')
+    );
+  }) || searchData.search[0];
+
+  const qid: string = chemEntry.id;
+  if (!qid) return null;
+
+  const sparqlQuery = `
+    SELECT ?formula ?smiles WHERE {
+      OPTIONAL { wd:${qid} wdt:P274 ?formula . }
+      OPTIONAL { wd:${qid} wdt:P233 ?smiles . }
+    }
+    LIMIT 1
+  `;
+
+  const sparqlUrl = `${WIKIDATA_SPARQL_URL}?query=${encodeURIComponent(sparqlQuery)}&format=json`;
+  const sparqlData = await fetchJson(sparqlUrl);
+
+  const bindings = sparqlData?.results?.bindings;
+  if (!bindings?.length) return { qid, formula: null, smiles: null };
+
+  const row = bindings[0];
+  const formula = row.formula?.value || null;
+  const smiles = row.smiles?.value || null;
+
+  return { qid, formula, smiles };
+}
+
+/**
+ * Searches Wikidata for a defining LaTeX formula (P2534) for a given scientific concept.
+ */
+async function resolveFormulaViaWikidata(name: string, lang: string = 'en'): Promise<{ qid: string; formula: string | null } | null> {
+  const targetLang = lang.toLowerCase().split('-')[0];
+  const langs = targetLang === 'en' ? ['en'] : [targetLang, 'en'];
+
+  let searchData = null;
+  for (const l of langs) {
+    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(name)}&language=${l}&format=json&type=item&limit=5`;
+    searchData = await fetchJson(searchUrl);
+    if (searchData?.search?.length) break;
+  }
+  if (!searchData?.search?.length) return null;
+
+  const entry = searchData.search[0];
+  const qid = entry.id;
+  if (!qid) return null;
+
+  const claimsUrl = `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${qid}&property=P2534&format=json`;
+  const claimsData = await fetchJson(claimsUrl);
+  const formulaClaim = claimsData?.claims?.P2534?.[0];
+  const formula = formulaClaim?.mainsnak?.datavalue?.value || null;
+  return { qid, formula };
+}
+
+
 
 // ─────────────────────────────────────────────────────────────────
 // WIKIPEDIA EXTRACT FALLBACK
@@ -413,3 +558,444 @@ export function isPlaceholderDates(dates: string | null | undefined): boolean {
   const hasYearPattern = /\d{3,4}/.test(s);
   return !hasYearPattern;
 }
+
+/**
+ * Resolves dates for a historical event by querying Wikidata.
+ */
+export async function resolveEventDates(eventName: string, lang: string = 'en'): Promise<EventDates | null> {
+  if (!eventName || eventName.trim().length === 0) return null;
+
+  const cache = loadCache();
+  const key = cacheKey(lang, 'event', eventName);
+  
+  if (cache[key]) {
+    const entry = cache[key];
+    if (!entry.dates) return null;
+    return {
+      startYear: entry.birthYear ?? null,
+      endYear: entry.deathYear ?? null,
+      formatted: entry.dates,
+      wikidataId: entry.wikidataId || null
+    };
+  }
+
+  console.log(`[wikidata-resolver] Cache miss for event: "${eventName}". Resolving...`);
+
+  let startYear: number | null = null;
+  let endYear: number | null = null;
+  let formatted = '';
+  let wikidataId: string | null = null;
+
+  try {
+    const wikidataResult = await resolveEventViaWikidata(eventName, lang);
+    if (wikidataResult) {
+      startYear = wikidataResult.startYear;
+      endYear = wikidataResult.endYear;
+      wikidataId = wikidataResult.qid;
+    }
+  } catch (err) {
+    console.error(`[wikidata-resolver] Wikidata event query failed for "${eventName}":`, err);
+  }
+
+  if (startYear) {
+    if (endYear) {
+      formatted = `${startYear}–${endYear}`;
+    } else {
+      formatted = `${startYear}`;
+    }
+    
+    // Save to cache
+    cache[key] = {
+      url: null,
+      summary: null,
+      description: null,
+      dates: formatted,
+      wikidataId,
+      birthYear: startYear,
+      deathYear: endYear,
+      fetchedAt: Date.now()
+    };
+  } else {
+    // Save negative resolution to avoid hammering API
+    cache[key] = {
+      url: null,
+      summary: null,
+      description: null,
+      dates: null,
+      wikidataId: null,
+      fetchedAt: Date.now()
+    };
+  }
+
+  saveCache(cache);
+
+  if (!formatted) {
+    console.warn(`[wikidata-resolver] Could not resolve dates for event "${eventName}".`);
+    return null;
+  }
+
+  return { startYear, endYear, formatted, wikidataId };
+}
+
+/**
+ * Resolves chemical compound formula and SMILES by querying Wikidata.
+ */
+export async function resolveChemicalData(compoundName: string, lang: string = 'en'): Promise<ChemicalData | null> {
+  if (!compoundName || compoundName.trim().length === 0) return null;
+
+  const cache = loadCache();
+  const key = cacheKey(lang, 'chemical', compoundName);
+
+  if (cache[key]) {
+    const entry = cache[key];
+    if (!entry.formula && !entry.smiles) return null;
+    return {
+      formula: entry.formula || null,
+      smiles: entry.smiles || null,
+      wikidataId: entry.wikidataId || null
+    };
+  }
+
+  console.log(`[wikidata-resolver] Cache miss for chemical: "${compoundName}". Resolving...`);
+
+  let formula: string | null = null;
+  let smiles: string | null = null;
+  let wikidataId: string | null = null;
+
+  try {
+    const wikidataResult = await resolveChemicalViaWikidata(compoundName, lang);
+    if (wikidataResult) {
+      formula = wikidataResult.formula;
+      smiles = wikidataResult.smiles;
+      wikidataId = wikidataResult.qid;
+    }
+  } catch (err) {
+    console.error(`[wikidata-resolver] Wikidata chemical query failed for "${compoundName}":`, err);
+  }
+
+  if (formula || smiles) {
+    cache[key] = {
+      url: null,
+      summary: null,
+      description: null,
+      dates: formula,
+      wikidataId,
+      formula,
+      smiles,
+      fetchedAt: Date.now()
+    };
+  } else {
+    cache[key] = {
+      url: null,
+      summary: null,
+      description: null,
+      dates: null,
+      wikidataId: null,
+      fetchedAt: Date.now()
+    };
+  }
+
+  saveCache(cache);
+
+  if (!formula && !smiles) {
+    console.warn(`[wikidata-resolver] Could not resolve formula/SMILES for chemical "${compoundName}".`);
+    return null;
+  }
+
+  return { formula, smiles, wikidataId };
+}
+
+export interface FormulaData {
+  formula: string | null;
+  wikidataId: string | null;
+}
+
+/**
+ * Resolves LaTeX defining formula for a given concept.
+ */
+export async function resolveScientificFormula(conceptName: string, lang: string = 'en'): Promise<FormulaData | null> {
+  if (!conceptName || conceptName.trim().length === 0) return null;
+
+  const cache = loadCache();
+  const key = cacheKey(lang, 'concept', conceptName);
+
+  if (cache[key] && cache[key].formula !== undefined) {
+    const entry = cache[key];
+    if (!entry.formula) return null;
+    return {
+      formula: entry.formula,
+      wikidataId: entry.wikidataId || null
+    };
+  }
+
+  console.log(`[wikidata-resolver] Cache miss for formula: "${conceptName}". Resolving...`);
+
+  let formula: string | null = null;
+  let wikidataId: string | null = null;
+
+  try {
+    const wikidataResult = await resolveFormulaViaWikidata(conceptName, lang);
+    if (wikidataResult) {
+      formula = wikidataResult.formula;
+      wikidataId = wikidataResult.qid;
+    }
+  } catch (err) {
+    console.error(`[wikidata-resolver] Wikidata formula query failed for "${conceptName}":`, err);
+  }
+
+  const existing = cache[key] || {
+    url: null,
+    summary: null,
+    description: null,
+    dates: null,
+    fetchedAt: Date.now()
+  };
+
+  cache[key] = {
+    ...existing,
+    formula,
+    wikidataId,
+    fetchedAt: Date.now()
+  };
+
+  saveCache(cache);
+
+  if (!formula) {
+    console.warn(`[wikidata-resolver] Could not resolve formula for concept "${conceptName}".`);
+    return null;
+  }
+
+  return { formula, wikidataId };
+}
+
+export interface ResolvedResource {
+  title: string;
+  author: string | null;
+  year: string | null;
+  url: string | null;
+}
+
+/**
+ * Searches Wikidata for a book or scientific paper and extracts its sitelink (Wikipedia), DOI, or ISBN.
+ */
+async function resolveResourceViaWikidata(
+  name: string,
+  type: string,
+  lang: string = 'en'
+): Promise<ResolvedResource | null> {
+  const targetLang = lang.toLowerCase().split('-')[0];
+  const langs = targetLang === 'en' ? ['en'] : [targetLang, 'en'];
+
+  let searchData = null;
+  for (const l of langs) {
+    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(name)}&language=${l}&format=json&type=item&limit=5`;
+    searchData = await fetchJson(searchUrl);
+    if (searchData?.search?.length) break;
+  }
+  if (!searchData?.search?.length) return null;
+
+  const entry = searchData.search[0];
+  const qid = entry.id;
+  if (!qid) return null;
+
+  // SPARQL to get author, publication date, DOI, ISBN, and wikipedia link
+  const sparqlQuery = `
+    SELECT ?authorLabel ?pubDate ?doi ?isbn13 ?isbn10 ?sitelink WHERE {
+      BIND(wd:${qid} AS ?item)
+      OPTIONAL { ?item wdt:P577 ?pubDate . }
+      OPTIONAL { ?item wdt:P356 ?doi . }
+      OPTIONAL { ?item wdt:P212 ?isbn13 . }
+      OPTIONAL { ?item wdt:P957 ?isbn10 . }
+      OPTIONAL {
+        ?sitelink schema:about ?item ;
+                  schema:isPartOf <https://${targetLang}.wikipedia.org/> .
+      }
+      OPTIONAL { ?item wdt:P2093 ?authorLabel . }
+    }
+    LIMIT 5
+  `;
+
+  const sparqlUrl = `${WIKIDATA_SPARQL_URL}?query=${encodeURIComponent(sparqlQuery)}&format=json`;
+  const sparqlData = await fetchJson(sparqlUrl);
+  const bindings = sparqlData?.results?.bindings;
+
+  let resolvedTitle = entry.label || name;
+  let resolvedAuthor: string | null = null;
+  let resolvedYear: string | null = null;
+  let resolvedUrl: string | null = null;
+
+  if (bindings && bindings.length > 0) {
+    const authors = Array.from(new Set(bindings.map((b: any) => b.authorLabel?.value).filter(Boolean)));
+    if (authors.length > 0) {
+      resolvedAuthor = authors.join(', ');
+    }
+
+    const row = bindings[0];
+    
+    if (row.pubDate?.value) {
+      const match = row.pubDate.value.match(/\d{4}/);
+      if (match) resolvedYear = match[0];
+    }
+
+    if (row.sitelink?.value) {
+      resolvedUrl = row.sitelink.value;
+    } else if (row.doi?.value) {
+      resolvedUrl = `https://doi.org/${row.doi.value}`;
+    } else if (row.isbn13?.value) {
+      resolvedUrl = `https://www.worldcat.org/search?q=isbn%3A${row.isbn13.value}`;
+    } else if (row.isbn10?.value) {
+      resolvedUrl = `https://www.worldcat.org/search?q=isbn%3A${row.isbn10.value}`;
+    }
+  }
+
+  if (!resolvedUrl) {
+    resolvedUrl = `https://${targetLang}.wikipedia.org/wiki/${encodeURIComponent(resolvedTitle.replace(/\s+/g, '_'))}`;
+  }
+
+  return {
+    title: resolvedTitle,
+    author: resolvedAuthor,
+    year: resolvedYear,
+    url: resolvedUrl
+  };
+}
+
+/**
+ * Resolves metadata and canonical links for external readings/books/articles in the goingFurther section.
+ */
+export async function resolveGoingFurtherResource(
+  title: string,
+  author: string | null,
+  type: string,
+  lang: string = 'en'
+): Promise<ResolvedResource | null> {
+  if (!title || title.trim().length === 0) return null;
+
+  const cache = loadCache();
+  const queryStr = `${title} ${author || ''}`.trim();
+  const key = cacheKey(lang, 'resource', `res_${type}_${queryStr}`);
+
+  if (cache[key]) {
+    const entry = cache[key];
+    if (!entry.url && !entry.dates) return null;
+    return {
+      title: entry.summary || title,
+      author: entry.description || author,
+      year: entry.dates || null,
+      url: entry.url || null
+    };
+  }
+
+  console.log(`[wikidata-resolver] Cache miss for resource: "${queryStr}" (type: ${type}). Resolving...`);
+
+  let resolvedTitle = title;
+  let resolvedAuthor = author;
+  let resolvedYear: string | null = null;
+  let resolvedUrl: string | null = null;
+
+  try {
+    const targetType = String(type).toLowerCase();
+    if (targetType === 'book') {
+      const searchUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(queryStr)}&maxResults=1`;
+      const data = await fetchJson(searchUrl);
+      const volume = data?.items?.[0]?.volumeInfo;
+      if (volume) {
+        resolvedTitle = volume.title || title;
+        if (volume.authors && volume.authors.length > 0) {
+          resolvedAuthor = volume.authors.join(', ');
+        }
+        if (volume.publishedDate) {
+          const match = volume.publishedDate.match(/\d{4}/);
+          if (match) resolvedYear = match[0];
+        }
+        resolvedUrl = volume.infoLink || null;
+      }
+      
+      // Wikidata fallback if Google Books failed or hit quota limits
+      if (!resolvedUrl) {
+        console.log(`[wikidata-resolver] Google Books failed for "${title}". Falling back to Wikidata...`);
+        const wdRes = await resolveResourceViaWikidata(title, 'book', lang);
+        if (wdRes) {
+          resolvedTitle = wdRes.title;
+          if (wdRes.author) resolvedAuthor = wdRes.author;
+          if (wdRes.year) resolvedYear = wdRes.year;
+          if (wdRes.url) resolvedUrl = wdRes.url;
+        }
+      }
+    } else if (targetType === 'article' || targetType === 'research') {
+      const searchUrl = `https://api.crossref.org/works?query=${encodeURIComponent(queryStr)}&rows=1`;
+      const data = await fetchJson(searchUrl);
+      const item = data?.message?.items?.[0];
+      if (item) {
+        resolvedTitle = item.title?.[0] || title;
+        if (item.author && item.author.length > 0) {
+          resolvedAuthor = item.author.map((a: any) => `${a.given || ''} ${a.family || ''}`.trim()).join(', ');
+        }
+        const createdParts = item.created?.['date-parts']?.[0];
+        if (createdParts && createdParts[0]) {
+          resolvedYear = String(createdParts[0]);
+        } else if (item.published?.['date-parts']?.[0]) {
+          resolvedYear = String(item.published['date-parts'][0][0]);
+        }
+        resolvedUrl = item.URL || null;
+      }
+      
+      // Wikidata fallback if CrossRef failed
+      if (!resolvedUrl) {
+        console.log(`[wikidata-resolver] CrossRef failed for "${title}". Falling back to Wikidata...`);
+        const wdRes = await resolveResourceViaWikidata(title, 'article', lang);
+        if (wdRes) {
+          resolvedTitle = wdRes.title;
+          if (wdRes.author) resolvedAuthor = wdRes.author;
+          if (wdRes.year) resolvedYear = wdRes.year;
+          if (wdRes.url) resolvedUrl = wdRes.url;
+        }
+      }
+    } else if (targetType === 'website') {
+      const cleanLang = lang.toLowerCase().split('-')[0];
+      const searchUrl = `https://${cleanLang}.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(title)}&srlimit=1`;
+      const data = await fetchJson(searchUrl);
+      const firstResult = data?.query?.search?.[0];
+      if (firstResult) {
+        resolvedTitle = firstResult.title;
+        resolvedUrl = `https://${cleanLang}.wikipedia.org/wiki/${encodeURIComponent(firstResult.title)}`;
+      }
+    }
+  } catch (err) {
+    console.error(`[wikidata-resolver] Resource query failed for "${queryStr}":`, err);
+  }
+
+  if (resolvedUrl || resolvedYear) {
+    cache[key] = {
+      url: resolvedUrl,
+      summary: resolvedTitle,
+      description: resolvedAuthor,
+      dates: resolvedYear,
+      fetchedAt: Date.now()
+    };
+  } else {
+    cache[key] = {
+      url: null,
+      summary: null,
+      description: null,
+      dates: null,
+      fetchedAt: Date.now()
+    };
+  }
+
+  saveCache(cache);
+
+  if (!resolvedUrl && !resolvedYear) {
+    return null;
+  }
+
+  return {
+    title: resolvedTitle,
+    author: resolvedAuthor,
+    year: resolvedYear,
+    url: resolvedUrl
+  };
+}
+
+
+
