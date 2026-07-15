@@ -5,6 +5,7 @@ import { preprocessMdx, isolateJsxForTranslation, restoreJsxAfterTranslation, re
 import { resolveAndPersistMedia } from './media-resolver';
 import { cleanPathSegment } from './translations';
 import { TASK_MODELS } from './ai-config';
+import { resolvePersonDates, isPlaceholderDates, formatPersonDates } from './wikidata-resolver';
 import fs from 'fs';
 import path from 'path';
 
@@ -1388,6 +1389,7 @@ const widgetBlock4Schema = {
 };
 
 
+
 function extractWidgetAnchors(narrativeText: string): { raw: string, type: string, id: string, topic?: string }[] {
   const matches: { raw: string, type: string, id: string, topic?: string }[] = [];
   const regex = /\[\[WIDGET:(.*?)\]\]+/gi;
@@ -1781,6 +1783,28 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       return true;
     });
 
+    // [FIX IC-1] Deduplicate IDs within interactiveComponents.
+    // The critic rejects blocks containing duplicate IDs, so we suffix duplicates
+    // deterministically (id, id_2, id_3, ...) rather than dropping valid components.
+    {
+      const seenIds = new Map<string, number>(); // id -> count of occurrences so far
+      widgets.interactiveComponents = widgets.interactiveComponents.map((comp: any) => {
+        const rawId: string = String(comp.id || '').trim();
+        if (!rawId) return comp;
+        const count = seenIds.get(rawId) || 0;
+        if (count === 0) {
+          seenIds.set(rawId, 1);
+          return comp;
+        } else {
+          // Duplicate found — suffix to make it unique
+          seenIds.set(rawId, count + 1);
+          const newId = `${rawId}_${count + 1}`;
+          console.warn(`[validateAndFixWidgets] Duplicate component id "${rawId}" → renamed to "${newId}"`);
+          return { ...comp, id: newId };
+        }
+      });
+    }
+
     const disc = (discipline || "").toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const isMath = disc.includes("math") || disc.includes("alge") || disc.includes("geomet");
     const isPhysics = disc.includes("physic") || disc.includes("physiq") || disc.includes("astron");
@@ -1797,7 +1821,7 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       const alwaysAllowed = [
         "Quiz", "FillInBlanks", "SolvedExercise", "UnsolvedExercise", "Mermaid", "Video", "Audio",
         "Biography", "Image", "Citation", "Epistemology", "MatchingEvaluation", "AssociationCorrespondance",
-        "ReorderEvaluation", "ReordonnerItems"
+        "ReorderEvaluation", "ReordonnerItems", "RealPerson", "HistoricalPerson"
       ];
       if (alwaysAllowed.includes(comp.componentType)) {
         return true;
@@ -1851,11 +1875,64 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       if (!comp.props || typeof comp.props !== 'object') comp.props = {};
       const props = comp.props;
 
-      // Intelligent biography healing
+      // [FIX IC-2] Resolve dates for RealPerson / HistoricalPerson components via Wikidata.
+      // The AI MUST NOT invent or hallucinate dates. We fetch them deterministically from
+      // Wikidata (SPARQL) → Wikipedia extract. If not found, we leave dates empty (not a
+      // placeholder string) so the critic cannot flag a spurious value.
+      if (comp.componentType === "RealPerson" || comp.componentType === "HistoricalPerson") {
+        const personName: string = (props.name || '').trim();
+        const currentYear: string = (props.year || props.dates || '').trim();
+        if (personName && isPlaceholderDates(currentYear)) {
+          try {
+            const targetLang = (lang || 'en').toLowerCase().split('-')[0];
+            const resolved = await resolvePersonDates(personName, targetLang);
+            if (resolved && resolved.formatted) {
+              // Prefer `year` if that is the field the schema uses, else `dates`
+              if (props.year !== undefined) {
+                props.year = resolved.formatted;
+              }
+              if (props.dates !== undefined || comp.componentType === 'HistoricalPerson') {
+                props.dates = resolved.formatted;
+              }
+              console.log(`[PERSON DATE RESOLVER] Resolved dates for "${personName}": ${resolved.formatted} (Wikidata: ${resolved.wikidataId || 'N/A'})`);
+            } else {
+              // Cannot determine dates — remove placeholder to avoid critic rejection
+              if (isPlaceholderDates(props.year)) delete props.year;
+              if (isPlaceholderDates(props.dates)) delete props.dates;
+              console.warn(`[PERSON DATE RESOLVER] No dates found for "${personName}" — placeholder removed.`);
+            }
+          } catch (err) {
+            console.error(`[PERSON DATE RESOLVER] Error resolving dates for "${personName}":`, err);
+            // Safety: remove known-bad placeholder on error
+            if (isPlaceholderDates(props.year)) delete props.year;
+            if (isPlaceholderDates(props.dates)) delete props.dates;
+          }
+        }
+      }
+
+      // Intelligent biography healing (description + dates)
       if (comp.componentType === "Biography") {
         let name = (props.name || "").trim();
         let description = (props.description || "").trim();
         const isPlaceholder = !description || description.length < 20 || /placeholder|dummy|todo|tbd|tbc|lorem|ipsum|biographie détaillée/i.test(description) || /^[\[\(].*[\]\)]$/.test(description);
+
+        // [FIX IC-3] Also resolve dates for Biography components via Wikidata
+        if (name && isPlaceholderDates(props.dates)) {
+          try {
+            const targetLang = (lang || 'en').toLowerCase().split('-')[0];
+            const resolved = await resolvePersonDates(name, targetLang);
+            if (resolved && resolved.formatted) {
+              props.dates = resolved.formatted;
+              console.log(`[BIOGRAPHY DATE RESOLVER] Resolved dates for "${name}": ${resolved.formatted}`);
+            } else {
+              // Remove placeholder to keep critic happy
+              if (isPlaceholderDates(props.dates)) delete props.dates;
+            }
+          } catch (err) {
+            console.error(`[BIOGRAPHY DATE RESOLVER] Error for "${name}":`, err);
+            if (isPlaceholderDates(props.dates)) delete props.dates;
+          }
+        }
         
         if (name && isPlaceholder) {
           console.log(`[BIOGRAPHY VALIDATOR] Biography placeholder or empty description for "${name}". Healing via Wikipedia...`);
@@ -4779,6 +4856,69 @@ Return ONLY the corrected and valid JSON response. Do NOT wrap your response in 
             currentJsonStr = repairedJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
           }
         }
+        // Clean empty string, null, and dummy placeholder properties from interactiveComponents props to prevent validation failures
+        if (parsed && Array.isArray(parsed.interactiveComponents)) {
+          // Fields that are NEVER valid in the raw generated media components — the media-resolver/validator handles them downstream.
+          const IMAGE_FORBIDDEN_KEYS = ['url', 'wikipediaUrl', 'wikipediaLink', 'imageUrl'];
+          const AUDIO_VIDEO_FORBIDDEN_KEYS = ['url', 'id', 'provider', 'unresolved', 'wikipediaUrl', 'wikipediaLink', 'imageUrl'];
+          for (const comp of parsed.interactiveComponents) {
+            if (comp && comp.props && typeof comp.props === 'object') {
+              const compTypeLower = typeof comp.componentType === 'string' ? comp.componentType.toLowerCase() : '';
+              // [FIX] Unconditionally strip URL/link/platform fields from Image, Audio, and Video components:
+              // they are resolved downstream via searchQuery/description search.
+              if (compTypeLower === 'image') {
+                for (const forbiddenKey of IMAGE_FORBIDDEN_KEYS) {
+                  delete comp.props[forbiddenKey];
+                }
+              } else if (compTypeLower === 'audio' || compTypeLower === 'video') {
+                for (const forbiddenKey of AUDIO_VIDEO_FORBIDDEN_KEYS) {
+                  delete comp.props[forbiddenKey];
+                }
+              }
+              for (const key of Object.keys(comp.props)) {
+                const val = comp.props[key];
+                if (
+                  val === '' ||
+                  val === null ||
+                  val === 'null' ||
+                  (typeof val === 'string' &&
+                    (key.toLowerCase().includes('url') || key.toLowerCase().includes('link')) &&
+                    (val.toLowerCase().includes('example.com') ||
+                      val.toLowerCase().includes('placeholder') ||
+                      val.toLowerCase().includes('tbd') ||
+                      val.toLowerCase().includes('your_') ||
+                      val.toLowerCase().includes('dummy')))
+                ) {
+                  delete comp.props[key];
+                }
+              }
+            }
+          }
+        }
+        // Clean empty string, null, and dummy placeholder properties from goingFurther items
+        if (parsed && parsed.goingFurther && Array.isArray(parsed.goingFurther.items)) {
+          for (const item of parsed.goingFurther.items) {
+            if (item && typeof item === 'object') {
+              for (const key of Object.keys(item)) {
+                const val = item[key];
+                if (
+                  val === '' ||
+                  val === null ||
+                  val === 'null' ||
+                  (typeof val === 'string' &&
+                    (key.toLowerCase().includes('url') || key.toLowerCase().includes('link')) &&
+                    (val.toLowerCase().includes('example.com') ||
+                      val.toLowerCase().includes('placeholder') ||
+                      val.toLowerCase().includes('tbd') ||
+                      val.toLowerCase().includes('your_') ||
+                      val.toLowerCase().includes('dummy')))
+                ) {
+                  delete item[key];
+                }
+              }
+            }
+          }
+        }
         return parsed;
       }
 
@@ -4950,7 +5090,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
       const maxBlock2Iterations = 3;
       let block2Feedback = '';
       let block2Parsed: any = null;
-      let block5Parsed: any = null;
+      let block3Parsed: any = null;
 
       const widgetBlock2Entry = {
         blockName: "Block 2: Interactive",
@@ -4967,7 +5107,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 
       const block2Types = ['biography', 'realperson', 'historicalperson', 'conceptlink', 'eventlink', 'historicaleventlink', 'evenementhistorique', 'événementhistorique', 'location', 'glossary'];
       const block2CustomAnchors = activeCustomAnchors.filter(a => block2Types.includes(a.type.toLowerCase()));
-      const block5CustomAnchors = activeCustomAnchors.filter(a => !block2Types.includes(a.type.toLowerCase()));
+      const block3CustomAnchors = activeCustomAnchors.filter(a => !block2Types.includes(a.type.toLowerCase()));
 
       if (block2CustomAnchors.length === 0 || isTerminalEvaluation) {
         await appendTaskLog(`[AI GENERATOR] No enrichment hover card anchors found. Skipping Widget Block 2 (Enrichment).`);
@@ -4997,6 +5137,7 @@ ${dynamicCatalogList}
    - "description": (string) Wikipedia-style hover card tooltip summary of this person (2-4 sentences).
    - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
    - "searchQuery": (string) Canonical search query to find the person on Wikipedia. MANDATORY.
+   ⚠️ CRITICAL: Do NOT add a "year", "dates", "birthYear", or "deathYear" field for RealPerson/HistoricalPerson. These fields are NOT in the schema and will cause validation failure. Dates are resolved automatically via Wikidata after generation.
 3. "ConceptLink":
    - "name": (string) Name of the concept (should match the Anchor Topic if provided).
    - "description": (string) Wikipedia-style hover card tooltip summary of this concept (2-4 sentences).
@@ -5017,6 +5158,8 @@ ${dynamicCatalogList}
    - "definition": (string) Detailed vocabulary definition (2-4 sentences).
    - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
    - "searchQuery": (string) Canonical search query to find the term on Wikipedia. MANDATORY.
+
+DO NOT output any properties that are not explicitly defined in the props catalog above for a given componentType. For instance, do NOT output "year", "dates", "url", or "wikipediaLink" for ConceptLink, HistoricalEventLink, Location, or Glossary; if you do, the critique agent will reject the block.
 
 You must define the "interactiveComponents" array containing one object for each anchor listed above.
 For each component:
@@ -5068,6 +5211,7 @@ Ensure:
 2. Captions and descriptions have no sequential figure prefixes like "Figure 1:".
 3. Biography component details (dates, Wikipedia link) are correct.
 4. ZERO placeholders, draft markers, bracketed texts, or template values are present. Biographies, interactive elements, figures, and diagrams must be fully populated with real, high-quality, professional educational content in the target language. Absolutely no fake URLs, lorem ipsum text, or incomplete fields. Reject the block if any placeholder or skeletal text is detected.
+5. The "year", "dates", "url", or "wikipediaLink" properties can be "null" or omitted for components that do not require them or where the resource is unresolved/needs backend matching (such as ConceptLink, Location, Glossary, Image, Audio, and Video). Do NOT reject the block or treat "null" or omission as a placeholder or incomplete for these properties on non-applicable component types.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 \`\`\`json
@@ -5126,26 +5270,26 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
         parsedWidgets.interactiveComponents = block2Parsed.interactiveComponents;
       }
 
-      // --- Block 5: Practice & Media ---
-      if (block5CustomAnchors.length > 0 && !isTerminalEvaluation) {
-        let block5Approved = false;
-        let block5Iteration = 0;
-        const maxBlock5Iterations = 3;
-        let block5Feedback = '';
+      // --- Block 3: Practice & Media ---
+      if (block3CustomAnchors.length > 0 && !isTerminalEvaluation) {
+        let block3Approved = false;
+        let block3Iteration = 0;
+        const maxBlock3Iterations = 3;
+        let block3Feedback = '';
 
-        const widgetBlock5Entry = {
-          blockName: "Block 5: Practice & Media",
+        const widgetBlock3Entry = {
+          blockName: "Block 3: Practice & Media",
           attempts: 0,
           rejections: 0,
           approved: false
         };
-        lessonStats.widgetBlockAttempts.push(widgetBlock5Entry);
+        lessonStats.widgetBlockAttempts.push(widgetBlock3Entry);
 
-        const block5Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+        const block3Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 Your task is to design the JSON object for the Practice Exercises, Visual Diagrams, and Multimedia components of the lesson (quizzes, exercises, charts, videos, and audios).
 
 The narrative text contains the following custom widget anchors that you MUST define in this block:
-${block5CustomAnchors.map(a => `- Anchor: [[WIDGET:${a.type}:${a.id}${a.topic ? `:${a.topic}` : ''}]] (Type: "${a.type}", ID: "${a.id}", Topic: "${a.topic || ''}")`).join('\n')}
+${block3CustomAnchors.map(a => `- Anchor: [[WIDGET:${a.type}:${a.id}${a.topic ? `:${a.topic}` : ''}]] (Type: "${a.type}", ID: "${a.id}", Topic: "${a.topic || ''}")`).join('\n')}
 
 ---
 
@@ -5154,21 +5298,24 @@ ${dynamicCatalogList}
 
 ### REQUIRED PROPS STRUCTURE per componentType:
 1. "Image":
-   - "description": (string) Detailed academic description of what the image depicts (at least 2-3 sentences). Write it as a description of an existing image (e.g., "Carte linguistique de la péninsule italienne montrant la répartition des principaux groupes de dialectes...") rather than drawing instructions for a designer (e.g. do NOT say "Générer une carte..."). Do NOT output any extra properties like "url", "wikipediaUrl", "wikipediaLink", or "year" for Image, Quiz, or Mermaid components; if you do, the critique agent will reject the block. Do NOT generate sequential figure prefixes.
+   - "description": (string) Detailed academic description of what the image depicts (at least 2-3 sentences). Write it as a description of an existing image (e.g., "Carte linguistique de la péninsule italienne montrant la répartition des principaux groupes de dialectes...") rather than drawing instructions for a designer (e.g. do NOT say "Générer une carte..."). Do NOT generate sequential figure prefixes.
    - "alt": (string) Short description for accessibility.
    - "caption": (string) A detailed, italicized caption explaining academic relevance. Do NOT generate sequential figure numbers.
    - "title": (string) Short title of the image.
    - "searchQuery": (string) Highly canonical 1 to 3 search words (e.g. 'Claudio Monteverdi', 'Prise de la Bastille') to search in archives.
+   ⛔ ABSOLUTELY FORBIDDEN for Image: Do NOT output "url", "wikipediaUrl", "wikipediaLink", "imageUrl", or "year" for Image components under any circumstances. These fields do not exist for Image. The URL is resolved automatically downstream by the media-resolver pipeline using the searchQuery and description. Including any of these fields — even with a seemingly valid URL — will cause a pipeline error and block validation.
 2. "Video":
    - "title": (string) Title of the video documentary or lecture segment.
    - "duration": (string) Estimated duration, e.g. "3:15".
    - "description": (string) Detailed description of the video's content, documentary topic, or lecture segment. MANDATORY.
    - "searchQuery": (string) Canonical search query to find this video on platforms like YouTube. MANDATORY.
+   ⛔ ABSOLUTELY FORBIDDEN for Video: Do NOT output "url", "id", "provider", "unresolved", "wikipediaUrl", "wikipediaLink", or "imageUrl" for Video components under any circumstances. These fields do not exist for Video in the initial widget definition. The resource is resolved automatically downstream by the external-resource-resolver pipeline using the searchQuery and title. Including any of these fields will cause a pipeline error and block validation.
 3. "Audio":
    - "title": (string) Short descriptive title for the audio.
    - "duration": (string) e.g. "1:30".
    - "description": (string) Detailed description/narration text. MANDATORY.
    - "searchQuery": (string) Canonical search query to find this audio resource. MANDATORY.
+   ⛔ ABSOLUTELY FORBIDDEN for Audio: Do NOT output "url", "unresolved", "wikipediaUrl", "wikipediaLink", or "imageUrl" for Audio components under any circumstances. These fields do not exist for Audio in the initial widget definition. The resource is resolved automatically downstream by the external-resource-resolver pipeline using the searchQuery and title. Including any of these fields will cause a pipeline error and block validation.
 4. "Quiz":
    - "limit": (integer) Number of questions to display.
    - "questions": (array of objects) Each object must have:
@@ -5192,6 +5339,8 @@ ${dynamicCatalogList}
 8. "Mermaid":
    - "chart": (string) Valid Mermaid chart notation starting with graph/sequenceDiagram/etc.
 
+DO NOT output any properties that are not explicitly defined in the props catalog above for a given componentType. For instance, do NOT output "year", "dates", "url", "wikipediaUrl", "wikipediaLink", "imageUrl", "id", "provider", or "unresolved" for Image, Audio, Video, Quiz, SolvedExercise, UnsolvedExercise, or Mermaid; if you do, the critique agent will reject the block.
+
 You must define the "interactiveComponents" array containing one object for each anchor listed above.
 For each component:
 - "id": Must match the ID from the anchor.
@@ -5206,7 +5355,7 @@ For each component:
   - Never use generic, default placeholders (like "y = x^2") so that each widget remains uniquely customized and distinct.
 
 Return ONLY a valid JSON object matching this schema:
-\`\`\`json
+\\\`\\\`\\\`json
 {
   "interactiveComponents": [
     {
@@ -5217,37 +5366,44 @@ Return ONLY a valid JSON object matching this schema:
     }
   ]
 }
-\`\`\`
+\\\`\\\`\\\`
 Do NOT wrap your JSON response in markdown code blocks.`;
 
-        while (!block5Approved && block5Iteration < maxBlock5Iterations) {
-          block5Iteration++;
+        while (!block3Approved && block3Iteration < maxBlock3Iterations) {
+          block3Iteration++;
           lessonStats.widgetsAttempts++;
-          widgetBlock5Entry.attempts = block5Iteration;
-          await appendTaskLog(`[AI GENERATOR] Generating Widget Block 5 (Attempt #${block5Iteration})...`);
+          widgetBlock3Entry.attempts = block3Iteration;
+          await appendTaskLog(`[AI GENERATOR] Generating Widget Block 3 (Attempt #${block3Iteration})...`);
 
-          let block5PromptWithFeedback = block5Prompt;
-          if (block5Feedback) {
-            block5PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block5Feedback}"\nPlease fix these issues and regenerate.`;
+          let block3PromptWithFeedback = block3Prompt;
+          if (block3Feedback) {
+            block3PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block3Feedback}"\nPlease fix these issues and regenerate.`;
           }
 
           try {
-            block5Parsed = await generateAndParseWidgetBlock(block5PromptWithFeedback, widgetBlock2Schema, 'Block 5 Interactive Part 2');
+            block3Parsed = await generateAndParseWidgetBlock(block3PromptWithFeedback, widgetBlock2Schema, 'Block 3 Interactive Part 2');
           } catch (e) {
-            await appendTaskLog(`[AI GENERATOR] Widget Block 5 failed to parse. Retrying...`);
+            await appendTaskLog(`[AI GENERATOR] Widget Block 3 failed to parse. Retrying...`);
             continue;
           }
 
-          // Critique block 5
-          await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 5...`);
-          const block5CriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 5:
-${JSON.stringify(block5Parsed, null, 2)}
+          // Critique block 3
+          await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 3...`);
+          const block3CriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 3:
+${JSON.stringify(block3Parsed, null, 2)}
 
 Ensure:
 1. Every anchor specified in the prompt is mapped.
 2. Captions and descriptions have no sequential figure prefixes like "Figure 1:".
 3. Biography component details (dates, Wikipedia link) are correct.
 4. ZERO placeholders, draft markers, bracketed texts, or template values are present. Biographies, interactive elements, figures, and diagrams must be fully populated with real, high-quality, professional educational content in the target language. Absolutely no fake URLs, lorem ipsum text, or incomplete fields. Reject the block if any placeholder or skeletal text is detected.
+5. CRITICAL MEDIA RULES:
+   - Image components MUST NOT contain "url", "wikipediaUrl", "wikipediaLink", "imageUrl", or "year" properties.
+   - Video components MUST NOT contain "url", "id", "provider", "unresolved", "wikipediaUrl", "wikipediaLink", or "imageUrl" properties.
+   - Audio components MUST NOT contain "url", "unresolved", "wikipediaUrl", "wikipediaLink", or "imageUrl" properties.
+   These fields are FORBIDDEN in the raw widgets JSON for Image, Video, and Audio. They are resolved automatically downstream by the external-resource-resolver pipeline using the component's title/searchQuery/description. Any media component missing these fields is CORRECT and must NOT be rejected. If a media component DOES contain any of these forbidden fields (even with a seemingly valid URL), that IS an error and should be flagged.
+6. For other components (Quiz, SolvedExercise, UnsolvedExercise, FillInBlanks, Mermaid): "url", "wikipediaLink", "wikipediaUrl" can be null or omitted — this is acceptable. Do NOT reject those component types for missing URL fields.
+7. For UnsolvedExercise components, the props must contain "title", "problem", and "correctAnswer". Do NOT reject them for missing "questions" or "tasks" as those are not part of the UnsolvedExercise props structure.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 \`\`\`json
@@ -5269,62 +5425,62 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
 2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
 
-          if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block5_${item.slug}_iter${block5Iteration}.md`, block5PromptWithFeedback);
-          if (block5Parsed) {
-            if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block5_${item.slug}_iter${block5Iteration}.json`, JSON.stringify(block5Parsed, null, 2));
+          if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block3_${item.slug}_iter${block3Iteration}.md`, block3PromptWithFeedback);
+          if (block3Parsed) {
+            if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block3_${item.slug}_iter${block3Iteration}.json`, JSON.stringify(block3Parsed, null, 2));
           }
-          if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block5_critique_${item.slug}_iter${block5Iteration}.md`, block5CriticPrompt);
+          if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block3_critique_${item.slug}_iter${block3Iteration}.md`, block3CriticPrompt);
 
-          const criticJsonStr = await callAIEngine(block5CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
-          if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block5_${item.slug}_iter${block5Iteration}.json`, criticJsonStr);
+          const criticJsonStr = await callAIEngine(block3CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
+          if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block3_${item.slug}_iter${block3Iteration}.json`, criticJsonStr);
           const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
           let auditResult = { approved: true, critique: '', fields: [] as any[] };
           try {
-            auditResult = safeJsonParse(cleanCritic, 'Widget Block 5 Audit Parsing');
+            auditResult = safeJsonParse(cleanCritic, 'Widget Block 3 Audit Parsing');
           } catch (e) {
-            console.warn(`[AI GENERATOR] Failed to parse Block 5 critique:`, e);
+            console.warn(`[AI GENERATOR] Failed to parse Block 3 critique:`, e);
           }
 
           if (auditResult.approved) {
-            await appendTaskLog(`[AI GENERATOR] Widget Block 5 approved by Critique Agent!`);
-            block5Approved = true;
-            widgetBlock5Entry.approved = true;
+            await appendTaskLog(`[AI GENERATOR] Widget Block 3 approved by Critique Agent!`);
+            block3Approved = true;
+            widgetBlock3Entry.approved = true;
           } else {
-            let critiqueMsg = auditResult.critique || 'Widget Block 5 rejected.';
+            let critiqueMsg = auditResult.critique || 'Widget Block 3 rejected.';
             if (auditResult.fields && auditResult.fields.length > 0) {
               critiqueMsg += '\nDetailed errors:\n' + auditResult.fields.map((f: any) => `- Field "${f.field}": ${f.critique}`).join('\n');
             }
-            await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 5 REJECTED. Critique: "${critiqueMsg}".`);
+            await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 3 REJECTED. Critique: "${critiqueMsg}".`);
             lessonStats.widgetsRejections++;
-            widgetBlock5Entry.rejections++;
-            block5Feedback = critiqueMsg;
+            widgetBlock3Entry.rejections++;
+            block3Feedback = critiqueMsg;
           }
         }
       }
 
-      if (block5Parsed && Array.isArray(block5Parsed.interactiveComponents)) {
+      if (block3Parsed && Array.isArray(block3Parsed.interactiveComponents)) {
         parsedWidgets.interactiveComponents = [
           ...(parsedWidgets.interactiveComponents || []),
-          ...block5Parsed.interactiveComponents
+          ...block3Parsed.interactiveComponents
         ];
       }
 
-      // --- Block 3: Conclusion, What's Next & Glossary ---
-      let block3Approved = false;
-      let block3Iteration = 0;
-      const maxBlock3Iterations = 3;
-      let block3Feedback = '';
-      let block3Parsed: any = null;
+      // --- Block 4: Conclusion, What's Next & Glossary ---
+      let block4Approved = false;
+      let block4Iteration = 0;
+      const maxBlock4Iterations = 3;
+      let block4Feedback = '';
+      let block4Parsed: any = null;
 
-      const widgetBlock3Entry = {
-        blockName: "Block 3: Conclusion & Glossary",
+      const widgetBlock4Entry = {
+        blockName: "Block 4: Conclusion & Glossary",
         attempts: 0,
         rejections: 0,
         approved: false
       };
-      lessonStats.widgetBlockAttempts.push(widgetBlock3Entry);
+      lessonStats.widgetBlockAttempts.push(widgetBlock4Entry);
 
-      const block3Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+      const block4Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 Your task is to design the JSON object for the conclusion, glossary, and transition widgets of the lesson:
 Course: "${correctedCourseName}"
 Level: "${getDescriptiveLevelForPrompt(levelInput)}"
@@ -5334,11 +5490,11 @@ Language: "${targetLang.toUpperCase()}"
 You must define the following JSON properties:
 1. "conclusionSummary": A detailed text summarizing the key takeaways of this lesson (at least 5 sentences).
 2. "whatsNext": A text showing the link/transition to the next lesson.
-3. "goingFurther": Additional links or resources (with titles and optional URLs. If you do not know a real, specific, valid URL for a resource, you MUST completely omit the "url" property from that item instead of generating a placeholder URL like "example.com" or "placeholder.com").
+3. "goingFurther": An object with an "items" array containing at least 5 to 7 high-quality, authoritative external resources (books, articles, videos, websites, research papers). For video and website types, you must provide a real, valid, functional URL (e.g. a specific working YouTube video URL or a real Wikipedia/academic portal URL). For books and research papers, the URL is optional and can be omitted. If you do not know a real, specific, valid URL, you MUST completely omit the "url" property from that item instead of generating a placeholder URL like "example.com" or "placeholder.com". Generate enough items (at least 5-7) so that even if some links fail automated reachability validation checks, the lesson will still display a rich selection of resources.
 4. "glossary": ${constraintKey === 'university_grad' ? 'An array of at least 12 to 15 key technical terms with detailed definitions.' : constraintKey === 'university_undergrad' ? 'An array of at least 8 to 12 key technical terms with detailed definitions.' : 'An array of at least 3-4 key technical terms with detailed definitions.'}
 
 Return ONLY a valid JSON object matching this schema:
-\\\`\\\`\\\`json
+\`\`\`json
 {
   "conclusionSummary": "string",
   "whatsNext": "string",
@@ -5347,39 +5503,39 @@ Return ONLY a valid JSON object matching this schema:
     { "term": "string", "definition": "string" }
   ]
 }
-\\\`\\\`\\\`
+\`\`\`
 Do NOT wrap your JSON response in markdown code blocks.`;
 
       if (isTerminalEvaluation) {
-        block3Approved = true;
-        widgetBlock3Entry.approved = true;
+        block4Approved = true;
+        widgetBlock4Entry.approved = true;
         parsedWidgets.conclusionSummary = '';
         parsedWidgets.whatsNext = null;
         parsedWidgets.goingFurther = null;
         parsedWidgets.glossary = [];
       } else {
-        while (!block3Approved && block3Iteration < maxBlock3Iterations) {
-        block3Iteration++;
+        while (!block4Approved && block4Iteration < maxBlock4Iterations) {
+        block4Iteration++;
         lessonStats.widgetsAttempts++;
-        widgetBlock3Entry.attempts = block3Iteration;
-        await appendTaskLog(`[AI GENERATOR] Generating Widget Block 3 (Attempt #${block3Iteration})...`);
+        widgetBlock4Entry.attempts = block4Iteration;
+        await appendTaskLog(`[AI GENERATOR] Generating Widget Block 4 (Attempt #${block4Iteration})...`);
 
-        let block3PromptWithFeedback = block3Prompt;
-        if (block3Feedback) {
-          block3PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block3Feedback}"\nPlease fix these issues and regenerate.`;
+        let block4PromptWithFeedback = block4Prompt;
+        if (block4Feedback) {
+          block4PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block4Feedback}"\nPlease fix these issues and regenerate.`;
         }
 
         try {
-          block3Parsed = await generateAndParseWidgetBlock(block3PromptWithFeedback, widgetBlock3Schema, 'Block 3 Conclusion & Glossary');
+          block4Parsed = await generateAndParseWidgetBlock(block4PromptWithFeedback, widgetBlock3Schema, 'Block 4 Conclusion & Glossary');
         } catch (e) {
-          await appendTaskLog(`[AI GENERATOR] Widget Block 3 failed to parse. Retrying...`);
+          await appendTaskLog(`[AI GENERATOR] Widget Block 4 failed to parse. Retrying...`);
           continue;
         }
 
-        // Critique block 3
-        await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 3...`);
-        const block3CriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 3:
-${JSON.stringify(block3Parsed, null, 2)}
+        // Critique block 4
+        await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 4...`);
+        const block4CriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
+${JSON.stringify(block4Parsed, null, 2)}
 
 Ensure:
 1. Glossary and conclusion summary are scientifically/academically accurate.
@@ -5406,64 +5562,64 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
 2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
 
-        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block3_${item.slug}_iter${block3Iteration}.md`, block3PromptWithFeedback); // [FIX G4/G5]
-        if (block3Parsed) {
-          if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block3_${item.slug}_iter${block3Iteration}.json`, JSON.stringify(block3Parsed, null, 2)); // [FIX G4/G5]
+        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block4_${item.slug}_iter${block4Iteration}.md`, block4PromptWithFeedback);
+        if (block4Parsed) {
+          if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block4_${item.slug}_iter${block4Iteration}.json`, JSON.stringify(block4Parsed, null, 2));
         }
-        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block3_critique${item.slug}_iter${block3Iteration}.md`, block3CriticPrompt); // [FIX G4/G5]
+        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block4_critique${item.slug}_iter${block4Iteration}.md`, block4CriticPrompt);
 
-        const criticJsonStr = await callAIEngine(block3CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
-        if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block3${item.slug}_iter${block3Iteration}.json`, criticJsonStr); // [FIX G4/G5]
+        const criticJsonStr = await callAIEngine(block4CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
+        if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block4${item.slug}_iter${block4Iteration}.json`, criticJsonStr);
 
         const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
         let auditResult = { approved: true, critique: '', fields: [] as any[] };
         try {
-          auditResult = safeJsonParse(cleanCritic, 'Widget Block 3 Audit Parsing');
+          auditResult = safeJsonParse(cleanCritic, 'Widget Block 4 Audit Parsing');
         } catch (e) {
-          console.warn(`[AI GENERATOR] Failed to parse Block 3 critique:`, e);
+          console.warn(`[AI GENERATOR] Failed to parse Block 4 critique:`, e);
         }
 
         if (auditResult.approved || isTerminalEvaluation) {
-          await appendTaskLog(`[AI GENERATOR] Widget Block 3 approved by Critique Agent!`);
-          block3Approved = true;
-          widgetBlock3Entry.approved = true;
+          await appendTaskLog(`[AI GENERATOR] Widget Block 4 approved by Critique Agent!`);
+          block4Approved = true;
+          widgetBlock4Entry.approved = true;
         } else {
-          let critiqueMsg = auditResult.critique || 'Widget Block 3 rejected.';
+          let critiqueMsg = auditResult.critique || 'Widget Block 4 rejected.';
           if (auditResult.fields && auditResult.fields.length > 0) {
             critiqueMsg += '\nDetailed errors:\n' + auditResult.fields.map((f: any) => `- Field "${f.field}": ${f.critique}`).join('\n');
           }
-          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 3 REJECTED. Critique: "${critiqueMsg}".`);
+          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 4 REJECTED. Critique: "${critiqueMsg}".`);
           lessonStats.widgetsRejections++;
-          widgetBlock3Entry.rejections++;
-          block3Feedback = critiqueMsg;
+          widgetBlock4Entry.rejections++;
+          block4Feedback = critiqueMsg;
         }
       }
 
-      if (block3Parsed) {
-        parsedWidgets.conclusionSummary = block3Parsed.conclusionSummary;
-        parsedWidgets.whatsNext = block3Parsed.whatsNext;
-        parsedWidgets.goingFurther = block3Parsed.goingFurther;
-        parsedWidgets.glossary = block3Parsed.glossary;
+      if (block4Parsed) {
+        parsedWidgets.conclusionSummary = block4Parsed.conclusionSummary;
+        parsedWidgets.whatsNext = block4Parsed.whatsNext;
+        parsedWidgets.goingFurther = block4Parsed.goingFurther;
+        parsedWidgets.glossary = block4Parsed.glossary;
       }
 
 
 
-      }      // --- Block 4: Evaluation & Bibliography References ---
-      let block4Approved = false;
-      let block4Iteration = 0;
-      const maxBlock4Iterations = 3;
-      let block4Feedback = '';
-      let block4Parsed: any = null;
+      }      // --- Block 5: Evaluation & Bibliography References ---
+      let block5Approved = false;
+      let block5Iteration = 0;
+      const maxBlock5Iterations = 3;
+      let block5Feedback = '';
+      let block5Parsed: any = null;
 
-      const widgetBlock4Entry = {
-        blockName: "Block 4: Evaluation & References",
+      const widgetBlock5Entry = {
+        blockName: "Block 5: Evaluation & References",
         attempts: 0,
         rejections: 0,
         approved: false
       };
-      lessonStats.widgetBlockAttempts.push(widgetBlock4Entry);
+      lessonStats.widgetBlockAttempts.push(widgetBlock5Entry);
 
-      const block4Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+      const block5Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 Your task is to design the JSON object for the final evaluation quiz and reference widgets of the lesson:
 Course: "${correctedCourseName}"
 Level: "${getDescriptiveLevelForPrompt(levelInput)}"
@@ -5495,28 +5651,28 @@ Return ONLY a valid JSON object matching this schema:
 \\\`\\\`\\\`
 Do NOT wrap your JSON response in markdown code blocks.`;
 
-      while (!block4Approved && block4Iteration < maxBlock4Iterations) {
-        block4Iteration++;
+      while (!block5Approved && block5Iteration < maxBlock5Iterations) {
+        block5Iteration++;
         lessonStats.widgetsAttempts++;
-        widgetBlock4Entry.attempts = block4Iteration;
-        await appendTaskLog(`[AI GENERATOR] Generating Widget Block 4 (Attempt #${block4Iteration})...`);
+        widgetBlock5Entry.attempts = block5Iteration;
+        await appendTaskLog(`[AI GENERATOR] Generating Widget Block 5 (Attempt #${block5Iteration})...`);
 
-        let block4PromptWithFeedback = block4Prompt;
-        if (block4Feedback) {
-          block4PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block4Feedback}"\nPlease fix these issues and regenerate.`;
+        let block5PromptWithFeedback = block5Prompt;
+        if (block5Feedback) {
+          block5PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block5Feedback}"\nPlease fix these issues and regenerate.`;
         }
 
         try {
-          block4Parsed = await generateAndParseWidgetBlock(block4PromptWithFeedback, widgetBlock4Schema, 'Block 4 Evaluation & References');
+          block5Parsed = await generateAndParseWidgetBlock(block5PromptWithFeedback, widgetBlock4Schema, 'Block 5 Evaluation & References');
         } catch (e) {
-          await appendTaskLog(`[AI GENERATOR] Widget Block 4 failed to parse. Retrying...`);
+          await appendTaskLog(`[AI GENERATOR] Widget Block 5 failed to parse. Retrying...`);
           continue;
         }
 
-        // Critique block 4
-        await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 4...`);
-        const block4CriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
-${JSON.stringify(block4Parsed, null, 2)}
+        // Critique block 5
+        await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 5...`);
+        const block5CriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 5:
+${JSON.stringify(block5Parsed, null, 2)}
 
 Ensure:
 1. Bibliography entries are valid academic citations.
@@ -5547,43 +5703,43 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
 2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
 
-        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block4_${item.slug}_iter${block4Iteration}.md`, block4PromptWithFeedback); // [FIX G4/G5]
-        if (block4Parsed) {
-          if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block4_${item.slug}_iter${block4Iteration}.json`, JSON.stringify(block4Parsed, null, 2)); // [FIX G4/G5]
+        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block5_${item.slug}_iter${block5Iteration}.md`, block5PromptWithFeedback); // [FIX G4/G5]
+        if (block5Parsed) {
+          if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block5_${item.slug}_iter${block5Iteration}.json`, JSON.stringify(block5Parsed, null, 2)); // [FIX G4/G5]
         }
-        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block4_critique${item.slug}_iter${block4Iteration}.md`, block4CriticPrompt); // [FIX G4/G5]
+        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block5_critique${item.slug}_iter${block5Iteration}.md`, block5CriticPrompt); // [FIX G4/G5]
 
-        const criticJsonStr = await callAIEngine(block4CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
-        if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block4${item.slug}_iter${block4Iteration}.json`, criticJsonStr); // [FIX G4/G5]
+        const criticJsonStr = await callAIEngine(block5CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
+        if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block5${item.slug}_iter${block5Iteration}.json`, criticJsonStr); // [FIX G4/G5]
 
         const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
         let auditResult = { approved: true, critique: '', fields: [] as any[] };
         try {
-          auditResult = safeJsonParse(cleanCritic, 'Widget Block 4 Audit Parsing');
+          auditResult = safeJsonParse(cleanCritic, 'Widget Block 5 Audit Parsing');
         } catch (e) {
-          console.warn(`[AI GENERATOR] Failed to parse Block 4 critique:`, e);
+          console.warn(`[AI GENERATOR] Failed to parse Block 5 critique:`, e);
         }
 
         if (auditResult.approved || isTerminalEvaluation) {
-          await appendTaskLog(`[AI GENERATOR] Widget Block 4 approved by Critique Agent!`);
-          block4Approved = true;
-          widgetBlock4Entry.approved = true;
+          await appendTaskLog(`[AI GENERATOR] Widget Block 5 approved by Critique Agent!`);
+          block5Approved = true;
+          widgetBlock5Entry.approved = true;
         } else {
-          let critiqueMsg = auditResult.critique || 'Widget Block 4 rejected.';
+          let critiqueMsg = auditResult.critique || 'Widget Block 5 rejected.';
           if (auditResult.fields && auditResult.fields.length > 0) {
             critiqueMsg += '\nDetailed errors:\n' + auditResult.fields.map((f: any) => `- Field "${f.field}": ${f.critique}`).join('\n');
           }
-          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 4 REJECTED. Critique: "${critiqueMsg}".`);
+          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 5 REJECTED. Critique: "${critiqueMsg}".`);
           lessonStats.widgetsRejections++;
-          widgetBlock4Entry.rejections++;
-          block4Feedback = critiqueMsg;
+          widgetBlock5Entry.rejections++;
+          block5Feedback = critiqueMsg;
         }
       }
 
-      if (block4Parsed) {
+      if (block5Parsed) {
         if (isTerminalEvaluation) {
-          block4Parsed.references = [];
-          if (block4Parsed.finalEvaluation) {
+          block5Parsed.references = [];
+          if (block5Parsed.finalEvaluation) {
             const cleanText = (str: string): string => {
               if (!str) return '';
               let cleaned = str;
@@ -5600,7 +5756,7 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
               return cleaned;
             };
 
-            const fe = block4Parsed.finalEvaluation;
+            const fe = block5Parsed.finalEvaluation;
             if (fe.props) {
               if (fe.props.prompt) fe.props.prompt = cleanText(fe.props.prompt);
               if (fe.props.subject) fe.props.subject = cleanText(fe.props.subject);
@@ -5643,8 +5799,8 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
             }
           }
         }
-        parsedWidgets.finalEvaluation = block4Parsed.finalEvaluation;
-        parsedWidgets.references = block4Parsed.references;
+        parsedWidgets.finalEvaluation = block5Parsed.finalEvaluation;
+        parsedWidgets.references = block5Parsed.references;
       }
       // --- Programmatic Curation-First budget & normalization ---
       const dbCatalogKeys = Object.keys(prunedCatalog);
@@ -8580,6 +8736,19 @@ async function validateAndFixImages(mdx: string): Promise<string> {
   
   const validationResults = await Promise.all(
     blocks.map(async (block) => {
+      const urlLower = block.url.toLowerCase();
+      if (
+        urlLower.includes('example.com') ||
+        urlLower.includes('placeholder') ||
+        urlLower.includes('tbd') ||
+        urlLower.includes('dummy') ||
+        urlLower.includes('your_') ||
+        block.url.trim() === ''
+      ) {
+        console.warn(`[IMAGE VALIDATOR] Deleting image block with placeholder URL: ${block.url}`);
+        return { fullBlock: block.fullBlock, isValid: false };
+      }
+
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), 15000);
       try {
