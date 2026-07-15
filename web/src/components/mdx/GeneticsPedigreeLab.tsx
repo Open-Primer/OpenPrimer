@@ -7,7 +7,7 @@ import { useLanguage } from '@/context/LanguageContext';
 type Allele = 'A' | 'a' | 'B' | 'b' | 'X^A' | 'X^a' | 'Y';
 type InheritanceMode = 'autosomal' | 'sex-linked';
 
-interface GeneticsPedigreeLab {
+interface GeneticsPedigreeLabProps {
   mode?: InheritanceMode;
   traitName?: string;
   gradeLevel?: 'middle_school' | 'high_school' | 'university';
@@ -48,8 +48,99 @@ function getPhenotype(genotype: string, mode: InheritanceMode, dominant: string,
 export const GeneticsPedigreeLab = ({
   mode: initialMode = 'autosomal',
   gradeLevel = 'high_school',
-}: GeneticsPedigreeLab) => {
+}: GeneticsPedigreeLabProps) => {
   const { language } = useLanguage();
+
+  const localZH: Record<string, string> = {
+    "Genetics Pedigree Lab": "遗传与系谱分析实验室",
+    "Interactive Punnett Square & pedigree analysis for inheritance pattern simulation": "用于遗传模式模拟的互动普氏方格与系谱分析",
+    "⬛ Punnett Square": "⬛ 普氏方格",
+    "🌳 Pedigree Tree": "🌳 系谱树",
+    "Eye Color": "眼睛颜色",
+    "Plant Height": "植株高度",
+    "Tongue Rolling": "卷舌能力",
+    "Color Vision": "辨色能力",
+    "Parent 1 (♀)": "亲本 1 (♀)",
+    "Parent 2 (♂)": "亲本 2 (♂)",
+    "Mother (♀)": "母亲 (♀)",
+    "Father (♂)": "父亲 (♂)",
+    "Normal": "正常",
+    "Carrier": "携带者",
+    "Affected": "患者",
+    "Color-blind": "色盲",
+    "Affected Male": "患病男性",
+    "Affected Female": "患病女性",
+    "Carrier Female": "携带者女性",
+    "Normal Male": "正常男性",
+    "Normal Female": "正常女性",
+    "Brown (B)": "褐色 (B)",
+    "Blue (b)": "蓝色 (b)",
+    "Tall (T)": "高茎 (T)",
+    "Short (t)": "矮茎 (t)",
+    "Roller (R)": "卷舌型 (R)",
+    "Non-roller (r)": "非卷舌型 (r)",
+    "Normal (X^A)": "正常 (X^A)",
+    "Color-blind (X^a)": "色盲 (X^a)",
+    "Trait Legend": "性状图例",
+    "Dominant": "显性",
+    "Recessive": "隐性",
+    "Phenotype Distribution (offspring probability)": "表现型分布（子代表现概率）",
+    "Pedigree chart showing inheritance across three generations based on the selected cross above.": "根据上方选择的杂交组合展示三代遗传规律的系谱图。",
+    "Gen": "世代",
+    "♂ Male": "♂ 男性",
+    "♀ Female": "♀ 女性",
+    "Reading pedigrees: ": "系谱图阅读说明：",
+    "Squares (□) represent males; circles (○) represent females. Filled shapes indicate the expressed phenotype. Half-filled circles denote heterozygous carriers in sex-linked traits.": "正方形 (□) 代表男性；圆形 (○) 代表女性。着色图形表示表现出该性状。半着色圆形表示伴性遗传中的杂合携带者。"
+  };
+
+  const localFR: Record<string, string> = {
+    "Genetics Pedigree Lab": "Laboratoire de génétique et pedigree",
+    "Interactive Punnett Square & pedigree analysis for inheritance pattern simulation": "Carré de Punnett interactif et analyse de pedigree pour la simulation de modèles d'hérédité",
+    "⬛ Punnett Square": "⬛ Carré de Punnett",
+    "🌳 Pedigree Tree": "🌳 Arbre généalogique",
+    "Eye Color": "Couleur des yeux",
+    "Plant Height": "Taille de la plante",
+    "Tongue Rolling": "Capacité à rouler la langue",
+    "Color Vision": "Vision des couleurs",
+    "Parent 1 (♀)": "Parent 1 (♀)",
+    "Parent 2 (♂)": "Parent 2 (♂)",
+    "Mother (♀)": "Mère (♀)",
+    "Father (♂)": "Père (♂)",
+    "Normal": "Normal",
+    "Carrier": "Porteur",
+    "Affected": "Atteint",
+    "Color-blind": "Daltonien",
+    "Affected Male": "Homme atteint",
+    "Affected Female": "Femme atteinte",
+    "Carrier Female": "Femme conductrice",
+    "Normal Male": "Homme sain",
+    "Normal Female": "Femme saine",
+    "Brown (B)": "Brun (B)",
+    "Blue (b)": "Bleu (b)",
+    "Tall (T)": "Grand (T)",
+    "Short (t)": "Nain (t)",
+    "Roller (R)": "Roteur (R)",
+    "Non-roller (r)": "Non-roteur (r)",
+    "Normal (X^A)": "Normal (X^A)",
+    "Color-blind (X^a)": "Daltonien (X^a)",
+    "Trait Legend": "Légende des caractères",
+    "Dominant": "Dominant",
+    "Recessive": "Récessif",
+    "Phenotype Distribution (offspring probability)": "Distribution des phénotypes (probabilité de la progéniture)",
+    "Pedigree chart showing inheritance across three generations based on the selected cross above.": "Arbre généalogique montrant la transmission sur trois générations basée sur le croisement sélectionné ci-dessus.",
+    "Gen": "Gén",
+    "♂ Male": "♂ Homme",
+    "♀ Female": "♀ Femme",
+    "Reading pedigrees: ": "Lecture des pedigrees : ",
+    "Squares (□) represent males; circles (○) represent females. Filled shapes indicate the expressed phenotype. Half-filled circles denote heterozygous carriers in sex-linked traits.": "Les carrés (□) représentent les hommes ; les cercles (○) représentent les femmes. Les formes remplies indiquent le phénotype exprimé. Les cercles à moitié remplis désignent les porteurs hétérozygotes pour les caractères liés au sexe."
+  };
+
+  const t = (key: string) => {
+    const lang = (language || 'EN').toUpperCase();
+    if (lang === 'ZH' && localZH[key]) return localZH[key];
+    if (lang === 'FR' && localFR[key]) return localFR[key];
+    return key;
+  };
 
   const [activeTrait, setActiveTrait] = useState(TRAITS[0]);
   const [parent1Allele1, setParent1Allele1] = useState('A');
@@ -66,16 +157,10 @@ export const GeneticsPedigreeLab = ({
 
   const squares = useMemo(() => {
     if (!isAutosomal) {
-      const femAlleles = femaleCarrierStatus.split('') as string[];
-      // parse X^A, X^a properly
-      const fem = [femaleCarrierStatus.substring(0, femaleCarrierStatus.length / 2), femaleCarrierStatus.substring(femaleCarrierStatus.length / 2)];
-      const mal = maleStatus === 'X^AY' ? ['X^A', 'Y'] : ['X^a', 'Y'];
-
-      // Simplified: use shorthand
       const femParsed = femaleCarrierStatus === 'X^AX^A' ? ['X^A', 'X^A']
         : femaleCarrierStatus === 'X^AX^a' ? ['X^A', 'X^a']
         : ['X^a', 'X^a'];
-
+      const mal = maleStatus === 'X^AY' ? ['X^A', 'Y'] : ['X^a', 'Y'];
       return femParsed.map(f => mal.map(m => [f, m].join('')));
     }
     return punnettSquare([parent1Allele1, parent1Allele2], [parent2Allele1, parent2Allele2]);
@@ -97,10 +182,10 @@ export const GeneticsPedigreeLab = ({
         <div>
           <h4 className="text-sm font-black text-slate-100 uppercase tracking-widest flex items-center gap-2">
             <Dna className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Genetics Pedigree Lab</span>
+            <span>{t("Genetics Pedigree Lab")}</span>
           </h4>
           <p className="text-[11px] text-slate-400 font-semibold mt-1">
-            Interactive Punnett Square & pedigree analysis for inheritance pattern simulation
+            {t("Interactive Punnett Square & pedigree analysis for inheritance pattern simulation")}
           </p>
         </div>
 
@@ -116,7 +201,7 @@ export const GeneticsPedigreeLab = ({
                   : 'bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200'
               }`}
             >
-              {v === 'punnett' ? '⬛ Punnett Square' : '🌳 Pedigree Tree'}
+              {v === 'punnett' ? t('⬛ Punnett Square') : t('🌳 Pedigree Tree')}
             </button>
           ))}
         </div>
@@ -124,18 +209,18 @@ export const GeneticsPedigreeLab = ({
 
       {/* Trait Selector */}
       <div className="flex flex-wrap gap-2 mb-5">
-        {TRAITS.map(t => (
+        {TRAITS.map(tOption => (
           <button
-            key={t.id}
-            onClick={() => setActiveTrait(t)}
+            key={tOption.id}
+            onClick={() => setActiveTrait(tOption)}
             className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
-              activeTrait.id === t.id
+              activeTrait.id === tOption.id
                 ? 'bg-indigo-600 border-indigo-500 text-white'
                 : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
             }`}
           >
-            {t.name}
-            <span className="ml-1 text-[8px] opacity-60">{t.mode === 'sex-linked' ? '♂♀' : 'AA'}</span>
+            {t(tOption.name)}
+            <span className="ml-1 text-[8px] opacity-60">{tOption.mode === 'sex-linked' ? '♂♀' : 'AA'}</span>
           </button>
         ))}
       </div>
@@ -148,14 +233,14 @@ export const GeneticsPedigreeLab = ({
               <>
                 {/* Parent 1 */}
                 <div className="p-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 space-y-3">
-                  <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block">Parent 1 (♀)</span>
+                  <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block">{t("Parent 1 (♀)")}</span>
                   <div className="flex gap-3">
                     {[{ val: parent1Allele1, set: setParent1Allele1 }, { val: parent1Allele2, set: setParent1Allele2 }].map((item, idx) => (
                       <div key={idx} className="flex-1">
                         <select
-                          value={item.val}
-                          onChange={e => item.set(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-800 text-white font-mono font-black text-center py-2 px-1 rounded-xl cursor-pointer text-sm focus:border-indigo-500 focus:outline-none"
+                           value={item.val}
+                           onChange={e => item.set(e.target.value)}
+                           className="w-full bg-slate-950 border border-slate-800 text-white font-mono font-black text-center py-2 px-1 rounded-xl cursor-pointer text-sm focus:border-indigo-500 focus:outline-none"
                         >
                           {alleleOptions.map(a => <option key={a} value={a}>{a}</option>)}
                         </select>
@@ -167,14 +252,14 @@ export const GeneticsPedigreeLab = ({
 
                 {/* Parent 2 */}
                 <div className="p-4 rounded-2xl border border-pink-500/20 bg-pink-500/5 space-y-3">
-                  <span className="text-[9px] font-black uppercase text-pink-400 tracking-wider block">Parent 2 (♂)</span>
+                  <span className="text-[9px] font-black uppercase text-pink-400 tracking-wider block">{t("Parent 2 (♂)")}</span>
                   <div className="flex gap-3">
                     {[{ val: parent2Allele1, set: setParent2Allele1 }, { val: parent2Allele2, set: setParent2Allele2 }].map((item, idx) => (
                       <div key={idx} className="flex-1">
                         <select
-                          value={item.val}
-                          onChange={e => item.set(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-800 text-white font-mono font-black text-center py-2 px-1 rounded-xl cursor-pointer text-sm focus:border-pink-500 focus:outline-none"
+                           value={item.val}
+                           onChange={e => item.set(e.target.value)}
+                           className="w-full bg-slate-950 border border-slate-800 text-white font-mono font-black text-center py-2 px-1 rounded-xl cursor-pointer text-sm focus:border-pink-500 focus:outline-none"
                         >
                           {alleleOptions.map(a => <option key={a} value={a}>{a}</option>)}
                         </select>
@@ -188,26 +273,26 @@ export const GeneticsPedigreeLab = ({
               <>
                 {/* Sex-linked Mother */}
                 <div className="p-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 space-y-3">
-                  <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block">Mother (♀)</span>
+                  <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block">{t("Mother (♀)")}</span>
                   {(['X^AX^A', 'X^AX^a', 'X^aX^a'] as const).map(s => (
                     <button key={s} onClick={() => setFemaleCarrierStatus(s)}
                       className={`w-full py-2 px-3 rounded-xl text-[10px] font-black border transition-all cursor-pointer text-left ${
                         femaleCarrierStatus === s ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
                       }`}>
-                      {s} — {s === 'X^AX^A' ? 'Normal' : s === 'X^AX^a' ? 'Carrier' : 'Affected'}
+                      {s} — {s === 'X^AX^A' ? t('Normal') : s === 'X^AX^a' ? t('Carrier') : t('Affected')}
                     </button>
                   ))}
                 </div>
 
                 {/* Sex-linked Father */}
                 <div className="p-4 rounded-2xl border border-pink-500/20 bg-pink-500/5 space-y-3">
-                  <span className="text-[9px] font-black uppercase text-pink-400 tracking-wider block">Father (♂)</span>
+                  <span className="text-[9px] font-black uppercase text-pink-400 tracking-wider block">{t("Father (♂)")}</span>
                   {(['X^AY', 'X^aY'] as const).map(s => (
                     <button key={s} onClick={() => setMaleStatus(s)}
                       className={`w-full py-2 px-3 rounded-xl text-[10px] font-black border transition-all cursor-pointer text-left ${
                         maleStatus === s ? 'bg-pink-600 border-pink-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
                       }`}>
-                      {s} — {s === 'X^AY' ? 'Normal' : 'Color-blind'}
+                      {s} — {s === 'X^AY' ? t('Normal') : t('Color-blind')}
                     </button>
                   ))}
                 </div>
@@ -216,14 +301,14 @@ export const GeneticsPedigreeLab = ({
 
             {/* Trait Legend */}
             <div className="p-3 rounded-xl border border-slate-850 bg-slate-900/20 space-y-1.5">
-              <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">Trait Legend</span>
+              <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">{t("Trait Legend")}</span>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-indigo-500" />
-                <span className="text-[10px] text-slate-300 font-semibold">{activeTrait.dominant} (Dominant)</span>
+                <span className="text-[10px] text-slate-300 font-semibold">{t(activeTrait.dominant)} ({t("Dominant")})</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-pink-500" />
-                <span className="text-[10px] text-slate-300 font-semibold">{activeTrait.recessive} (Recessive)</span>
+                <span className="text-[10px] text-slate-300 font-semibold">{t(activeTrait.recessive)} ({t("Recessive")})</span>
               </div>
             </div>
           </div>
@@ -254,7 +339,7 @@ export const GeneticsPedigreeLab = ({
                         className="m-0.5 h-16 rounded-xl flex flex-col items-center justify-center border border-opacity-30 transition-all hover:scale-105 cursor-default"
                         style={{ backgroundColor: `${color}15`, borderColor: `${color}40` }}>
                         <span className="font-mono font-black text-sm" style={{ color }}>{cell}</span>
-                        <span className="text-[8px] font-bold text-slate-400 mt-1 text-center leading-tight px-1">{label}</span>
+                        <span className="text-[8px] font-bold text-slate-400 mt-1 text-center leading-tight px-1">{t(label)}</span>
                       </div>
                     );
                   })}
@@ -264,7 +349,7 @@ export const GeneticsPedigreeLab = ({
 
             {/* Phenotype ratio summary */}
             <div className="p-4 rounded-2xl border border-slate-850 bg-slate-900/20 space-y-2">
-              <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">Phenotype Distribution (offspring probability)</span>
+              <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">{t("Phenotype Distribution (offspring probability)")}</span>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(phenotypeCounts).map(([label, count]) => {
                   const { color } = getPhenotype(
@@ -276,7 +361,7 @@ export const GeneticsPedigreeLab = ({
                       style={{ backgroundColor: `${color}10`, borderColor: `${color}30` }}>
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
                       <span className="text-[10px] font-black" style={{ color }}>{count}/4 ({(count * 25)}%)</span>
-                      <span className="text-[10px] text-slate-400 font-semibold">{label}</span>
+                      <span className="text-[10px] text-slate-400 font-semibold">{t(label)}</span>
                     </div>
                   );
                 })}
@@ -288,14 +373,14 @@ export const GeneticsPedigreeLab = ({
 
       {view === 'pedigree' && (
         <div className="space-y-4">
-          <p className="text-[11px] text-slate-400 font-semibold">Pedigree chart showing inheritance across three generations based on the selected cross above.</p>
+          <p className="text-[11px] text-slate-400 font-semibold">{t("Pedigree chart showing inheritance across three generations based on the selected cross above.")}</p>
 
           {/* SVG Pedigree Tree */}
           <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-2xl overflow-x-auto">
             <svg viewBox="0 0 600 280" className="w-full max-w-[600px] mx-auto h-auto">
               {/* Generation labels */}
               {['I', 'II', 'III'].map((gen, gi) => (
-                <text key={gi} x={10} y={60 + gi * 100 + 6} fill="#64748b" fontSize="11" fontWeight="900" fontFamily="monospace">Gen {gen}</text>
+                <text key={gi} x={10} y={60 + gi * 100 + 6} fill="#64748b" fontSize="11" fontWeight="900" fontFamily="monospace">{t('Gen')} {gen}</text>
               ))}
 
               {/* Gen I parents */}
@@ -323,7 +408,6 @@ export const GeneticsPedigreeLab = ({
               {flatResults.slice(0, 4).map((cell, ci) => {
                 const { color, label } = getPhenotype(cell, activeTrait.mode, activeTrait.dominant, activeTrait.recessive);
                 const x = 100 + ci * 110;
-                const isFemalePhenotype = label.toLowerCase().includes('female') || label.toLowerCase().includes('carrier');
                 return (
                   <g key={ci}>
                     <line x1={x} y1={90} x2={x} y2={120} stroke="#475569" strokeWidth={1} strokeDasharray="3,2" />
@@ -354,15 +438,15 @@ export const GeneticsPedigreeLab = ({
 
               {/* Legend */}
               <rect x={490} y={30} width={14} height={14} rx={2} fill="none" stroke="#94a3b8" strokeWidth={1.5} />
-              <text x={508} y={42} fill="#94a3b8" fontSize="9">♂ Male</text>
+              <text x={508} y={42} fill="#94a3b8" fontSize="9">{t("♂ Male")}</text>
               <circle cx={497} cy={65} r={7} fill="none" stroke="#94a3b8" strokeWidth={1.5} />
-              <text x={508} y={69} fill="#94a3b8" fontSize="9">♀ Female</text>
+              <text x={508} y={69} fill="#94a3b8" fontSize="9">{t("♀ Female")}</text>
             </svg>
           </div>
 
           <div className="p-4 rounded-2xl border border-slate-850 bg-slate-900/20 text-[11px] text-slate-400 font-semibold leading-relaxed">
-            <span className="text-slate-200 font-black">Reading pedigrees: </span>
-            Squares (□) represent males; circles (○) represent females. Filled shapes indicate the expressed phenotype. Half-filled circles denote heterozygous carriers in sex-linked traits.
+            <span className="text-slate-200 font-black">{t("Reading pedigrees: ")}</span>
+            {t("Squares (□) represent males; circles (○) represent females. Filled shapes indicate the expressed phenotype. Half-filled circles denote heterozygous carriers in sex-linked traits.")}
           </div>
         </div>
       )}

@@ -7,6 +7,7 @@ import { BookOpen, ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 import { useWikiCascade } from '@/hooks/useWikiCascade';
+import { useNesting } from './CitationContext';
 
 const GLOSSARY_DATA: Record<string, string> = {
   "cell theory": "The fundamental scientific theory that all living organisms are made of cells, and that cells are the basic unit of structure and function in living things.",
@@ -46,6 +47,7 @@ export const Glossary = ({
   children: React.ReactNode; 
 }) => {
   const { language } = useLanguage();
+  const { disableOverlays } = useNesting();
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
@@ -91,8 +93,8 @@ export const Glossary = ({
   // Clean definition formatting for popover content
   let displayDefinition = finalDefinition || '';
   if (displayDefinition) {
-    // Strip Wikipedia markdown links
-    displayDefinition = displayDefinition.replace(/\[+Wikip[ée]dia\]+\(https?:\/\/[^\)]+\)/gi, '');
+    // Strip Wikipedia markdown links (with optional language markers)
+    displayDefinition = displayDefinition.replace(/\[+(?:Wikip[ée]dia|Wikipedia)(?:\s*\([^)]*\))?\]+\(https?:\/\/[^\)]+\)/gi, '');
     // Clean any other markdown links
     displayDefinition = displayDefinition.replace(/\[+([^\]]+)\]+\([^\)]+\)/g, '$1');
     // Strip HTML tags
@@ -103,7 +105,8 @@ export const Glossary = ({
 
 
 
-  if (!finalDefinition) return <>{children}</>;
+
+  if (!finalDefinition || disableOverlays) return <>{children}</>;
 
   const handleMouseEnter = () => {
     if (timeoutId) clearTimeout(timeoutId);

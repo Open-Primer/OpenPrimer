@@ -1,0 +1,92 @@
+---
+title: >-
+  Les Fondements de la physique Quantique : Dualité Onde-Corpuscule et Équation
+  de Schrödinger
+subject: Mécanique Quantique Fondamentale et Structure de la Matière
+level: L3
+module: Les Fondements de la physique Quantique
+order: 1
+---
+<DiagnosticQuiz question="Quelle relation mathematique relie l'impulsion p d'un electron a sa longueur d'onde de matiere lambda associee ?" options="lambda = h * p|||lambda = h / p|||lambda = p / h|||lambda = h_barre * p" correctIndex="1" targetSectionId="la-dualite-onde-corpuscule" sectionTitle="La Dualite Onde-Corpuscule" />
+
+
+## Introduction aux Phénomènes Quantiques
+
+Au tournant du XXe siècle, la physique classique, pourtant triomphante avec la mécanique de Newton et l'électromagnétisme de Maxwell, se heurte à des anomalies insolubles à l'échelle atomique. Le rayonnement du corps noir, l'effet photoélectrique et la stabilité des spectres de raies d'émission révèlent des comportements incompatibles avec une description continue de la matière et de la lumière.
+
+L'introduction du quantum d'action par <RealPerson id="max_planck" url="https://fr.wikipedia.org/wiki/Max_Planck" description="Max Planck, né Max Karl Ernst Ludwig Planck le 23 avril 1858 à Kiel dans le duché de Holstein et mort le 4 octobre 1947 à Göttingen en Allemagne occupée, est un physicien allemand." type="person" name="Max Planck">Max Planck</RealPerson> en 1900 <Reference id="1">1</Reference>, puis l'interprétation corpusculaire de la lumière par <RealPerson id="albert_einstein" url="https://fr.wikipedia.org/wiki/Albert_Einstein" description="Albert Einstein, né le 14 mars 1879 à Ulm et mort le 18 avril 1955 à Princeton, est un physicien théoricien helvético-américain d'origine allemande." type="person" name="Albert Einstein">Albert Einstein</RealPerson> en 1905, jettent les bases d'une révolution conceptuelle sans précédent : la quantification de l'énergie et la dualité onde-corpuscule.
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Comprendre l'origine historique et les limites de la physique classique menant à la quantification.</li>
+      <li>Formuler mathématiquement la dualité onde-corpuscule de de Broglie.</li>
+      <li>Établir et analyser l'équation de Schrödinger temporelle et stationnaire. &#123;/* [FIX A3] */&#125;</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Calculer la longueur d'onde de de Broglie pour des particules subatomiques.</li>
+      <li>Vérifier et appliquer la condition de normalisation d'une fonction d'onde complexe.</li>
+      <li>Résoudre l'équation de Schrödinger pour un puits de potentiel infini unidimensionnel.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Adopter une démarche de rigueur conceptuelle face à l'interprétation probabiliste du monde microscopique.</li>
+      <li>S'habituer à l'abandon des trajectoires classiques déterministes au profit d'amplitudes de probabilité.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+### La Dualité Onde-Corpuscule
+
+En 1924, le physicien français <RealPerson id="louis_de_broglie" url="https://fr.wikipedia.org/wiki/Louis_de_Broglie" description="Louis Victor de Broglie, prince, puis septième duc de Broglie, né le 15 août 1892 à Dieppe et mort le 19 mars 1987 à Louveciennes, est un mathématicien et physicien français. À seulement 37 ans, il devient lauréat du prix Nobel de physique de 1929 « pour sa découverte de la nature ondulatoire des électrons », qui a révolutionné la physique en généralisant à toute la matière la dualité onde-corpuscule proposée par Einstein pour la lumière." type="person" name="Louis de Broglie">Louis de Broglie</RealPerson> généralise la dualité onde-corpuscule en postulant que toute particule massive en mouvement (comme un électron) possède une onde associée, appelée onde de matière <Reference id="2">2</Reference>. La longueur d'onde de de Broglie $\lambda$ est reliée à l'impulsion $p$ de la particule par la relation fondamentale :
+
+$$\lambda = \frac{h}{p}$$
+
+où $h$ est la constante de Planck. Cette hypothèse audacieuse a été vérifiée expérimentalement par les célèbres expériences de diffraction d'électrons de Davisson et Germer en 1927.
+
+<Mermaid caption="Figure 1 : Dualite Onde-Corpuscule" chart={`graph LR
+    A[Matière classique / Particule] --/> C{Dualité Onde-Corpuscule}
+    B[Lumière classique / Onde] --> C
+    C --> D[Longueur d'onde de de Broglie]
+    C --> E[Fonction d'onde quantique]`} />
+
+### L'Équation de Schrödinger
+
+S'appuyant sur l'idée de de Broglie, le physicien autrichien <RealPerson id="erwin_schrodinger" url="https://fr.wikipedia.org/wiki/Erwin_Schr%C3%B6dinger" description="Erwin Schrödinger, né le 12 août 1887 à Vienne et mort le 4 janvier 1961 dans la même ville, est un physicien, philosophe et théoricien scientifique autrichien." type="person" name="Erwin Schrödinger">Erwin Schrödinger</RealPerson> formule en 1926 une équation d'onde décrivant l'évolution temporelle de ces ondes de matière. L'équation de Schrödinger dépendante du temps pour une particule de masse $m$ soumise à un potentiel $V(\vec{r}, t)$ s'écrit :
+
+$$i\hbar\frac{\partial}{\partial t}\Psi(\vec{r}, t) = \hat{H}\Psi(\vec{r}, t)$$
+
+où $\hbar = \frac{h}{2\pi}$ est la constante de Planck réduite, et $\hat{H}$ est l'opérateur Hamiltonien du système :
+
+$$\hat{H} = -\frac{\hbar^2}{2m}\nabla^2 + V(\vec{r}, t)$$
+
+La <Glossary id="fonction_onde" wikipediaUrl="https://fr.wikipedia.org/wiki/Fonction_d'onde" definition="La fonction d'onde est un des concepts fondamentaux de la mécanique quantique. Elle correspond à la représentation de l'état quantique  d'un système dans une base de dimension infinie, en général celle des positions . Dans ce dernier cas, elle est notée , qui, par définition, correspond à , si l'état quantique  est normé." type="concept" term="Fonction d'onde">Fonction d'onde</Glossary> $\Psi(\vec{r}, t)$ est une amplitude de probabilité complexe. Selon l'interprétation statistique proposée par <RealPerson id="max_born" url="https://fr.wikipedia.org/wiki/Max_Born" description="Max Born est un physicien et mathématicien allemand." type="person" name="Max Born">Max Born</RealPerson> en 1926, le carré du module de la fonction d'onde, $|\Psi(\vec{r}, t)|^2$, représente la densité de probabilité de présence de la particule au point $\vec{r}$ à l'instant $t$ :
+
+$$P(\vec{r}, t)d^3r = |\Psi(\vec{r}, t)|^2 d^3r$$
+
+La normalisation de cette probabilité impose que la particule se trouve nécessairement quelque part dans l'espace, ce qui donne la condition de normalisation :
+
+$$\int_{-\infty}^{+\infty} |\Psi(\vec{r}, t)|^2 d^3r = 1$$
+
+### Conséquences Physiques : La Quantification et l'Effet Tunnel
+
+L'équation de Schrödinger indépendante du temps pour des états stationnaires d'énergie $E$ s'écrit sous la forme d'une équation aux valeurs propres :
+
+$$\hat{H}\psi(\vec{r}) = E\psi(\vec{r})$$
+
+Les conditions aux limites physiques imposées à $\psi(\vec{r})$ (continuité, régularité et sommabilité au carré) restreignent les solutions physiques à un ensemble de valeurs d'énergie discrètes. C'est l'explication naturelle de la <ConceptLink id="quantification_energie">Quantification de l'énergie</ConceptLink> dans les puits de potentiel ou les atomes <Reference id="3">3</Reference>.
+
+De plus, la nature ondulatoire permet à une particule de traverser une barrière de potentiel d'énergie supérieure à l'énergie propre de la particule. Ce phénomène purement quantique, appelé **effet tunnel**, régit la radioactivité alpha, la fusion nucléaire au sein des étoiles et le fonctionnement des microscopes à effet tunnel.
+
+## Conclusion
+<Summary itemsString="undefined" />
+
+<WhatsNext itemsBase64="W3sidGl0bGUiOiJNZWNhbmlxdWUgUXVhbnRpcXVlIC0gVG9tZSBJIiwiZGVzY3JpcHRpb24iOiJMZSBjb3VycyBkZSByZWZlcmVuY2UgbW9uZGlhbGVtZW50IHJlY29ubnUgcG91ciBzYSByaWd1ZXVyIHDDqWRhZ29naXF1ZSBldCBmb3JtZWxsZS4iLCJzbHVnIjoibWVjYW5pcXVlLXF1YW50aXF1ZS10b21lLWkiLCJzdWJqZWN0IjoiIiwibGV2ZWwiOiIifV0=" />
+#
+
+### Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiUGxhbmNrLCBNLiAoMTkwMCkuIFVlYmVyIGVpbmUgVmVyYmVzc2VydW5nIGRlciBXaWVuJ3NjaGVuIFNwZWN0cmFsZ2xlaWNodW5nLiBWZXJoYW5kbHVuZ2VuIGRlciBEZXV0c2NoZW4gUGh5c2lrYWxpc2NoZW4gR2VzZWxsc2NoYWZ0LCAyLCAyMDItMjA0LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1QbGFuY2slMjAlMjJWZXJoYW5kbHVuZ2VuJTIwZGVyJTIwRGV1dHNjaGVuJTIwUGh5c2lrYWxpc2NoZW4lMjBHZXNlbGxzY2hhZnQlMjIlMjAxOTAwIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjIsInRleHQiOiJkZSBCcm9nbGllLCBMLiAoMTkyNCkuIFJlY2hlcmNoZXMgc3VyIGxhIHRow6lvcmllIGRlcyBxdWFudGEgKERvY3RvcmFsIGRpc3NlcnRhdGlvbiwgTWlncmF0aW9uLVVuaXZlcnNpdMOpIGRlIFBhcmlzKS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9ZGUlMjBCcm9nbGllJTIwJTIyUmVjaGVyY2hlcyUyMHN1ciUyMGxhJTIwdGglQzMlQTlvcmllJTIwZGVzJTIwcXVhbnRhJTIwRG9jdG9yYWwlMjBkaXNzZXJ0YXRpb24lMjIlMjAxOTI0Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjMsInRleHQiOiJTY2hyw7ZkaW5nZXIsIEUuICgxOTI2KS4gQW4gdW5kdWxhdG9yeSB0aGVvcnkgb2YgdGhlIG1lY2hhbmljcyBvZiBhdG9tcyBhbmQgbW9sZWN1bGVzLiBQaHlzaWNhbCBSZXZpZXcsIDI4KDYpLCAxMDQ5LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1TY2hyJUMzJUI2ZGluZ2VyJTIwJTIyQW4lMjB1bmR1bGF0b3J5JTIwdGhlb3J5JTIwb2YlMjB0aGUlMjBtZWNoYW5pY3MlMjBvZiUyMGF0b21zJTIwYW5kJTIwbW9sZWN1bGVzJTIyJTIwMTkyNiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo0LCJ0ZXh0IjoiQ2xhdWRlIENvaGVuLVRhbm5vdWRqaSwgQmVybmFyZCBEaXUsIEZyYW5jayBMYWxvw6suIDIwMTguIMKrIE3DqWNhbmlxdWUgUXVhbnRpcXVlIC0gVG9tZSBJIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9Q2xhdWRlJTIwQ29oZW4tVGFubm91ZGppJTIwJTIyTSVDMyVBOWNhbmlxdWUlMjBRdWFudGlxdWUlMjIlMjAyMDE4Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjp0cnVlfV0=" />

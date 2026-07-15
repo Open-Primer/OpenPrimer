@@ -1,0 +1,187 @@
+---
+title: "1. Cifrados Históricos y Fundamentos"
+subject: "Ciencias_de_la_Computación"
+level: "L1"
+module: "Cifrado Simétrico y Fundamentos"
+order: 1
+---
+
+
+
+# 1. Cifrados Históricos y Fundamentos
+
+La criptografía, la ciencia de la comunicación segura, es una piedra angular de la seguridad de la información moderna. Su objetivo principal es permitir que dos partes —tradicionalmente llamadas Alice y Bob— se comuniquen a través de un canal inseguro de tal manera que un adversario, Eve, no pueda comprender el contenido de sus mensajes.
+
+En esta lección, exploraremos los fundamentos matemáticos de la criptografía clásica. Analizaremos los cifrados históricos que sentaron las bases para el cifrado moderno y comprenderemos por qué son inseguros frente al criptoanálisis matemático.
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Definir los términos Texto plano, Cifrado, Clave, Cifrado, Descifrado y Espacio de claves.</li>
+      <li>Comprender la definición matemática de la aritmética modular.</li>
+      <li>Explicar el mecanismo de sustitución monoalfabética y polialfabética.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Codificar y decodificar matemáticamente mensajes utilizando los cifrados César y Vigenère.</li>
+      <li>Realizar criptoanálisis por análisis de frecuencia en cifrados de sustitución simple.</li>
+      <li>Calcular el tamaño del espacio de claves para diferentes cifrados clásicos.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Desarrollar una mentalidad crítica con respecto a la seguridad de los esquemas de cifrado ad-hoc.</li>
+      <li>Apreciar la transición de la seguridad basada en la oscuridad a pruebas matemáticas rigurosas.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+---
+## El Primitivo Criptográfico Central
+
+Todo esquema de cifrado consta de un **espacio de texto plano** $\mathcal{M}$, un **espacio de texto cifrado** $\mathcal{C}$, un **espacio de claves** $\mathcal{K}$, y un par de algoritmos:
+- Un **Algoritmo de Cifrado** $E: \mathcal{M} \times \mathcal{K} \rightarrow \mathcal{C}$
+- Un **Algoritmo de Descifrado** $D: \mathcal{C} \times \mathcal{K} \rightarrow \mathcal{M}$
+
+El requisito fundamental de corrección de la criptografía es que para cualquier texto plano $m \in \mathcal{M}$ y clave $k \in \mathcal{K}$:
+$$D(E(m, k), k) = m$$
+
+![Symmetric Cryptography Diagram](https://upload.wikimedia.org/wikipedia/commons/8/8e/Binary_symmetric_channel_%28en%29.svg)
+
+---
+## El Cifrado César (Sustitución Monoalfabética)
+
+El cifrado César es una de las técnicas de cifrado más antiguas registradas, nombrado en honor a Julio César, quien lo utilizaba para comunicarse con sus generales.
+
+### Formulación Matemática
+Para representar matemáticamente las letras del alfabeto inglés, las mapeamos al conjunto de enteros módulo 26:
+$$\mathbb{Z}_{26} = \{0, 1, 2, \dots, 25\}$$
+donde 'A' $\mapsto 0$, 'B' $\mapsto 1$, \dots, 'Z' $\mapsto 25$.
+
+Dado una clave de desplazamiento $k \in \mathbb{Z}_{26}$, el cifrado de una sola letra $p \in \mathbb{Z}_{26}$ es:
+$$E(p, k) = (p + k) \pmod{26}$$
+
+Y el descifrado de una letra de texto cifrado $c \in \mathbb{Z}_{26}$ es:
+$$D(c, k) = (c - k) \pmod{26}$$
+
+
+
+
+### Demostración Interactiva
+A continuación, puedes experimentar con el cifrado y descifrado César directamente en tu navegador.
+
+<CodeSandbox code={`// Dynamic Caesar Cipher Encryption
+function encryptCaesar(plaintext, key) {
+  return plaintext.toUpperCase().split('').map(char = /> {
+    const code = char.charCodeAt(0);
+    if (code >= 65 && code <= 90) {
+      return String.fromCharCode(((code - 65 + key) % 26) + 65);
+    }
+    return char;
+  }).join('');
+}
+
+const text = "OPENPRIMER UNIVERSITY GRADE CRYPTOGRAPHY";
+const key = 13;
+console.log("Plaintext:  ", text);
+console.log("Ciphertext: ", encryptCaesar(text, key));
+`}
+  language="javascript"
+  title="Interactive Caesar Cipher Decoder"
+/>
+
+---
+## Por qué el Cifrado César está Roto: Complejidad del Espacio de Claves
+
+La principal debilidad del cifrado César reside en su minúsculo espacio de claves. Debido a que la clave $k$ debe ser un número entero entre $1$ y $25$, solo hay **25 claves posibles** (un desplazamiento de 0 o 26 no altera el texto plano).
+
+Una intrusa, Eva, puede realizar fácilmente un **ataque de fuerza bruta** probando las 25 claves posibles hasta que lea texto plano inteligible.
+
+<SolvedExercise title="Keyspace Complexity Calculation">
+  **Problema:**
+  Calcula el tamaño del espacio de claves para un cifrado de sustitución monoalfabético general, donde cada letra del alfabeto se asigna a una permutación única del alfabeto.
+
+  **Solución:**
+  En un cifrado de sustitución monoalfabético general, podemos asignar 'A' a cualquiera de las 26 letras. 'B' puede asignarse a cualquiera de las 25 letras restantes, 'C' a cualquiera de las 24 letras, y así sucesivamente.
+
+  Por lo tanto, el tamaño del espacio de claves es el número de permutaciones de 26 elementos:
+  $$|\mathcal{K}| = 26! \approx 4.03 \times 10^{26}$$
+
+  Este es un espacio de claves masivo, mayor que $2^{88}$. ¡Un ataque de fuerza bruta que intente 1000 millones de claves por segundo tardaría más de 12 mil millones de años en completarse!
+</SolvedExercise>
+
+---
+## Análisis de Frecuencia: Rompiendo la Sustitución General
+
+Aunque un cifrado de sustitución general tiene un espacio de claves de $26!$, sigue siendo completamente inseguro. ¿Por qué? Porque preserva la **distribución estadística** del lenguaje subyacente.
+
+En cualquier lenguaje natural, algunas letras ocurren con mucha más frecuencia que otras. En inglés, la 'E' es la letra más frecuente (aprox. 12.7%), seguida por la 'T', la 'A' y la 'O'. Contando las ocurrencias de cada letra en el texto cifrado, podemos mapear las letras más frecuentes del texto cifrado a las letras más frecuentes del inglés, descifrando rápidamente el código.
+
+<SocraticInput 
+  question="¿Por qué el análisis de frecuencia falla por completo al descifrar un texto si el texto cifrado es muy corto (por ejemplo, un mensaje de solo 5 letras como 'QYUPX')?" 
+  idealAnswer="El análisis de frecuencia se basa en la Ley de los Grandes Números. En mensajes cortos, la distribución estadística de las letras no converge con la frecuencia promedio del idioma, lo que significa que dominan las fluctuaciones aleatorias y hacen que los conteos de frecuencia sean inútiles." 
+  customCriteriaString="Debe mencionar la ley de los grandes números o la convergencia estadística, y explicar que el texto corto carece de una muestra representativa de frecuencias de letras."
+/>
+
+---
+## El Cifrado de Vigenère (Sustitución Polialfabética)
+
+Para contrarrestar el análisis de frecuencias, los criptógrafos del siglo XVI desarrollaron la sustitución polialfabética. El cifrado de Vigenère utiliza una palabra clave repetida para determinar una serie de diferentes desplazamientos César.
+
+### Formulación Matemática
+Sea la clave un vector de desplazamientos $\vec{k} = (k_0, k_1, \dots, k_{d-1})$ de período $d$.
+Para un mensaje en texto plano $\vec{p} = (p_0, p_1, \dots)$, el elemento de texto cifrado $c_i$ es:
+$$c_i = (p_i + k_{i \pmod d}) \pmod{26}$$
+
+Al cambiar el desplazamiento de letra en letra, Vigenère aplana la distribución de frecuencias, haciendo imposible el análisis de frecuencias simple.
+
+<Quiz mode="standard">
+  <Question q="¿Cuál es la técnica principal utilizada para encontrar la longitud de la clave 'd' de un cifrado de Vigenère?" explanation="El examen de Kasiski identifica secuencias repetidas de texto cifrado para encontrar divisores comunes de sus distancias, que representan candidatos para la longitud de la clave. La prueba de Friedman utiliza el Índice de Coincidencia.">
+  <Option text="Fuerza bruta de todas las 26! permutaciones de las letras" correct={false} />
+  <Option text="Búsqueda de la letra individual más frecuente en el texto cifrado" correct={false} />
+  <Option text="Examen de Kasiski o Prueba de Friedman (Índice de Coincidencia)" correct={true} />
+  <Option text="Criptoanálisis lineal utilizando registros de desplazamiento con retroalimentación" correct={false} />
+</Question>
+</Quiz>
+
+---
+## Clasificación de Tarjetas: Empareja Términos Criptográficos
+
+Empareja los términos de criptografía clásica con sus descripciones.
+
+<CardSort pairsString="Texto plano:El mensaje original sin cifrar||Texto cifrado:El mensaje cifrado tras la transformación||Espacio de claves:El conjunto de todas las claves posibles||Análisis de frecuencia:Criptoanálisis que aprovecha las estadísticas de distribución de letras" />
+
+---
+## Línea de Tiempo Histórica de la Criptografía Clásica
+
+Explore los momentos clave en la historia de la criptografía clásica.
+
+<Timeline items={[
+  {
+    date: "50 a.C.",
+    title: "El Cifrado César",
+    description: "Julio César utiliza un cifrado de desplazamiento simple para asegurar los despachos militares."
+  },
+  {
+    date: "850 d.C.",
+    title: "Al-Kindi inventa el análisis de frecuencia",
+    description: "El polímata árabe Al-Kindi publica 'Un manuscrito sobre el descifrado de mensajes criptográficos', introduciendo el análisis de frecuencia y rompiendo la sustitución monoalfabética."
+  },
+  {
+    date: "1553 d.C.",
+    title: "El Cifrado Vigenère",
+    description: "Giovan Battista Bellaso describe el primer cifrado de sustitución polialfabética, posteriormente atribuido erróneamente a Blaise de Vigenère."
+  },
+  {
+    date: "1863 d.C.",
+    title: "Publicación del examen de Kasiski",
+    description: "Friedrich Kasiski publica un método sistemático para romper el cifrado de Vigenère analizando las distancias entre patrones repetitivos."
+  }
+]} />
+
+---
+
+<Summary itemsString="La criptografía clásica se basaba en técnicas de sustitución y transposición.|||La sustitución monoalfabética (César) preserva las características de la frecuencia de las letras y se rompe fácilmente mediante análisis de fuerza bruta o de frecuencia.|||La sustitución polialfabética (Vigenère) altera los desplazamientos periódicamente, pero aún se puede romper analizando el Índice de Coincidencia y buscando la longitud de la clave.|||La seguridad absoluta es inalcanzable con estos cifrados; un sistema matemáticamente perfecto requiere un espacio de claves infinitamente largo." />
+
+<WhatsNext itemsBase64="W10=" />

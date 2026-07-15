@@ -715,13 +715,15 @@ export const Quiz = ({
                   : `Duration: ${actualDurationLimit ? formatDurationText(actualDurationLimit) : 'Unlimited'}`}
               </span>
             </div>
-            <div className={cn("flex items-start gap-2", isFinal && "text-red-400 font-bold text-sm bg-red-500/10 p-3 rounded-xl border border-red-500/20 my-1")}>
-              {isFinal ? (
-                <span className="shrink-0 text-red-400 text-base">⚠️</span>
-              ) : (
-                <span className="text-blue-400 font-black shrink-0">▸</span>
-              )}
-              <span>{isFinal ? t.eval_attempts_single.toUpperCase() : t.eval_attempts_unlimited}</span>
+            <div className="flex items-start gap-2">
+              <span className={cn("font-black shrink-0", isFinal ? "text-amber-500" : "text-blue-400")}>
+                {isFinal ? "⚠️" : "▸"}
+              </span>
+              <span>
+                {isFinal
+                  ? t.summative_single_attempt_warning.replace(/^⚠️\s*/, '')
+                  : t.eval_attempts_unlimited}
+              </span>
             </div>
           </div>
         </div>
@@ -738,11 +740,6 @@ export const Quiz = ({
                 : language === 'ZH' ? "请确保您有比回答问题所需稍微多一点的时间。"
                 : "Ensure you have a bit more time than necessary to answer the questions."}
             </li>
-            {isFinal && (
-              <li className="text-red-400 font-bold border-t border-red-500/20 pt-2 mt-2 list-none flex items-center gap-1.5">
-                <span>{t.summative_single_attempt_warning}</span>
-              </li>
-            )}
           </ul>
         </div>
 
@@ -992,6 +989,7 @@ interface QuestionProps {
   mediaCaption?: string;
   mode?: 'standard' | 'elimination';
   durationLimit?: number;
+  multiple?: boolean; // If true, enables multi-answer (checkbox) mode
 }
 
 export const Question = ({
@@ -1007,6 +1005,7 @@ export const Question = ({
   mediaUrl,
   mediaCaption,
   mode = 'standard',
+  multiple = false,
 }: QuestionProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
@@ -1019,6 +1018,9 @@ export const Question = ({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isFullscreenImage, setIsFullscreenImage] = useState(false);
   const [eliminatedIndexes, setEliminatedIndexes] = useState<number[]>([]);
+  // Multiple-choice state
+  const [multiSelected, setMultiSelected] = useState<number[]>([]);
+  const [multiSubmitted, setMultiSubmitted] = useState(false);
 
   // Parse options either from children or from options prop
   const finalOptions = React.useMemo(() => {
@@ -1076,6 +1078,15 @@ export const Question = ({
   const handleSelect = (index: number, correct: boolean) => {
     if (isReadOnly) return;
 
+    if (multiple) {
+      // Checkbox toggle
+      if (multiSubmitted) return;
+      setMultiSelected((prev) =>
+        prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+      );
+      return;
+    }
+
     if (mode === 'elimination') {
       // In elimination mode:
       // Clicking a correct option is a failure (the user was supposed to eliminate incorrect options, not click the correct one!).
@@ -1114,12 +1125,38 @@ export const Question = ({
     }
   };
 
+  const handleMultiSubmit = () => {
+    if (multiSubmitted || multiSelected.length === 0) return;
+    // All correct options selected AND no incorrect option selected
+    const correctIndexes = finalOptions
+      .map((o, i) => ({ i, correct: o.correct }))
+      .filter((o) => o.correct)
+      .map((o) => o.i);
+    const isAllCorrect =
+      correctIndexes.length === multiSelected.length &&
+      correctIndexes.every((ci) => multiSelected.includes(ci));
+
+    setMultiSubmitted(true);
+    setIsCorrect(isAllCorrect);
+    if (onAnswer) onAnswer(isAllCorrect);
+    dispatchBridgeEvent(multiSelected[0] ?? 0, isAllCorrect);
+  };
+
   return (
     <div className="space-y-4">
-      {/* Mode Badge if elimination */}
+      {/* Mode Badge */}
       {mode === 'elimination' && (
         <span className="text-[10px] font-black uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-xl select-none inline-block">
           {language === 'FR' ? "⚠️ Élimination des fausses affirmations" : "⚠️ Elimination of incorrect choices"}
+        </span>
+      )}
+      {multiple && (
+        <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl select-none inline-block">
+          {language === 'FR' ? "☑ Plusieurs réponses possibles" 
+            : language === 'ES' ? "☑ Varias respuestas posibles"
+            : language === 'DE' ? "☑ Mehrere Antworten möglich"
+            : language === 'ZH' ? "☑ 可多选"
+            : "☑ Multiple answers may be correct"}
         </span>
       )}
 
@@ -1188,18 +1225,35 @@ export const Question = ({
 
       <div className="grid gap-3">
         {finalOptions.map((option, index) => {
-          const isSelectedOption = index === selected;
+          const isSelectedOption = multiple ? multiSelected.includes(index) : index === selected;
           const isOptionCorrect = option.correct === true;
           const isEliminated = eliminatedIndexes.includes(index);
+          // Multiple-choice resolved state
+          const isMultiReadOnly = multiple ? (multiSubmitted || isParentReadOnly) : false;
+          const effectiveReadOnly = multiple ? isMultiReadOnly : isReadOnly;
+          // Color coding for multi after submit
+          let multiOptionClass = '';
+          if (multiple && multiSubmitted) {
+            if (isSelectedOption && isOptionCorrect) multiOptionClass = 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400 cursor-default';
+            else if (isSelectedOption && !isOptionCorrect) multiOptionClass = 'bg-red-500/10 border-red-500/50 text-red-400 cursor-default';
+            else if (!isSelectedOption && isOptionCorrect) multiOptionClass = 'bg-amber-500/10 border-amber-500/40 text-amber-400 cursor-default'; // missed correct
+            else multiOptionClass = 'bg-slate-800/30 border-slate-700 opacity-40 cursor-default';
+          }
 
           return (
             <button
               key={index}
               onClick={() => handleSelect(index, isOptionCorrect)}
-              disabled={isReadOnly || isEliminated}
+              disabled={effectiveReadOnly || isEliminated}
               className={cn(
                 "p-4 text-left rounded-xl border transition-all duration-200 group flex items-center justify-between text-sm",
-                isEliminated 
+                multiple && !multiSubmitted && !isParentReadOnly
+                  ? isSelectedOption
+                    ? "bg-amber-500/10 border-amber-500/50 text-white cursor-pointer"
+                    : "bg-slate-800/30 border-slate-700 hover:border-amber-500/40 hover:bg-amber-500/5 cursor-pointer text-slate-200"
+                  : multiple && multiSubmitted
+                  ? multiOptionClass
+                  : isEliminated 
                   ? "bg-slate-900/10 border-slate-850 text-slate-500 opacity-40 cursor-default line-through"
                   : isReadOnly
                     ? isSelectedOption
@@ -1212,20 +1266,49 @@ export const Question = ({
                     : "bg-slate-800/30 border-slate-700 hover:border-blue-500/50 hover:bg-blue-500/5 cursor-pointer text-slate-200"
               )}
             >
-              <span className="font-medium">{option.text}</span>
+              {/* Checkbox / radio indicator */}
+              <span className="flex items-center gap-3 font-medium flex-1">
+                {multiple ? (
+                  <span className={cn(
+                    "w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors",
+                    isSelectedOption ? "bg-amber-500 border-amber-500" : "border-slate-600 bg-transparent"
+                  )}>
+                    {isSelectedOption && <span className="text-white text-[10px] font-black">✓</span>}
+                  </span>
+                ) : null}
+                {option.text}
+              </span>
               {isEliminated ? (
                 <XCircle className="w-4 h-4 text-red-500/70" />
-              ) : selected === null && !isParentReadOnly ? (
+              ) : !multiple && selected === null && !isParentReadOnly ? (
                 <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400" />
-              ) : isSelectedOption ? (
+              ) : !multiple && isSelectedOption ? (
                 isCorrect ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />
-              ) : isOptionCorrect && isReadOnly ? (
+              ) : !multiple && isOptionCorrect && isReadOnly ? (
                 <CheckCircle2 className="w-4 h-4" />
+              ) : multiple && multiSubmitted && isOptionCorrect ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               ) : null}
             </button>
           );
         })}
       </div>
+
+      {/* Multi-choice Submit Button */}
+      {multiple && !multiSubmitted && !isParentReadOnly && (
+        <button
+          onClick={handleMultiSubmit}
+          disabled={multiSelected.length === 0}
+          className="w-full py-2.5 mt-1 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+        >
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          {language === 'FR' ? 'Valider mes réponses'
+            : language === 'ES' ? 'Validar mis respuestas'
+            : language === 'DE' ? 'Antworten bestätigen'
+            : language === 'ZH' ? '提交答案'
+            : 'Submit Answers'}
+        </button>
+      )}
       
       {isReadOnly && (
         <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-2 mt-2 text-xs">

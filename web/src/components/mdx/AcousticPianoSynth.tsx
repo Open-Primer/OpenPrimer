@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Music, Radio, Sliders, Volume2, Sparkles, Layout, Eye } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
+
 
 interface PianoKey {
   note: string;
@@ -35,7 +37,12 @@ const PIANO_KEYS_DB: PianoKey[] = [
 
 export const AcousticPianoSynth = () => {
   const { language } = useLanguage();
-  const isFR = language === 'FR';
+  const t = (key: string) => {
+    const dict = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+    return dict[key] || key;
+  };
+
+  const isFR = language.toUpperCase() === 'FR';
 
   const [waveType, setWaveType] = useState<OscillatorType>('sine');
   const [activeNote, setActiveNote] = useState<string | null>(null);
@@ -287,12 +294,10 @@ export const AcousticPianoSynth = () => {
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
-            <span>{isFR ? 'Spectromètre & Synthétiseur de Fourier' : 'Fourier Synth & Spectrometer Lab'}</span>
+            <span>{t("piano_fourier_title")}</span>
           </h3>
           <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            {isFR 
-              ? "Manipulez les harmoniques de Fourier pour concevoir de nouveaux timbres acoustiques complexes et visualisez leur décomposition fréquentielle."
-              : "Vary the harmonic overtones to procedurally synthesize complex physical timbres and explore their frequency spectrum."}
+            {t("piano_fourier_desc")}
           </p>
         </div>
 
@@ -314,7 +319,7 @@ export const AcousticPianoSynth = () => {
                 visualMode === 'spectrogram' ? 'bg-indigo-600 text-white' : 'text-slate-400'
               }`}
             >
-              Spectrographe FFT
+              {isFR ? 'Spectrographe FFT' : 'FFT Spectrograph'}
             </button>
           </div>
 
@@ -405,7 +410,11 @@ export const AcousticPianoSynth = () => {
           <div className="rounded-3xl border border-slate-850 bg-[#020617] p-4 flex flex-col items-center">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-indigo-400 self-start mb-2.5 flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5 animate-pulse" />
-              <span>{visualMode === 'oscilloscope' ? 'Oscilloscope (Amplitude Temporelle)' : 'Spectrogramme FFT Cascade (Fréquence over Time)'}</span>
+              <span>
+                {visualMode === 'oscilloscope' 
+                  ? (isFR ? 'Oscilloscope (Amplitude Temporelle)' : 'Oscilloscope (Time-Domain)') 
+                  : (isFR ? 'Spectrogramme FFT Cascade (Fréquence over Time)' : 'Waterfall FFT Spectrogram (Frequency over Time)')}
+              </span>
             </h4>
             <div className="w-full h-36 rounded-2xl overflow-hidden border border-slate-900">
               <canvas ref={canvasRef} width={500} height={140} className="w-full h-full block" />
@@ -421,7 +430,7 @@ export const AcousticPianoSynth = () => {
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-indigo-400" />
-              <span>{isFR ? 'Mélangeur de Fourier (Harmoniques)' : 'Fourier Overtone Mixer'}</span>
+              <span>{t("piano_fourier_mixer")}</span>
             </h4>
 
             {/* H1 slider */}
@@ -474,13 +483,13 @@ export const AcousticPianoSynth = () => {
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-3">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-indigo-400" />
-              <span>Modulateur d'Enveloppe ADSR</span>
+              <span>{t("piano_fourier_adsr")}</span>
             </h4>
 
             {/* Attack Slider */}
             <div className="space-y-1">
               <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                <span>Attaque (A)</span>
+                <span>{isFR ? 'Attaque (A)' : 'Attack (A)'}</span>
                 <span className="font-mono text-indigo-300">{attack.toFixed(2)}s</span>
               </div>
               <input type="range" min="0.01" max="1.0" step="0.05" value={attack} onChange={(e) => setAttack(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
@@ -489,7 +498,7 @@ export const AcousticPianoSynth = () => {
             {/* Release Slider */}
             <div className="space-y-1">
               <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                <span>Relâchement (R)</span>
+                <span>{isFR ? 'Relâchement (R)' : 'Release (R)'}</span>
                 <span className="font-mono text-indigo-300">{release.toFixed(2)}s</span>
               </div>
               <input type="range" min="0.1" max="2.0" step="0.05" value={release} onChange={(e) => setRelease(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
@@ -500,12 +509,10 @@ export const AcousticPianoSynth = () => {
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-4 text-center select-text">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center justify-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{isFR ? "Théorème de Fourier" : "Fourier Synthesis"}</span>
+              <span>{t("piano_fourier_insight_title")}</span>
             </span>
             <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed">
-              {isFR 
-                ? "Tout signal périodique se décompose en une somme d'ondes sinusoïdales pures. Dosez les harmoniques pour imiter le timbre d'une flûte (H1+H3) ou d'un hautbois (harmoniques riches)."
-                : "Any physical periodic wave comprises a sum of pure sine waves. Combine multiple harmonic fractions to shape clean acoustic timbres like woodwinds or brass."}
+              {t("piano_fourier_insight_desc")}
             </p>
           </div>
 

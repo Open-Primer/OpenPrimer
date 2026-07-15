@@ -3,41 +3,9 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 import { Layers, Sliders, Globe, AlertTriangle, Thermometer, Compass, Droplets, CheckCircle } from 'lucide-react';
 
-interface UIStrings {
-  title: string;
-  subtitle: string;
-  scenarioLabel: string;
-  probeCoordinates: string;
-  probeStats: string;
-  layerTitle: string;
-  alertTitle: string;
-  scenarioDesc: string;
-}
-
-const STRINGS: Record<string, UIStrings> = {
-  EN: {
-    title: "GIS Climatology & Geography Laboratory",
-    subtitle: "Analyze geographical layers, coordinates, elevation, and 2050 carbon emission pathways.",
-    scenarioLabel: "Carbon Emission Pathway (Scenario)",
-    probeCoordinates: "Interactive Probe Coordinates",
-    probeStats: "Telemetry Probe Readings",
-    layerTitle: "Active Map Layers",
-    alertTitle: "Climate Projection Alert",
-    scenarioDesc: "Vary greenhouse gas concentration pathways to compute 2050 temperature deviations."
-  },
-  FR: {
-    title: "Laboratoire de Climatologie & SIG",
-    subtitle: "Analysez les couches géographiques, coordonnées, altitude et trajectoires carbone 2050.",
-    scenarioLabel: "Scénario d'Émission Carbone (RCP)",
-    probeCoordinates: "Coordonnées de la Sonde Active",
-    probeStats: "Mesures Télémétriques de la Sonde",
-    layerTitle: "Couches Cartographiques Actives",
-    alertTitle: "Alerte de Projection Climatique",
-    scenarioDesc: "Ajustez la concentration de gaz à effet de serre pour calculer l'anomalie thermique de 2050."
-  }
-};
 
 interface MapRegion {
   id: string;
@@ -151,8 +119,10 @@ const REGIONS_DATABASE: MapRegion[] = [
 
 export const ClimateImpactMap = () => {
   const { language } = useLanguage();
-  const isFR = language === 'FR';
-  const t = STRINGS[isFR ? 'FR' : 'EN'];
+  const t = (key: string) => {
+    const dict = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+    return dict[key] || key;
+  };
 
   // active selected region
   const [selectedId, setSelectedRegion] = useState<string>("eu");
@@ -191,10 +161,10 @@ export const ClimateImpactMap = () => {
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <Globe className="w-5 h-5 text-indigo-400 animate-spin-slow" />
-            <span>{t.title}</span>
+            <span>{t("climate_map_title")}</span>
           </h3>
           <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            {t.subtitle}
+            {t("climate_map_subtitle")}
           </p>
         </div>
 
@@ -207,7 +177,7 @@ export const ClimateImpactMap = () => {
             }`}
           >
             <Thermometer className="w-3 h-3 text-rose-400" />
-            <span>{isFR ? "Anomalie Temp (T)" : "Temp Anomalies"}</span>
+            <span>{t("climate_map_temp_anomalies")}</span>
           </button>
           <button
             onClick={() => setActiveLayer('precip')}
@@ -216,7 +186,7 @@ export const ClimateImpactMap = () => {
             }`}
           >
             <Droplets className="w-3 h-3 text-blue-400" />
-            <span>{isFR ? "Précipitations (P)" : "Rainfall Shifts"}</span>
+            <span>{t("climate_map_rainfall_shifts")}</span>
           </button>
         </div>
       </div>
@@ -329,7 +299,7 @@ export const ClimateImpactMap = () => {
                   fontWeight="bold"
                   className="pointer-events-none drop-shadow-md bg-slate-950/80 px-1"
                 >
-                  {isFR ? region.nameFR : region.nameEN}
+                  {t("climate_map_" + region.id + "_name")}
                 </text>
               );
             })}
@@ -343,13 +313,13 @@ export const ClimateImpactMap = () => {
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-indigo-400" />
-              <span>{t.scenarioLabel}</span>
+              <span>{t("climate_map_scenario_label")}</span>
             </h4>
 
             {/* Slider with steps: RCP 2.6 (0), RCP 4.5 (1), RCP 8.5 (2) */}
             <div className="space-y-1">
               <div className="flex justify-between text-[11px] font-bold text-slate-400">
-                <span className="text-slate-500 font-mono text-[9px]">{t.scenarioDesc}</span>
+                <span className="text-slate-500 font-mono text-[9px]">{t("climate_map_scenario_desc")}</span>
               </div>
               
               <input 
@@ -375,14 +345,14 @@ export const ClimateImpactMap = () => {
             <div>
               <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-300 flex items-center gap-2 mb-4">
                 <Compass className="w-4 h-4 text-indigo-400" />
-                <span>{t.probeStats}</span>
+                <span>{t("climate_map_probe_stats")}</span>
               </h4>
 
               <div className="grid grid-cols-2 gap-3 mb-5">
                 
                 {/* Longitude / Latitude */}
                 <div className="bg-slate-950/40 border border-slate-850/80 p-3 rounded-2xl">
-                  <span className="text-[8px] text-slate-500 font-black uppercase block">{isFR ? "SITUATION" : "COORDINATES"}</span>
+                  <span className="text-[8px] text-slate-500 font-black uppercase block">{t("climate_map_coordinates")}</span>
                   <span className="font-mono text-xs font-bold text-slate-200 mt-1 block">
                     {Math.abs(activeRegion.latitude).toFixed(1)}°{activeRegion.latitude >= 0 ? 'N' : 'S'}, {Math.abs(activeRegion.longitude).toFixed(1)}°{activeRegion.longitude >= 0 ? 'E' : 'W'}
                   </span>
@@ -390,7 +360,7 @@ export const ClimateImpactMap = () => {
 
                 {/* Elevation */}
                 <div className="bg-slate-950/40 border border-slate-850/80 p-3 rounded-2xl">
-                  <span className="text-[8px] text-slate-500 font-black uppercase block">{isFR ? "ALTITUDE MOYENNE" : "ELEVATION"}</span>
+                  <span className="text-[8px] text-slate-500 font-black uppercase block">{t("climate_map_elevation")}</span>
                   <span className="font-mono text-xs font-bold text-indigo-300 mt-1 block">
                     {activeRegion.elevation} m
                   </span>
@@ -399,7 +369,7 @@ export const ClimateImpactMap = () => {
                 {/* Base climate Temperature -> Projected Temperature */}
                 <div className="bg-slate-950/40 border border-slate-850/80 p-3 rounded-2xl col-span-2 flex items-center justify-between">
                   <div>
-                    <span className="text-[8px] text-slate-500 font-black uppercase block">{isFR ? "TEMPÉRATURE DE SURFACE (MOY.)" : "MEAN TEMPERATURE"}</span>
+                    <span className="text-[8px] text-slate-500 font-black uppercase block">{t("climate_map_mean_temp")}</span>
                     <div className="flex items-baseline gap-1.5 mt-1">
                       <span className="font-mono text-slate-400 text-xs">{activeRegion.baseTemp.toFixed(1)}°C</span>
                       <span className="text-slate-600 text-xs">➔</span>
@@ -422,7 +392,7 @@ export const ClimateImpactMap = () => {
                 {/* Precipitation shift */}
                 <div className="bg-slate-950/40 border border-slate-850/80 p-3 rounded-2xl col-span-2 flex items-center justify-between">
                   <div>
-                    <span className="text-[8px] text-slate-500 font-black uppercase block">{isFR ? "PLUVIOMÉTRIE ANNUELLE" : "ANNUAL PRECIPITATION"}</span>
+                    <span className="text-[8px] text-slate-500 font-black uppercase block">{t("climate_map_annual_precip")}</span>
                     <div className="flex items-baseline gap-1.5 mt-1">
                       <span className="font-mono text-slate-400 text-xs">{activeRegion.basePrecip.toFixed(0)} mm</span>
                       <span className="text-slate-600 text-xs">➔</span>
@@ -447,10 +417,10 @@ export const ClimateImpactMap = () => {
                   }`} />
                   <div>
                     <span className="text-[9px] text-slate-500 font-black uppercase tracking-wider block leading-none mb-1">
-                      {t.alertTitle}
+                      {t("climate_map_alert_title")}
                     </span>
                     <p className="text-[11px] text-slate-300 leading-relaxed font-semibold">
-                      {isFR ? activeRegion.ecologyFR : activeRegion.ecologyEN}
+                      {t("climate_map_" + activeRegion.id + "_ecology")}
                     </p>
                   </div>
                 </div>

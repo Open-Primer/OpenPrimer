@@ -933,6 +933,22 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
             await new Promise(resolve => setTimeout(resolve, jitterDelay));
             continue;
           }
+        } else if (response.status === 401) {
+          // Token expired or invalid! Invalidate cache immediately.
+          console.warn(`[VERTEX-POOL] ⚠️ Received 401 Unauthorized on project "${currentProjectId}". Invalidating cached token...`);
+          account.cachedToken = null;
+          account.tokenExpiry = 0;
+          removeRequestFromEndpoint(endpoint);
+          
+          const errText = await response.text();
+          lastError = `[VERTEX-POOL] Model "${model}" failed on project "${currentProjectId}" in region "${currentLocation}" (401 Unauthorized). ${errText.slice(0, 300)}`;
+
+          if (attempt < maxRetries) {
+            const jitterDelay = Math.floor(Math.random() * 1000);
+            console.warn(`Retrying with a fresh token in ${jitterDelay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, jitterDelay));
+            continue;
+          }
         } else {
           removeRequestFromEndpoint(endpoint);
           const errText = await response.text();

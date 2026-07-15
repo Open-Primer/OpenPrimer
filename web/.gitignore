@@ -49,7 +49,9 @@ yarn-error.log*
 next-env.d.ts
 
 # prebuild outputs
-/content
+# NOTE: /content is intentionally tracked by git — it is the offline course set.
+# Run `node web/scripts/export_mdx.js` to regenerate it from the database.
+# /content  <-- DO NOT re-add this line; MDX lessons must be committed.
 /syllabus.json
 
 # Scratch / one-off debug scripts (may contain secrets or API keys)

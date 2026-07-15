@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Sparkles, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface DiagnosticQuizProps {
   question?: string;
@@ -13,90 +14,6 @@ interface DiagnosticQuizProps {
   children?: React.ReactNode;
 }
 
-const STRINGS = {
-  EN: {
-    badge: "Adaptive Diagnostic Check",
-    prompt: "Test your knowledge to skip this section:",
-    success: "🏆 Topic validated! You have mastered the prerequisites. You can continue reading or progress directly to the next section.",
-    fail: "❌ Recommended: We advise reading this section to build a solid foundation.",
-    skip_btn: "Skip directly to",
-    submit: "Check Answer",
-    reset: "Retry Check"
-  },
-  FR: {
-    badge: "Test Diagnostique Adaptatif",
-    prompt: "Testez vos connaissances pour passer directement à la suite :",
-    success: "🏆 Notion validée ! Vous maîtrisez les prérequis de cette section. Vous pouvez continuer la lecture ou accéder directement à la section suivante.",
-    fail: "❌ Recommandation : Nous vous conseillons de lire cette section pour acquérir les bases nécessaires.",
-    skip_btn: "Passer directement à",
-    submit: "Vérifier",
-    reset: "Réessayer"
-  },
-  ES: {
-    badge: "Prueba de Diagnóstico Adaptativa",
-    prompt: "Pon a prueba tus conocimientos para omitir esta sección:",
-    success: "🏆 ¡Tema validado! Dominas los prerrequisitos de esta sección. Puedes continuar leyendo o ir directamente a la siguiente sección.",
-    fail: "❌ Recomendado: Te aconsejamos leer esta sección para construir una base sólida.",
-    skip_btn: "Omitir e ir a",
-    submit: "Comprobar",
-    reset: "Reintentar"
-  },
-  DE: {
-    badge: "Adaptiver Diagnosetest",
-    prompt: "Testen Sie Ihr Wissen, um diesen Abschnitt zu überspringen:",
-    success: "🏆 Thema bestätigt! Sie beherrschen die Voraussetzungen für diesen Abschnitt. Sie können weiterlesen oder direkt zum nächsten Abschnitt springen.",
-    fail: "❌ Empfohlen: Wir empfehlen Ihnen, diesen Abschnitt zu lesen, um eine solide Grundlage zu schaffen.",
-    skip_btn: "Direkt springen zu",
-    submit: "Prüfen",
-    reset: "Wiederholen"
-  },
-  ZH: {
-    badge: "自适应诊断测试",
-    prompt: "测试您的知识以跳过此部分：",
-    success: "🏆 知识点已验证！您已掌握本节 of 先决条件。您可以继续阅读或直接跳过至下一节。",
-    fail: "❌ 建议：我们建议您阅读此部分以建立坚实的基础。",
-    skip_btn: "直接跳过至",
-    submit: "检查答案",
-    reset: "重试"
-  },
-  PT: {
-    badge: "Teste Diagnóstico Adaptativo",
-    prompt: "Teste seus conhecimentos para pular esta seção:",
-    success: "🏆 Tópico validado! Você domina os pré-requisitos desta seção. Pode continuar lendo ou avançar diretamente para a próxima seção.",
-    fail: "❌ Recomendado: Aconselhamos a leitura desta seção para construir uma base sólida.",
-    skip_btn: "Pular diretamente para",
-    submit: "Verificar",
-    reset: "Tentar novamente"
-  },
-  AR: {
-    badge: "اختبار تشخيصي تكيفي",
-    prompt: "اختبر معرفتك لتخطي هذا القسم:",
-    success: "🏆 تمت المصادقة على الموضوع! أنت تتقن متطلبات هذا القسم. يمكنك مواصلة القراءة أو الانتقال مباشرة إلى القسم التالي.",
-    fail: "❌ موصى به: ننصحك بقراءة هذا القسم لبناء أساس متين.",
-    skip_btn: "انتقل مباشرة إلى",
-    submit: "تحقق من الإجابة",
-    reset: "إعادة المحاولة"
-  },
-  HI: {
-    badge: "अनुकूलनीय निदानात्मक जांच",
-    prompt: "इस अनुभाग को छोड़ने के लिए अपने ज्ञान का परीक्षण करें:",
-    success: "🏆 विषय सत्यापित! आप इस अनुभाग की पूर्वआवश्यकताओं में महारत हैं। आप पढ़ना जारी रख सकते हैं या सीधे अगले अनुभाग पर जा सकते हैं।",
-    fail: "❌ अनुशंसा: हम आपको इस अनुभाग को पढ़ने की सलाह देते हैं।",
-    skip_btn: "सीधे जाएं",
-    submit: "उत्तर जांचें",
-    reset: "पुनः प्रयास करें"
-  },
-  UR: {
-    badge: "انڈیتی تشخیصی جائزہ",
-    prompt: "اس حصے کو چھوڑنے کے لیے اپنی معلومات کی جانچ کریں:",
-    success: "🏆 موضوع تصدیق ہو گیا! آپ اس حصے کی شرائط پر عبور کرتے ہیں۔ آپ پڑھنا جاری رکھ سکتے ہیں یا سیدھے اگلے حصے پر جا سکتے ہیں۔",
-    fail: "❌ تجویز کردہ: ہم آپ کو اس حصے کو پڑھنے کی سفارش کرتے ہیں۔",
-    skip_btn: "سیدھے جائیں",
-    submit: "جواب جانچیں",
-    reset: "دوبارہ کوشش کریں"
-  }
-};
-
 export const DiagnosticQuiz = ({
   question,
   options,
@@ -106,7 +23,10 @@ export const DiagnosticQuiz = ({
   children
 }: DiagnosticQuizProps) => {
   const { language } = useLanguage();
-  const t = STRINGS[language as keyof typeof STRINGS] || STRINGS.EN;
+  const t = (key: string) => {
+    const dict = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+    return dict[key] || key;
+  };
 
   const isPlaceholder = (str: string) => {
     if (!str) return true;
@@ -215,7 +135,7 @@ export const DiagnosticQuiz = ({
           selectedAnswer: resolvedOptions[selectedIdx],
           correctAnswer: resolvedOptions[resolvedCorrectIndex],
           explanation: sectionTitle 
-            ? `${t.skip_btn} "${sectionTitle}"`
+            ? `${t("diagnostic_skip_btn")} "${sectionTitle}"`
             : undefined
         }
       });
@@ -272,14 +192,14 @@ export const DiagnosticQuiz = ({
       <div className="flex items-center gap-2">
         <span className="px-2.5 py-1 bg-violet-600/10 border border-violet-500/20 rounded-lg text-[10px] font-black uppercase tracking-widest text-violet-400 flex items-center gap-1.5 animate-pulse">
           <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-          {t.badge}
+          {t("diagnostic_badge")}
         </span>
       </div>
 
       {!isSubmitted ? (
         <div className="space-y-4">
           <div className="space-y-1">
-            <span className="text-slate-400 text-xs font-semibold">{t.prompt}</span>
+            <span className="text-slate-400 text-xs font-semibold">{t("diagnostic_prompt")}</span>
             <p className="text-white text-sm font-bold leading-relaxed">{resolvedQuestion}</p>
           </div>
 
@@ -304,7 +224,7 @@ export const DiagnosticQuiz = ({
             disabled={selectedIdx === null}
             className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            {t.submit}
+            {t("diagnostic_submit")}
           </button>
         </div>
       ) : (
@@ -313,13 +233,13 @@ export const DiagnosticQuiz = ({
             <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-3">
               <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold">
                 <CheckCircle2 className="w-4 h-4" />
-                <span>{t.success}</span>
+                <span>{t("diagnostic_success")}</span>
               </div>
               <button
                 onClick={handleSkip}
                 className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                {t.skip_btn} "{sectionTitle}"
+                {t("diagnostic_skip_btn")} "{sectionTitle}"
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -327,13 +247,13 @@ export const DiagnosticQuiz = ({
             <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl space-y-3">
               <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
                 <AlertCircle className="w-4 h-4" />
-                <span>{t.fail}</span>
+                <span>{t("diagnostic_fail")}</span>
               </div>
               <button
                 onClick={handleReset}
                 className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
-                {t.reset}
+                {t("diagnostic_reset")}
               </button>
             </div>
           )}

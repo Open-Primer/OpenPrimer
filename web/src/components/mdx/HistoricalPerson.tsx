@@ -5,6 +5,7 @@ import * as Popover from '@radix-ui/react-popover';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useMdxStatus } from './MdxStatusContext';
+import { useNesting } from './CitationContext';
 import { 
   User, 
   Sparkles, 
@@ -286,7 +287,7 @@ const extractEntityMetadata = (
     if (domain && creator) {
       return { icon: Brain, label: isFr ? `${domain} (par ${creator})` : `${domain} (by ${creator})` };
     } else if (domain) {
-      return { icon: Brain, label: isFr ? `Domaine : ${domain}` : `Field: ${domain}` };
+      return { icon: Brain, label: domain };
     } else if (creator) {
       return { icon: Brain, label: isFr ? `Formulé par ${creator}` : `Formulated by ${creator}` };
     }
@@ -550,6 +551,31 @@ const formatSummaryText = (text: string | null | undefined): string | null => {
     .replace(/\s+/g, ' ')
     .trim();
 
+  // Strip Wikipedia/Wikipédia markdown links (with optional language markers)
+  cleaned = cleaned.replace(/\[+(?:Wikip[ée]dia|Wikipedia)(?:\s*\([^)]*\))?\]+\(https?:\/\/[^\)]+\)/gi, '');
+  // Clean any other markdown links (converting [text](url) -> text)
+  cleaned = cleaned.replace(/\[+([^\]]+)\]+\([^\)]+\)/g, '$1');
+
+  // Clean up empty parentheses/brackets left behind
+  cleaned = cleaned.replace(/\(\s*\)/g, '').replace(/\[\s*\]/g, '');
+
+  // Clean up space before punctuation
+  cleaned = cleaned.replace(/\s+([,.;!?])/g, '$1');
+
+  // Clean up consecutive/fantom commas
+  cleaned = cleaned.replace(/,\s*,/g, ',');
+  
+  // Clean up comma followed by sentence-ending punctuation
+  cleaned = cleaned.replace(/,\s*([.!?])/g, '$1');
+
+  // Trim and remove trailing commas, colons, semicolons, or dashes at the end
+  cleaned = cleaned.replace(/[,;:\-–—\s]+$/, '');
+
+  // Ensure the text ends with a proper sentence marker if not already present
+  if (cleaned && !/[.!?]$/.test(cleaned)) {
+    cleaned += '.';
+  }
+
   if (cleaned.length <= 500) {
     return cleaned;
   }
@@ -562,7 +588,7 @@ const formatSummaryText = (text: string | null | undefined): string | null => {
       accumulated += (accumulated ? ' ' : '') + sentence;
     } else {
       if (!accumulated) {
-        accumulated = sentence.slice(0, 497) + '...';
+        accumulated = sentence.slice(0, 497).replace(/[,;:\-–—\s]+$/, '') + '...';
       }
       break;
     }
@@ -601,6 +627,7 @@ export const EntityLink = ({
   unresolved
 }: EntityLinkProps) => {
   const { markDegraded } = useMdxStatus();
+  const { disableOverlays } = useNesting();
 
   useEffect(() => {
     if (unresolved) {
@@ -636,7 +663,7 @@ export const EntityLink = ({
   const [isOpen, setIsOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
-  const showOverlay = !!name;
+  const showOverlay = !!name && !disableOverlays;
   if (!showOverlay) {
     return <>{children}</>;
   }
@@ -831,7 +858,7 @@ export const EntityLink = ({
                   className="inline-flex items-center gap-1 text-[11px] font-bold transition-colors uppercase tracking-wider text-teal-400 hover:text-teal-300 [.theme-paper_&]:text-teal-700 [.theme-paper_&]:hover:text-teal-800"
                 >
                   {
-                    (resolvedType === 'website' || resolvedType === 'project' || resolvedType === 'institution' || resolvedType === 'person')
+                    (resolvedType === 'website' || resolvedType === 'project')
                       ? (isFr ? 'Site officiel' : 'Official website')
                       : (isFr ? 'En savoir plus' : 'Learn more')
                   }

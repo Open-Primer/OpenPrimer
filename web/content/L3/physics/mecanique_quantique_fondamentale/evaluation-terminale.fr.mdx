@@ -1,0 +1,47 @@
+---
+title: "« Évaluation Terminale »"
+subject: "« Mécanique Quantique Fondamentale et Structure de la Matière »"
+level: "« L3 »"
+module: "« Évaluation Terminale »"
+order: 3
+summative: true
+---
+
+<SummativeEvaluation>
+<Quiz isFinal={true} durationLimit={3600}>
+    <Question q="Selon l'interpretation statistique de Max Born, quelle est la signification physique directe du carre du module de la fonction d'onde |Psi(x)|^2 en mecanique quantique ?" explanation="L'interpretation statistique de Born (1926) postule que le module au carre de la fonction d'onde represente la densite de probabilite de présence de la particule dans l'espace. Elle n'indique pas une trajectoire definie ni une force physique.">
+  <Option text="L'énergie cinetique instantanee de la particule au point x." correct={false} />
+  <Option text="La force gravitationnelle exercee sur la masse microscopique." correct={false} />
+  <Option text="La densite de probabilite de présence de la particule au point x." correct={true} />
+  <Option text="Le produit exact de la position et de l'impulsion classiques." correct={false} />
+</Question>
+
+    <Question q="Si la fonction d'onde d'un système quantique est notee Psi(x), que stipule mathematiquement la condition de normalisation integree sur tout l'espace ?" explanation="La probabilite totale de trouver la particule dans tout l'espace doit etre rigoureusement egale a 1 (soit 100%), ce qui se traduit par l'integrale du module au carre de Psi(x) sur tout l'espace egale a 1.">
+  <Option text="L'integrale de -infini a +infini de |Psi(x)|^2 dx doit etre egale a 1." correct={true} />
+  <Option text="L'integrale de -infini a +infini de Psi(x) dx doit etre nulle." correct={false} />
+  <Option text="Le commutateur de position et d'impulsion doit valoir h-barre." correct={false} />
+  <Option text="La derivee temporelle de la fonction d'onde doit s'annuler." correct={false} />
+</Question>
+
+    <Question q="Pourquoi les operateurs mathematiques representant les grandeurs physiques mesurables (observables) doivent-ils etre rigoureusement hermitiens (auto-adjoints) ?" explanation="Les valeurs propres d'un operateur hermitien sont necessairement des nombres reels, ce qui est indispensable puisque les resultats de mesures physiques reelles doivent etre representes par des reels, et non des complexes.">
+  <Option text="Pour garantir que les fonctions d'onde s'annulent aux limites infinies." correct={false} />
+  <Option text="Pour assurer que leurs valeurs propres (resultats de mesure possibles) soient des nombres reels." correct={true} />
+  <Option text="Pour permettre une évolution temporelle non lineaire de l'etat quantique." correct={false} />
+  <Option text="Pour imposer la symetrie de jauge par translation spatiale." correct={false} />
+</Question>
+
+    <Question q="Quelle est la valeur du commutateur canonique de position et d'impulsion [X, Px] en mecanique quantique ?" explanation="Le commutateur de position et d'impulsion est fondamental et vaut [X, Px] = i * h-barre, manifestant le fait que ces deux observables ne peuvent etre mesurees simultanement avec une precision infinie.">
+  <Option text="[X, Px] = 0" correct={false} />
+  <Option text="[X, Px] = h_barre" correct={false} />
+  <Option text="[X, Px] = i * h_barre" correct={true} />
+  <Option text="[X, Px] = -i * h_barre^2" correct={false} />
+</Question>
+
+    <Question q="Qu'arrive-t-il au vecteur d'etat Psi d'un système physique lors de la mesure projective d'une observable A, d'apres les postulats ?" explanation="D'apres le postulat de reduction du paquet d'onde (ou effondrement de l'etat quantique), la mesure projette instantanement le vecteur d'etat sur le sous-espace propre associe au resultat obtenu.">
+  <Option text="Le vecteur d'etat s'annule immediatement et le système disparait." correct={false} />
+  <Option text="Il continue d'evoluer de maniere unitaire et deterministe sous l'effet de l'equation de Schrodinger." correct={false} />
+  <Option text="Il s'effondre instantanement (reduction) sur le vecteur propre associe a la valeur propre mesuree." correct={true} />
+  <Option text="Il se convertit en onde de de Broglie de longueur d'onde infinie." correct={false} />
+</Question>
+</Quiz>
+</SummativeEvaluation>

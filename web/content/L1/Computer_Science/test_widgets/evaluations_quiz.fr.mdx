@@ -1,0 +1,193 @@
+---
+title: "4. Évaluations, Quiz & Feedback Interactifs"
+subject: "Computer_Science"
+level: "L1"
+module: "Sandbox de Test"
+order: 4
+---
+
+# 4. Évaluations, Quiz & Feedback Interactifs
+
+Bienvenue dans la quatrième et dernière leçon de la Sandbox de Test d'OpenPrimer ! Cette page rassemble **l'ensemble des activités d'évaluation, de quiz formatif, d'entraînement à l'oral et à l'écrit par IA, d'analyse socratique et de jeux d'association**.
+
+Ces widgets interactifs forment le pilier de l'apprentissage actif sur notre plateforme en offrant aux apprenants un feedback instantané, adaptatif et hautement pédagogique.
+
+---
+
+## 🎯 Orientation Initiale & Diagnostic
+
+### 🔍 Quiz Diagnostique Adaptatif (DiagnosticQuiz)
+Ce composant permet de vérifier si l'étudiant maîtrise déjà les prérequis de cette section. S'il répond correctement, il est invité à passer directement à la leçon suivante ou à la section de son choix, optimisant ainsi son temps d'apprentissage.
+
+<DiagnosticQuiz 
+  question="Quel concept informatique permet à une fonction de s'appeler elle-même pour résoudre un sous-problème plus petit ?" 
+  options="La Récursion|||L'Encapsulation|||L'Héritage|||Le Polymorphisme" 
+  correctIndex={0} 
+  targetSectionId="simulations_sciences" 
+  sectionTitle="Simulations Scientifiques Avancées" 
+/>
+
+---
+
+## 📝 Évaluation Formative Standard
+
+### ✏️ Quiz Thématique (Quiz, Question, Option)
+Voici un quiz d'évaluation standard. Il peut comporter des questions à choix unique ou multiple, et dispose de plusieurs modes comme le mode normal ou le mode élimination.
+
+<Quiz mode="standard" durationLimit={300}>
+  <Question q="Quelle est la complexité temporelle dans le pire des cas (worst-case) de l'algorithme de tri rapide (Quicksort) ?" explanation="Dans le pire des cas (par exemple, si le pivot choisi est toujours le plus petit ou le plus grand élément), Quicksort effectue n comparaisons à chaque niveau de récursion, ce qui donne une complexité quadratique de O(n²).">
+    <Option text="O(n log n)" correct={false} />
+    <Option text="O(n)" correct={false} />
+    <Option text="O(n²)" correct={true} />
+    <Option text="O(2ⁿ)" correct={false} />
+  </Question>
+
+  <Question q="Lequel des protocoles suivants opère au niveau de la couche transport du modèle OSI pour assurer un transfert de données fiable et ordonné ?" explanation="TCP (Transmission Control Protocol) est un protocole de la couche transport orienté connexion qui garantit la livraison ordonnée et sans erreur des paquets de données.">
+    <Option text="HTTP" correct={false} />
+    <Option text="IP" correct={false} />
+    <Option text="TCP" correct={true} />
+    <Option text="UDP" correct={false} />
+  </Question>
+</Quiz>
+
+---
+
+## 💬 Analyse Dialoguée & Socratique
+
+### 🏛️ Tuteur Socratique Interactif (SocraticInput)
+La boîte d'analyse socratique invite l'étudiant à formuler sa propre explication conceptuelle. Une IA évalue la réponse de manière fluide par rapport à des critères précis définis par l'enseignant, sans imposer de corrigé rigide.
+
+<SocraticInput 
+  question="Pourquoi dit-on que la recherche dichotomique (binary search) est beaucoup plus efficace qu'une recherche linéaire sur un grand tableau trié ?" 
+  idealAnswer="À chaque étape, l'algorithme divise l'espace de recherche par deux en comparant l'élément médian avec la valeur recherchée, ce qui réduit la complexité de O(n) à O(log n)." 
+  customCriteriaString="L'apprenant doit obligatoirement mentionner la division systématique par deux de l'espace de recherche à chaque itération et la réduction drastique du nombre de comparaisons." 
+/>
+
+---
+
+## 🧩 Activités de Tri & d'Association
+
+### 🗂️ Tri de Cartes par Paires (CardSort / AssociationPaires)
+Ce jeu de cartes interactif stimule la mémoire sémantique en demandant à l'apprenant d'associer des concepts clés à leurs définitions exactes par glisser-déposer ou sélection tactile.
+
+<CardSort pairsString='[
+  {"id": "1", "concept": "Pile (Stack)", "definition": "Structure de données LIFO (Last In, First Out) où les insertions et suppressions se font exclusivement au sommet."},
+  {"id": "2", "concept": "File (Queue)", "definition": "Structure de données FIFO (First In, First Out) couramment utilisée pour la gestion des files d'impression ou des tampons."},
+  {"id": "3", "concept": "Graphe (Graph)", "definition": "Structure composée de sommets (nœuds) et d\'arêtes (liaisons) modélisant des réseaux interconnectés."},
+  {"id": "4", "concept": "Pointeur (Pointer)", "definition": "Variable stockant l\'adresse mémoire d\'une autre variable plutôt que sa valeur directe."}
+]' />
+
+### 🔗 Correspondance Conceptuelle (MatchingEvaluation)
+Un outil d'association bidirectionnel sous forme de lignes reliant des blocs de gauche et de droite pour relier des notions complémentaires.
+
+<MatchingEvaluation 
+  title="Association des Paradigmes de Programmation" 
+  pairs="Paradigme Impératif|Met l'accent sur les étapes d'exécution détaillées et les changements d'état du programme. || Paradigme Fonctionnel|Repose sur l'évaluation de fonctions mathématiques pures et exclut les effets de bord. || Paradigme Orienté Objet|Structure le code autour d'entités encapsulant des attributs de données et des comportements de méthode." 
+  explanation="Associez chaque grand paradigme logiciel à sa philosophie fondamentale de modélisation." 
+/>
+
+### 🔢 Réordonnancement Séquentiel (ReorderEvaluation)
+Ce composant demande à l'utilisateur de réorganiser des étapes chronologiques ou des instructions dans l'ordre logique correct. Très utile pour enseigner des protocoles, des algorithmes ou des flux physiques.
+
+<ReorderEvaluation 
+  title="Chronologie de la Compilation d'un Fichier C" 
+  items="Prétraitement (gestion des macros et des directives #include) | Compilation (génération du code assembleur à partir du code C) | Assemblage (traduction du code assembleur en code objet binaire) | Édition de liens (liaison des fichiers objets avec les bibliothèques)" 
+  explanation="Remettez dans l'ordre chronologique les étapes qui transforment un code source C en un exécutable autonome." 
+/>
+
+---
+
+## 🎙️ Évaluations Rédactionnelles & Orales par IA
+
+Ces activités avancées soumettent le travail écrit ou oral de l'apprenant à une correction IA personnalisée selon un barème officiel.
+
+### 📝 Dissertation & Rédaction (EssayEvaluation)
+L'apprenant rédige une synthèse textuelle complète. L'IA analyse la structure argumentative, la pertinence technique et attribue une note accompagnée d'un plan d'amélioration.
+
+<EssayEvaluation 
+  prompt="Expliquez la différence fondamentale entre les protocoles de communication TCP et UDP, en détaillant la notion de connexion, de contrôle de flux et de congestion, ainsi que leurs cas d'usage respectifs." 
+  gradingSystem="0/20" 
+  subject="Réseaux Informatiques" 
+/>
+
+### 📢 Exposé & Élocution Orale (OralEvaluation)
+L'étudiant s'enregistre ou téléverse un fichier audio pour argumenter un sujet complexe. L'IA évalue le vocabulaire, la clarté explicative et la cohérence de l'exposé.
+
+<OralEvaluation 
+  prompt="Expliquez le fonctionnement et l'importance de la cryptographie asymétrique. Comment la paire de clés publique/privée garantit-elle à la fois la confidentialité et l'authenticité d'un message ?" 
+  gradingSystem="0/20" 
+  subject="Sécurité Informatique" 
+/>
+
+---
+
+## 🗣️ Entraînement de Prononciation Linguistique
+
+### 🎙️ Bac à Sable de Prononciation (PronunciationSandbox)
+Ce widget utilise la reconnaissance vocale pour écouter l'utilisateur prononcer un terme technique délicat, affiche sa transcription phonétique (IAP) et attribue un score de précision en temps réel pour l'aider à s'améliorer.
+
+<PronunciationSandbox 
+  word="Algorithm" 
+  ipa="ˈæl.ɡə.rɪð.əm" 
+  lang="en" 
+  definition="A step-by-step procedure or formula for solving a mathematical or computational problem." 
+  explanation="Accentuez bien la première syllabe (AL) et prononcez le 'th' de manière douce avec la langue entre les dents." 
+/>
+
+---
+
+## 🕳️ Texte à Trous Interactif
+
+### ✍️ Texte à Trous (FillInBlanks)
+Un grand classique de l'évaluation formative. L'apprenant doit remplir les espaces vides directement au sein d'une phrase explicative.
+
+<FillInBlanks 
+  sentence="Dans la théorie de la complexité, un algorithme dont le temps d'exécution croît de manière proportionnelle à la taille des données est dit de complexité [...], tandis qu'un algorithme avec deux boucles imbriquées est généralement de complexité [...]." 
+  answer="O(n) ||| O(n^2)" 
+/>
+
+---
+
+## 🏋️ Exercices d'Entraînement Pratiques
+
+### 🔓 Exercice Corrigé (SolvedExercise)
+Un bloc structuré présentant un problème complexe dont l'étudiant peut révéler la solution rédigée de manière pas-à-pas en cliquant sur un bouton d'expansion.
+
+<SolvedExercise title="Calcul de la complexité d'une boucle log">
+  Soit le code suivant où $N$ est un entier positif :
+  ```cpp
+  int i = 1;
+  while (i < N) {
+      i = i * 2;
+  }
+  ```
+  Déterminez la complexité temporelle de cet algorithme en notation Grand O.
+  
+  <Solution>
+    À chaque itération de la boucle, la variable `i` est doublée :
+    - Itération 0 : `i = 1`
+    - Itération 1 : `i = 2`
+    - Itération 2 : `i = 4`
+    - Itération $k$ : `i = 2^k`
+    
+    La boucle s'arrête dès que `i >= N`, c'est-à-dire quand $2^k \ge N$.
+    En prenant le logarithme de chaque côté de l'inéquation, nous obtenons :
+    $$k \ge \log_2(N)$$
+    
+    Le nombre d'itérations de la boucle est donc directement proportionnel au logarithme de $N$. 
+    Par conséquent, la complexité temporelle est **logarithmique**, soit $\mathcal{O}(\log N)$.
+  </Solution>
+</SolvedExercise>
+
+### 🔒 Exercice d'Application Directe (UnsolvedExercise)
+Un exercice interactif demandant à l'apprenant de saisir sa réponse numérique ou textuelle. Une validation automatique est effectuée à la validation avec des indices facultatifs et une tolérance numérique paramétrable.
+
+<UnsolvedExercise 
+  title="Capacité de Canal (Formule de Shannon)" 
+  question="Un canal de communication sans fil possède une largeur de bande de 3000 Hz et un rapport signal/bruit (S/N) de 31. D'après le théorème de Shannon-Hartley, quelle est la capacité maximale théorique de ce canal en bits par seconde (bps) ?" 
+  correctAnswer={15000} 
+  unit="bps" 
+  placeholder="Saisissez la valeur numérique..." 
+  hint="Utilisez la formule : C = B * log2(1 + S/N). Ici, S/N vaut 31, donc (1 + S/N) vaut 32. log2(32) est une valeur entière simple." 
+  solution="La formule de Shannon est C = B * log2(1 + S/N). En remplaçant par les valeurs données : C = 3000 * log2(1 + 31) = 3000 * log2(32). Puisque 2^5 = 32, log2(32) = 5. On a donc C = 3000 * 5 = 15000 bps." 
+/>

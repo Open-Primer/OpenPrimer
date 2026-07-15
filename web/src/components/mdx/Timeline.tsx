@@ -3,41 +3,9 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 import { Calendar, ChevronLeft, ChevronRight, Sparkles, BookOpen, Award, CheckCircle, Sliders, History, Filter } from 'lucide-react';
 
-interface TimelineStrings {
-  title: string;
-  subtitle: string;
-  impactLabel: string;
-  progressLabel: string;
-  completedLabel: string;
-  next: string;
-  prev: string;
-  by: string;
-}
-
-const UI_STRINGS: Record<string, TimelineStrings> = {
-  EN: {
-    title: "Multidisciplinary Historical Chronology Lab",
-    subtitle: "Navigate historical eras, scientific milestones, and geopolitical events.",
-    impactLabel: "Historical/Scientific Impact",
-    progressLabel: "Milestones Explored",
-    completedLabel: "Chronological Journey Completed!",
-    next: "Next Milestone",
-    prev: "Previous",
-    by: "by"
-  },
-  FR: {
-    title: "Laboratoire Chronologique Pluridisciplinaire",
-    subtitle: "Naviguez à travers les époques historiques, jalons scientifiques et empires.",
-    impactLabel: "Impact Historique / Scientifique",
-    progressLabel: "Étapes explorées",
-    completedLabel: "Voyage chronologique accompli !",
-    next: "Étape Suivante",
-    prev: "Précédent",
-    by: "par"
-  }
-};
 
 interface Milestone {
   year: number;
@@ -217,8 +185,16 @@ const ALL_MILESTONES: Milestone[] = [
 
 export const Timeline = () => {
   const { language } = useLanguage();
-  const isFR = language === 'FR';
-  const t = UI_STRINGS[isFR ? 'FR' : 'EN'];
+  const t = (key: string) => {
+    const dict = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+    return dict[key] || key;
+  };
+
+  const getLocalizedField = (milestone: Milestone | null, field: 'title' | 'author' | 'description' | 'impact' | 'metadata') => {
+    if (!milestone) return '';
+    const langKey = language.toUpperCase();
+    return (milestone as any)[`${field}${langKey}`] || (milestone as any)[`${field}EN`] || '';
+  };
 
   // Draggable timelines year scroller states (1700 to 2050)
   const startYear = 1700;
@@ -269,10 +245,10 @@ export const Timeline = () => {
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
-            <span>{t.title}</span>
+            <span>{t("timeline_title")}</span>
           </h3>
           <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            {t.subtitle}
+            {t("timeline_subtitle")}
           </p>
         </div>
 
@@ -284,7 +260,7 @@ export const Timeline = () => {
               activeCategory === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-400'
             }`}
           >
-            {isFR ? "Tous" : "All Tracks"}
+            {t("timeline_all_tracks")}
           </button>
           <button
             onClick={() => setActiveCategory('science')}
@@ -292,7 +268,7 @@ export const Timeline = () => {
               activeCategory === 'science' ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30' : 'text-slate-400 border border-transparent'
             }`}
           >
-            {isFR ? "Sciences 🔬" : "Science 🔬"}
+            {t("timeline_science")}
           </button>
           <button
             onClick={() => setActiveCategory('geopolitics')}
@@ -300,7 +276,7 @@ export const Timeline = () => {
               activeCategory === 'geopolitics' ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30' : 'text-slate-400 border border-transparent'
             }`}
           >
-            {isFR ? "Géopolitique 👑" : "Geopolitics 👑"}
+            {t("timeline_geopolitics")}
           </button>
           <button
             onClick={() => setActiveCategory('art')}
@@ -308,7 +284,7 @@ export const Timeline = () => {
               activeCategory === 'art' ? 'bg-pink-600/20 text-pink-300 border border-pink-500/30' : 'text-slate-400 border border-transparent'
             }`}
           >
-            {isFR ? "Arts/Culture 🎨" : "Arts/Culture 🎨"}
+            {t("timeline_arts_culture")}
           </button>
         </div>
       </div>
@@ -355,7 +331,7 @@ export const Timeline = () => {
           <div className="flex justify-between text-[11px] font-bold text-slate-400">
             <span className="flex items-center gap-1.5">
               <History className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{isFR ? "Voyageur Temporel" : "Temporal Drag Slider"}</span>
+              <span>{t("timeline_temporal_slider")}</span>
             </span>
             <span className="font-mono text-indigo-300 text-xs font-black bg-indigo-950/40 px-2 py-0.5 border border-indigo-900/30 rounded-md">
               {selectedYear} CE
@@ -400,32 +376,32 @@ export const Timeline = () => {
                         ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20'
                         : 'bg-pink-600/10 text-pink-400 border border-pink-500/20'
                   }`}>
-                    {activeMilestone.category === 'science' ? (isFR ? 'Science 🔬' : 'Science 🔬') : activeMilestone.category === 'geopolitics' ? (isFR ? 'Géopolitique 👑' : 'Geopolitics 👑') : (isFR ? 'Art/Lettres 🎨' : 'Art/Culture 🎨')}
+                    {activeMilestone.category === 'science' ? t("timeline_science") : activeMilestone.category === 'geopolitics' ? t("timeline_geopolitics") : t("timeline_arts_culture")}
                   </span>
                 </div>
 
                 {/* Title */}
                 <h4 className="text-xl font-black text-slate-100 mt-4 leading-none">
-                  {isFR ? activeMilestone.titleFR : activeMilestone.titleEN}
+                  {getLocalizedField(activeMilestone, 'title')}
                 </h4>
 
                 {/* Author */}
                 <div className="text-xs text-slate-400 font-bold mt-1">
-                  {isFR ? "Auteur(s) / Acteur(s)" : "Key Figure(s)"} : <span className="text-slate-200">{isFR ? activeMilestone.authorFR : activeMilestone.authorEN}</span>
+                  {t("timeline_key_figures")} : <span className="text-slate-200">{getLocalizedField(activeMilestone, 'author')}</span>
                 </div>
 
                 {/* Description paragraphs */}
                 <p className="text-xs text-slate-300 mt-4 leading-relaxed">
-                  {isFR ? activeMilestone.descriptionFR : activeMilestone.descriptionEN}
+                  {getLocalizedField(activeMilestone, 'description')}
                 </p>
 
                 {/* Historical impact badge overlay */}
                 <div className="bg-slate-950/40 rounded-2xl border border-slate-850/80 p-4 mt-5">
                   <span className="text-[9px] text-slate-500 font-black uppercase tracking-wider block mb-1">
-                    {t.impactLabel}
+                    {t("timeline_impact_label")}
                   </span>
                   <p className="text-[11.5px] text-indigo-200 leading-relaxed font-semibold">
-                    {isFR ? activeMilestone.impactFR : activeMilestone.impactEN}
+                    {getLocalizedField(activeMilestone, 'impact')}
                   </p>
                 </div>
               </div>
@@ -437,18 +413,18 @@ export const Timeline = () => {
                   className="px-3.5 py-2 text-[10px] font-black uppercase tracking-wider rounded-xl bg-slate-800 text-slate-300 border border-slate-700/60 hover:text-white hover:bg-slate-700 cursor-pointer flex items-center gap-1.5 transition-all"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
-                  <span>{t.prev}</span>
+                  <span>{t("timeline_prev")}</span>
                 </button>
 
                 <span className="text-[9px] font-mono font-bold text-slate-500">
-                  {isFR ? activeMilestone.metadataFR : activeMilestone.metadataEN}
+                  {getLocalizedField(activeMilestone, 'metadata')}
                 </span>
 
                 <button 
                   onClick={handleNextMilestone}
                   className="px-3.5 py-2 text-[10px] font-black uppercase tracking-wider rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 cursor-pointer flex items-center gap-1.5 transition-all"
                 >
-                  <span>{t.next}</span>
+                  <span>{t("timeline_next")}</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -460,7 +436,7 @@ export const Timeline = () => {
               <div>
                 <h5 className="text-[10px] font-black tracking-widest uppercase text-slate-400 mb-3 flex items-center gap-1.5">
                   <Award className="w-4 h-4 text-indigo-400" />
-                  <span>{isFR ? "Évaluation Chronologique" : "Historical Rating"}</span>
+                  <span>{t("timeline_rating_title")}</span>
                 </h5>
 
                 {/* Stars metrics */}
@@ -476,9 +452,7 @@ export const Timeline = () => {
                 </div>
 
                 <p className="text-[11px] text-slate-400 leading-relaxed select-text">
-                  {isFR 
-                    ? "Les jalons historiques sélectionnés sont évalués selon leur impact systémique global sur le droit international, les paradigmes physiques ou les sciences sociales."
-                    : "Selected landmarks are scaled dynamically based on their global systemic impact on scientific paradigms or civil structures."}
+                  {t("timeline_rating_desc")}
                 </p>
               </div>
 
@@ -487,10 +461,10 @@ export const Timeline = () => {
                 <CheckCircle className="w-4 h-4 text-emerald-400" />
                 <div className="flex-1 text-[10.5px]">
                   <span className="font-bold text-slate-200 block leading-tight">
-                    {isFR ? "Exploration Active" : "Active Chronology Exploration"}
+                    {t("timeline_active_exploration")}
                   </span>
                   <span className="text-slate-500 font-mono text-[9px]">
-                    {isFR ? "Règle glissante synchronisée" : "Temporal crosshair synchronized"}
+                    {t("timeline_synchronized")}
                   </span>
                 </div>
               </div>
@@ -499,7 +473,7 @@ export const Timeline = () => {
           </motion.div>
         ) : (
           <div className="text-center py-10 text-slate-500 text-xs uppercase font-mono tracking-wider bg-slate-900/20 border border-slate-850 rounded-3xl">
-            {isFR ? "Aucun jalon sur ce canal à cette date" : "No milestones listed on this track near this year"}
+            {t("timeline_no_milestone")}
           </div>
         )}
       </AnimatePresence>

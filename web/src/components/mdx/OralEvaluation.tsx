@@ -685,16 +685,11 @@ export const OralEvaluation = ({
             <li>Testez votre microphone et parlez distinctement.</li>
             <li>
               {language === 'FR' ? "Assurez-vous d'avoir un peu plus de temps que nécessaire pour répondre aux questions."
-                : language === 'ES' ? "Asegúrese de tener un poco más de temps de lo nécessaire para responder a las preguntas."
+                : language === 'ES' ? "Asegúrese de tener un poco más de tiempo del necesario para responder a las preguntas."
                 : language === 'DE' ? "Stellen Sie sicher, dass Sie etwas mehr Zeit als nötig haben, um die Fragen zu beantworten."
                 : language === 'ZH' ? "请确保您有比回答问题所需稍微多一点的时间。"
                 : "Ensure you have a bit more time than necessary to answer the questions."}
             </li>
-            {isFinal && (
-              <li className="text-red-400 font-bold border-t border-rose-500/10 pt-2 mt-2 list-none flex items-center gap-1.5">
-                <span>{t.summative_single_attempt_warning}</span>
-              </li>
-            )}
           </ul>
         </div>
 
@@ -724,9 +719,15 @@ export const OralEvaluation = ({
               <span className="text-violet-400 font-black shrink-0">▸</span>
               <span>Durée : <strong className="text-violet-300">{actualDurationLimit ? formatDurationText(actualDurationLimit) : 'Illimitée'}</strong></span>
             </div>
-            <div className={cn("flex items-start gap-2", isFinal && "text-red-400 font-bold bg-red-500/10 p-3 rounded-xl border border-red-500/20 w-full my-1")}>
-              {isFinal ? <span className="shrink-0 text-red-400">⚠️</span> : <span className="text-violet-400 font-black shrink-0">▸</span>}
-              <span>{isFinal ? t.eval_attempts_single.toUpperCase() : t.eval_attempts_unlimited}</span>
+            <div className="flex items-start gap-2">
+              <span className={cn("font-black shrink-0", isFinal ? "text-amber-500" : "text-violet-400")}>
+                {isFinal ? "⚠️" : "▸"}
+              </span>
+              <span>
+                {isFinal
+                  ? t.summative_single_attempt_warning.replace(/^⚠️\s*/, '')
+                  : t.eval_attempts_unlimited}
+              </span>
             </div>
           </div>
         </div>

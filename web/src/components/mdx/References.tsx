@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface ReferenceItem {
   num: number;
@@ -16,38 +17,6 @@ interface ReferencesProps {
   items?: ReferenceItem[];
 }
 
-const STRINGS: Record<string, { title: string; sortBy: string; appearance: string; alphabetical: string }> = {
-  EN: {
-    title: "References",
-    sortBy: "Sort order",
-    appearance: "Appearance",
-    alphabetical: "Alphabetical"
-  },
-  FR: {
-    title: "Références",
-    sortBy: "Ordre de tri",
-    appearance: "Apparition",
-    alphabetical: "Alphabétique"
-  },
-  ES: {
-    title: "Referencias",
-    sortBy: "Orden de clasificación",
-    appearance: "Aparición",
-    alphabetical: "Alfabético"
-  },
-  DE: {
-    title: "Referenzen",
-    sortBy: "Sortierung",
-    appearance: "Reihenfolge",
-    alphabetical: "Alphabetisch"
-  },
-  ZH: {
-    title: "参考文献",
-    sortBy: "排序方式",
-    appearance: "出现顺序",
-    alphabetical: "字母顺序"
-  }
-};
 
 interface DisplayReferenceItem extends ReferenceItem {
   allNums: number[];
@@ -81,8 +50,10 @@ function parseMarkdownToHtml(text: string): string {
 
 export function References({ itemsBase64, items: directItems }: ReferencesProps) {
   const { language } = useLanguage();
-  const langKey = (language || 'EN').toUpperCase();
-  const t = STRINGS[langKey] || STRINGS.EN;
+  const t = (key: string) => {
+    const dict = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+    return dict[key] || key;
+  };
 
   const [sortOrder, setSortOrder] = useState<'appearance' | 'alphabetical'>('appearance');
 
@@ -163,8 +134,8 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
   return (
     <div 
       className="my-10 p-6 md:p-8 bg-slate-900/40 border border-slate-800/80 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-xl select-none"
-      title="References"
-      aria-label="References"
+      title={t("references_title")}
+      aria-label={t("references_title")}
     >
       <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-indigo-600/5 rounded-full blur-[40px] pointer-events-none" />
       
@@ -180,7 +151,7 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
             }`}
           >
-            {t.appearance}
+            {t("references_appearance")}
           </button>
           <button
             onClick={() => setSortOrder('alphabetical')}
@@ -190,10 +161,11 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
             }`}
           >
-            {t.alphabetical}
+            {t("references_alphabetical")}
           </button>
         </div>
       </div>
+
 
       {/* References List */}
       <div className="space-y-4">

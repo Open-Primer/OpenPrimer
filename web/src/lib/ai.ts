@@ -886,7 +886,8 @@ const lessonWidgetsSchema = {
                        type: "object",
                        properties: {
                          q: { type: "string", description: "The question card text." },
-                         explanation: { type: "string", description: "Extremely concise, punchy explanation of the correct choice." },
+                         explanation: { type: "string", description: "Extremely concise, punchy explanation of the correct choice(s)." },
+                         multiple: { type: "boolean", description: "Set to true if multiple options are correct and the student must select ALL of them. Omit or set false for single-answer questions." },
                          mode: { type: "string", enum: ["standard", "elimination"] },
                          mediaType: { type: "string", enum: ["image", "audio", "video"] },
                          mediaUrl: { type: "string" },
@@ -897,7 +898,7 @@ const lessonWidgetsSchema = {
                              type: "object",
                              properties: {
                                text: { type: "string", description: "The text of the option." },
-                               correct: { type: "boolean", description: "Whether this option is correct." }
+                               correct: { type: "boolean", description: "Whether this option is correct. For multiple=true questions, set correct=true on ALL correct options." }
                              },
                              required: ["text", "correct"]
                            }
@@ -1174,6 +1175,7 @@ const lessonWidgetsSchema = {
                 properties: {
                   q: { type: "string" },
                   explanation: { type: "string" },
+                  multiple: { type: "boolean", description: "Set to true if multiple options are correct." },
                   options: {
                     type: "array",
                     items: {
@@ -2611,7 +2613,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     const props = comp.props || {};
 
     if (comp.componentType === "Quiz") {
-      compStr = `<Quiz durationLimit={${props.durationLimit || 300}}${props.limit ? ` limit={${props.limit}}` : ''}>\n  ${(props.questions || []).map((q: any) => `  <Question q="${(q.q || '').replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${(o.text || '').replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
+      compStr = `<Quiz durationLimit={${props.durationLimit || 300}}${props.limit ? ` limit={${props.limit}}` : ''}>\n  ${(props.questions || []).map((q: any) => `  <Question q="${(q.q || '').replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}"${q.multiple ? ' multiple={true}' : ''}>\n    ${(q.options || []).map((o: any) => `<Option text="${(o.text || '').replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
     } else if (comp.componentType === "FillInBlanks") {
       // [FIX A2] Use question/blanks props matching the component contract (not legacy sentence/answer).
       compStr = `<FillInBlanks question="${(props.question || props.sentence || '').replace(/"/g, '&quot;')}" blanks='${props.blanks ? JSON.stringify(props.blanks) : JSON.stringify([props.answer || ''])}' />`;
@@ -2719,10 +2721,11 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const questionsMarkup = (qProps.questions || []).map((q: any) => {
         const qText = (q.q || '').replace(/"/g, '&quot;');
         const qExpl = (q.explanation || '').replace(/"/g, '&quot;');
+        const qMultiple = q.multiple ? ' multiple={true}' : '';
         const optionsMarkup = (q.options || []).map((o: any) => {
           return `<Option text="${(o.text || '').replace(/"/g, '&quot;')}" correct={${o.correct}} />`;
         }).join('\n    ');
-        return `  <Question q="${qText}" explanation="${qExpl}">\n    ${optionsMarkup}\n  </Question>`;
+        return `  <Question q="${qText}" explanation="${qExpl}"${qMultiple}>\n    ${optionsMarkup}\n  </Question>`;
       }).join('\n  ');
       compStr = `<Quiz${qLimit}${qDuration}${qMode}${qQDuration}>\n  ${questionsMarkup}\n</Quiz>`;
     } else if (comp.componentType === "SolvedExercise" || comp.componentType === "ExerciceResolut") {
@@ -3988,7 +3991,7 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
           targetLang.toLowerCase()
         );
         // [FIX T5] Verify the saved lesson is in the correct target language before skipping.
-        const isCorrectLang = existingLesson.lang === targetLang.toLowerCase();
+        const isCorrectLang = existingLesson && existingLesson.lang === targetLang.toLowerCase();
         const hasContent = existingLesson && existingLesson.content && existingLesson.content.trim().length > 100;
         if (hasContent && isCorrectLang) {
           await appendTaskLog(`[AI GENERATOR - INCREMENTAL] Skipping lesson "${item.title}" because it is already generated.`);
@@ -4957,7 +4960,10 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
       };
       lessonStats.widgetBlockAttempts.push(widgetBlock2Entry);
 
-      const activeCustomAnchors = activeAnchors.filter(a => !['prerequisites', 'diagnosticQuiz', 'learningObjectives', 'conclusionSummary', 'whatsNext', 'goingFurther', 'finalEvaluation', 'references'].includes(a.type));
+      const activeCustomAnchors = activeAnchors.filter(a => {
+        const typeLower = a.type.toLowerCase();
+        return !['prerequisites', 'diagnosticquiz', 'learningobjectives', 'conclusionsummary', 'whatsnext', 'goingfurther', 'finalevaluation', 'references', 'reference', 'citation', 'ref'].includes(typeLower);
+      });
 
       const block2Types = ['biography', 'realperson', 'historicalperson', 'conceptlink', 'eventlink', 'historicaleventlink', 'evenementhistorique', 'événementhistorique', 'location', 'glossary'];
       const block2CustomAnchors = activeCustomAnchors.filter(a => block2Types.includes(a.type.toLowerCase()));
@@ -5148,7 +5154,7 @@ ${dynamicCatalogList}
 
 ### REQUIRED PROPS STRUCTURE per componentType:
 1. "Image":
-   - "description": (string) Detailed search/generation description for the image (at least 2-3 sentences of visual instructions). Do NOT generate sequential figure prefixes.
+   - "description": (string) Detailed academic description of what the image depicts (at least 2-3 sentences). Write it as a description of an existing image (e.g., "Carte linguistique de la péninsule italienne montrant la répartition des principaux groupes de dialectes...") rather than drawing instructions for a designer (e.g. do NOT say "Générer une carte..."). Do NOT output any extra properties like "url", "wikipediaUrl", "wikipediaLink", or "year" for Image, Quiz, or Mermaid components; if you do, the critique agent will reject the block. Do NOT generate sequential figure prefixes.
    - "alt": (string) Short description for accessibility.
    - "caption": (string) A detailed, italicized caption explaining academic relevance. Do NOT generate sequential figure numbers.
    - "title": (string) Short title of the image.
@@ -5167,10 +5173,11 @@ ${dynamicCatalogList}
    - "limit": (integer) Number of questions to display.
    - "questions": (array of objects) Each object must have:
      - "q": (string) The question card text.
-     - "explanation": (string) Extremely concise, punchy explanation of the correct choice.
+     - "explanation": (string) Extremely concise, punchy explanation of the correct choice(s).
+     - "multiple": (boolean, optional) Set to true if the question has MULTIPLE correct answers — the student must select ALL of them. Omit or set false for standard single-answer questions. Use multiple=true for at most 25% of questions to add variety.
      - "options": (array of objects) Each option must have:
        - "text": (string) Option text.
-       - "correct": (boolean) Whether correct.
+       - "correct": (boolean) Whether correct. For multiple=true, mark ALL correct options as correct=true.
 5. "SolvedExercise":
    - "title": (string) Exercise title.
    - "problem": (string) The markdown-formatted problem statement.
@@ -5327,7 +5334,7 @@ Language: "${targetLang.toUpperCase()}"
 You must define the following JSON properties:
 1. "conclusionSummary": A detailed text summarizing the key takeaways of this lesson (at least 5 sentences).
 2. "whatsNext": A text showing the link/transition to the next lesson.
-3. "goingFurther": Additional links or resources (with titles and URLs).
+3. "goingFurther": Additional links or resources (with titles and optional URLs. If you do not know a real, specific, valid URL for a resource, you MUST completely omit the "url" property from that item instead of generating a placeholder URL like "example.com" or "placeholder.com").
 4. "glossary": ${constraintKey === 'university_grad' ? 'An array of at least 12 to 15 key technical terms with detailed definitions.' : constraintKey === 'university_undergrad' ? 'An array of at least 8 to 12 key technical terms with detailed definitions.' : 'An array of at least 3-4 key technical terms with detailed definitions.'}
 
 Return ONLY a valid JSON object matching this schema:
@@ -5377,7 +5384,7 @@ ${JSON.stringify(block3Parsed, null, 2)}
 Ensure:
 1. Glossary and conclusion summary are scientifically/academically accurate.
 2. The language is strictly in ${targetLang.toUpperCase()}.
-3. Absolutely ZERO placeholders, draft markers, TBDs, lorem ipsum text, or template values (like "your_youtube_id" or "placeholder") in the goingFurther, whatsNext, or glossary items. All fields must contain real, fully translated, complete information. Reject if any empty strings or dummy templates are used.
+3. Absolutely ZERO placeholders, draft markers, TBDs, lorem ipsum text, or template values (like "your_youtube_id" or "placeholder") in the goingFurther, whatsNext, or glossary items. All fields must contain real, fully translated, complete information. Reject if any empty strings or dummy templates are used. Note that for goingFurther items, omitting the "url" property entirely is perfectly acceptable if a real URL is not known; do not reject items for not having a "url" property, but reject them if they have a dummy/placeholder URL like "example.com" or "placeholder.com".
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 \`\`\`json
@@ -8950,11 +8957,11 @@ export async function validateAndFixExternalResources(mdx: string, targetLang: s
           if (alternativeUrl) {
             newTag = block.fullBlock.replace(/url="[^"]*"/gi, `url="${alternativeUrl.replace(/"/g, '&quot;')}"`)
                                     .replace(/url='[^']*'/gi, `url="${alternativeUrl.replace(/"/g, '&quot;')}"`);
+            updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
           } else {
-            newTag = block.fullBlock.replace(/\s*url="[^"]*"/gi, '')
-                                    .replace(/\s*url='[^']*'/gi, '');
+            console.log(`[EXTERNAL RESOURCE VALIDATOR] Removing GoingFurtherItem due to dead URL and resolution failure: ${title}`);
+            updatedMdx = updatedMdx.replace(block.fullBlock, '');
           }
-          updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
         }
       } else {
         // No URL in original — try to auto-resolve from title
@@ -8983,11 +8990,17 @@ export async function validateAndFixExternalResources(mdx: string, targetLang: s
             const newTag = block.fullBlock.replace(/(\/?>)$/, ` url="${resolvedUrl.replace(/"/g, '&quot;')}" />`);
             updatedMdx = updatedMdx.replace(block.fullBlock, newTag);
             console.log(`[EXTERNAL RESOURCE VALIDATOR] Auto-resolved URL for "${title}": ${resolvedUrl}`);
+          } else {
+            console.log(`[EXTERNAL RESOURCE VALIDATOR] Removing GoingFurtherItem due to no URL and resolution failure: ${title}`);
+            updatedMdx = updatedMdx.replace(block.fullBlock, '');
           }
         }
       }
     }
   }
+
+  // Clean up empty GoingFurther containers (possibly containing whitespace/newlines)
+  updatedMdx = updatedMdx.replace(/<GoingFurther>\s*<\/GoingFurther>/gi, '');
 
   return updatedMdx;
 }
@@ -9547,6 +9560,30 @@ export async function deduplicateLessonWidgetsAndReferences(
   
   if (!widgets) return { widgets, narrativeMdx };
 
+  // 0. Deduplicate multiple occurrences of the exact same widget anchor ID in the narrative MDX text
+  const seenAnchorIds = new Set<string>();
+  const rawAnchorRegex = /\[\[\s*WIDGET\s*:\s*(?:([^:\s\]]+)\s*:\s*)?([^:\s\]]+)\s*(?::\s*([^\\]]+))?\s*\]\]/gi;
+  let rawMatch;
+  let cleanedMdx = '';
+  let lastIdx = 0;
+  rawAnchorRegex.lastIndex = 0;
+  while ((rawMatch = rawAnchorRegex.exec(narrativeMdx)) !== null) {
+    const fullAnchor = rawMatch[0];
+    const widgetId = rawMatch[2].toLowerCase();
+    
+    cleanedMdx += narrativeMdx.substring(lastIdx, rawMatch.index);
+    if (seenAnchorIds.has(widgetId)) {
+      console.log(`[DEDUPLICATION] Removed duplicate anchor for widget "${widgetId}" from narrative.`);
+      cleanedMdx += '';
+    } else {
+      seenAnchorIds.add(widgetId);
+      cleanedMdx += fullAnchor;
+    }
+    lastIdx = rawAnchorRegex.lastIndex;
+  }
+  cleanedMdx += narrativeMdx.substring(lastIdx);
+  narrativeMdx = cleanedMdx;
+
   const otherLessonsComponents: any[] = [];
   try {
     const { data: dbLessons, error: dbErr } = await supabaseAdmin
@@ -9658,11 +9695,11 @@ export async function deduplicateLessonWidgetsAndReferences(
 
       const original = uniqueComponents.find(existing => areComponentsDuplicate(comp, existing));
       if (original) {
-        console.log(`[DEDUPLICATION] Merged intra-lesson duplicate interactive component: type="${comp.componentType}", id="${comp.id}" -> "${original.id}"`);
-        if (comp.id && original.id && comp.id !== original.id) {
-          const escapedDupId = comp.id.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-          const regex = new RegExp(`(\\[\\[\\s*WIDGET\\s*:\\s*(?:[^:\\s\\]]+\\s*:\\s*)?)${escapedDupId}(\\s*(?::\\s*([^\\]]+))?\\s*\\]\\])`, 'gi');
-          narrativeMdx = narrativeMdx.replace(regex, `$1${original.id}$2`);
+        console.log(`[DEDUPLICATION] Removed intra-lesson duplicate interactive component: type="${comp.componentType}", id="${comp.id}" (Merged -> "${original.id}")`);
+        if (comp.id) {
+          const escapedId = comp.id.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          const anchorRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*(?:[^:\\s\\]]+\\s*:\\s*)?${escapedId}\\s*(?::\\s*[^\\]]+)?\\s*\\]\\]`, 'gi');
+          narrativeMdx = narrativeMdx.replace(anchorRegex, '');
         }
         continue;
       }

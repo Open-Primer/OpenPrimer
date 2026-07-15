@@ -1428,15 +1428,15 @@ export const IframeWidget = ({ src, title }: { src: string, title: string }) => 
 );
 
 const PREFERRED_VOICES: Record<string, string[]> = {
-  'fr': ['Hortense', 'Thomas', 'Microsoft Hortense Desktop', 'Amélie', 'Julie', 'Google français'],
-  'en': ['Microsoft Zira Desktop', 'Zira', 'Microsoft David Desktop', 'David', 'Samantha', 'Karen', 'Alex', 'Daniel', 'Google US English', 'Google UK English Male', 'Google UK English Female'],
-  'es': ['Microsoft Helena Desktop', 'Helena', 'Microsoft Sabina Desktop', 'Monica', 'Paulina', 'Google español', 'Google español de Estados Unidos'],
-  'de': ['Microsoft Hedda Desktop', 'Hedda', 'Microsoft Stefan Desktop', 'Anna', 'Petra', 'Google Deutsch'],
-  'zh': ['Microsoft Huihui Desktop', 'Huihui', 'Microsoft Kangkang Desktop', 'Microsoft Yaoyao Desktop', 'Ting-Ting', 'Sinji', 'Google 普通话（中国大陆）', 'Google 粤语（香港）'],
-  'pt': ['Microsoft Maria Desktop', 'Maria', 'Microsoft Daniel Desktop', 'Daniel', 'Helia', 'Raissa', 'Google português'],
-  'ar': ['Microsoft Naayf Desktop', 'Naayf', 'Hoda', 'Maged', 'Tarik', 'Google العربية'],
-  'hi': ['Microsoft Hemant Desktop', 'Hemant', 'Kalpana', 'Google हिन्दी'],
-  'ur': ['Microsoft Asif Desktop', 'Asif', 'Google اردو'],
+  'fr': ['Google français', 'Hortense', 'Thomas', 'Microsoft Hortense Desktop', 'Amélie', 'Julie'],
+  'en': ['Google US English', 'Google UK English Male', 'Google UK English Female', 'Microsoft Zira Desktop', 'Zira', 'Microsoft David Desktop', 'David', 'Samantha', 'Karen', 'Alex', 'Daniel'],
+  'es': ['Google español', 'Google español de Estados Unidos', 'Microsoft Helena Desktop', 'Helena', 'Microsoft Sabina Desktop', 'Monica', 'Paulina'],
+  'de': ['Google Deutsch', 'Microsoft Hedda Desktop', 'Hedda', 'Microsoft Stefan Desktop', 'Anna', 'Petra'],
+  'zh': ['Google 普通话（中国大陆）', 'Google 粤语（香港）', 'Microsoft Huihui Desktop', 'Huihui', 'Microsoft Kangkang Desktop', 'Microsoft Yaoyao Desktop', 'Ting-Ting', 'Sinji'],
+  'pt': ['Google português', 'Microsoft Maria Desktop', 'Maria', 'Microsoft Daniel Desktop', 'Daniel', 'Helia', 'Raissa'],
+  'ar': ['Google العربية', 'Microsoft Naayf Desktop', 'Naayf', 'Hoda', 'Maged', 'Tarik'],
+  'hi': ['Google हिन्दी', 'Microsoft Hemant Desktop', 'Hemant', 'Kalpana'],
+  'ur': ['Google اردو', 'Microsoft Asif Desktop', 'Asif'],
 };
 
 // Bouton Speech (TTS Natif)
@@ -1464,21 +1464,19 @@ export const SpeechButton = ({ text }: { text: string }) => {
         if (found) { matchedVoice = found; break; }
       }
 
-      // 2. Try offline system voices
+      // 2. Fallback options prioritizing Google voices if available, then local/offline voices
+      if (!matchedVoice) {
+        matchedVoice = availableVoices.find(v =>
+          v.lang.toLowerCase().startsWith(targetLang) && v.name.toLowerCase().includes('google')
+        );
+      }
+
       if (!matchedVoice) {
         matchedVoice = availableVoices.find(v =>
           v.lang.toLowerCase().startsWith(targetLang) && v.localService
         );
       }
 
-      // 3. Try non-Google offline voices
-      if (!matchedVoice) {
-        matchedVoice = availableVoices.find(v =>
-          v.lang.toLowerCase().startsWith(targetLang) && !v.name.toLowerCase().includes('google')
-        );
-      }
-
-      // 4. Try any voice matching the language
       if (!matchedVoice) {
         matchedVoice = availableVoices.find(v =>
           v.lang.toLowerCase().startsWith(targetLang)

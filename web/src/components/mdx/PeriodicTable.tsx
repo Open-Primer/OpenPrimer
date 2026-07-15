@@ -4,6 +4,8 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Thermometer, Radio, Zap, Layers, RefreshCw } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
+
 
 interface ElementData {
   num: number;
@@ -79,7 +81,22 @@ const getWavelengthColor = (wavelength: number): string => {
 
 export const PeriodicTable = () => {
   const { language } = useLanguage();
-  const isFR = language === 'FR';
+  const t = (key: string) => {
+    const dict = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+    return dict[key] || key;
+  };
+
+  const getElementName = (el: ElementData) => {
+    return language.toUpperCase() === 'FR' ? el.nameFR : el.nameEN;
+  };
+
+  const getCategoryLabel = (category: string) => {
+    const cat = CATEGORY_COLORS[category];
+    if (!cat) return category;
+    return language.toUpperCase() === 'FR' ? cat.labelFR : cat.labelEN;
+  };
+
+  const isFR = language.toUpperCase() === 'FR';
 
   const [selectedNum, setSelectedNum] = useState<number>(1); // Default: Hydrogen
   const [temperature, setTemperature] = useState<number>(298); // 298 K = 25°C
@@ -114,7 +131,7 @@ export const PeriodicTable = () => {
       case 'solid': return 'bg-slate-800/80 border-slate-700/80 text-slate-100';
       case 'liquid': return 'bg-amber-950/40 border-amber-600/50 text-amber-300';
       case 'gas': return 'bg-rose-950/40 border-rose-600/50 text-rose-300';
-      default: return 'bg-slate-900 border-slate-800 text-slate-500';
+      default: return 'bg-slate-900 border-slate-880 text-slate-500';
     }
   };
 
@@ -163,12 +180,10 @@ export const PeriodicTable = () => {
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
-            <span>{isFR ? "Spectroscopie & Classification Périodique" : "Periodic Table & Spectroscopy Lab"}</span>
+            <span>{t("periodic_spectroscopy_title")}</span>
           </h3>
           <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            {isFR 
-              ? "Excitez les cortèges électroniques par saut quantique : tirez des photons de longueur d'onde ajustable et étudiez les spectres de raies réels."
-              : "Perform quantum orbital jumps: shoot wavelength-tunable photons to excite outer shells and project atomic emission line spectra."}
+            {t("periodic_spectroscopy_desc")}
           </p>
         </div>
 
@@ -177,7 +192,7 @@ export const PeriodicTable = () => {
           <Thermometer className="w-5 h-5 text-indigo-400 shrink-0" />
           <div className="flex-1 space-y-1">
             <div className="flex justify-between text-[11px] font-black tracking-wider text-slate-400">
-              <span className="uppercase">{isFR ? 'Température' : 'Temperature'}</span>
+              <span className="uppercase">{t("periodic_temperature")}</span>
               <span className="font-mono text-indigo-300">
                 {temperature} K ({Math.round(temperature - 273.15)} °C)
               </span>
@@ -232,7 +247,7 @@ export const PeriodicTable = () => {
                     {el.symbol}
                   </span>
                   <span className="text-[6.5px] font-medium text-slate-400 tracking-tight text-center leading-none">
-                    {isFR ? el.nameFR : el.nameEN}
+                    {getElementName(el)}
                   </span>
                 </div>
               );
@@ -253,7 +268,7 @@ export const PeriodicTable = () => {
                   }`}
                 >
                   <div className={`w-1.5 h-1.5 rounded-full bg-current`} />
-                  <span>{isFR ? info.labelFR : info.labelEN}</span>
+                  <span>{getCategoryLabel(key)}</span>
                 </div>
               );
             })}
@@ -274,10 +289,10 @@ export const PeriodicTable = () => {
                   Z = {activeElement.num}
                 </span>
                 <h4 className="text-xl font-black text-slate-100 mt-2 leading-none">
-                  {isFR ? activeElement.nameFR : activeElement.nameEN}
+                  {getElementName(activeElement)}
                 </h4>
                 <span className="text-[10px] font-bold uppercase text-indigo-400 tracking-wider">
-                  {isFR ? CATEGORY_COLORS[activeElement.category]?.labelFR : CATEGORY_COLORS[activeElement.category]?.labelEN}
+                  {getCategoryLabel(activeElement.category)}
                 </span>
               </div>
               <div className="text-4xl font-black text-indigo-400 select-text leading-none bg-indigo-500/5 border border-indigo-500/10 p-4 rounded-2xl min-w-[70px] text-center">
@@ -288,11 +303,11 @@ export const PeriodicTable = () => {
             {/* Physical metrics list */}
             <div className="grid grid-cols-2 gap-3.5 mt-5 text-xs">
               <div className="bg-slate-950/40 p-3 rounded-2xl border border-slate-850/80">
-                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{isFR ? 'Masse Atomique' : 'Atomic Mass'}</span>
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{t("periodic_atomic_mass")}</span>
                 <div className="font-mono font-bold text-slate-200 mt-0.5">{activeElement.mass.toFixed(4)} u</div>
               </div>
               <div className="bg-slate-950/40 p-3 rounded-2xl border border-slate-850/80">
-                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{isFR ? 'Électronégativité' : 'Electronegativity'}</span>
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{t("periodic_electronegativity")}</span>
                 <div className="font-mono font-bold text-slate-200 mt-0.5">
                   {activeElement.electronegativity !== null ? activeElement.electronegativity.toFixed(2) : '--'}
                 </div>
@@ -304,7 +319,7 @@ export const PeriodicTable = () => {
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col items-center relative overflow-hidden">
             <h5 className="text-[10px] font-black tracking-widest uppercase text-slate-400 mb-4 self-start flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{isFR ? "Spectroscopie de Bohr" : "Bohr Absorption & Jump Lab"}</span>
+              <span>{t("periodic_bohr_lab")}</span>
             </h5>
 
             <div className="w-48 h-48 relative flex items-center justify-center border border-slate-850/50 bg-[#020617] rounded-3xl overflow-hidden p-2">
@@ -403,7 +418,7 @@ export const PeriodicTable = () => {
             {/* Electron shell config details */}
             <div className="mt-4 flex justify-between items-center w-full text-[10px] font-mono">
               <span className="text-slate-500 font-bold uppercase tracking-wider">
-                {isFR ? 'Configuration :' : 'Shells :'}
+                {t("periodic_shells_config")}
               </span>
               <div className="flex gap-1">
                 {activeElement.shells.map((count, idx) => (
@@ -422,12 +437,12 @@ export const PeriodicTable = () => {
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-3">
             <h5 className="text-[10px] font-black tracking-widest uppercase text-slate-400 flex items-center gap-2 mb-1">
               <Radio className="w-4 h-4 text-purple-400" />
-              <span>{isFR ? "Canon à Photons" : "Photon Exciter Gun"}</span>
+              <span>{t("periodic_photon_gun")}</span>
             </h5>
 
             {/* Presets Row */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[8.5px] font-black text-slate-500 uppercase mr-1">{isFR ? "Raies H :" : "H Lines :"}</span>
+              <span className="text-[8.5px] font-black text-slate-500 uppercase mr-1">{language.toUpperCase() === 'FR' ? "Raies H :" : "H Lines :"}</span>
               <button onClick={() => setTargetWavelength(121.6)} className="px-2 py-1 bg-slate-950 text-[8.5px] border border-slate-850 font-bold text-purple-400 rounded-lg cursor-pointer">
                 Lyman-α (121.6nm)
               </button>
@@ -442,7 +457,7 @@ export const PeriodicTable = () => {
             {/* Slider */}
             <div className="space-y-1 mt-1">
               <div className="flex justify-between text-[10.5px] font-bold text-slate-400">
-                <span>Longueur d'onde (λ)</span>
+                <span>{language.toUpperCase() === 'FR' ? "Longueur d'onde (λ)" : "Wavelength (λ)"}</span>
                 <span className="font-mono text-purple-300">{targetWavelength.toFixed(1)} nm</span>
               </div>
               <input 
@@ -467,7 +482,7 @@ export const PeriodicTable = () => {
               }`}
             >
               <Zap className="w-3.5 h-3.5" />
-              <span>{isFR ? "Injecter Photon" : "Shoot Photon"}</span>
+              <span>{t("periodic_shoot_photon")}</span>
             </button>
           </div>
 
@@ -475,7 +490,7 @@ export const PeriodicTable = () => {
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-2.5">
             <h5 className="text-[10px] font-black tracking-widest uppercase text-slate-400 flex items-center gap-2">
               <Layers className="w-4 h-4 text-purple-400" />
-              <span>{isFR ? "Spectre d'Émission Atomique" : "Atomic Emission Line Spectrogram"}</span>
+              <span>{t("periodic_emission_spectrogram")}</span>
             </h5>
 
             {/* Colored horizontal spectrum strip with lines drawn on top */}
@@ -509,7 +524,7 @@ export const PeriodicTable = () => {
             {/* Label axis */}
             <div className="flex justify-between text-[8px] font-mono text-slate-500 uppercase mt-0.5">
               <span>UV (380nm)</span>
-              <span>VERT (550nm)</span>
+              <span>{language.toUpperCase() === 'FR' ? "VERT (550nm)" : "GREEN (550nm)"}</span>
               <span>IR (750nm)</span>
             </div>
           </div>

@@ -1,0 +1,298 @@
+---
+title: "L'Architecture de von Neumann : Principes et Fonctionnement"
+subject: "Computer_Science"
+level: "L1"
+module: "Architecture des Ordinateurs"
+order: 1
+---
+
+<Prerequisites items={["Concepts fondamentaux d'électronique numérique (portes logiques)", "Bases de la représentation binaire"]} />
+
+<DiagnosticQuiz 
+  question="Quel composant de l'architecture de von Neumann stocke à la fois les instructions du programme et les données ?" 
+  options={["L'Unité de Contrôle", "La Mémoire Centrale", "L'Unité Arithmétique et Logique", "Les Registres CPU"]} 
+  correctIndex={1} 
+  targetSectionId="section-architecture-globale" 
+  sectionTitle="L'architecture globale de von Neumann" 
+/>
+
+# L'Architecture de von Neumann : Principes et Fonctionnement
+
+Bienvenue dans ce cours universitaire d'introduction à l'architecture des ordinateurs. Dans cette leçon, nous allons explorer les principes fondamentaux définis par le mathématicien <HistoricalPerson name="John_von_Neumann" lang="fr" bio="Mathématicien et physicien austro-hongrois naturalisé américain, ayant apporté des contributions majeures en mécanique quantique, théorie des jeux et informatique fondamentale.">John von Neumann</HistoricalPerson> en 1945, modèles qui constituent l'ossature de la quasi-totalité des ordinateurs modernes.
+
+---
+
+## 🎯 Objectifs d'Apprentissage (Objectives)
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>**Analyser** la structure interne d'une unité centrale de traitement (CPU) et le rôle de ses sous-composants.</li>
+      <li>**Distinguer** l'architecture de von Neumann de l'architecture Harvard en termes de bus et de mémoire.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>**Calculer** l'espace d'adressage maximal théorique d'un processeur selon la largeur de son bus d'adresse.</li>
+      <li>**Déterminer** la bande passante maximale théorique d'un bus de données en fonction de sa fréquence et de sa largeur.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>**Apprécier** l'élégance conceptuelle de la mémoire unifiée tout en mesurant de manière critique ses goulots d'étranglement matériels.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+---
+
+<span id="section-architecture-globale"></span>
+## 🏛️ L'Architecture Globale de von Neumann
+
+L'architecture de von Neumann repose sur quatre composants clés interconnectés :
+1. **L'Unité Centrale de Traitement (CPU)**, le « cerveau » qui traite les informations.
+2. **La Mémoire Centrale (RAM)**, qui stocke de manière éphémère les programmes (instructions) et les données nécessaires au calcul.
+3. **Les Systèmes d'Entrées/Sorties (E/S)**, permettant de communiquer avec l'extérieur (clavier, écran, disque dur).
+4. **Les Bus**, autoroutes physiques de cuivre sur la carte mère permettant d'acheminer les bits d'information.
+
+De manière très **concrète**, le génie de cette conception réside dans le principe de **l'ordinateur à programme enregistré** : le code et les variables résident dans le même espace mémoire physique.
+
+### Schéma d'Architecture Interne
+
+Voici une représentation visuelle de l'organisation d'un système informatique de von Neumann générée à l'aide de diagrammes Mermaid :
+
+<Mermaid chart="graph TD
+    subgraph CPU [Unité Centrale de Traitement - CPU]
+        UC[Unité de Contrôle]
+        UAL[Unité Arithmétique et Logique - UAL]
+        REG[Registres: Accumulateur, PC, RI]
+        UC -->|Contrôle| UAL
+        UC -->|Sélection| REG
+        UAL -->|Résultats| REG
+    end
+
+    subgraph MEM [Mémoire Centrale]
+        Code[Instructions du Programme]
+        Data[Données / Variables]
+    end
+
+    subgraph IO [Entrées / Sorties]
+        Input[Périphériques d'Entrée]
+        Output[Périphériques de Sortie]
+    end
+
+    BusControl[Bus de Contrôle]
+    BusAddr[Bus d'Adresse]
+    BusData[Bus de Données]
+
+    CPU <==>|Signaux| BusControl
+    MEM <==>|Signaux| BusControl
+    IO <==>|Signaux| BusControl
+
+    CPU ===>|Sélection d'adresse| BusAddr
+    BusAddr ===> MEM
+    BusAddr ===> IO
+
+    CPU <==>|Échange de mots| BusData
+    MEM <==>|Échange de mots| BusData
+    IO <==>|Échange de mots| BusData
+
+    style CPU fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style MEM fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#fff
+    style IO fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#fff
+" />
+
+---
+
+## ⚡ L'Unité Arithmétique et Logique (UAL)
+
+L'UAL est le composant du processeur chargé d'effectuer les opérations arithmétiques de base (comme l'addition ou la soustraction) et les opérations logiques fondamentales (comme ET, OU, NON). Ces circuits sont bâtis à l'aide de transistors arrangés en portes logiques.
+
+### 🔌 Simulation Interactive : Les Portes Logiques de l'UAL
+Utilisez l'outil interactif ci-dessous pour assembler des portes logiques élémentaires et observer comment des signaux binaires (0 et 1) se combinent pour générer des fonctions booléennes complexes, qui constituent l'armature d'une UAL.
+
+<LogicGateSimulator />
+
+---
+
+## ⏳ Le Cycle Fetch-Decode-Execute (Recherche, Décodage, Exécution)
+
+Le processeur exécute les programmes de façon séquentielle et ininterrompue en répétant un cycle fondamental composé de trois phases majeures :
+1. **Fetch (Recherche) :** Récupérer l'instruction en mémoire centrale pointée par le registre *Compteur de Programme* (PC - Program Counter), puis charger cette instruction dans le *Registre d'Instruction* (RI).
+2. **Decode (Décodage) :** L'Unité de Contrôle analyse l'instruction binaire pour identifier l'opération à effectuer (ex: addition, stockage) et les opérandes requis.
+3. **Execute (Exécution) :** L'opération est lancée (par exemple par l'UAL), les registres internes ou la mémoire centrale sont mis à jour, et le PC est incrémenté pour pointer vers l'instruction suivante.
+
+### 💻 Expérimentation Active avec la programmation
+Pour comprendre comment s'opèrent ces manipulations binaires à bas niveau, analysez le code Javascript ci-dessous. Il s'agit d'un **exemple** d'émulateur simplifié montrant comment un CPU fictif décode des opcodes binaires d'instructions (comme l'addition ou le saut).
+
+<CodeSandbox 
+  title="Émulateur JS : Cycle d'exécution d'un CPU simplifié" 
+  language="javascript" 
+  initialCode={`// Définition de notre mémoire centrale fictive (contenant opcodes et données)
+// Format instruction: [OPCODE, OPÉRANDE_A, OPÉRANDE_B, DESTINATION]
+// OPCODES: 1 = ADD, 2 = SUB, 3 = JUMP_IF_ZERO
+const memoire = [
+  [1, 10, 20, 0], // instruction 0: ADD 10 + 20 et stocke dans le Registre 0
+  [2, 30, 5, 1],  // instruction 1: SUB 30 - 5 et stocke dans le Registre 1
+  [3, 1, 0, 0]    // instruction 2: Si Reg[1] est égal à 0, saute à l'instruction 0 (sinon continue)
+];
+
+// Registres du CPU
+let PC = 0; // Compteur de Programme (Program Counter)
+let Registres = [0, 0]; 
+
+console.log("🚀 Lancement de la simulation du CPU :");
+
+while (PC < memoire.length) {
+  console.log("\\n--- Cycle d'exécution - Instruction à l'adresse " + PC + " ---");
+  
+  // 1. FETCH (Recherche)
+  const instruction = memoire[PC];
+  console.log("FETCH : Instruction chargée ->", JSON.stringify(instruction));
+  
+  // 2. DECODE (Décodage)
+  const opcode = instruction[0];
+  const opA = instruction[1];
+  const opB = instruction[2];
+  const dest = instruction[3];
+  
+  // 3. EXECUTE (Exécution)
+  if (opcode === 1) { // ADD
+    Registres[dest] = opA + opB;
+    console.log("EXECUTE : ADD -> Registre[" + dest + "] = " + opA + " + " + opB + " = " + Registres[dest]);
+    PC++;
+  } else if (opcode === 2) { // SUB
+    Registres[dest] = opA - opB;
+    console.log("EXECUTE : SUB -> Registre[" + dest + "] = " + opA + " - " + opB + " = " + Registres[dest]);
+    PC++;
+  } else if (opcode === 3) { // JUMP
+    if (Registres[opA] === 0) {
+      console.log("EXECUTE : JUMP -> Registre[" + opA + "] est nul. Saut vers l'adresse " + opB);
+      PC = opB;
+    } else {
+      console.log("EXECUTE : JUMP -> Registre[" + opA + "] n'est pas nul (" + Registres[opA] + "). Pas de saut.");
+      PC++;
+    }
+  }
+}
+
+console.log("\\nÉtat final des registres du CPU :", JSON.stringify(Registres));
+`}
+  height="350px"
+/>
+
+---
+
+## 📝 Exercices d'Entraînement et Applications
+
+### Exercices Résolus
+
+<SolvedExercise title="Calcul de l'espace d'adressage" solution="Avec un bus d'adresse de 16 bits, l'adresse maximale que le CPU peut cibler directement est $2^{16} = 65\,536$ adresses individuelles distinctes. Si chaque adresse pointe vers un octet, cela représente exactement 64 Kio (kibioctets) de mémoire vive adressable.">
+**Mise en situation :** Soit un microcontrôleur historique doté d'un bus d'adresse de 16 bits de large. Quelle est la quantité maximale théorique de mémoire vive (RAM) que ce processeur peut adresser de manière directe, en considérant un adressage par octet ?
+</SolvedExercise>
+
+<SolvedExercise title="Analyse de la bande passante d'un bus" solution="La formule de la bande passante est : $\text{Bande Passante} = \text{Largeur du bus (octets)} \times \text{Fréquence du bus (Hz)}$.\n1. Largeur du bus = 32 bits = 4 octets.\n2. Fréquence = 100 MHz = $100 \times 10^6$ Hz.\n3. $\text{Bande Passante} = 4 \times 100 \times 10^6 = 400 \times 10^6$ octets/s = 400 Mo/s.">
+**Cas pratique / Application :** Un bus système reliant la mémoire centrale au CPU a une largeur de 32 bits et fonctionne à une fréquence d'horloge de 100 MHz. **Calculez** la bande passante maximale théorique de ce bus en mégaoctets par seconde (Mo/s).
+</SolvedExercise>
+
+### Exercices à Résoudre
+
+Mettez en **application** vos connaissances en résolvant les problèmes numériques suivants :
+
+<Quiz mode="standard" durationLimit={300}>
+  <Question q="Combien d'octets de mémoire (capacité) peut-on adresser au maximum avec un bus d'adresse de 32 bits de large ?" explanation="Le nombre d'adresses possibles est de 2^32, soit exactement 4 294 967 296 octets (soit 4 Gio).">
+    <Option text="1 048 576 octets" correct={false} />
+    <Option text="16 777 216 octets" correct={false} />
+    <Option text="4 294 967 296 octets" correct={true} />
+    <Option text="65 536 octets" correct={false} />
+  </Question>
+</Quiz>
+
+<UnsolvedExercise question="Combien d'octets de mémoire peuvent être adressés directement avec un bus d'adresse de 32 bits de large ?" correctAnswer={4294967296} tolerance={0} solution="Le nombre d'adresses possibles est de 2^32, soit exactement 4 294 967 296 octets (4 Gio)." />
+
+<UnsolvedExercise question="Si un CPU fonctionne à une fréquence de 2 GHz (soit 2 000 000 000 Hz) et qu'une instruction requiert en moyenne 4 cycles d'horloge pour s'exécuter, quel est le temps moyen d'exécution d'une instruction en nanosecondes (ns) ?" correctAnswer={2} tolerance={0.01} solution="La période d'un cycle est T = 1 / F = 1 / (2 * 10^9) secondes = 0.5 nanoseconde. Ainsi, 4 cycles d'horloge prennent 4 * 0.5 ns = 2 nanosecondes." />
+
+---
+
+## 🏛️ Analyse Dialoguée & Réflexion Critique
+
+### 🔍 Esprit Critique (CriticalThinking)
+<CriticalThinking>
+**Le goulot d'étranglement de von Neumann :**
+Dans cette architecture, l'unité centrale et la mémoire centrale sont séparées, et les données et instructions transitent par les mêmes bus système. Comme le processeur est infiniment plus rapide que la mémoire pour effectuer ses calculs, il passe une grande partie de son temps à attendre l'arrivée des données. Ce goulet d'étranglement est le défi majeur de l'informatique haute performance. Comment les architectures modernes tentent-elles de le contourner (pensez aux mémoires caches L1, L2, L3) ?
+</CriticalThinking>
+
+### ⚔️ Débat Scientifique : von Neumann vs Harvard
+Dans l'architecture de von Neumann, code et données sont unifiés. Dans l'architecture Harvard, les instructions et les données ont des bus et des mémoires physiquement séparés.
+- **Avantages de von Neumann :** Grande flexibilité d'utilisation de la RAM (le code peut être réécrit ou chargé dynamiquement, allocation dynamique de la mémoire simplifiée).
+- **Avantages de Harvard :** Accès simultané au code et aux données en un seul cycle (pas de goulot d'étranglement), absence de risque d'exécution de données malveillantes (sécurité renforcée). Utilisé principalement dans les processeurs de signaux numériques (DSP) et les systèmes embarqués critiques.
+
+### 🏛️ Tuteur Socratique : Analyse Personnelle
+<SocraticInput 
+  question="Pourquoi le fait de stocker à la fois le code (instructions) et les données dans la même mémoire physique peut-il poser des problèmes de performance dans un ordinateur ?" 
+  idealAnswer="Cela crée ce que l'on appelle le goulot d'étranglement de von Neumann (von Neumann bottleneck), car le processeur ne peut pas lire simultanément une instruction et lire/écrire une donnée depuis/vers la mémoire centrale à l'aide du même bus unifié." 
+  customCriteriaString="L'apprenant doit obligatoirement mentionner le terme de 'goulot d'étranglement de von Neumann' (ou 'von Neumann bottleneck') et expliquer que le CPU ne peut pas accéder simultanément aux instructions et aux données à cause du partage du même bus ou de la même mémoire physique." 
+/>
+
+---
+
+## 🧩 Activités de Synthèse
+
+### 🗂️ Association Conceptuelle (CardSort)
+Associez chaque grand concept de l'architecture des processeurs à sa définition exacte en réalisant l'activité d'association ci-dessous :
+
+<CardSort pairsString='[
+  {"id": "1", "concept": "Unité de Contrôle", "definition": "Supervise le séquencement et le décodage des instructions lues depuis la mémoire."},
+  {"id": "2", "concept": "UAL", "definition": "Réalise les calculs arithmétiques élémentaires et les opérations logiques fondamentales (ET, OU, etc.)."},
+  {"id": "3", "concept": "Registres", "definition": "Zones de stockage de données ultra-rapides et de petite taille internes au CPU."},
+  {"id": "4", "concept": "Bus de Données", "definition": "Canal physique acheminant les bits de données entre le processeur et la mémoire."}
+]' />
+
+### 📜 L'histoire des architectures (Timeline)
+Voici les jalons chronologiques de la conceptualisation et du développement des architectures d'ordinateurs :
+
+<Timeline items={[
+  {
+    "year": "1945",
+    "title": "Rapport sur l'EDVAC",
+    "description": "John von Neumann formalise l'architecture unifiée d'ordinateur à programme enregistré dans un document historique resté célèbre."
+  },
+  {
+    "year": "1949",
+    "title": "EDSAC au Royaume-Uni",
+    "description": "Maurice Wilkes et son équipe conçoivent et construisent l'EDSAC, le tout premier ordinateur pratique à programme enregistré à grande échelle opérationnel."
+  },
+  {
+    "year": "1951",
+    "title": "UNIVAC I commercial",
+    "description": "Premier ordinateur commercialisé à grande échelle aux États-Unis, mettant en application directe les principes de von Neumann pour le traitement de données civiles."
+  }
+]} />
+
+---
+
+## 🏁 Clôture & Consolidation
+
+### 🔄 Résumé de Fin de Chapitre (Summary)
+<Summary items={[
+  "L'architecture de von Neumann unifie les données et les instructions dans un même espace mémoire physique.",
+  "Le processeur orchestre l'exécution séquentielle des programmes à travers le cycle infini de recherche, décodage et exécution (Fetch-Decode-Execute).",
+  "Le goulot d'étranglement de von Neumann est la limitation de vitesse intrinsèque due au partage du bus de données pour charger à la fois le code et les variables."
+]} />
+
+### 💡 Prochaines Étapes (WhatsNext)
+<WhatsNext items={[
+  "Consultez les cours de niveau L1 en systèmes d'exploitation pour voir comment le noyau Linux ou Windows orchestre ces accès matériels.",
+  "Explorez le module d'Assembleur x86 et ARM pour apprendre à écrire du code machine directement exécuté par ces composants matériels."
+]} />
+
+### Glossary
+- **Mémoire Centrale (RAM) :** Dispositif stockant temporairement les données et les programmes en cours d'exécution.
+- **Processeur (CPU) :** L'unité d'exécution de l'ordinateur qui orchestre et exécute les instructions logicielles.
+- **Unité Arithmétique et Logique (UAL) :** Partie du processeur chargée d'effectuer les opérations mathématiques et logiques de base.
+- **Cycle Fetch-Decode-Execute :** Cycle d'exécution fondamental du processeur consistant à récupérer une instruction, la décoder, puis l'exécuter.
+
+### References
+
+[1] von Neumann, J. (1945). *First Draft of a Report on the EDVAC*. Moore School of Electrical Engineering, University of Pennsylvania. [Google Books](https://books.google.com/books?q=von+Neumann)
+[2] Patterson, D. A., & Hennessy, J. L. (2017). *Computer Organization and Design: The Hardware/Software Interface*. Morgan Kaufmann, Boston, MA. [Google Books](https://books.google.com/books?q=Patterson)

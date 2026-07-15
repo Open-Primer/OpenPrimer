@@ -29,6 +29,7 @@ import { Biography } from './Biography';
 import { MatchingEvaluation } from './MatchingEvaluation';
 import { ReorderEvaluation } from './ReorderEvaluation';
 import { LawLink } from './LawLink';
+import { NestingContext } from './CitationContext';
 
 // New Visual and Interactive Components
 import { Mermaid } from './Mermaid';
@@ -79,6 +80,17 @@ import { ResearchFocus } from './ResearchFocus';
 import { RecentNewsBridge } from './RecentNewsBridge';
 
 import { useLanguage } from '@/context/LanguageContext';
+
+function withDisabledOverlays<T extends React.ComponentType<any>>(Component: T): T {
+  const WrappedComponent = (props: any) => (
+    <NestingContext.Provider value={{ disableOverlays: true }}>
+      <Component {...props} />
+    </NestingContext.Provider>
+  );
+  WrappedComponent.displayName = `WithDisabledOverlays(${Component.displayName || Component.name || 'Component'})`;
+  return WrappedComponent as unknown as T;
+}
+
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 import { dbService } from '@/lib/db';
 import { MdxStatusProvider, useMdxStatus } from './MdxStatusContext';
@@ -2389,9 +2401,9 @@ const components = {
   Visual: CustomFigure,
   VisualMedia: CustomFigure,
   Image: CustomFigure,
-  Quiz,
-  Question,
-  Option,
+  Quiz: withDisabledOverlays(Quiz),
+  Question: withDisabledOverlays(Question),
+  Option: withDisabledOverlays(Option),
   Glossary,
   Video,
   AudioPlayer,
@@ -2407,10 +2419,10 @@ const components = {
   'FillInBlanks.Input': FillInBlanksWrapper.Input,
   FillInBlanksQuestion,
   MetaNote,
-  SolvedProblem,
+  SolvedProblem: withDisabledOverlays(SolvedProblem),
   Summary,
-  SelfEval,
-  SelfAssessment,
+  SelfEval: withDisabledOverlays(SelfEval),
+  SelfAssessment: withDisabledOverlays(SelfAssessment),
   // ─── Entity Overlays (inline hover cards) ────────────────────────────────
   LawLink,
   LienLoi: LawLink,
@@ -2454,12 +2466,12 @@ const components = {
   CorpsCeleste,
   CorpsCéleste,
   AstroLien,
-  EssayEvaluation,
-  OralEvaluation,
-  EvaluationOrale: OralEvaluation,
+  EssayEvaluation: withDisabledOverlays(EssayEvaluation),
+  OralEvaluation: withDisabledOverlays(OralEvaluation),
+  EvaluationOrale: withDisabledOverlays(OralEvaluation),
   Prerequisites,
   Epistemology,
-  DiagnosticQuiz,
+  DiagnosticQuiz: withDisabledOverlays(DiagnosticQuiz),
   ExternalSandbox,
   
   // Registering New Interactivity Widgets
@@ -2523,12 +2535,12 @@ const components = {
   ExplorateurGeographique: GeoMapExplorer,
   CardSort,
   AssociationPaires: CardSort,
-  MatchingEvaluation,
-  AssociationCorrespondance: MatchingEvaluation,
-  ReorderEvaluation,
-  ReordonnerItems: ReorderEvaluation,
-  SocraticInput,
-  AnalyseSocratique: SocraticInput,
+  MatchingEvaluation: withDisabledOverlays(MatchingEvaluation),
+  AssociationCorrespondance: withDisabledOverlays(MatchingEvaluation),
+  ReorderEvaluation: withDisabledOverlays(ReorderEvaluation),
+  ReordonnerItems: withDisabledOverlays(ReorderEvaluation),
+  SocraticInput: withDisabledOverlays(SocraticInput),
+  AnalyseSocratique: withDisabledOverlays(SocraticInput),
   Timeline,
   FriseChronologique: Timeline,
   pre: PreCodeInterceptor,
@@ -2570,10 +2582,10 @@ const components = {
   InteractiveQuote,
 
   // Opposing theories side-by-side
-  DivergingViews,
-  DivergingView: DivergingViews,
-  VisionsOpposees: DivergingViews,
-  VisionsOpposées: DivergingViews,
+  DivergingViews: withDisabledOverlays(DivergingViews),
+  DivergingView: withDisabledOverlays(DivergingViews),
+  VisionsOpposees: withDisabledOverlays(DivergingViews),
+  VisionsOpposées: withDisabledOverlays(DivergingViews),
 
   // Custom standard tag overrides
   a: (props: any) => {
@@ -2617,22 +2629,22 @@ const components = {
   Attitudes,
 
   // Evaluation & Assignments
-  SummativeEvaluation,
-  EvaluationSection,
+  SummativeEvaluation: withDisabledOverlays(SummativeEvaluation),
+  EvaluationSection: withDisabledOverlays(EvaluationSection),
   Assignment,
   Deadline,
   Submission,
-  Evaluation,
+  Evaluation: withDisabledOverlays(Evaluation),
   FinalProject,
   FinalWork,
   Format,
   Instructions,
-  FinalQuiz,
-  QuizQuestion,
+  FinalQuiz: withDisabledOverlays(FinalQuiz),
+  QuizQuestion: withDisabledOverlays(QuizQuestion),
   Answer,
   Description,
   Title,
-  FormativeQuiz,
+  FormativeQuiz: withDisabledOverlays(FormativeQuiz),
 
   // Callouts & Media aliases
   Callout,

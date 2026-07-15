@@ -3115,7 +3115,7 @@ function cleanBiographyAlerts(mdx: string): string {
       remainingText = remainingText.replace(subjectRegex, '');
     }
 
-    const bioText = remainingText.replace(/\[(?:Read more on Wikipedia|En savoir plus sur Wikipédia|Mehr auf Wikipedia lesen|Leer más en Wikipedia)\]\([^)]+\)/gi, '').trim();
+    const bioText = remainingText.replace(/\[(?:Read more on Wikipedia|En savoir plus sur Wikipédia|Mehr auf Wikipedia lesen|Leer más en Wikipedia)(?:\s*\([^)]*\))?\]\([^)]+\)/gi, '').trim();
     const cleanBio = bioText.replace(/^[:\-–—\s]+/g, '').trim();
 
     const escName = subjectName.replace(/"/g, '&quot;');
@@ -3524,11 +3524,11 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
   // Normalize Wikipedia / Wikipédia link text based on current language
   const wikiLabel = getWikipediaLabel(lang);
-  processed = processed.replace(/\[Wikip[eé]dia\]\((https?:\/\/[a-zA-Z0-9-.]+\.wikipedia\.org\/wiki\/[^)]*)\)/gi, `[${wikiLabel}]($1)`);
+  processed = processed.replace(/\[Wikip[eé]dia(?:\s*\([^)]*\))?\]\((https?:\/\/[a-zA-Z0-9-.]+\.wikipedia\.org\/wiki\/[^)]*)\)/gi, `[${wikiLabel}]($1)`);
 
   // Normalize "En savoir plus sur Wikipédia" / "Learn more on Wikipedia" link labels
   const learnMoreLabel = getLearnMoreWikipediaLabel(lang);
-  processed = processed.replace(/\[(?:En savoir plus sur Wikipédia|Learn more on Wikipedia|Saber más en Wikipedia|Mehr erfahren auf Wikipedia|Scopri di più su Wikipedia|Saiba mais na Wikipedia|在维基百科上了解更多)\]\((https?:\/\/[a-zA-Z0-9-.]+\.wikipedia\.org\/wiki\/[^)]*)\)/gi, `[${learnMoreLabel}]($1)`);
+  processed = processed.replace(/\[(?:En savoir plus sur Wikipédia|Learn more on Wikipedia|Saber más en Wikipedia|Mehr erfahren auf Wikipedia|Scopri di più su Wikipedia|Saiba mais na Wikipedia|在维基百科上了解更多)(?:\s*\([^)]*\))?\]\((https?:\/\/[a-zA-Z0-9-.]+\.wikipedia\.org\/wiki\/[^)]*)\)/gi, `[${learnMoreLabel}]($1)`);
 
 
   // Remove markdown wrapping (emphasis/strong) around JSX tags to prevent MDX parser escaping them as raw text
@@ -3904,12 +3904,13 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
         let definition = itemMatch[2].trim();
 
         // Format Wikipedia links in the definition to blue underlined links without outer bracket styling
-        definition = definition.replace(/\[?\[?(Wikip[eé]dia)\]?\]?\((https?:\/\/[^\s)]+)\)\]?/gi, (m, label, url) => {
-          return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 underline font-semibold transition-colors">Wikipédia</a>`;
+        definition = definition.replace(/\[?\[?(Wikip[eé]dia|Wikipedia)(?:\s*\([^)]*\))?\]?\]?\((https?:\/\/[^\s)]+)\)\]?/gi, (m, label, url) => {
+          const resolvedLabel = label.toLowerCase().startsWith('wikip') && label.toLowerCase().includes('é') ? 'Wikipédia' : 'Wikipedia';
+          return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 underline font-semibold transition-colors">${resolvedLabel}</a>`;
         });
         
         // Also remove any wrapping brackets around the Wikipedia link if they exist, e.g. " [Wikipédia]" or " (Wikipédia)"
-        definition = definition.replace(/\[\s*(<a\b[^>]*>Wikip[eé]dia<\/a>)\s*\]/gi, '$1');
+        definition = definition.replace(/\[\s*(<a\b[^>]*>(?:Wikip[eé]dia|Wikipedia)<\/a>)\s*\]/gi, '$1');
 
         glossaryItems.push({
           term,
@@ -5486,7 +5487,7 @@ const TYPE_SUFFIXES: Record<string, Record<string, string[]>> = {
 function extractDatesOrCentury(desc: string | null, extract: string | null): string | null {
   if (!desc && !extract) return null;
   const text = `${desc || ''} ${extract || ''}`.slice(0, 150);
-  const parenRegex = /\(([^)]*(?:\d{3,4}|[IVXLCDM]+e?\\s*siècle|century|BC|av\\.|J\\.-C\\.)[^)]*)\)/i;
+  const parenRegex = /\(([^)]*(?:\d{3,4}|[IVXLCDM]+e?\s*siècle|century|BC|av\.|J\.-C\.)[^)]*)\)/i;
   const match = text.match(parenRegex);
   if (match) {
     const cleaned = match[1].trim();
@@ -5497,7 +5498,7 @@ function extractDatesOrCentury(desc: string | null, extract: string | null): str
     }
   }
   if (desc) {
-    const centuryRegex = /(\\b[IVXLCDM]+e?\\s*siècle\\b|\\b\\d+(?:th|st|nd|rd)\\s*century\\b)/i;
+    const centuryRegex = /(\b[IVXLCDM]+e?\s*siècle\b|\b\d+(?:th|st|nd|rd)\s*century\b)/i;
     const centMatch = desc.match(centuryRegex);
     if (centMatch) {
       return centMatch[1].trim();
@@ -5622,9 +5623,19 @@ export async function resolveWikiDetails(
   }
 
   // Helper to commit and cache at both levels
-  const commit = (result: WikiDetails) => {
+  const commit = async (result: WikiDetails) => {
     if (type === 'person' || type === 'character') {
-      result.dates = extractDatesOrCentury(result.description, result.summary);
+      if (!result.dates) {
+        result.dates = extractDatesOrCentury(result.description, result.summary);
+      }
+      if (!result.dates) {
+        try {
+          const actionRes = await fetchWikiDetailsFromActionApi(resolvedTitle || formattedName, langCode);
+          if (actionRes && actionRes.summary) {
+            result.dates = extractDatesOrCentury(actionRes.summary, actionRes.summary);
+          }
+        } catch (_) {}
+      }
     }
     wikipediaCacheExtended[cacheKey] = { ...result, fetchedAt: Date.now() };
     wikiDetailsRuntimeCache.set(cacheKey, result);
@@ -5641,7 +5652,7 @@ export async function resolveWikiDetails(
     const initialRes = await fetchWikiDetailsFromRest(formattedName, langCode);
     if (initialRes) {
       // Cache-hit on first try — commit and return immediately
-      return commit(initialRes);
+      return await commit(initialRes);
     } else {
       // Not found directly — try a fuzzy search to get the canonical title
       const searched = await fetchSearchFirstMatchTitle(name, langCode, type);
@@ -5656,12 +5667,12 @@ export async function resolveWikiDetails(
     if (searched) resolvedTitle = searched;
   }
 
-  if (stage1Result) return commit(stage1Result);
+  if (stage1Result) return await commit(stage1Result);
 
   // Stage 2: Action API on activeLang
   try {
     const r = await fetchWikiDetailsFromActionApi(resolvedTitle, langCode);
-    if (r) return commit(r);
+    if (r) return await commit(r);
   } catch (_) {}
 
   // Stage 3: Interlanguage links (originalLang -> activeLang)
@@ -5680,7 +5691,7 @@ export async function resolveWikiDetails(
             const translatedTitle = (match['*'] as string).replace(/ /g, '_');
             const r = await fetchWikiDetailsFromRest(translatedTitle, langCode) ||
                       await fetchWikiDetailsFromActionApi(translatedTitle, langCode);
-            if (r) return commit(r);
+            if (r) return await commit(r);
           }
         }
       }
@@ -5704,13 +5715,13 @@ export async function resolveWikiDetails(
               const translatedTitle = (match['*'] as string).replace(/ /g, '_');
               const r = await fetchWikiDetailsFromRest(translatedTitle, langCode) ||
                         await fetchWikiDetailsFromActionApi(translatedTitle, langCode);
-              if (r) return commit(r);
+              if (r) return await commit(r);
             } else {
               const r = await fetchWikiDetailsFromRest(formattedName, 'en') ||
                         await fetchWikiDetailsFromActionApi(formattedName, 'en');
               if (r) {
                 r.url = `https://translate.google.com/translate?sl=en&tl=${langCode}&u=${encodeURIComponent(r.url || '')}`;
-                return commit(r);
+                return await commit(r);
               }
             }
           }
@@ -5726,7 +5737,7 @@ export async function resolveWikiDetails(
                 await fetchWikiDetailsFromActionApi(formattedName, origLang);
       if (r) {
         r.url = `https://translate.google.com/translate?sl=${origLang}&tl=${langCode}&u=${encodeURIComponent(r.url || '')}`;
-        return commit(r);
+        return await commit(r);
       }
     } catch (_) {}
   }

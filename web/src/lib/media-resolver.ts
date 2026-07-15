@@ -729,6 +729,118 @@ async function fetchGallicaImage(query: string): Promise<string | null> {
   }
 }
 
+// ─── Wellcome Collection (Catalogue API + IIIF) ────────────────────────────
+// Free, no API key. Exceptional for anatomy, surgery, pathology, history of medicine.
+// License: mostly Public Domain Mark (PDM) or CC-BY (verified via accessConditions).
+async function fetchWellcomeCollectionImage(query: string): Promise<{ url: string; sourceLabel: string; sourceUrl: string } | null> {
+  try {
+    const cleanQuery = query.trim();
+    const apiUrl = `https://api.wellcomecollection.org/catalogue/v2/images?query=${encodeURIComponent(cleanQuery)}&pageSize=5`;
+    const res = await fetchWithTimeout(apiUrl, {}, 6000);
+    if (!res.ok) return null;
+    const json = await safeResponseJson(res, 'Wellcome Collection images search');
+    const results: any[] = json?.results ?? [];
+    for (const img of results) {
+      // Verify image is openly accessible (status: open)
+      const loc = img?.locations?.[0];
+      const isOpen = loc?.accessConditions?.some((a: any) => a?.status?.id === 'open');
+      if (!isOpen) continue;
+      // Build IIIF image URL from the IIIF info.json URL: replace /info.json with /full/800,/0/default.jpg
+      const iiifInfoUrl: string = loc?.url || '';
+      if (!iiifInfoUrl.includes('iiif.wellcomecollection.org')) continue;
+      const imageId = iiifInfoUrl.split('/image/')[1]?.split('/')[0];
+      if (!imageId) continue;
+      const imageUrl = `https://iiif.wellcomecollection.org/image/${imageId}/full/800,/0/default.jpg`;
+      const licenseLabel = loc?.license?.label || 'Public Domain';
+      const workTitle = img?.source?.title || cleanQuery;
+      const sourceLabel = `Wellcome Collection — "${workTitle}" (${licenseLabel})`;
+      const sourceUrl = `https://wellcomecollection.org/works/${img?.source?.id || ''}`;
+      console.log(`[WELLCOME] Found image for "${cleanQuery}": ${imageUrl}`);
+      return { url: imageUrl, sourceLabel, sourceUrl };
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[WELLCOME] fetchWellcomeCollectionImage failed for "${query}":`, err);
+    return null;
+  }
+}
+
+// ─── NLM Digital Collections (National Library of Medicine / NIH) ────────────
+// Free, no API key. ~70,000 historical images from the History of Medicine.
+// Best for: anatomical illustrations, portraits of physicians, surgical instruments.
+async function fetchNLMDigitalCollectionImage(query: string): Promise<{ url: string; sourceLabel: string; sourceUrl: string } | null> {
+  try {
+    const cleanQuery = query.trim();
+    const apiUrl = `https://collections.nlm.nih.gov/api/search?query=${encodeURIComponent(cleanQuery)}&schema=imageSearch&from=0&size=5`;
+    const res = await fetchWithTimeout(apiUrl, {}, 6000);
+    if (!res.ok) return null;
+    const json = await safeResponseJson(res, 'NLM Digital Collections search');
+    const items: any[] = json?.results?.items ?? [];
+    for (const item of items) {
+      // NLM returns a thumbnail URL in the localId field and full image via IIIF
+      const localId: string = item?.localId || '';
+      if (!localId) continue;
+      // Build the thumbnail / display image URL
+      const imageUrl = `https://collections.nlm.nih.gov/api/iiif/${encodeURIComponent(localId)}/full/800,/0/default.jpg`;
+      const title = item?.title || cleanQuery;
+      const sourceUrl = `https://collections.nlm.nih.gov/catalog/${localId}`;
+      const sourceLabel = `NLM Digital Collections / National Library of Medicine — "${title}" (Public Domain)`;
+      console.log(`[NLM] Found image for "${cleanQuery}": ${imageUrl}`);
+      return { url: imageUrl, sourceLabel, sourceUrl };
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[NLM] fetchNLMDigitalCollectionImage failed for "${query}":`, err);
+    return null;
+  }
+}
+
+// ─── OpenStax / Gray's Anatomy Wikimedia Commons Booster ─────────────────────
+// Searches Wikimedia Commons with source-specific suffixes to surface
+// OpenStax (CC-BY 4.0) and Gray's Anatomy 1918 (Public Domain) illustrations.
+async function fetchMedicalBookImage(
+  query: string,
+  source: 'grays' | 'openstax'
+): Promise<{ url: string; sourceLabel: string; sourceUrl?: string } | null> {
+  try {
+    const suffix = source === 'grays' ? 'Gray anatomy' : 'OpenStax';
+    const searchTerm = `${query} ${suffix}`;
+    const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(searchTerm)}&gsrnamespace=6&prop=imageinfo&iiprop=url|extmetadata&format=json&origin=*&gsrlimit=5`;
+    const res = await fetchWithTimeout(url, {}, 5000);
+    if (!res.ok) return null;
+    const json = await safeResponseJson(res, `Wikimedia ${source} search`);
+    const pages = json?.query?.pages;
+    if (!pages) return null;
+    for (const key of Object.keys(pages)) {
+      const imgInfo = pages[key]?.imageinfo?.[0];
+      const fileUrl: string = imgInfo?.url || '';
+      if (!fileUrl.match(/\.(jpg|jpeg|png|svg|webp)$/i)) continue;
+      if (source === 'grays') {
+        const license: string = (imgInfo?.extmetadata?.LicenseShortName?.value || '').toLowerCase();
+        // Gray's 1918 should be public domain
+        if (license && !license.includes('public domain') && !license.includes('pd') && !license.includes('cc')) continue;
+        console.log(`[GRAYS-ANATOMY] Found PD image for "${query}": ${fileUrl}`);
+        return {
+          url: fileUrl,
+          sourceLabel: "Gray's Anatomy (Henry Gray, 1918) — Wikimedia Commons (Public Domain)",
+          sourceUrl: imgInfo?.descriptionurl
+        };
+      } else {
+        console.log(`[OPENSTAX] Found CC-BY image for "${query}": ${fileUrl}`);
+        return {
+          url: fileUrl,
+          sourceLabel: 'OpenStax / Rice University — Wikimedia Commons (CC BY 4.0)',
+          sourceUrl: imgInfo?.descriptionurl
+        };
+      }
+    }
+    return null;
+  } catch (err) {
+    console.warn(`[MEDICAL-BOOK] fetchMedicalBookImage (${source}) failed for "${query}":`, err);
+    return null;
+  }
+}
+
 // ─── Internet Archive (Archive.org API) ───────────────────────────────────
 // Resolves royalty-free media (images, audio, or videos) from Archive.org.
 async function fetchArchiveOrgMedia(
@@ -1072,6 +1184,68 @@ async function searchCascade(
           url: gallicaImage, 
           sourceLabel: 'Gallica / Bibliothèque nationale de France (Domaine Public)',
           sourceUrl: gallicaImage,
+          isSoftValidated: soft ? true : undefined
+        };
+      }
+    }
+  }
+
+  // 3b. Medical/Anatomy specialist sources — highest-quality institutional imagery
+  const isMedical = disc.includes('anat') || disc.includes('medic') || disc.includes('physiol') ||
+    disc.includes('biolog') || disc.includes('chirur') || disc.includes('pathol') ||
+    disc.includes('surg') || disc.includes('histol') || disc.includes('embry') ||
+    disc.includes('neuros') || disc.includes('cardio') || disc.includes('ophtalm') ||
+    disc.includes('dent') || disc.includes('pharma') || disc.includes('santé') ||
+    disc.includes('health') || disc.includes('cliniq') || disc.includes('clinic');
+  if (isMedical) {
+    // Gray's Anatomy 1918 (Public Domain) — highest priority for anatomy illustrations
+    const graysResult = await fetchMedicalBookImage(queryEnglish, 'grays');
+    if (graysResult) {
+      const { valid, soft } = await validateWithSoftFallback(graysResult.url, validationDesc || queryEnglish, queryEnglish);
+      if (valid) {
+        return {
+          url: graysResult.url,
+          sourceLabel: graysResult.sourceLabel,
+          sourceUrl: graysResult.sourceUrl,
+          isSoftValidated: soft ? true : undefined
+        };
+      }
+    }
+    // Wellcome Collection — exceptional for history of medicine, surgical illustrations, pathology
+    const wellcomeResult = await fetchWellcomeCollectionImage(queryEnglish);
+    if (wellcomeResult) {
+      const { valid, soft } = await validateWithSoftFallback(wellcomeResult.url, validationDesc || queryEnglish, queryEnglish);
+      if (valid) {
+        return {
+          url: wellcomeResult.url,
+          sourceLabel: wellcomeResult.sourceLabel,
+          sourceUrl: wellcomeResult.sourceUrl,
+          isSoftValidated: soft ? true : undefined
+        };
+      }
+    }
+    // OpenStax (CC-BY 4.0) — modern, high-quality anatomy & biology diagrams
+    const openstaxResult = await fetchMedicalBookImage(queryEnglish, 'openstax');
+    if (openstaxResult) {
+      const { valid, soft } = await validateWithSoftFallback(openstaxResult.url, validationDesc || queryEnglish, queryEnglish);
+      if (valid) {
+        return {
+          url: openstaxResult.url,
+          sourceLabel: openstaxResult.sourceLabel,
+          sourceUrl: openstaxResult.sourceUrl,
+          isSoftValidated: soft ? true : undefined
+        };
+      }
+    }
+    // NLM Digital Collections — ~70,000 images from the History of Medicine
+    const nlmResult = await fetchNLMDigitalCollectionImage(queryEnglish);
+    if (nlmResult) {
+      const { valid, soft } = await validateWithSoftFallback(nlmResult.url, validationDesc || queryEnglish, queryEnglish);
+      if (valid) {
+        return {
+          url: nlmResult.url,
+          sourceLabel: nlmResult.sourceLabel,
+          sourceUrl: nlmResult.sourceUrl,
           isSoftValidated: soft ? true : undefined
         };
       }

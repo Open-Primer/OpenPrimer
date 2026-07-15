@@ -3,70 +3,7 @@
 import React, { useState } from 'react';
 import { Swords, ChevronDown, ChevronUp, BookOpen, User, Calendar } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
-
-interface DivergingViewsStrings {
-  header: string;
-  view_a_label: string;
-  view_b_label: string;
-  read_more: string;
-  read_less: string;
-  era: string;
-  proponents: string;
-  verdict: string;
-}
-
-const STRINGS: Record<string, DivergingViewsStrings> = {
-  EN: {
-    header: 'Opposing Views',
-    view_a_label: 'First Perspective',
-    view_b_label: 'Second Perspective',
-    read_more: 'Read more',
-    read_less: 'Read less',
-    era: 'Period',
-    proponents: 'Key proponents',
-    verdict: 'Historical verdict',
-  },
-  FR: {
-    header: 'Visions Opposées',
-    view_a_label: 'Première Perspective',
-    view_b_label: 'Seconde Perspective',
-    read_more: 'Lire la suite',
-    read_less: 'Réduire',
-    era: 'Époque',
-    proponents: 'Défenseurs clés',
-    verdict: 'Verdict historique',
-  },
-  ES: {
-    header: 'Visiones Opuestas',
-    view_a_label: 'Primera Perspectiva',
-    view_b_label: 'Segunda Perspectiva',
-    read_more: 'Leer más',
-    read_less: 'Leer menos',
-    era: 'Período',
-    proponents: 'Defensores clave',
-    verdict: 'Veredicto histórico',
-  },
-  DE: {
-    header: 'Gegensätzliche Ansichten',
-    view_a_label: 'Erste Perspektive',
-    view_b_label: 'Zweite Perspektive',
-    read_more: 'Mehr lesen',
-    read_less: 'Weniger lesen',
-    era: 'Zeitraum',
-    proponents: 'Wichtigste Vertreter',
-    verdict: 'Historisches Urteil',
-  },
-  ZH: {
-    header: '对立观点',
-    view_a_label: '第一视角',
-    view_b_label: '第二视角',
-    read_more: '阅读更多',
-    read_less: '收起',
-    era: '时期',
-    proponents: '主要代表人物',
-    verdict: '历史裁决',
-  },
-};
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface ViewData {
   /** Name / label of the theory, doctrine, or position */
@@ -122,7 +59,7 @@ function resolveAccent(color?: string, fallback: AccentKey = 'blue'): AccentKey 
 interface ViewCardProps {
   view: ViewData;
   accentKey: AccentKey;
-  t: DivergingViewsStrings;
+  t: (key: string) => string;
   side: 'A' | 'B';
 }
 
@@ -153,7 +90,7 @@ const ViewCard = ({ view, accentKey, t, side }: ViewCardProps) => {
           {view.era && (
             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${a.badge}`}>
               <Calendar className="w-2.5 h-2.5" />
-              {t.era} : {view.era}
+              {t("diverging_views_era")} : {view.era}
             </span>
           )}
           {view.proponents && (
@@ -184,9 +121,9 @@ const ViewCard = ({ view, accentKey, t, side }: ViewCardProps) => {
             className={`self-start mt-auto flex items-center gap-1 text-[9px] font-black uppercase tracking-widest transition-colors cursor-pointer ${a.title} hover:opacity-80`}
           >
             {expanded ? (
-              <><ChevronUp className="w-3 h-3" />{t.read_less}</>
+              <><ChevronUp className="w-3 h-3" />{t("diverging_views_read_less")}</>
             ) : (
-              <><ChevronDown className="w-3 h-3" />{t.read_more}</>
+              <><ChevronDown className="w-3 h-3" />{t("diverging_views_read_more")}</>
             )}
           </button>
         </>
@@ -203,8 +140,10 @@ export const DivergingViews = ({
   verdictEra,
 }: DivergingViewsProps) => {
   const { language } = useLanguage();
-  const langKey = (language || 'EN').toUpperCase();
-  const t = STRINGS[langKey] || STRINGS.EN;
+  const t = (key: string) => {
+    const dict = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+    return dict[key] || key;
+  };
 
   const viewA = parseView(rawA);
   const viewB = parseView(rawB);
@@ -227,7 +166,7 @@ export const DivergingViews = ({
         </div>
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-0.5">
-            {t.header}
+            {t("diverging_views_header")}
           </p>
           <h3 className="text-base font-black text-white leading-tight">
             {topic}
@@ -271,7 +210,7 @@ export const DivergingViews = ({
             </div>
             <div>
               <p className="text-[9px] font-black uppercase tracking-widest text-amber-400 mb-1 select-none">
-                {t.verdict}{verdictEra ? ` — ${verdictEra}` : ''}
+                {t("diverging_views_verdict")}{verdictEra ? ` — ${verdictEra}` : ''}
               </p>
               <p className="text-[13px] text-slate-300 leading-relaxed">{verdict}</p>
             </div>

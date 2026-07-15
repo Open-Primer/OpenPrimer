@@ -336,14 +336,16 @@ const generateMeshForPreset = (presetId: string): Mesh[] => {
               const ry = Math.cos(theta);
               const rz = Math.sin(theta) * Math.sin(phi);
               const dot = dir.x * rx + dir.y * ry + dir.z * rz;
-              return Math.abs(0.38 + 0.62 * dot);
+              const val = 0.5 + 0.5 * dot;
+              return val >= 0 ? val : Math.abs(val) * 0.2;
             },
             (theta, phi) => {
               const rx = Math.sin(theta) * Math.cos(phi);
               const ry = Math.cos(theta);
               const rz = Math.sin(theta) * Math.sin(phi);
               const dot = dir.x * rx + dir.y * ry + dir.z * rz;
-              return (0.38 + 0.62 * dot) >= 0 ? '+' : '-';
+              const val = 0.5 + 0.5 * dot;
+              return val >= 0 ? '+' : '-';
             },
             75,
             12,
@@ -368,14 +370,16 @@ const generateMeshForPreset = (presetId: string): Mesh[] => {
               const ry = Math.cos(theta);
               const rz = Math.sin(theta) * Math.sin(phi);
               const dot = dir.x * rx + dir.y * ry + dir.z * rz;
-              return Math.abs(0.38 + 0.62 * dot);
+              const val = 0.414 + 0.586 * dot;
+              return val >= 0 ? val : Math.abs(val) * 0.2;
             },
             (theta, phi) => {
               const rx = Math.sin(theta) * Math.cos(phi);
               const ry = Math.cos(theta);
               const rz = Math.sin(theta) * Math.sin(phi);
               const dot = dir.x * rx + dir.y * ry + dir.z * rz;
-              return (0.38 + 0.62 * dot) >= 0 ? '+' : '-';
+              const val = 0.414 + 0.586 * dot;
+              return val >= 0 ? '+' : '-';
             },
             75,
             12,
@@ -401,14 +405,16 @@ const generateMeshForPreset = (presetId: string): Mesh[] => {
               const ry = Math.cos(theta);
               const rz = Math.sin(theta) * Math.sin(phi);
               const dot = dir.x * rx + dir.y * ry + dir.z * rz;
-              return Math.abs(0.38 + 0.62 * dot);
+              const val = 0.366 + 0.634 * dot;
+              return val >= 0 ? val : Math.abs(val) * 0.2;
             },
             (theta, phi) => {
               const rx = Math.sin(theta) * Math.cos(phi);
               const ry = Math.cos(theta);
               const rz = Math.sin(theta) * Math.sin(phi);
               const dot = dir.x * rx + dir.y * ry + dir.z * rz;
-              return (0.38 + 0.62 * dot) >= 0 ? '+' : '-';
+              const val = 0.366 + 0.634 * dot;
+              return val >= 0 ? '+' : '-';
             },
             75,
             12,
@@ -663,8 +669,9 @@ export const QuantumOrbitalExplorer = ({
             colorBase = face.phase === '+' ? '#3b82f6' : '#ef4444';
           }
 
-          // Inner shells or outer shells transparent/solid blending
-          const opacity = (meshIdx === 0 && activeMeshes.length > 1) ? 0.32 : 0.82;
+          // Inner shells or outer shells transparent/solid blending (hybrid lobes should be uniform)
+          const isHybrid = mode === 'preset' && activePreset.id.startsWith('sp');
+          const opacity = (meshIdx === 0 && activeMeshes.length > 1 && !isHybrid) ? 0.32 : 0.82;
 
           return { p0, p1, p2, p3, avgZ, intensity, colorBase, opacity };
         });

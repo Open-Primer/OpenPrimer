@@ -1,0 +1,106 @@
+---
+title: "2. Outils Mathématiques, Code & Graphiques"
+subject: "Computer_Science"
+level: "L1"
+module: "Sandbox de Test"
+order: 2
+---
+
+# 2. Outils Mathématiques, Code & Graphiques
+
+Cette deuxième leçon regroupe tous les outils interactifs dédiés aux **sciences formelles, à la manipulation d'équations, au traçage de courbes mathématiques, à l'analyse de données expérimentales et à la programmation**.
+
+Ils permettent de rendre l'apprentissage actif et d'ancrer les concepts abstraits par l'expérimentation directe.
+
+---
+
+## 📈 Tracé & Manipulation de Fonctions Mathématiques
+
+### 📊 Traceur de Fonctions 2D (FunctionPlotter)
+Un graphique cartésien de haute précision capable de tracer n'importe quelle expression mathématique à la volée. L'utilisateur peut zoomer et survoler la courbe pour voir les valeurs $(x, y)$.
+
+<FunctionPlotter 
+  mode="expression" 
+  title="Courbe Polynomiale du Second Degré" 
+  expression="x^2 - 3x - 1" 
+  xMin={-5} 
+  xMax={5} 
+  yMin={-5} 
+  yMax={5} 
+  xLabel="Axe X (Variable)"
+  yLabel="Axe Y (Résultat : f(x))"
+/>
+
+### 🎛️ Manipulateur de Coefficients d'Équation (FunctionManipulator)
+Cette simulation interactive permet d'ajuster les coefficients d'une équation à l'aide de curseurs tactiles et d'observer instantanément la déformation de la courbe (linéaire, quadratique, sinusoïdale, exponentielle ou logarithmique).
+
+<FunctionManipulator gradeLevel="university" />
+
+---
+
+## 🧮 Équations & Arithmétique Active
+
+### 🔢 Résolveur pas-à-pas d'équations algébriques (EquationManipulator)
+Un puzzle d'algèbres interactif où l'étudiant doit effectuer des opérations inverses successives (additionner, multiplier, diviser par un terme) de chaque côté de l'égalité afin de réduire et d'isoler l'inconnue $x$.
+
+<EquationManipulator gradeLevel="high_school" />
+
+### 🍰 Explorateur de Mathématiques de Base (BasicMathExplorer)
+Un laboratoire visuel et intuitif conçu pour manipuler concrètement les fractions, les rapports arithmétiques, l'ordre des opérations ou les divisions avec reste.
+
+<BasicMathExplorer initialTab="fractions" />
+
+---
+
+## 💻 Programmation Active & Console de Test
+
+### 🖥️ Bac à Sable de Programmation Web (CodeSandbox)
+Un éditeur de code léger et réactif, équipé d'un moteur d'exécution en temps réel et d'un interpréteur HTML/JS sécurisé. Il permet aux apprenants d'écrire et de lancer du code directement dans la leçon.
+
+<CodeSandbox 
+  title="Console interactive JavaScript - Algorithme de Fibonacci" 
+  language="javascript" 
+  initialCode={`// Générateur de la suite de Fibonacci
+function fibonacci(n) {
+  let suite = [0, 1];
+  for (let i = 2; i < n; i++) {
+    suite.push(suite[i - 1] + suite[i - 2]);
+  }
+  return suite;
+}
+
+const termes = 10;
+console.log("Les " + termes + " premiers termes de Fibonacci :");
+console.log(JSON.stringify(fibonacci(termes)));
+`}
+  height="300px"
+/>
+
+---
+
+## 📉 Analyse de Données & Comparaisons
+
+### 📊 Analyseur de données graphiques & Régression (DataChart)
+Cet outil permet de tracer des points expérimentaux, d'ajouter une courbe de régression linéaire ou polynomiale, et d'analyser le coefficient de corrélation de Pearson $R^2$.
+
+<DataChart 
+  title="Rapport d'Analyse : Temps de calcul en fonction de la taille de l'entrée (N)"
+/>
+
+### ↕️ Glisseur de Comparaison Visuelle (ComparisonSlider)
+Permet d'opposer deux représentations ou deux états structurels de manière fluide et interactive grâce à une poignée de séparation coulissante. Idéal pour comparer des versions de code, des algorithmes ou des schémas.
+
+<ComparisonSlider
+  beforeLabel="Paradigme Impératif"
+  afterLabel="Paradigme Fonctionnel"
+  beforeContent="let total = 0;\nfor (let i = 0; i < nombres.length; i++) {\n  if (nombres[i] % 2 === 0) {\n    total += nombres[i] * 2;\n  }\n}"
+  afterContent="const total = nombres\n  .filter(x => x % 2 === 0)\n  .map(x => x * 2)\n  .reduce((acc, x) => acc + x, 0);"
+/>
+
+---
+
+## 🏁 Prochaines Étapes
+<WhatsNext items={[
+  "Passez à la Leçon 3 pour explorer les simulations scientifiques physiques, quantiques et moléculaires 3D complexes !",
+  "Réalisez les évaluations de la Leçon 4 pour valider vos acquis mathématiques et informatiques."
+]} />

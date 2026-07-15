@@ -5,6 +5,7 @@ import * as Popover from '@radix-ui/react-popover';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useParams } from 'next/navigation';
+import { useNesting } from './CitationContext';
 import { Scale, Landmark, Shield, Gavel, Book, ExternalLink, HelpCircle } from 'lucide-react';
 import { LEGAL_DATABASES, type LegalDatabaseConfig } from '@/config/legalDatabases';
 import { clsx, type ClassValue } from 'clsx';
@@ -50,6 +51,7 @@ export const LawLink = ({
 }: LawLinkProps) => {
   const { language } = useLanguage();
   const params = useParams();
+  const { disableOverlays } = useNesting();
   const isFr = (language || 'en').toLowerCase().startsWith('fr');
   const [open, setOpen] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
@@ -119,6 +121,23 @@ export const LawLink = ({
   const jurisdiction = isFr ? config.jurisdictionFr : config.jurisdictionEn;
   const actionText = isFr ? config.actionTextFr : config.actionTextEn;
   const finalExcerpt = excerpt || (isFr ? config.defaultExcerptFr : config.defaultExcerptEn);
+
+  if (disableOverlays) {
+    return (
+      <a
+        href={finalUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn(
+          "underline transition-all duration-300",
+          config.textColor,
+          config.underlineClass
+        )}
+      >
+        {children}
+      </a>
+    );
+  }
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>

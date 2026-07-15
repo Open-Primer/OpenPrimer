@@ -1,0 +1,103 @@
+---
+title: "5. Final Summative Evaluation"
+subject: "Computer_Science"
+level: "L1"
+module: "Summative Terminal Exam"
+order: 5
+summative: true
+---
+
+<Prerequisites items={[
+  "Lesson 1: Historical Ciphers & Foundations",
+  "Lesson 2: Symmetric Encryption & Entropy",
+  "Lesson 3: Public Key Cryptography & Key Exchange",
+  "Lesson 4: The RSA Cryptosystem & Digital Signatures"
+]} />
+
+# 5. Final Summative Evaluation
+
+Welcome to the Final Summative Evaluation for the **Introduction to Cryptography** course. This exam is designed to test your understanding of classical ciphers, symmetric encryption, entropy, key exchange, and the mathematical foundations of the RSA cryptosystem.
+
+This evaluation consists of a series of theoretical questions, mathematical calculation exercises, and critical thinking assessments. Please read each question carefully and ensure your answers are precise and mathematically rigorous.
+
+---
+
+## Part 1: Comprehensive Theoretical Assessment
+
+Use the interactive quiz below to test your knowledge of both symmetric and asymmetric paradigms.
+
+<Quiz isFinal={true} durationLimit={600} limit={1}>
+  <Question q="What is the core distinction between information-theoretic security (perfect secrecy) and complexity-theoretic security?" explanation="Information-theoretic security (like the One-Time Pad) means that the cipher cannot be broken even with infinite computational power because the ciphertext contains no information. Complexity-theoretic security (like AES or RSA) means that breaking the cipher is computationally infeasible for a bounded-time adversary under standard mathematical assumptions.">
+    <Option text="Information-theoretic security relies on the secrecy of the algorithm, while complexity-theoretic security relies on Kerckhoffs's Principle." correct={false} />
+    <Option text="Information-theoretic security cannot be broken even with infinite computational power, whereas complexity-theoretic security assumes bounded adversary computing power." correct={true} />
+    <Option text="Information-theoretic security requires asymmetric keypairs, while complexity-theoretic security requires symmetric keys." correct={false} />
+    <Option text="Information-theoretic security is only applicable to classical ciphers like the Caesar cipher." correct={false} />
+  </Question>
+
+  <Question q="In the Advanced Encryption Standard (AES), which transformation represents the sole source of non-linear confusion?" explanation="SubBytes is the only non-linear transformation in AES, utilizing an S-Box to translate bytes. ShiftRows and MixColumns are linear operations providing diffusion, and AddRoundKey is a simple linear XOR.">
+    <Option text="SubBytes" correct={true} />
+    <Option text="ShiftRows" correct={false} />
+    <Option text="MixColumns" correct={false} />
+    <Option text="AddRoundKey" correct={false} />
+  </Question>
+
+  <Question q="What is the Discrete Logarithm Problem (DLP) mathematically?" explanation="The DLP is the problem of finding the integer 'a' given A, g, and p such that g^a = A mod p, where p is prime and g is a generator.">
+    <Option text="Finding the prime factors p and q of a massive composite number n." correct={false} />
+    <Option text="Finding the exponent 'a' given A, g, and p such that g^a = A mod p." correct={true} />
+    <Option text="Finding the modular multiplicative inverse of e modulo phi(n)." correct={false} />
+    <Option text="Computing the greatest common divisor of two extremely large integers." correct={false} />
+  </Question>
+
+  <Question q="Why is the Electronic Codebook (ECB) mode of a block cipher considered highly insecure for complex data?" explanation="ECB mode encrypts identical plaintext blocks into identical ciphertext blocks, preserving visual or statistical patterns of the original data.">
+    <Option text="It requires a shared key that is twice as long as the block size." correct={false} />
+    <Option text="It does not utilize any key, relying entirely on the obscurity of the substitution table." correct={false} />
+    <Option text="It encrypts identical plaintext blocks into identical ciphertext blocks, preserving visual or statistical patterns." correct={true} />
+    <Option text="It can only be used to encrypt text messages of exactly 128 characters." correct={false} />
+  </Question>
+</Quiz>
+
+---
+
+## Part 2: Essay-Style Academic Review
+
+Please draft a detailed response to the following theoretical question. Your response will be parsed and evaluated by our academic AI tutor.
+
+<EssayEvaluation 
+  prompt="Critically analyze how the 'Key Distribution Problem' in symmetric cryptography led to the creation of Asymmetric Key Exchanges like Diffie-Hellman. In your essay, detail: (1) why symmetric cryptography is logistically challenging for massive global networks, (2) how Diffie-Hellman bypasses this problem mathematically using cyclic groups, and (3) the exact threat model (e.g., active vs. passive adversaries) that Diffie-Hellman addresses." 
+  gradingSystem="0/20" 
+  subject="Asymmetric Cryptography Foundations" 
+/>
+
+---
+
+## Part 3: Advanced Mathematical Logic
+
+Evaluate your understanding of the modular arithmetic relationships underlying asymmetric ciphers.
+
+<CardSort pairsString="Perfect Secrecy:P(M|C) = P(M)||RSA Key Relation:ed = 1 mod phi(n)||AES Block Size:128 bits||Diffie-Hellman Secret:g^(ab) mod p" />
+
+---
+
+## Part 4: Socratic Self-Reflection
+
+To conclude your terminal evaluation, reflect on the practical threat landscapes of the mathematical systems you have studied.
+
+<SocraticInput 
+  question="If Alice and Bob execute a perfect Diffie-Hellman Key Exchange over a public channel, but an active adversary, Mallory, intercepts the messages and injects her own public keys (Man-in-the-Middle attack), why does the mathematics of Diffie-Hellman fail to detect this attack?" 
+  idealAnswer="Diffie-Hellman does not provide authentication. The mathematics only guarantees that two parties can negotiate a key, but it cannot verify the identity of the parties. Therefore, Mallory can execute separate exchanges with Alice and Bob, acting as a secret middleman without either party knowing." 
+  customCriteriaString="Must mention that Diffie-Hellman lacks authentication, and explain that a Man-in-the-Middle can intercept and negotiate separate keys with each party."
+/>
+
+---
+
+<Summary items={[
+  "You have completed the comprehensive assessment of your L1 Cryptography course.",
+  "Classical ciphers demonstrate the vulnerabilities of mono-alphabetic substitution, which are solved by Shannon's perfect secrecy or modern block ciphers.",
+  "Public-key key exchange and RSA represent the pinnacle of modern internet transport security.",
+  "Security in the real world is a combination of mathematical complexity, correct implementation modes, and proper identity authentication."
+]} />
+
+<References>
+  * **Koblitz, N.** (1994). *A Course in Number Theory and Cryptography*. Springer-Verlag.
+  * **Paar, C., & Pelzl, J.** (2009). *Understanding Cryptography: A Textbook for Students and Practitioners*. Springer.
+</References>

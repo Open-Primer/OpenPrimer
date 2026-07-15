@@ -1,0 +1,150 @@
+---
+title: "« L'art de la résolution de problèmes: Genèse et rôle des algorithmes »"
+subject: "« Algorithmique fondamentale »"
+level: "« L1 »"
+module: "« L'art de la résolution de problèmes: Genèse et rôle des algorithmes »"
+order: 1
+---
+
+<Prerequisites itemsBase64="W3sidGl0bGUiOiJMb2dpcXVlIGV0IHJhaXNvbm5lbWVudCIsInNsdWciOiJsb2dpcXVlLXJhaXNvbm5lbWVudCIsImxldmVsIjoiTHljw6llIC8gSGlnaCBTY2hvb2wiLCJzdWJqZWN0IjoiTWF0aMOpbWF0aXF1ZXMifSx7InRpdGxlIjoiQ29uY2VwdHMgbWF0aMOpbWF0aXF1ZXMgZGUgYmFzZSIsInNsdWciOiJjb25jZXB0cy1tYXRoZW1hdGlxdWVzLWJhc2UiLCJsZXZlbCI6Ikx5Y8OpZSAvIEhpZ2ggU2Nob29sIiwic3ViamVjdCI6Ik1hdGjDqW1hdGlxdWVzIn0seyJ0aXRsZSI6Ik3DqXRob2RlcyBkZSByw6lzb2x1dGlvbiBkZSBwcm9ibMOobWVzIiwic2x1ZyI6Im3DqXRob2Rlcy1yZXNvbHV0aW9uLXByb2JsZW1lcyIsImxldmVsIjoiTHljw6llIC8gSGlnaCBTY2hvb2wiLCJzdWJqZWN0IjoiQ29tcMOpdGVuY2VzIHRyYW5zdmVyc2FsZXMifV0=" />
+
+<DiagnosticQuiz question="Quelle est la premiere etape essentielle pour aborder la resolution d'un probleme complexe de maniere structuree?" options="Écrire immédiatement le code ou la solution finale.|||Définir clairement le problème, ses objectifs et ses contraintes.|||Choisir le langage de programmation ou l'outil à utiliser.|||Tester différentes solutions au hasard jusqu'à en trouver une qui fonctionne." correctIndex="1" targetSectionId="introduction-resolution-algorithmique" sectionTitle="Introduction a la resolution algorithmique" />
+
+
+## Introduction: L'Algorithmique, une Approche Essentielle
+Ce cours, « L'art de la résolution de problèmes: Genèse et rôle des algorithmes », a pour objectif fondamental de vous initier aux principes de l'algorithmique, une discipline au cœur de l'informatique moderne. L'algorithmique n'est pas simplement une branche de la programmation ; elle représente une méthode universelle et structurée de résolution de problèmes, dont la maîtrise est indispensable à tout futur informaticien.
+
+Dans un monde de plus en plus numérisé, les algorithmes sont omniprésents. Ils pilotent nos moteurs de recherche, optimisent nos itinéraires, filtrent nos courriels, recommandent nos films, et sous-tendent les avancées en intelligence artificielle et en science des données. Comprendre comment concevoir, analyser et évaluer des algorithmes est donc crucial. Comme le soulignent des ouvrages de référence tels que *Algorithmique* de Cormen et al.  ou *Algorithmes et structures de données* de Wirth , l'algorithmique est la pierre angulaire qui permet de transformer une idée abstraite en une solution concrète et efficace, exécutable par une machine. Cette leçon posera les bases de cette approche essentielle, en explorant non seulement sa définition et son rôle, mais aussi son riche héritage historique.
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Décrire les origines historiques et l'évolution du concept d'algorithme.</li>
+      <li>Identifier les caractéristiques fondamentales qui définissent un algorithme.</li>
+      <li>Expliquer le rôle et l'impact des algorithmes dans la société contemporaine.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Illustrer des problèmes simples avec des séquences d'étapes logiques.</li>
+      <li>Construire des représentations simples d'algorithmes (ex: pseudo-code basique, organigramme).</li>
+      <li>Utiliser des exemples concrets pour différencier un algorithme d'une simple recette ou d'une instruction ambiguë.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Développer une approche méthodique et rigoureuse face à la résolution de problèmes.</li>
+      <li>Apprécier l'importance de la clarté, de la précision et de l'exhaustivité dans la description des étapes.</li>
+      <li>Adopter une curiosité intellectuelle envers les applications et les limites des algorithmes dans divers domaines.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Genèse et Évolution Historique des Algorithmes
+L'idée d'une procédure systématique pour résoudre un problème n'est pas une invention moderne, mais trouve ses racines dans l'Antiquité. L'un des premiers exemples explicites d'algorithme est attribué au mathématicien grec Euclide (vers 300 av. J.-C.), dont l'algorithme pour trouver le plus grand commun diviseur (PGCD) de deux nombres est encore enseigné aujourd'hui. Cette méthode pas-à-pas démontre déjà les caractéristiques fondamentales d'un algorithme : une séquence finie d'instructions bien définies et non ambiguës.
+
+Le Moyen Âge a vu des contributions significatives, notamment avec le mathématicien perse Muhammad ibn Musa al-Khwarizmi (vers 780-850 ap. J.-C.). Ses travaux sur les systèmes de numération indiens et la résolution d'équations linéaires et quadratiques ont introduit des méthodes systématiques qui, traduites en latin, ont donné naissance au terme « algorisme », puis « algorithme ». Son approche méthodique de la résolution de problèmes mathématiques a jeté les bases de ce que nous reconnaissons aujourd'hui comme une pensée algorithmique.
+
+La véritable fondation de l'informatique moderne et de la notion d'algorithme exécutable par une machine s'est dessinée bien plus tard. Au XIXe siècle, Ada Lovelace (1815-1852), en travaillant sur la machine analytique de Charles Babbage, a non seulement reconnu le potentiel de cette machine à aller au-delà des simples calculs, mais a également écrit ce qui est considéré comme le premier algorithme destiné à être exécuté par une machine. Elle a ainsi anticipé l'idée de la programmation.
+
+Cependant, c'est au XXe siècle qu'Alan Turing (1912-1954) a formalisé le concept d'algorithme avec sa « machine de Turing » en 1936. Ce modèle théorique abstrait a permis de définir rigoureusement ce qu'est un calcul et ce qui est calculable, posant les bases théoriques de l'informatique moderne et de la conception des ordinateurs. Des ouvrages comme ceux de Brassard et Bratley  ou Aho, Hopcroft et Ullman  détaillent ces fondements théoriques.
+
+Ainsi, la notion d'algorithme a évolué d'une simple procédure mathématique à une séquence d'instructions formelles et exécutables par une machine, capable de résoudre une classe de problèmes. Cette évolution reflète le passage d'une pensée humaine structurée à une automatisation du raisonnement, marquant le début de l'ère numérique.
+
+## Concepts Fondamentaux: Problème, Algorithme et Programme
+
+Pour naviguer efficacement dans le monde de l'informatique et de la résolution de problèmes, il est impératif de bien distinguer et de comprendre les liens entre trois concepts fondamentaux : le problème, l'algorithme et le programme. Bien qu'interdépendants, chacun représente une étape distincte dans le processus de transformation d'une question abstraite en une solution concrète et exécutable.
+
+Un **problème** peut être défini comme une tâche ou une question bien spécifiée qui nécessite une solution. Il se caractérise par un ensemble d'entrées (données initiales) et un ensemble de sorties désirées (résultats attendus). Par exemple, « trier une liste de nombres » est un problème : l'entrée est une liste non ordonnée, la sortie est la même liste, mais ordonnée. La définition claire du problème est la première étape cruciale, car elle délimite précisément ce que l'on cherche à accomplir.
+
+Un **algorithme** est une séquence finie et non ambiguë d'instructions précises, conçue pour résoudre un problème donné ou pour accomplir une tâche spécifique. C'est une méthode ou une procédure pas-à-pas qui, appliquée aux entrées du problème, garantit d'atteindre les sorties désirées en un nombre fini d'étapes. L'algorithme est une solution conceptuelle, indépendante de tout langage de programmation ou machine particulière. Il décrit le « comment faire » de manière abstraite. Par exemple, l'algorithme de tri par insertion est une méthode pour trier une liste, distincte de son implémentation. Des ouvrages comme ceux de Cormen et al.  ou Wirth  détaillent la conception et l'analyse de ces méthodes.
+
+Enfin, un **programme** est l'implémentation concrète d'un algorithme dans un langage de programmation spécifique, rendu exécutable par une machine. C'est la traduction des instructions abstraites de l'algorithme en code compréhensible par un ordinateur. Si l'algorithme est la « recette » pour résoudre un problème, le programme est le « plat cuisiné » qui peut être consommé. Un même algorithme peut donner lieu à de multiples programmes, écrits dans différents langages (C++, Python, Java, etc.), comme le montre Sedgewick .
+
+En résumé, le **problème** est le *quoi* (l'objectif), l'**algorithme** est le *comment* (la méthode), et le **programme** est le *avec quoi* (l'implémentation concrète). La distinction est fondamentale : un algorithme peut exister sans être programmé, et un programme sans algorithme clair sous-jacent risque d'être inefficace ou incorrect. L'étude de l'algorithmique se concentre sur la conception et l'analyse des algorithmes, avant même leur traduction en code.
+
+## L'Algorithmique au Cœur de l'Informatique et de la Pensée Structurée
+
+L'algorithmique n'est pas seulement une branche de l'informatique ; elle en est le cœur battant et le moteur intellectuel. Son rôle central se manifeste à plusieurs niveaux, tant dans la discipline elle-même que comme méthode de pensée applicable à de nombreux domaines.
+
+En informatique, l'algorithmique est la clé de l'**efficacité** et de l'**optimisation**. La performance d'un logiciel ou d'un système dépend directement de la qualité des algorithmes qu'il utilise. Un algorithme bien conçu peut réduire considérablement le temps de calcul et les ressources nécessaires pour résoudre un problème, transformant une tâche irréalisable en une opération rapide et économique. L'étude de la **complexité algorithmique**, qui analyse la quantité de ressources (temps et mémoire) requises par un algorithme en fonction de la taille de ses entrées, est un pilier de l'informatique théorique et pratique. Choisir l'algorithme le plus adapté à un problème donné est une décision cruciale pour les ingénieurs et les chercheurs, comme le soulignent les travaux de Aho, Hopcroft et Ullman  ou Brassard et Bratley . Que ce soit pour la recherche d'informations sur internet, le traitement d'images, la cryptographie ou l'intelligence artificielle, des algorithmes performants sont indispensables.
+
+Au-delà de son application directe dans la conception de logiciels, l'algorithmique est une méthode de **pensée structurée et logique** universelle. Elle enseigne à décomposer un problème complexe en sous-problèmes plus petits et gérables, à identifier les étapes nécessaires à leur résolution, à définir des règles claires et non ambiguës, et à anticiper les différents scénarios possibles. Cette approche systématique, qui consiste à formaliser le raisonnement, est précieuse dans une multitude de domaines.
+
+Par exemple, en ingénierie, la conception d'un processus de fabrication suit une logique algorithmique. En logistique, l'optimisation des tournées de livraison repose sur des algorithmes complexes. En finance, la modélisation des marchés et la prise de décision automatisée sont intrinsèquement algorithmiques. Même dans la vie quotidienne, organiser une tâche ménagère, suivre une recette de cuisine ou assembler un meuble sont des activités qui, sans être formalisées, relèvent d'une pensée séquentielle et logique inspirée par l'algorithmique.
+
+Ainsi, l'algorithmique n'est pas seulement l'art de concevoir des instructions pour les machines ; c'est aussi l'art de structurer la pensée humaine pour résoudre des problèmes de manière efficace et rigoureuse, quel que soit le contexte. Elle développe des compétences essentielles en analyse, en synthèse et en abstraction, qui sont transférables et fondamentales dans le monde moderne.
+
+## Conclusion
+Cette leçon a posé les jalons de notre exploration de l'algorithmique, révélant son histoire millénaire, de ses racines antiques aux défis contemporains de l'ère numérique. Nous avons défini l'algorithme comme une séquence finie et non ambiguë d'instructions, conçue pour résoudre un problème spécifique, soulignant son caractère universel et sa capacité à structurer la pensée. L'importance capitale de l'algorithmique en informatique a été mise en lumière, non seulement comme fondement de l'efficacité logicielle et de l'optimisation des ressources, mais aussi comme discipline essentielle à l'analyse de la complexité des problèmes, un aspect crucial pour la conception de systèmes performants, comme le détaillent des ouvrages de référence tels que ceux de Cormen et al.  ou Sedgewick .
+
+Au-delà de ces fondations théoriques et pratiques, cette introduction a démontré que la maîtrise de l'algorithmique est bien plus qu'une simple compétence technique ; c'est une approche fondamentale de la résolution de problèmes, applicable bien au-delà du code. Pour tout futur informaticien, comprendre et concevoir des algorithmes efficaces et robustes est une pierre angulaire, indispensable pour naviguer dans un monde de plus en plus numérisé et complexe. Les prochaines étapes de votre parcours en informatique approfondiront ces concepts, explorant des structures de données plus sophistiquées, des paradigmes de conception algorithmique avancés et l'analyse rigoureuse de leur performance, comme le préconisent des auteurs tels que Wirth  ou Preiss . L'algorithmique est donc le langage universel de la résolution de problèmes informatiques, et sa maîtrise est la clé de votre succès académique et professionnel.
+
+
+
+
+
+
+<Summary itemsString="Ce cours a mis en lumière la nature fondamentale des algorithmes, les définissant comme des séquences d'instructions précises et finies conçues pour résoudre des problèmes.|||Nous avons exploré leur genèse historique, remontant aux travaux d'Al-Khwarizmi, soulignant que la pensée algorithmique est bien antérieure à l'ère numérique.|||L'importance cruciale des algorithmes dans la résolution de problèmes a été démontrée, qu'il s'agisse de tâches quotidiennes ou de défis informatiques complexes.|||Ils constituent le cœur battant de toute technologie moderne, des moteurs de recherche aux systèmes de navigation GPS, en passant par l'intelligence artificielle.|||Comprendre les algorithmes n'est pas seulement essentiel pour les informaticiens, mais pour quiconque souhaite appréhender le fonctionnement du monde numérique qui nous entoure.|||Cette première approche a posé les bases nécessaires pour aborder des concepts plus avancés en algorithmique." />
+
+<WhatsNext itemsBase64="W3sidGl0bGUiOiJJbnRyb2R1Y3Rpb24gYSBsJ2FsZ29yaXRobWlxdWUgOiBOb3Rpb25zIGV0IGV4ZW1wbGVzIiwiZGVzY3JpcHRpb24iOiJVbiBvdXZyYWdlIGNsYXNzaXF1ZSBwb3VyIGRlYnV0ZXIgZW4gYWxnb3JpdGhtaXF1ZSwgY291dnJhbnQgbGVzIGNvbmNlcHRzIGZvbmRhbWVudGF1eCBldCBwcm9wb3NhbnQgZGUgbm9tYnJldXggZXhlbXBsZXMgcHJhdGlxdWVzLiIsInNsdWciOiJpbnRyb2R1Y3Rpb24tYS1sLWFsZ29yaXRobWlxdWUtbm90aW9ucy1ldC1leGVtcGxlcyIsInN1YmplY3QiOiIiLCJsZXZlbCI6IiJ9XQ==" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+    <Question q="Qu'est-ce qu'un algorithme ?" explanation="Un algorithme est une sequence finie d'instructions claires et non ambigues, concues pour resoudre un probleme ou accomplir une tache specifique. Il ne se limite pas aux programmes informatiques, mais est un concept plus général.">
+  <Option text="Un ensemble d'instructions pour un programme informatique." correct={false} />
+  <Option text="Une sequence finie d'instructions bien definies et non ambigues pour resoudre un probleme ou effectuer un calcul." correct={true} />
+  <Option text="Une formule mathematique utilisee dans des calculs complexes." correct={false} />
+  <Option text="Un langage de programmation." correct={false} />
+</Question>
+    <Question q="Quelle est une caracteristique essentielle d'un algorithme bien defini ?" explanation="Un algorithme doit toujours se terminer apres un nombre fini d'etapes et produire un resultat. C'est la propriete de finitude.">
+  <Option text="Il doit etre ecrit dans un langage de programmation specifique." correct={false} />
+  <Option text="Il doit produire un resultat dans un laps de temps fini." correct={true} />
+  <Option text="Il doit etre compris uniquement par les ordinateurs." correct={false} />
+  <Option text="Il doit etre complexe pour resoudre des problemes difficiles." correct={false} />
+</Question>
+    <Question q="De quelle figure historique le terme 'algorithme' tire-t-il son origine ?" explanation="Le terme 'algorithme' est derive du nom du mathematicien perse du IXe siecle, Muhammad ibn Musa al-Khwarizmi, dont les travaux sur les nombres indiens ont ete traduits en latin.">
+  <Option text="Alan Turing" correct={false} />
+  <Option text="Euclide" correct={false} />
+  <Option text="Al-Khwarizmi" correct={true} />
+  <Option text="Charles Babbage" correct={false} />
+</Question>
+    <Question q="Quel est le role principal d'un algorithme dans la resolution de problemes ?" explanation="Les algorithmes fournissent une approche structuree et logique pour decomposer un probleme complexe en etapes gerables, permettant ainsi d'atteindre une solution de maniere systematique.">
+  <Option text="Ecrire du code informatique efficace." correct={false} />
+  <Option text="Fournir une méthode systematique et etape par etape pour atteindre un resultat souhaite." correct={true} />
+  <Option text="analyser les tendances des donnees." correct={false} />
+  <Option text="Concevoir des interfaces utilisateur." correct={false} />
+</Question>
+    <Question q="Quelle est la principale difference entre un algorithme et un programme informatique ?" explanation="Un algorithme est une description abstraite et independante du langage d'une méthode de resolution de probleme. Un programme est la traduction concrete de cet algorithme dans un langage de programmation specifique, executable par une machine.">
+  <Option text="Un algorithme est toujours plus efficace qu'un programme." correct={false} />
+  <Option text="Un algorithme est une solution conceptuelle, tandis qu'un programme est son implementation dans un langage specifique." correct={true} />
+  <Option text="Un programme peut s'executer sur n'importe quelle machine, mais pas un algorithme." correct={false} />
+  <Option text="Il n'y a pas de difference ; les termes sont interchangeables." correct={false} />
+</Question>
+    <Question q="Pourquoi l'ambiguite est-elle evitee dans la conception d'algorithmes ?" explanation="L'absence d'ambiguite (precision) est cruciale pour qu'un algorithme puisse etre execute de maniere fiable et produire le meme resultat pour les memes entrees, quelle que soit la personne ou la machine qui l'execute.">
+  <Option text="Pour rendre l'algorithme plus court." correct={false} />
+  <Option text="Pour s'assurer que l'algorithme peut etre compris et execute de maniere coherente, conduisant a des resultats previsibles." correct={true} />
+  <Option text="Pour masquer la complexite de la solution." correct={false} />
+  <Option text="Pour permettre de multiples interpretations." correct={false} />
+</Question>
+    <Question q="Lequel des éléments suivants N'EST PAS une etape typique du processus de resolution de problemes algorithmique ?" explanation="Le marketing de la solution est une etape commerciale ou de deploiement, pas une etape intrinseque au processus de conception et de validation de l'algorithme lui-meme.">
+  <Option text="Comprendre le probleme." correct={false} />
+  <Option text="Concevoir l'algorithme." correct={false} />
+  <Option text="Tester et deboguer l'algorithme." correct={false} />
+  <Option text="Commercialiser la solution aupres des utilisateurs." correct={true} />
+</Question>
+</Quiz>
+
+### Glossaire
+
+- **Algorithme** : Une suite finie et non ambiguë d'instructions ou d'opérations ordonnées, destinée à résoudre un problème donné ou à effectuer une tâche spécifique. Il doit être déterministe et se terminer en un nombre fini d'étapes.
+- **Problème** : Une situation ou une question pour laquelle une solution doit être trouvée. En informatique, un problème est souvent défini par ses entrées, ses sorties attendues et les contraintes associées.
+- **Pseudocode** : Un langage informel de haut niveau utilisé pour décrire les étapes d'un algorithme. Il combine des éléments de langage naturel avec des conventions de programmation structurée, sans adhérer à la syntaxe stricte d'un langage de programmation spécifique, ce qui le rend facile à comprendre pour les humains.
+- **Résolution de problèmes** : Le processus cognitif et méthodologique qui consiste à identifier un problème, à l'analyser, à concevoir une ou plusieurs solutions possibles, à les mettre en œuvre et à évaluer leur efficacité. C'est une compétence clé en algorithmique.
+
+
+
+
+### Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiQ29ybWVuLCBUaG9tYXMgSC4sIENoYXJsZXMgRS4gTGVpc2Vyc29uLCBSb25hbGQgTC4gUml2ZXN0LCBhbmQgQ2xpZmZvcmQgU3RlaW4uIDIwMDkuIEludHJvZHVjdGlvbiB0byBBbGdvcml0aG1zLiAzcmQgZWQuIENhbWJyaWRnZSwgTUE6IE1JVCBQcmVzcy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Q29ybWVuJTIwJTIyTGVpc2Vyc29uJTIyJTIwMjAwOSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyLCJ0ZXh0IjoiS251dGgsIERvbmFsZCBFLiAxOTczLiBUaGUgQXJ0IG9mIENvbXB1dGVyIFByb2dyYW1taW5nLCBWb2wuIDE6IEZ1bmRhbWVudGFsIEFsZ29yaXRobXMuIDNyZCBlZC4gUmVhZGluZywgTUE6IEFkZGlzb24tV2VzbGV5LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9S251dGglMjAlMjJUaGUlMjBBcnQlMjBvZiUyMENvbXB1dGVyJTIwUHJvZ3JhbW1pbmclMjIlMjAxOTczIiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MywidGV4dCI6IlBvbHlhLCBHZW9yZ2UuIDIwMDQuIEhvdyB0byBTb2x2ZSBJdDogQSBOZXcgQXNwZWN0IG9mIE1hdGhlbWF0aWNhbCBNZXRob2QuIFByaW5jZXRvbiwgTko6IFByaW5jZXRvbiBVbml2ZXJzaXR5IFByZXNzLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Qb2x5YSUyMCUyMkhvdyUyMHRvJTIwU29sdmUlMjBJdCUyMiUyMDIwMDQiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6NCwidGV4dCI6IlNlZGdld2ljaywgUm9iZXJ0LCBhbmQgS2V2aW4gV2F5bmUuIDIwMTEuIEFsZ29yaXRobXMuIDR0aCBlZC4gQm9zdG9uOiBBZGRpc29uLVdlc2xleS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9U2VkZ2V3aWNrJTIwJTIyU2VkZ2V3aWNrJTIyJTIwMjAxMSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo1LCJ0ZXh0IjoiVGhvbWFzIEguIENvcm1lbiwgQ2hhcmxlcyBFLiBMZWlzZXJzb24sIFJvbmFsZCBMLiBSaXZlc3QsIENsaWZmb3JkIFN0ZWluLiAyMDA5LiDCqyBJbnRyb2R1Y3Rpb24gw6AgbCdhbGdvcml0aG1pcXVlIDogTm90aW9ucyBldCBleGVtcGxlcyDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9VGhvbWFzJTIwQ29ybWVuJTIwJTIySW50cm9kdWN0aW9uJTIwJUMzJUEwJTIwbCdhbGdvcml0aG1pcXVlJTIyJTIwMjAwOSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo2LCJ0ZXh0IjoiUG91ciBsYSBTY2llbmNlLiAyMDIwLiDCqyBMJ2hpc3RvaXJlIGRlcyBhbGdvcml0aG1lcyA6IERlcyBvcmlnaW5lcyDDoCBsJ2ludGVsbGlnZW5jZSBhcnRpZmljaWVsbGUgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVBvdXIlMjBsYSUyMFNjaWVuY2UlMjAlMjJMJ2hpc3RvaXJlJTIwZGVzJTIwYWxnb3JpdGhtZXMlMjIlMjAyMDIwIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjcsInRleHQiOiJDdXJpb3VzIERyb2lkLiAyMDE4LiDCqyBRdSdlc3QtY2UgcXUndW4gYWxnb3JpdGhtZSA/ICh2aWTDqW8gZXhwbGljYXRpdmUpIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1DdXJpb3VzJTIwRHJvaWQlMjAlMjJRdSdlc3QlMjIlMjAyMDE4Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjgsInRleHQiOiJPcGVuQ2xhc3Nyb29tcy4gMjAyMS4gwqsgT3BlbkNsYXNzcm9vbXMgLSBBcHByZW5leiDDoCBwcm9ncmFtbWVyIGF2ZWMgSmF2YVNjcmlwdCA6IExlcyBhbGdvcml0aG1lcyDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9T3BlbkNsYXNzcm9vbXMlMjAlMjJPcGVuQ2xhc3Nyb29tcyUyMiUyMDIwMjEiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfV0=" />

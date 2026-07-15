@@ -1,0 +1,211 @@
+---
+title: "1. Historical Ciphers & Foundations"
+subject: "Computer_Science"
+level: "L1"
+module: "Symmetric Encryption & Foundations"
+order: 1
+---
+
+<Prerequisites items={[
+  "Basic Modular Arithmetic",
+  "Fundamental Python or Javascript programming constructs",
+  "High School Pre-calculus (functions and basic probability)"
+]} />
+
+# 1. Historical Ciphers & Foundations
+
+Cryptography, the science of secure communication, is a cornerstone of modern information security. Its primary objective is to allow two parties—traditionally called Alice and Bob—to communicate over an insecure channel in such a way that an adversary, Eve, cannot understand the content of their messages.
+
+In this lesson, we will explore the mathematical foundations of classical cryptography. We will analyze the historical ciphers that laid the groundwork for modern encryption, and understand why they are insecure against mathematical cryptanalysis.
+
+<Objectives>
+  <Knowledge>
+    * Define the terms Plaintext, Ciphertext, Key, Encryption, Decryption, and Keyspace.
+    * Understand the mathematical definition of modular arithmetic.
+    * Explain the mechanism of monoalphabetic and polyalphabetic substitution.
+  </Knowledge>
+  <Skills>
+    * Mathematically encode and decode messages using the Caesar and Vigenère ciphers.
+    * Perform frequency analysis cryptanalysis on simple substitution ciphers.
+    * Calculate the size of the keyspace for different classical ciphers.
+  </Skills>
+  <Attitudes>
+    * Develop a critical mindset regarding the security of ad-hoc encryption schemes.
+    * Appreciate the transition from obscurity-based security to rigorous mathematical proofs.
+  </Attitudes>
+</Objectives>
+
+---
+
+## The Core Cryptographic Primitive
+
+Every encryption scheme consists of a **plaintext space** \(\mathcal{M}\), a **ciphertext space** \(\mathcal{C}\), a **keyspace** \(\mathcal{K}\), and a pair of algorithms:
+- An **Encryption Algorithm** \(E: \mathcal{M} \times \mathcal{K} \rightarrow \mathcal{C}\)
+- A **Decryption Algorithm** \(D: \mathcal{C} \times \mathcal{K} \rightarrow \mathcal{M}\)
+
+The fundamental correctness requirement of cryptography is that for any plaintext \(m \in \mathcal{M}\) and key \(k \in \mathcal{K}\):
+\[D(E(m, k), k) = m\]
+
+![Symmetric Cryptography Diagram](/images/cryptography/symmetric_encryption.png)
+
+---
+
+## The Caesar Cipher (Monoalphabetic Substitution)
+
+The Caesar cipher is one of the earliest recorded encryption techniques, named after Julius Caesar, who used it to communicate with his generals.
+
+### Mathematical Formulation
+To represent the letters of the English alphabet mathematically, we map them to the set of integers modulo 26:
+\[\mathbb{Z}_{26} = \{0, 1, 2, \dots, 25\}\]
+where 'A' \(\mapsto 0\), 'B' \(\mapsto 1\), \dots, 'Z' \(\mapsto 25\).
+
+Given a shift key \(k \in \mathbb{Z}_{26}\), the encryption of a single letter \(p \in \mathbb{Z}_{26}\) is:
+\[E(p, k) = (p + k) \pmod{26}\]
+
+And decryption of a ciphertext letter \(c \in \mathbb{Z}_{26}\) is:
+\[D(c, k) = (c - k) \pmod{26}\]
+
+<DiagnosticQuiz questions={[
+  {
+    q: "If we encrypt 'CAT' (C=2, A=0, T=19) using a Caesar cipher with key k=5, what is the ciphertext?",
+    options: ["HFY", "IGZ", "HEX", "HBY"],
+    correctIndex: 0,
+    explanation: "C (2) + 5 = 7 (H); A (0) + 5 = 5 (F); T (19) + 5 = 24 (Y). Hence, HFY."
+  }
+]} />
+
+### Interactive Demonstration
+Below, you can experiment with Caesar cipher encryption and decryption directly in your browser.
+
+<CodeSandbox 
+  code={`// Dynamic Caesar Cipher Encryption
+function encryptCaesar(plaintext, key) {
+  return plaintext.toUpperCase().split('').map(char => {
+    const code = char.charCodeAt(0);
+    if (code >= 65 && code <= 90) {
+      return String.fromCharCode(((code - 65 + key) % 26) + 65);
+    }
+    return char;
+  }).join('');
+}
+
+const text = "OPENPRIMER UNIVERSITY GRADE CRYPTOGRAPHY";
+const key = 13;
+console.log("Plaintext:  ", text);
+console.log("Ciphertext: ", encryptCaesar(text, key));
+`}
+  language="javascript"
+  title="Interactive Caesar Cipher Decoder"
+/>
+
+---
+
+## Why Caesar is Broken: Keyspace Complexity
+
+The major weakness of the Caesar cipher lies in its tiny keyspace. Because the key \(k\) must be an integer between \(1\) and \(25\), there are only **25 possible keys** (a shift of 0 or 26 does not alter the plaintext).
+
+An eavesdropper, Eve, can easily perform a **brute-force attack** by trying all 25 possible keys until she reads intelligible plaintext.
+
+<SolvedExercise title="Keyspace Complexity Calculation">
+  **Problem:**
+  Calculate the size of the keyspace for a general monoalphabetic substitution cipher, where each letter of the alphabet is mapped to a unique permutation of the alphabet.
+
+  **Solution:**
+  In a general monoalphabetic substitution cipher, we can map 'A' to any of the 26 letters. 'B' can then be mapped to any of the remaining 25 letters, 'C' to any of the 24 letters, and so on.
+
+  Therefore, the keyspace size is the number of permutations of 26 elements:
+  \[|\mathcal{K}| = 26! \approx 4.03 \times 10^{26}\]
+
+  This is a massive keyspace, larger than \(2^{88}\). A brute-force attack trying 1 billion keys per second would take over 12 billion years to complete!
+</SolvedExercise>
+
+---
+
+## Frequency Analysis: Breaking General Substitution
+
+Even though a general substitution cipher has a keyspace of \(26!\), it is still completely insecure. Why? Because it preserves the **statistical distribution** of the underlying language.
+
+In any natural language, some letters occur much more frequently than others. In English, 'E' is the most frequent letter (approx. 12.7%), followed by 'T', 'A', and 'O'. By counting the occurrences of each letter in the ciphertext, we can map the most frequent ciphertext letters to the most frequent English letters, rapidly cracking the code.
+
+<SocraticInput 
+  question="Why does frequency analysis completely fail to crack a cipher if the ciphertext is very short (e.g., a message of only 5 letters like 'QYUPX')?" 
+  idealAnswer="Frequency analysis relies on the Law of Large Numbers. In short messages, the statistical distribution of letters does not converge to the average frequency of the language, meaning random fluctuations dominate and render frequency counts useless." 
+  customCriteriaString="Must mention the law of large numbers or statistical convergence, and explain that short text lacks a representative sample of letter frequencies."
+/>
+
+---
+
+## The Vigenère Cipher (Polyalphabetic Substitution)
+
+To counter frequency analysis, 16th-century cryptographers developed polyalphabetic substitution. The Vigenère cipher uses a repeating keyword to determine a series of different Caesar shifts.
+
+### Mathematical Formulation
+Let the key be a vector of shifts \(\vec{k} = (k_0, k_1, \dots, k_{d-1})\) of period \(d\).
+For a plaintext message \(\vec{p} = (p_0, p_1, \dots)\), the ciphertext element \(c_i\) is:
+\[c_i = (p_i + k_{i \pmod d}) \pmod{26}\]
+
+By changing the shift from letter to letter, Vigenère flattens the frequency distribution, making simple frequency analysis impossible.
+
+<Quiz mode="standard">
+  <Question q="What is the main technique used to find the key length 'd' of a Vigenère cipher?" explanation="Kasiski examination identifies repeating sequences of ciphertext to find common divisors of their distances, which represent candidates for key length. Friedman test uses the Index of Coincidence.">
+    <Option text="Brute-forcing all 26! permutations of the letters" correct={false} />
+    <Option text="Searching for the most frequent single letter in the ciphertext" correct={false} />
+    <Option text="Kasiski Examination or Friedman Test (Index of Coincidence)" correct={true} />
+    <Option text="Linear cryptanalysis using feedback shift registers" correct={false} />
+  </Question>
+</Quiz>
+
+---
+
+## Card Sort: Cryptographic Terms Match
+
+Match the classical cryptography terms with their descriptions.
+
+<CardSort pairsString="Plaintext:The original unencrypted message||Ciphertext:The encrypted message after transformation||Keyspace:The set of all possible keys||Frequency Analysis:Cryptanalysis exploiting letter distribution statistics" />
+
+---
+
+## Historical Timeline of Classical Cryptography
+
+Explore the key moments in classical cryptographic history.
+
+<Timeline items={[
+  {
+    date: "50 BC",
+    title: "The Caesar Cipher",
+    description: "Julius Caesar uses a simple shift cipher to secure military dispatches."
+  },
+  {
+    date: "850 AD",
+    title: "Al-Kindi Invents Frequency Analysis",
+    description: "The Arab polymath Al-Kindi publishes 'A Manuscript on Deciphering Cryptographic Messages', introducing frequency analysis and breaking monoalphabetic substitution."
+  },
+  {
+    date: "1553 AD",
+    title: "The Vigenère Cipher",
+    description: "Giovan Battista Bellaso describes the first polyalphabetic substitution cipher, later misattributed to Blaise de Vigenère."
+  },
+  {
+    date: "1863 AD",
+    title: "Kasiski Examination Published",
+    description: "Friedrich Kasiski publishes a systematic method to break the Vigenère cipher by analyzing distances between repeating patterns."
+  }
+]} />
+
+---
+
+<Summary items={[
+  "Classical cryptography relied on substitution and transposition techniques.",
+  "Monoalphabetic substitution (Caesar) preserves letter frequency characteristics and is easily broken by brute-force or frequency analysis.",
+  "Polyalphabetic substitution (Vigenère) alters shifts periodically, but can still be broken by analyzing the Index of Coincidence and finding key length.",
+  "Absolute security is unattainable with these ciphers; a mathematically perfect system requires an infinitely long keyspace."
+]} />
+
+<WhatsNext items={[
+  "In Lesson 2, we will study modern symmetric cryptography, Shannon entropy, and how the One-Time Pad achieves mathematically perfect secrecy."
+]} />
+
+<References>
+  * **Kahn, D.** (1996). *The Codebreakers: The Comprehensive History of Secret Communication from Ancient Times to the Internet*. Scribner.
+  * **Shannon, C. E.** (1949). *Communication Theory of Secrecy Systems*. Bell System Technical Journal.
+</References>
