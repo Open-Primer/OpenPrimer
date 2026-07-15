@@ -5,12 +5,12 @@ We are writing the lesson block-by-block.
 - This is Block 3 out of 3.
 - You MUST write the content for the following sections:
 * Heading: "## Conclusion générale"
-  Instructions: "Cette section synthétisera les points clés abordés dans le cours, en rappelant l'importance des trois éléments cumulatifs (fait générateur, dommage, lien de causalité) et des causes d'exonération. Elle pourra également ouvrir sur les enjeux contemporains ou l'évolution future de la responsabilité civile extracontractuelle."
+  Instructions: "Synthétiser les points clés du cours sur la responsabilité civile extracontractuelle, rappeler l'importance de ses trois éléments cumulatifs et des causes d'exonération, et ouvrir sur les enjeux contemporains ou les évolutions jurisprudentielles en la matière."
 
 ---
 
 ### GLOBAL CONTEXT:
-- Course Name: "Droit des Obligations et Responsabilité Civile"
+- Course Name: "Droit des obligations et responsabilité civile"
 - Academic Level: "University Year 2 / Bachelor 2nd Year (L2)"
 - Lesson Title: "La responsabilité civile extracontractuelle : Réparation des dommages et faits générateurs"
 - Discipline: "Droit"
@@ -60,33 +60,29 @@ Please write them exactly in this anchor format [[WIDGET:Type:unique_id:descript
 ### PREVIOUS TEXT (for transitions and context):
 Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
 """
-... emogue]] fut un fervent défenseur de cette approche.
+... en que l'[article 1218 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040713) les définisse principalement pour le droit des contrats, ils sont transposables en matière délictuelle :
 
-Les difficultés d'appréciation du lien de causalité sont nombreuses, notamment en présence de causes multiples, de causes incertaines (par exemple, en matière de pollution ou de produits défectueux), ou de causes successives. La jurisprudence tend souvent vers une approche pragmatique, privilégiant la réparation de la victime.
+*   **Imprévisibilité** : L'événement ne pouvait être raisonnablement prévu au moment où le fait générateur est survenu.
+*   **Irrésistibilité** : L'événement ne pouvait être empêché dans ses effets par des mesures appropriées. Il est insurmontable et inévitable.
+*   **Extériorité** : L'événement doit être étranger à la personne du défendeur et à son activité.
 
-[[WIDGET:Mermaid:conditions_responsabilite:Diagramme des trois conditions cumulatives de la responsabilité civile]]
+Si la force majeure est la cause exclusive du dommage, elle entraîne une exonération totale de responsabilité. Si elle n'est que partielle, l'exonération sera proportionnelle à son rôle dans la survenance du dommage.
 
-### Les causes d'exonération de la responsabilité
+### 2. Le fait d'un tiers
 
-Même si les trois conditions de la responsabilité civile (fait générateur, dommage, lien de causalité) sont réunies, l'auteur du dommage peut voir sa responsabilité atténuée ou totalement exclue par l'existence de certaines causes d'exonération. Ces causes rompent le lien de causalité entre le fait générateur et le dommage, ou justifient le fait générateur lui-même [[WIDGET:Reference:5]].
+Le fait d'un tiers est l'intervention d'une personne autre que le défendeur et la victime dans la réalisation du dommage. Pour qu'il soit une cause d'exonération, le fait du tiers doit, en principe, présenter les caractères de la force majeure (imprévisibilité, irrésistibilité, extériorité).
 
-1.  **La force majeure** : C'est un événement extérieur, imprévisible et irrésistible qui rend impossible l'exécution d'une obligation ou la prévention d'un dommage. Ses conditions cumulatives sont :
-    *   **Extériorité** : L'événement doit être étranger à la personne du défendeur.
-    *   **Imprévisibilité** : L'événement ne pouvait être raisonnablement prévu au moment où le fait générateur est survenu.
-    *   **Irrésistibilité** : L'événement ne pouvait être évité dans ses effets, même par des mesures appropriées.
-    La force majeure a pour effet d'exonérer totalement l'auteur du dommage de sa responsabilité.
+*   Si le fait du tiers est la cause exclusive du dommage et qu'il revêt les caractères de la force majeure, le défendeur est totalement exonéré.
+*   Si le fait du tiers ne présente pas ces caractères, il peut entraîner un partage de responsabilité entre le défendeur et le tiers, ou une simple contribution à la dette de réparation si le défendeur est tenu *in solidum* avec le tiers.
 
-2.  **Le fait de la victime** : Lorsque le dommage est causé, en tout ou partie, par la faute de la victime elle-même, la responsabilité de l'auteur peut être atténuée ou exclue.
-    *   Si la faute de la victime est la cause exclusive du dommage et présente les caractères de la force majeure, elle exonère totalement l'auteur.
-    *   Si la faute de la victime a seulement concouru à la réalisation du dommage, elle entraîne un partage de responsabilité, et l'indemnisation est réduite proportionnellement à la gravité de la faute de la victime.
+### 3. La faute de la victime
 
-3.  **Le fait d'un tiers** : L'intervention d'un tiers dans la chaîne causale peut également exonérer, totalement ou partiellement, l'auteur initial du dommage.
-    *   Si le fait du tiers est la cause exclusive du dommage et présente les caractères de la force majeure, il exonère totalement l'auteur initial.
-    *   Si le fait du tiers a seulement concouru à la réalisation du dommage, l'auteur initial et le tiers sont généralement tenus solidairement à la réparation envers la victime, mais un recours en garantie est possible entre eux pour un partage de la charge finale.
+La faute de la victime est le comportement de la personne lésée qui a contribué à la réalisation de son propre dommage. Pour être une cause d'exonération, la faute de la victime doit avoir un lien de causalité avec le dommage. Son appréciation se fait généralement [[WIDGET:Glossary:in_concreto:in concreto]], c'est-à-dire en tenant compte des circonstances spécifiques de l'affaire.
 
-Ces causes d'exonération sont cruciales car elles permettent de moduler l'application du principe de réparation intégrale du dommage et d'adapter la responsabilité aux circonstances particulières de chaque affaire.
+*   **Exonération totale** : La faute de la victime n'entraîne une exonération totale du défendeur que si elle est la cause exclusive du dommage et qu'elle présente les caractères de la force majeure (imprévisibilité, irrésistibilité, extériorité). Par exemple, le suicide d'une personne sur une voie ferrée peut, sous certaines conditions, être considéré comme une faute exclusive de la victime.
+*   **Exonération partielle** : Dans la majorité des cas, la faute de la victime conduit à un [[WIDGET:ConceptLink:partage_responsabilite:partage de responsabilité]] entre le défendeur et la victime. L'indemnisation due à la victime est alors réduite proportionnellement à sa part de responsabilité dans la survenance du dommage. Ce principe a été affirmé par la [Cour de cassation, notamment dans un arrêt du 21 juillet 1982](https://www.legifrance.gouv.fr/juri/id/JURITEXT000007010476/) concernant l'indemnisation des victimes d'accidents de la circulation.
 
-[[WIDGET:Quiz:causes_exonération:Quiz sur les causes d'exonération de responsabilité]]
+[[WIDGET:CustomFigure:causes_exoneration:Illustration schématique des principales causes d'exonération de responsabilité]]
 """
 
 ---
@@ -101,6 +97,20 @@ Ces causes d'exonération sont cruciales car elles permettent de moduler l'appli
 7. ACADEMIC REFERENCES CITATION MANDATE: You MUST actively cite the references listed under "### GLOBAL CONTEXT:" (if any) throughout the prose. Cite them inline using the format [[WIDGET:Reference:1]], [[WIDGET:Reference:2]], etc., where [[WIDGET:Reference:1]] maps to the first reference in the Global Context list, [[WIDGET:Reference:2]] to the second, and so on. Exclusively use [[WIDGET:Reference:num]] anchors. Do not define a bibliography section here; simply cite them inline in this format.
 8. MANDATORY DESCRIPTION FOR MEDIA WIDGETS: For all media/visual widgets (including Image, CustomFigure, Video, Audio, and Mermaid), you MUST append the description/caption as the third parameter in the widget anchor: [[WIDGET:Type:id:description]]. Absolute prohibition on placing external descriptions, captions, or comments (such as "*Description: ...*", "Caption: ...", "Légende: ...") directly in the narrative prose outside the anchor.
 9. ABSOLUTE PROHIBITION ON RAW MERMAID DIAGRAMS. Never write raw Mermaid diagram code (e.g. wrapped in ```mermaid ... ```) directly in the narrative prose. Instead, you MUST only generate a widget anchor like `[[WIDGET:Mermaid:id:description]]` on a separate blank line, describing what the diagram should display in the description. The actual Mermaid diagram code will be generated later by the Widgets Architect (Agent 3b).
+
+
+=============================================================================
+🚨 MANDATORY LEGIFRANCE HYPERLINKING REQUIREMENT FOR LAW COURSES 🚨
+Since this lesson belongs to a Law/Legal Studies course, you MUST enrich your prose with a very dense set of direct hyperlinks to Legifrance (https://www.legifrance.gouv.fr) for:
+- EVERY article of a code (e.g., Code civil, Code pénal, Code de commerce, Code du travail, etc.).
+- Major jurisprudence, court decisions, and institutional rulings.
+
+Link Formatting Rules:
+- Exclusively use standard markdown links, for example: [article 1101 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040713) or [article 1240 du Code civil](https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006070721/) or [arrêt de la Cour de cassation](https://www.legifrance.gouv.fr/juri/id/JURITEXT000006935293/).
+- Ensure the URLs point to Legifrance. Do NOT invent URLs; use real Legifrance search or article links or standard mock links pointing to the official site if the exact ID is unknown.
+- Do NOT use custom HTML/JSX tags. Exclusively write standard markdown links: `[link text](https://www.legifrance.gouv.fr/...)`.
+- Ensure a massive density of Légifrance links to make this an exceptionally authoritative academic and professional resource!
+=============================================================================
 
 10. Since this is the LAST block, you MUST end with the ## Conclusion section containing at least two comprehensive academic paragraphs, and all conclusion widgets in this exact order:
   [[WIDGET:conclusionSummary]]

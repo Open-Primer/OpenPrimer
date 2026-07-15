@@ -5,14 +5,14 @@ We are writing the lesson block-by-block.
 - This is Block 1 out of 3.
 - You MUST write the content for the following sections:
 * Heading: "## Introduction à la responsabilité civile extracontractuelle"
-  Instructions: "Cette section introduira le concept de la responsabilité civile extracontractuelle, son rôle fondamental en droit français (articles 1240 et suivants du Code civil), et distinguera ce régime de la responsabilité contractuelle. Elle présentera également le plan général du cours."
+  Instructions: "Présenter la notion de responsabilité civile extracontractuelle, sa distinction avec la responsabilité contractuelle, son fondement légal (articles 1240 et suivants du Code civil) et l'objectif de la réparation des dommages."
 * Heading: "## Le fait générateur de responsabilité"
-  Instructions: "Cette section détaillera les différentes catégories de faits générateurs de responsabilité. Elle abordera la faute personnelle (responsabilité du fait personnel), la responsabilité du fait d'autrui (parents, commettants, etc.) et la responsabilité du fait des choses (garde de la chose, rôle actif de la chose)."
+  Instructions: "Détailler les différentes catégories de faits générateurs : la responsabilité du fait personnel (faute), la responsabilité du fait des choses (garde d'une chose), et la responsabilité du fait d'autrui (parents, commettants, etc.). Expliquer les conditions propres à chaque type de fait générateur."
 
 ---
 
 ### GLOBAL CONTEXT:
-- Course Name: "Droit des Obligations et Responsabilité Civile"
+- Course Name: "Droit des obligations et responsabilité civile"
 - Academic Level: "University Year 2 / Bachelor 2nd Year (L2)"
 - Lesson Title: "La responsabilité civile extracontractuelle : Réparation des dommages et faits générateurs"
 - Discipline: "Droit"
@@ -74,6 +74,20 @@ None. This is the first block of the lesson.
 7. ACADEMIC REFERENCES CITATION MANDATE: You MUST actively cite the references listed under "### GLOBAL CONTEXT:" (if any) throughout the prose. Cite them inline using the format [[WIDGET:Reference:1]], [[WIDGET:Reference:2]], etc., where [[WIDGET:Reference:1]] maps to the first reference in the Global Context list, [[WIDGET:Reference:2]] to the second, and so on. Exclusively use [[WIDGET:Reference:num]] anchors. Do not define a bibliography section here; simply cite them inline in this format.
 8. MANDATORY DESCRIPTION FOR MEDIA WIDGETS: For all media/visual widgets (including Image, CustomFigure, Video, Audio, and Mermaid), you MUST append the description/caption as the third parameter in the widget anchor: [[WIDGET:Type:id:description]]. Absolute prohibition on placing external descriptions, captions, or comments (such as "*Description: ...*", "Caption: ...", "Légende: ...") directly in the narrative prose outside the anchor.
 9. ABSOLUTE PROHIBITION ON RAW MERMAID DIAGRAMS. Never write raw Mermaid diagram code (e.g. wrapped in ```mermaid ... ```) directly in the narrative prose. Instead, you MUST only generate a widget anchor like `[[WIDGET:Mermaid:id:description]]` on a separate blank line, describing what the diagram should display in the description. The actual Mermaid diagram code will be generated later by the Widgets Architect (Agent 3b).
+
+
+=============================================================================
+🚨 MANDATORY LEGIFRANCE HYPERLINKING REQUIREMENT FOR LAW COURSES 🚨
+Since this lesson belongs to a Law/Legal Studies course, you MUST enrich your prose with a very dense set of direct hyperlinks to Legifrance (https://www.legifrance.gouv.fr) for:
+- EVERY article of a code (e.g., Code civil, Code pénal, Code de commerce, Code du travail, etc.).
+- Major jurisprudence, court decisions, and institutional rulings.
+
+Link Formatting Rules:
+- Exclusively use standard markdown links, for example: [article 1101 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040713) or [article 1240 du Code civil](https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006070721/) or [arrêt de la Cour de cassation](https://www.legifrance.gouv.fr/juri/id/JURITEXT000006935293/).
+- Ensure the URLs point to Legifrance. Do NOT invent URLs; use real Legifrance search or article links or standard mock links pointing to the official site if the exact ID is unknown.
+- Do NOT use custom HTML/JSX tags. Exclusively write standard markdown links: `[link text](https://www.legifrance.gouv.fr/...)`.
+- Ensure a massive density of Légifrance links to make this an exceptionally authoritative academic and professional resource!
+=============================================================================
 
 
 

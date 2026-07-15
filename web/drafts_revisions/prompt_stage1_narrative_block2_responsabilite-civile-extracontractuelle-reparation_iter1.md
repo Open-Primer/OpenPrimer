@@ -5,14 +5,14 @@ We are writing the lesson block-by-block.
 - This is Block 2 out of 3.
 - You MUST write the content for the following sections:
 * Heading: "## Le dommage réparable et le lien de causalité"
-  Instructions: "Cette section analysera les deux autres conditions cumulatives de la responsabilité civile. Elle définira le dommage réparable (préjudice) en explorant ses différentes catégories (matériel, corporel, moral) et ses caractères. Ensuite, elle expliquera le lien de causalité entre le fait générateur et le dommage, en présentant les théories de la causalité (équivalence des conditions, causalité adéquate) et les difficultés d'appréciation."
-* Heading: "## Les causes d'exonération de la responsabilité"
-  Instructions: "Cette section examinera les différentes causes permettant d'atténuer ou d'exclure la responsabilité de l'auteur du dommage. Elle traitera de la force majeure, du fait de la victime et du fait d'un tiers, en précisant leurs conditions d'application et leurs effets sur l'indemnisation."
+  Instructions: "Analyser la notion de dommage réparable (matériel, corporel, moral), ses caractères (certain, direct, légitime). Expliquer ensuite le lien de causalité entre le fait générateur et le dommage, et les différentes théories de la causalité (équivalence des conditions, causalité adéquate)."
+* Heading: "## Les causes d'exonération de responsabilité"
+  Instructions: "Présenter les principales causes d'exonération de responsabilité : la force majeure, le fait d'un tiers et la faute de la victime. Expliquer leurs conditions d'application et leurs effets sur l'obligation de réparation."
 
 ---
 
 ### GLOBAL CONTEXT:
-- Course Name: "Droit des Obligations et Responsabilité Civile"
+- Course Name: "Droit des obligations et responsabilité civile"
 - Academic Level: "University Year 2 / Bachelor 2nd Year (L2)"
 - Lesson Title: "La responsabilité civile extracontractuelle : Réparation des dommages et faits générateurs"
 - Discipline: "Droit"
@@ -62,18 +62,23 @@ Please write them exactly in this anchor format [[WIDGET:Type:unique_id:descript
 ### PREVIOUS TEXT (for transitions and context):
 Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
 """
-... ause à autrui un dommage, oblige celui par la faute duquel il est arrivé à le réparer." L'article 1241 ajoute que "Chacun est responsable du dommage qu'il a causé non seulement par sa faute, mais encore par sa négligence ou par son imprudence." La faute est donc un manquement à une obligation préexistante, qu'elle soit légale, réglementaire ou issue d'un devoir général de prudence et de diligence. Elle peut être intentionnelle (faute dolosive) ou non intentionnelle (négligence, imprudence). La jurisprudence et la doctrine, notamment [[WIDGET:RealPerson:jean_carbonnier:Jean Carbonnier]], ont longuement débattu des éléments constitutifs de la faute, insistant sur l'aspect objectif (violation d'une norme de conduite) et subjectif (capacité de discernement de l'auteur) [[WIDGET:Reference:2]].
+... https://www.legifrance.gouv.fr/juri/id/JURITEXT000006935293/), a défini le gardien comme celui qui a l'usage, la direction et le contrôle de la chose. Le propriétaire est présumé gardien, mais il peut transférer la garde (par exemple, en cas de vol ou de prêt).
+*   **Le rôle actif de la chose dans la réalisation du dommage** : La chose doit avoir été l'instrument du dommage. Si la chose est inerte, il faut prouver qu'elle était dans une position anormale ou en mauvais état. Si elle est en mouvement, son simple contact avec la victime suffit à présumer son rôle actif.
 
-### La responsabilité du fait d'autrui
+### 3. La responsabilité du fait d'autrui
 
-Par dérogation au principe selon lequel on n'est responsable que de son propre fait, l'article 1242 alinéa 1er du Code civil pose le principe général selon lequel "On est responsable non seulement du dommage que l'on cause par son propre fait, mais encore de celui qui est causé par le fait des personnes dont on doit répondre, ou des choses que l'on a sous sa garde." Ce principe a servi de fondement à l'élaboration de régimes spéciaux de responsabilité du fait d'autrui, notamment :
-*   **La responsabilité des parents du fait de leurs enfants mineurs** (article 1242 al. 4 C. civ.) : Les père et mère sont solidairement responsables du dommage causé par leurs enfants mineurs habitant avec eux. Cette responsabilité est de plein droit et n'exige pas la preuve d'une faute des parents, mais d'une faute de l'enfant.
-*   **La responsabilité des commettants du fait de leurs préposés** (article 1242 al. 5 C. civ.) : Les maîtres et les commettants sont responsables du dommage causé par leurs domestiques et préposés dans les fonctions auxquelles ils les ont employés. Il s'agit d'une responsabilité sans faute du commettant, dès lors que le préposé a agi dans le cadre de ses fonctions.
-*   D'autres régimes existent pour les artisans du fait de leurs apprentis, et les enseignants du fait de leurs élèves.
+L'[article 1242 alinéa 1er du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040713) pose le principe général de la responsabilité du fait d'autrui, mais les alinéas suivants et la jurisprudence ont développé des cas spécifiques :
 
-### La responsabilité du fait des choses
+*   **Responsabilité des parents du fait de leurs enfants mineurs** ([article 1242 alinéa 4 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040713)) : Les père et mère sont solidairement responsables du dommage causé par leurs enfants mineurs habitant avec eux. C'est un régime de responsabilité de plein droit, c'est-à-dire qu'il n'est pas nécessaire de prouver une faute des parents. Il suffit de prouver le fait dommageable de l'enfant, sa minorité et la cohabitation. La [Cour de cassation, par l'arrêt Bertrand du 19 février 1997](https://www.legifrance.gouv.fr/juri/id/JURITEXT000007008182/), a même précisé que seule la force majeure ou la faute de la victime peut exonérer les parents.
 
-Également fondée sur l'article 1242 alinéa 1er du Code civil, cette responsabilité concerne le dommage causé par une chose. Elle est de plein droit, c'est-à-dire qu'elle n'exige pas la preuve d'une faute du gardien de la chose. La condition essentielle est la [[WIDGET:ConceptLink:garde_de_la_chose:garde de la chose]], entendue comme le pouvoir d'usage, de direction et de contrôle sur la chose. Le gardien est présumé responsable si la chose a joué un rôle actif dans la production du dommage. Ce rôle actif est généralement admis lorsque la chose est en mouvement et est entrée en contact avec la victime, ou si elle est inerte mais se trouvait dans une position anormale ou était en mauvais état [[WIDGET:Reference:4]].
+*   **Responsabilité des commettants du fait de leurs préposés** ([article 1242 alinéa 5 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040713)) : Les maîtres et les commettants sont responsables du dommage causé par leurs domestiques et préposés dans les fonctions auxquelles ils les ont employés. Les conditions sont :
+    *   Un lien de préposition (lien de subordination juridique).
+    *   Un fait dommageable commis par le préposé.
+    *   Le fait doit avoir été commis dans l'exercice des fonctions ou à l'occasion de celles-ci. L'[arrêt Costedoat de la Cour de cassation du 25 février 2000](https://www.legifrance.gouv.fr/juri/id/JURITEXT000007008182/) a posé le principe de l'immunité du préposé agissant dans les limites de sa mission.
+
+*   **Autres cas de responsabilité du fait d'autrui** : La jurisprudence a étendu cette responsabilité à d'autres situations, notamment :
+    *   Les artisans du fait de leurs apprentis ([article 1242 alinéa 6 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040713)).
+    *   Les associations sportives du fait de leurs membres (reconnu par la jurisprudence, notamment l'[arrêt Ass. Les Sports Réunis de la Cour de cassation du 13 décembre 2002](https://www.legifrance.gouv.fr/juri/id/JURITEXT000007008182/)).
 
 [[WIDGET:Quiz:faits_generateurs:Quiz sur les faits générateurs de responsabilité]]
 """
@@ -90,6 +95,20 @@ Par dérogation au principe selon lequel on n'est responsable que de son propre 
 7. ACADEMIC REFERENCES CITATION MANDATE: You MUST actively cite the references listed under "### GLOBAL CONTEXT:" (if any) throughout the prose. Cite them inline using the format [[WIDGET:Reference:1]], [[WIDGET:Reference:2]], etc., where [[WIDGET:Reference:1]] maps to the first reference in the Global Context list, [[WIDGET:Reference:2]] to the second, and so on. Exclusively use [[WIDGET:Reference:num]] anchors. Do not define a bibliography section here; simply cite them inline in this format.
 8. MANDATORY DESCRIPTION FOR MEDIA WIDGETS: For all media/visual widgets (including Image, CustomFigure, Video, Audio, and Mermaid), you MUST append the description/caption as the third parameter in the widget anchor: [[WIDGET:Type:id:description]]. Absolute prohibition on placing external descriptions, captions, or comments (such as "*Description: ...*", "Caption: ...", "Légende: ...") directly in the narrative prose outside the anchor.
 9. ABSOLUTE PROHIBITION ON RAW MERMAID DIAGRAMS. Never write raw Mermaid diagram code (e.g. wrapped in ```mermaid ... ```) directly in the narrative prose. Instead, you MUST only generate a widget anchor like `[[WIDGET:Mermaid:id:description]]` on a separate blank line, describing what the diagram should display in the description. The actual Mermaid diagram code will be generated later by the Widgets Architect (Agent 3b).
+
+
+=============================================================================
+🚨 MANDATORY LEGIFRANCE HYPERLINKING REQUIREMENT FOR LAW COURSES 🚨
+Since this lesson belongs to a Law/Legal Studies course, you MUST enrich your prose with a very dense set of direct hyperlinks to Legifrance (https://www.legifrance.gouv.fr) for:
+- EVERY article of a code (e.g., Code civil, Code pénal, Code de commerce, Code du travail, etc.).
+- Major jurisprudence, court decisions, and institutional rulings.
+
+Link Formatting Rules:
+- Exclusively use standard markdown links, for example: [article 1101 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040713) or [article 1240 du Code civil](https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006070721/) or [arrêt de la Cour de cassation](https://www.legifrance.gouv.fr/juri/id/JURITEXT000006935293/).
+- Ensure the URLs point to Legifrance. Do NOT invent URLs; use real Legifrance search or article links or standard mock links pointing to the official site if the exact ID is unknown.
+- Do NOT use custom HTML/JSX tags. Exclusively write standard markdown links: `[link text](https://www.legifrance.gouv.fr/...)`.
+- Ensure a massive density of Légifrance links to make this an exceptionally authoritative academic and professional resource!
+=============================================================================
 
 
 

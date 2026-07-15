@@ -727,9 +727,9 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
         finalLevelEN = tLevel;
       } else {
         const [tName, tDesc, tLevel] = await Promise.all([
-          translateText(editNameEN, lang, 'FR'),
-          translateText(editDescEN, lang, 'FR'),
-          translateText(editLevelEN, lang, 'FR')
+          translateText(editNameEN, 'EN', 'FR'),
+          translateText(editDescEN, 'EN', 'FR'),
+          translateText(editLevelEN, 'EN', 'FR')
         ]);
         finalNameFR = tName;
         finalDescFR = tDesc;
@@ -906,15 +906,15 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
         finalLevelEN = rawLevel ? await translateText(rawLevel, 'FR', 'EN') : "High School / University";
       } else {
         finalNameEN = newWidgetNameEN.trim();
-        finalNameFR = await translateText(finalNameEN, lang, 'FR');
+        finalNameFR = await translateText(finalNameEN, 'EN', 'FR');
 
         const rawDesc = newWidgetDescEN.trim();
         finalDescEN = rawDesc || "Custom interactive component built for pedagogical curriculum enrichment.";
-        finalDescFR = rawDesc ? await translateText(rawDesc, lang, 'FR') : "Composant interactif personnalisé pour l'enrichissement pédagogique.";
+        finalDescFR = rawDesc ? await translateText(rawDesc, 'EN', 'FR') : "Composant interactif personnalisé pour l'enrichissement pédagogique.";
 
         const rawLevel = newWidgetLevelEN.trim();
         finalLevelEN = rawLevel || "High School / University";
-        finalLevelFR = rawLevel ? await translateText(rawLevel, lang, 'FR') : "Lycée / Université";
+        finalLevelFR = rawLevel ? await translateText(rawLevel, 'EN', 'FR') : "Lycée / Université";
       }
 
       // Generate the widgetId Clean from English Name

@@ -870,7 +870,7 @@ export default function CurriculumPage() {
       level = 'L1'; subject = 'Mathematics'; targetSlug = 'Statistics';
     }
 
-    window.location.href = getCoursePathHelper(level, subject, targetSlug, resolvedSlug, lang);
+    window.location.href = getCoursePathHelper(level, subject, targetSlug, resolvedSlug, targetLang);
   };
 
 

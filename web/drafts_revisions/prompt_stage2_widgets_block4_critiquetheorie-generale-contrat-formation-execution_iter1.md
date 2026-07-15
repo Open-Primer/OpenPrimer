@@ -5,81 +5,209 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
     "props": {
       "questions": [
         {
-          "q": "Quelles sont les conditions essentielles de validité d'un contrat en droit français, telles qu'énoncées par le Code civil ?",
-          "explanation": "L'article 1128 du Code civil dispose que sont nécessaires à la validité d'un contrat : 1° Le consentement des parties ; 2° Leur capacité de contracter ; 3° Un contenu licite et certain.",
+          "q": "Quelle est la condition essentielle pour la validité du consentement dans la formation d'un contrat ?",
+          "explanation": "En droit français, le consentement est une condition de validité du contrat. Il doit être exempt de vices (erreur, dol, violence) pour être considéré comme libre et éclairé.",
           "options": [
             {
-              "text": "Le consentement des parties, leur capacité de contracter, un contenu licite et certain.",
+              "text": "Le consentement doit être écrit.",
+              "correct": false
+            },
+            {
+              "text": "Le consentement doit être libre et éclairé.",
               "correct": true
             },
             {
-              "text": "L'accord des volontés, la signature d'un acte authentique, un prix déterminé.",
+              "text": "Le consentement doit être donné devant notaire.",
               "correct": false
             },
             {
-              "text": "La bonne foi des parties, l'absence de vices du consentement, l'enregistrement fiscal.",
-              "correct": false
-            },
-            {
-              "text": "La présence de témoins, un délai de rétractation, une clause pénale.",
+              "text": "Le consentement doit être tacite.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Parmi les propositions suivantes, laquelle ne constitue PAS un vice du consentement susceptible d'entraîner la nullité relative du contrat ?",
-          "explanation": "L'erreur, le dol et la violence sont les trois vices du consentement prévus par le Code civil (articles 1130 et suivants). La lésion n'est un vice du consentement que dans des cas exceptionnels et limitativement énumérés par la loi (ex: vente d'immeuble, partage), elle n'est pas une cause générale de nullité.",
+          "q": "Qu'est-ce qu'un dol en droit des contrats ?",
+          "explanation": "Le dol est un vice du consentement caractérisé par des manœuvres, des mensonges ou une réticence dolosive ayant pour but de provoquer une erreur chez le cocontractant et de le pousser à conclure le contrat.",
           "options": [
             {
-              "text": "L'erreur.",
+              "text": "Une erreur commise par l'une des parties.",
               "correct": false
             },
             {
-              "text": "Le dol.",
+              "text": "Une violence physique exercée pour obtenir le consentement.",
               "correct": false
             },
             {
-              "text": "La violence.",
-              "correct": false
-            },
-            {
-              "text": "La lésion.",
-              "correct": true
-            }
-          ]
-        },
-        {
-          "q": "Quel principe fondamental du droit des contrats est exprimé par l'adage 'Pacta sunt servanda' ?",
-          "explanation": "'Pacta sunt servanda' signifie 'les conventions doivent être respectées'. C'est le principe de la force obligatoire du contrat, désormais codifié à l'article 1103 du Code civil, selon lequel les contrats légalement formés tiennent lieu de loi à ceux qui les ont faits.",
-          "options": [
-            {
-              "text": "Le principe de la liberté contractuelle.",
-              "correct": false
-            },
-            {
-              "text": "Le principe de la force obligatoire du contrat.",
+              "text": "Une manœuvre frauduleuse visant à tromper l'autre partie pour l'inciter à contracter.",
               "correct": true
             },
             {
-              "text": "Le principe de la bonne foi.",
-              "correct": false
-            },
-            {
-              "text": "Le principe de l'effet relatif des contrats.",
+              "text": "Un cas de force majeure empêchant l'exécution du contrat.",
               "correct": false
             }
           ]
         },
         {
-          "q": "En cas d'inexécution contractuelle, quelle sanction permet au créancier d'obtenir l'exécution de la prestation due par le débiteur, si celle-ci est possible ?",
-          "explanation": "L'exécution forcée en nature (article 1221 du Code civil) est la sanction qui vise à contraindre le débiteur à réaliser la prestation promise. La résolution met fin au contrat, la réduction du prix est une sanction spécifique, et la clause pénale est une évaluation forfaitaire des dommages-intérêts.",
+          "q": "Quelle est la sanction principale d'un contrat dont le consentement est vicié ?",
+          "explanation": "Les vices du consentement (erreur, dol, violence) entraînent la nullité relative du contrat, qui ne peut être invoquée que par la partie protégée.",
           "options": [
             {
               "text": "La résolution du contrat.",
               "correct": false
             },
             {
-              "text": "La réduction du prix.",
+              "text": "La caducité du contrat.",
+              "correct": false
+            },
+            {
+              "text": "La nullité relative du contrat.",
+              "correct": true
+            },
+            {
+              "text": "L'inopposabilité du contrat.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Selon le principe de la force obligatoire des contrats (article 1103 du Code civil), que signifie \"les contrats légalement formés tiennent lieu de loi à ceux qui les ont faits\" ?",
+          "explanation": "Ce principe fondamental signifie que les parties sont liées par les engagements qu'elles ont pris et ne peuvent s'en délier unilatéralement, sauf exceptions prévues par la loi ou le contrat.",
+          "options": [
+            {
+              "text": "Les contrats doivent être rédigés par un juriste.",
+              "correct": false
+            },
+            {
+              "text": "Les parties sont obligées de respecter les termes du contrat comme si c'était une loi.",
+              "correct": true
+            },
+            {
+              "text": "Les contrats peuvent être modifiés unilatéralement par l'une des parties.",
+              "correct": false
+            },
+            {
+              "text": "Les contrats n'ont de valeur que s'ils sont homologués par un juge.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Qu'est-ce que la résolution d'un contrat ?",
+          "explanation": "La résolution sanctionne l'inexécution d'une obligation contractuelle. Elle entraîne l'anéantissement rétroactif du contrat, remettant les parties dans l'état où elles se trouvaient avant la conclusion du contrat.",
+          "options": [
+            {
+              "text": "La modification des termes du contrat par accord mutuel.",
+              "correct": false
+            },
+            {
+              "text": "L'annulation rétroactive du contrat en raison d'un vice de formation.",
+              "correct": false
+            },
+            {
+              "text": "La disparition rétroactive du contrat en cas d'inexécution grave.",
+              "correct": true
+            },
+            {
+              "text": "La suspension de l'exécution du contrat.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Quel est le principe de la relativité des contrats ?",
+          "explanation": "Le principe de la relativité des contrats (article 1199 du Code civil) signifie que le contrat ne crée d'obligations qu'entre les parties. Il ne peut ni nuire ni profiter aux tiers, sauf exceptions légales (ex: stipulation pour autrui).",
+          "options": [
+            {
+              "text": "Les contrats ne produisent d'effets qu'entre les parties contractantes.",
+              "correct": true
+            },
+            {
+              "text": "Les contrats peuvent toujours être remis en question par des tiers.",
+              "correct": false
+            },
+            {
+              "text": "Les contrats sont toujours opposables aux tiers.",
+              "correct": false
+            },
+            {
+              "text": "Les contrats sont relatifs à la situation économique du moment.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Dans quel cas un contrat peut-il être frappé de nullité absolue ?",
+          "explanation": "La nullité absolue sanctionne la violation d'une règle d'ordre public protégeant l'intérêt général (ex: illicéité de l'objet ou de la cause). Elle peut être invoquée par toute personne ayant un intérêt, ou par le ministère public.",
+          "options": [
+            {
+              "text": "En cas de vice du consentement.",
+              "correct": false
+            },
+            {
+              "text": "En cas d'incapacité d'une partie.",
+              "correct": false
+            },
+            {
+              "text": "Lorsque la règle violée protège l'intérêt général.",
+              "correct": true
+            },
+            {
+              "text": "Lorsque la règle violée protège l'intérêt particulier d'une partie.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Qu'est-ce que l'offre de contracter doit contenir pour être valable ?",
+          "explanation": "Pour être qualifiée d'offre, la proposition doit être ferme (volonté de s'engager) et précise (contenir les éléments essentiels du futur contrat).",
+          "options": [
+            {
+              "text": "Uniquement le prix du bien ou service.",
+              "correct": false
+            },
+            {
+              "text": "Les éléments essentiels du contrat envisagé et la volonté de son auteur d'être lié en cas d'acceptation.",
+              "correct": true
+            },
+            {
+              "text": "Une durée de validité illimitée.",
+              "correct": false
+            },
+            {
+              "text": "La signature des deux parties.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "Quelle est la différence entre la nullité et la caducité d'un contrat ?",
+          "explanation": "La nullité sanctionne un défaut de validité du contrat au moment de sa formation. La caducité intervient lorsqu'un élément essentiel à la validité du contrat, régulièrement formé, disparaît après sa conclusion.",
+          "options": [
+            {
+              "text": "La nullité sanctionne un défaut de formation, la caducité une disparition ultérieure d'un élément essentiel.",
+              "correct": true
+            },
+            {
+              "text": "La nullité est toujours rétroactive, la caducité jamais.",
+              "correct": false
+            },
+            {
+              "text": "La nullité est prononcée par le juge, la caducité est automatique.",
+              "correct": false
+            },
+            {
+              "text": "La nullité concerne les contrats à durée indéterminée, la caducité les contrats à durée déterminée.",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "q": "En cas d'inexécution contractuelle, quelle est la première sanction que le créancier peut demander, si elle est possible ?",
+          "explanation": "L'exécution forcée en nature est la sanction de droit commun de l'inexécution contractuelle. Le créancier peut en demander l'exécution, sauf si elle est impossible ou si son coût est manifestement déraisonnable.",
+          "options": [
+            {
+              "text": "La résolution du contrat.",
               "correct": false
             },
             {
@@ -87,41 +215,28 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
               "correct": true
             },
             {
-              "text": "La clause pénale.",
-              "correct": false
-            }
-          ]
-        },
-        {
-          "q": "À quel stade de la vie du contrat le principe de bonne foi doit-il impérativement être respecté en droit français ?",
-          "explanation": "L'article 1104 du Code civil dispose que 'Les contrats doivent être négociés, formés et exécutés de bonne foi.' Le principe de bonne foi est donc transversal à toutes les étapes de la vie contractuelle.",
-          "options": [
-            {
-              "text": "Uniquement lors de la formation du contrat.",
+              "text": "La réduction du prix.",
               "correct": false
             },
             {
-              "text": "Uniquement lors de l'exécution du contrat.",
+              "text": "La suspension de sa propre obligation.",
               "correct": false
-            },
-            {
-              "text": "Uniquement lors de la rupture du contrat.",
-              "correct": false
-            },
-            {
-              "text": "Lors de la négociation, de la formation et de l'exécution du contrat.",
-              "correct": true
             }
           ]
         }
       ],
-      "durationLimit": 300
+      "durationLimit": 600
     }
   },
   "references": [
-    "Bénabent, Alain. Droit des obligations. 18e éd., LGDJ, 2020.",
-    "Terré, François, Philippe Simler et Yves Lequette. Droit civil : Les obligations. 12e éd., Dalloz, 2019.",
-    "Malaurie, Philippe, Laurent Aynès et Pierre-Yves Gautier. Droit des contrats. 13e éd., LGDJ, 2021."
+    "Terré, François, Philippe Simler, Yves Lequette et François Chénedé. Droit civil : Les obligations. 13e éd., Dalloz, 2022.",
+    "Malaurie, Philippe, Laurent Aynès et Pierre-Yves Gautier. Droit des obligations. 11e éd., LGDJ, 2022.",
+    "Carbonnier, Jean. Droit civil : Les obligations. Tome 4, 22e éd., PUF, 2000.",
+    "Mazeaud, Henri, Léon Mazeaud, Jean Mazeaud et François Chabas. Leçons de droit civil : Obligations, Théorie générale des obligations. Tome 2, Vol. 1, 10e éd., Montchrestien, 2000.",
+    "Benabent, Alain. Droit des obligations. 19e éd., LGDJ, 2022.",
+    "Fabre-Magnan, Muriel. Droit des obligations : Contrat et engagement unilatéral. 6e éd., PUF, 2022.",
+    "Jamin, Christophe et Gilles Goubeaux. Droit civil : Les obligations. 27e éd., LGDJ, 2022.",
+    "Delebecque, Philippe et Frédéric-Jérôme Pansier. Droit des obligations : Contrat. 9e éd., LexisNexis, 2022."
   ]
 }
 

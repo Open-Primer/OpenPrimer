@@ -2297,7 +2297,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
           
           try {
             // Check if this course page is available in the target language
-            const res = await fetch(`/api/content?slug=${newLevelSlug},${newSubjectSlug},${courseSlug},${targetLesson}&lang=${targetLang.toLowerCase()}`);
+            const res = await fetch(`/api/content?slug=${newLevelSlug},${newSubjectSlug},${courseSlug},${targetLesson}&lang=${targetLang.toLowerCase()}&strict=true`);
             if (res.ok) {
               window.location.href = targetPath;
               return;

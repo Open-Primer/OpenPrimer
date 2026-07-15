@@ -5,50 +5,50 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 1:
       {
         "title": "Introduction au Droit Civil",
         "slug": "introduction-droit-civil",
-        "level": "University Year 1",
+        "level": "University Year 1 / Bachelor 1st Year (L1)",
         "subject": "Droit"
       },
       {
-        "title": "Les Sources du Droit",
-        "slug": "sources-du-droit",
-        "level": "University Year 1",
+        "title": "Les sources du Droit des obligations",
+        "slug": "sources-droit-obligations",
+        "level": "University Year 1 / Bachelor 1st Year (L1)",
         "subject": "Droit"
       },
       {
-        "title": "Les Personnes et les Biens",
-        "slug": "personnes-biens",
-        "level": "University Year 1",
+        "title": "La notion d'acte juridique et de fait juridique",
+        "slug": "notion-acte-fait-juridique",
+        "level": "University Year 1 / Bachelor 1st Year (L1)",
         "subject": "Droit"
       }
     ]
   },
   "diagnosticQuiz": {
-    "question": "Quelle est la caractéristique essentielle qui distingue un contrat d'un simple fait juridique en droit français ?",
+    "question": "Quelle est la caractéristique essentielle qui distingue un acte juridique d'un fait juridique en droit français?",
     "options": [
-      "La présence d'un dommage causé à autrui.",
-      "La volonté concordante de deux ou plusieurs parties de produire des effets de droit.",
-      "L'intervention systématique d'une autorité publique pour sa formation.",
-      "L'existence d'une loi spécifique qui en détermine impérativement toutes les clauses."
+      "L'acte juridique est toujours écrit, contrairement au fait juridique.",
+      "L'acte juridique résulte d'une volonté délibérée de produire des effets de droit, tandis que le fait juridique produit des effets de droit indépendamment de la volonté.",
+      "Le fait juridique est toujours illicite, alors que l'acte juridique est licite.",
+      "L'acte juridique nécessite l'intervention d'un juge pour être valide."
     ],
     "correctIndex": 1,
-    "targetSectionId": "introduction-au-contrat",
-    "sectionTitle": "Introduction au Contrat"
+    "targetSectionId": "section-1-1",
+    "sectionTitle": "Distinction entre acte juridique et fait juridique"
   },
   "learningObjectives": {
     "knowledge": [
-      "Analyser les conditions de validité et de formation d'un contrat en droit français.",
-      "Distinguer les différentes classifications des contrats et leurs régimes juridiques spécifiques.",
-      "Expliquer les effets juridiques du contrat entre les parties et à l'égard des tiers."
+      "Analyser les conditions de validité et de formation du contrat en droit français.",
+      "Évaluer les différentes classifications des contrats et leurs régimes juridiques spécifiques.",
+      "Distinguer les effets juridiques du contrat entre les parties et à l'égard des tiers."
     ],
     "skills": [
-      "Évaluer la validité d'une clause contractuelle au regard des principes fondamentaux du droit des contrats.",
-      "Rédiger des clauses contractuelles simples respectant les exigences légales et jurisprudentielles.",
-      "Appliquer les règles d'interprétation des contrats pour résoudre des cas pratiques."
+      "Appliquer les principes de la théorie générale du contrat à la résolution de cas pratiques.",
+      "Rédiger des clauses contractuelles simples en respectant les exigences légales et jurisprudentielles.",
+      "Analyser la jurisprudence relative à l'exécution et à l'inexécution des obligations contractuelles."
     ],
     "attitudes": [
-      "Développer une rigueur intellectuelle dans l'analyse des situations contractuelles complexes.",
-      "Adopter une approche critique face aux évolutions législatives et jurisprudentielles en matière contractuelle.",
-      "Manifester un sens de la responsabilité dans la rédaction et l'exécution des engagements contractuels."
+      "Développer un esprit critique face aux enjeux éthiques et économiques du droit des contrats.",
+      "Adopter une rigueur juridique dans l'interprétation des textes et des situations contractuelles.",
+      "Manifester de l'autonomie dans la recherche et l'analyse des sources du droit des contrats."
     ]
   }
 }

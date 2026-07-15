@@ -222,10 +222,32 @@ export const CardSort: React.FC<CardSortProps> = ({ pairs, pairsString }) => {
   const resolvedPairs = React.useMemo(() => {
     if (pairs && pairs.length > 0) return pairs;
     if (pairsString) {
-      try {
-        return JSON.parse(pairsString);
-      } catch (e) {
-        console.error("Failed to parse CardSort pairsString JSON:", e);
+      const trimmed = pairsString.trim();
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        try {
+          return JSON.parse(trimmed);
+        } catch (e) {
+          console.error("Failed to parse CardSort pairsString as JSON:", e);
+        }
+      }
+      
+      // Fallback or primary parsing for '||' and ':' delimited format
+      if (trimmed.includes('||') || trimmed.includes(':')) {
+        try {
+          const parts = trimmed.split('||');
+          const parsed = parts.map((part, index) => {
+            const colonIndex = part.indexOf(':');
+            if (colonIndex !== -1) {
+              const concept = part.substring(0, colonIndex).trim();
+              const definition = part.substring(colonIndex + 1).trim();
+              return { id: String(index + 1), concept, definition };
+            }
+            return null;
+          }).filter((item): item is { id: string; concept: string; definition: string } => item !== null);
+          if (parsed.length > 0) return parsed;
+        } catch (err) {
+          console.error("Failed to parse CardSort pairsString as delimited pairs:", err);
+        }
       }
     }
     return DEFAULT_PAIRS[langKey] || DEFAULT_PAIRS.EN;

@@ -2,87 +2,96 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 3:
 {
   "conclusionSummary": {
     "items": [
-      "Cette leçon a permis d'explorer en profondeur les fondements de la responsabilité civile extracontractuelle en droit français.",
-      "Nous avons détaillé les trois conditions essentielles à sa mise en œuvre : l'existence d'un dommage, la présence d'un fait générateur et l'établissement d'un lien de causalité entre les deux.",
-      "Les faits générateurs ont été étudiés sous leurs différentes formes, qu'il s'agisse de la faute personnelle, du fait d'autrui ou du fait des choses, chacun obéissant à des régimes juridiques spécifiques.",
-      "Enfin, le principe cardinal de la réparation intégrale du dommage a été mis en lumière, soulignant l'objectif de replacer la victime dans la situation où elle se serait trouvée si le fait dommageable ne s'était pas produit.",
-      "La compréhension de ces mécanismes est fondamentale pour appréhender la protection des victimes et l'imputation des conséquences des actes illicites."
+      "La responsabilité civile extracontractuelle, régie principalement par les articles 1240 et suivants du Code civil, constitue un pilier fondamental du droit des obligations, visant à réparer les dommages causés en dehors de tout lien contractuel.",
+      "Son engagement repose sur la réunion de trois conditions cumulatives et essentielles : un fait générateur (faute, fait d'autrui ou fait des choses), un dommage certain et légitime, et un lien de causalité direct entre ce fait et ce dommage.",
+      "Le fait générateur peut prendre diverses formes, allant de la faute personnelle prouvée à la responsabilité objective du fait des choses ou d'autrui, illustrant la complexité et la diversité des situations juridiques.",
+      "Le dommage, qu'il soit corporel, matériel ou moral, doit être évalué selon le principe de la réparation intégrale, qui vise à replacer la victime dans la situation la plus proche de celle qui aurait été la sienne sans la survenance du préjudice.",
+      "La compréhension de ces mécanismes est cruciale pour appréhender les droits des victimes et les obligations des responsables, soulignant l'importance de la preuve et de l'appréciation souveraine des juges dans la mise en œuvre de ce régime."
     ]
   },
   "whatsNext": {
     "steps": [
       {
-        "title": "Explorer les régimes spéciaux de responsabilité",
-        "description": "Approfondir les spécificités de la responsabilité du fait des produits défectueux, des accidents de la circulation et de la responsabilité médicale.",
-        "slug": "regimes-speciaux-responsabilite"
-      },
-      {
-        "title": "Comprendre les modalités de la réparation",
-        "description": "Étudier les différentes formes de réparation (en nature, par équivalent) et les méthodes d'évaluation du dommage.",
-        "slug": "modalites-reparation-dommage"
-      },
-      {
-        "title": "Analyser les actions en justice des victimes",
-        "description": "Découvrir les procédures judiciaires et les voies de recours ouvertes aux victimes pour obtenir réparation de leur préjudice.",
-        "slug": "actions-justice-victimes"
+        "title": "Explorer la Responsabilité Contractuelle",
+        "description": "Après avoir maîtrisé les principes de la responsabilité civile extracontractuelle, la prochaine étape consistera à étudier la responsabilité contractuelle. Nous analyserons les conditions de son engagement, les causes d'exonération et les spécificités de la réparation des dommages résultant de l'inexécution ou de la mauvaise exécution d'un contrat.",
+        "slug": "droit-obligations-responsabilite-contractuelle"
       }
     ]
   },
   "goingFurther": {
     "items": [
       {
-        "title": "Droit civil. Les obligations",
+        "title": "Droit civil : Les obligations",
         "type": "book",
-        "description": "Ouvrage de référence couvrant l'ensemble du droit des obligations, y compris la responsabilité civile, par des auteurs majeurs du droit français.",
+        "description": "Ouvrage de référence incontournable pour l'étude approfondie du droit des obligations, incluant une section détaillée sur la responsabilité civile.",
         "author": "François Terré, Philippe Simler, Yves Lequette",
-        "url": "https://www.dalloz.fr/documentation/Document?id=DAL_OUVR/9782247210271",
+        "url": "https://www.dalloz.fr/documentation/Ouvrage/Droit_civil_Les_obligations-2023.html",
         "year": "2023"
       },
       {
-        "title": "Code civil français",
+        "title": "Légifrance : Code civil",
         "type": "website",
-        "description": "Accès direct au texte consolidé du Code civil, notamment les articles relatifs à la responsabilité civile (articles 1240 et suivants), source législative fondamentale.",
-        "author": "Légifrance",
+        "description": "Accès direct et constamment mis à jour aux articles du Code civil français, notamment ceux relatifs à la responsabilité civile (articles 1240 et suivants).",
         "url": "https://www.legifrance.gouv.fr/codes/id/LEGITEXT000006070721/"
       },
       {
-        "title": "L'évolution de la responsabilité civile en France : entre tradition et modernité",
+        "title": "La responsabilité civile : Fondements et évolutions",
         "type": "article",
-        "description": "Analyse des grandes tendances et réformes récentes affectant le régime de la responsabilité civile, par une spécialiste reconnue.",
+        "description": "Analyse des principes fondamentaux et des évolutions jurisprudentielles et doctrinales de la responsabilité civile en droit français.",
         "author": "Geneviève Viney",
-        "url": "https://www.dalloz-actualite.fr/recherche/responsabilite-civile",
-        "year": "2018"
-      },
-      {
-        "title": "Conférence sur la réforme de la responsabilité civile",
-        "type": "video",
-        "description": "Conférence universitaire présentant les enjeux et les propositions de réforme du droit de la responsabilité civile, offrant une perspective académique.",
-        "author": "Université Paris 1 Panthéon-Sorbonne",
-        "url": "https://www.youtube.com/results?search_query=responsabilite+civile+reforme+conference",
-        "year": "2020"
+        "url": "https://www.cairn.info/revue-droit-et-societe-2006-1-page-13.htm",
+        "year": "2006"
       }
     ]
   },
   "glossary": [
     {
       "term": "Responsabilité civile extracontractuelle",
-      "definition": "Obligation légale de réparer le dommage causé à autrui en dehors de tout contrat préexistant. Elle repose sur la démonstration d'un dommage, d'un fait générateur et d'un lien de causalité."
+      "definition": "Obligation légale de réparer le dommage causé à autrui en dehors de tout lien contractuel préexistant, fondée sur le principe général de ne pas nuire à autrui."
+    },
+    {
+      "term": "Faute",
+      "definition": "Comportement illicite, imprudent ou négligent, volontaire ou non, qui constitue le fait générateur principal de la responsabilité civile extracontractuelle."
     },
     {
       "term": "Dommage",
-      "definition": "Atteinte subie par une personne dans son patrimoine (dommage matériel), son intégrité physique ou psychique (dommage corporel) ou ses affections et sentiments (dommage moral). Il doit être certain, direct et légitime."
-    },
-    {
-      "term": "Fait générateur",
-      "definition": "Événement ou comportement à l'origine du dommage. Il peut s'agir d'une faute personnelle (article 1240 C. civ.), du fait d'autrui (article 1242 al. 1 C. civ.) ou du fait des choses (article 1242 al. 1 C. civ.)."
+      "definition": "Atteinte subie par une personne dans son patrimoine (matériel), son intégrité physique (corporel) ou ses affections (moral), qui doit être certaine, directe et légitime pour être réparable."
     },
     {
       "term": "Lien de causalité",
-      "definition": "Relation directe et nécessaire entre le fait générateur et le dommage subi par la victime. Sans ce lien, la responsabilité ne peut être engagée."
+      "definition": "Relation directe et nécessaire entre le fait générateur (faute ou fait objectif) et le dommage subi, sans laquelle la responsabilité ne peut être engagée."
     },
     {
       "term": "Réparation intégrale",
-      "definition": "Principe selon lequel la victime doit être replacée, autant que possible, dans la situation où elle se serait trouvée si le fait dommageable ne s'était pas produit, sans perte ni profit pour elle."
+      "definition": "Principe fondamental de la responsabilité civile selon lequel la victime doit être replacée, autant que possible, dans la situation où elle se serait trouvée si le dommage ne s'était pas produit, sans enrichissement ni appauvrissement."
+    },
+    {
+      "term": "Préjudice corporel",
+      "definition": "Atteinte à l'intégrité physique ou psychique d'une personne, incluant les blessures, l'incapacité, les souffrances endurées et le préjudice esthétique."
+    },
+    {
+      "term": "Préjudice matériel",
+      "definition": "Atteinte aux biens ou au patrimoine de la victime, se traduisant par une perte subie (damnum emergens) ou un gain manqué (lucrum cessans)."
+    },
+    {
+      "term": "Préjudice moral",
+      "definition": "Atteinte aux sentiments, à l'honneur, à la réputation, à la tranquillité ou à l'affection d'une personne, souvent difficile à évaluer financièrement."
+    },
+    {
+      "term": "Fait générateur",
+      "definition": "Événement ou comportement qui est à l'origine du dommage et qui, selon la loi, peut engager la responsabilité de son auteur (faute, fait d'autrui, fait des choses)."
+    },
+    {
+      "term": "Force majeure",
+      "definition": "Événement extérieur, imprévisible et irrésistible qui, en rompant le lien de causalité, exonère totalement ou partiellement le responsable de sa responsabilité."
+    },
+    {
+      "term": "Cas fortuit",
+      "definition": "Événement imprévisible et irrésistible, mais interne à l'activité du responsable, dont les effets sont souvent assimilés à ceux de la force majeure en matière de responsabilité."
+    },
+    {
+      "term": "Victime",
+      "definition": "Personne physique ou morale ayant subi un dommage direct et certain du fait d'autrui ou d'une chose, et qui est en droit de demander réparation."
     }
   ]
 }

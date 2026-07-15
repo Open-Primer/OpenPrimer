@@ -169,16 +169,7 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
       <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-indigo-600/5 rounded-full blur-[40px] pointer-events-none" />
       
       {/* Header and Toggle Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800/50">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-400">
-            <span className="text-lg">📚</span>
-          </div>
-          <div>
-            <h3 className="text-lg font-black text-white leading-tight">{t.title}</h3>
-          </div>
-        </div>
-        
+      <div className="flex items-center justify-end gap-4 mb-6 pb-4 border-b border-slate-800/50">
         {/* Toggle Pill Buttons */}
         <div className="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-850 w-fit">
           <button

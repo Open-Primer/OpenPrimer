@@ -4,15 +4,15 @@ Your task is to write a section of the academic MDX narrative content for the sp
 We are writing the lesson block-by-block.
 - This is Block 2 out of 3.
 - You MUST write the content for the following sections:
-* Heading: "## Les Conditions de Validité du Contrat après la Réforme de 2016"
-  Instructions: "Détailler les conditions essentielles à la validité du contrat telles que posées par la réforme de 2016 : le consentement (ses vices : erreur, dol, violence), la capacité des parties à contracter, et le contenu licite et certain du contrat."
-* Heading: "## L'Exécution et les Sanctions de l'Inexécution Contractuelle"
-  Instructions: "Analyser les effets du contrat entre les parties et envers les tiers. Présenter les différentes sanctions en cas d'inexécution contractuelle : l'exécution forcée en nature, la réduction du prix, la résolution du contrat, la responsabilité contractuelle et l'exception d'inexécution."
+* Heading: "## Les conditions de validité du contrat : Les piliers de l'engagement"
+  Instructions: "Analyser les conditions essentielles à la validité d'un contrat selon la réforme de 2016. Traiter du consentement (intégrité du consentement et vices du consentement : erreur, dol, violence), de la capacité des parties et du contenu licite et certain du contrat (objet et cause, puis licéité et équilibre)."
+* Heading: "## L'exécution et les sanctions de l'inexécution contractuelle"
+  Instructions: "Expliquer les principes de l'exécution du contrat (force obligatoire, bonne foi). Aborder les différentes sanctions en cas d'inexécution : l'exécution forcée en nature, la réduction du prix, l'exception d'inexécution, la résolution du contrat et la responsabilité contractuelle (dommages et intérêts)."
 
 ---
 
 ### GLOBAL CONTEXT:
-- Course Name: "Droit des Obligations et Responsabilité Civile"
+- Course Name: "Droit des obligations et responsabilité civile"
 - Academic Level: "University Year 2 / Bachelor 2nd Year (L2)"
 - Lesson Title: "La théorie générale du contrat : De la formation à l'exécution de l'acte juridique"
 - Discipline: "Droit"
@@ -62,30 +62,32 @@ Please write them exactly in this anchor format [[WIDGET:Type:unique_id:descript
 ### PREVIOUS TEXT (for transitions and context):
 Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
 """
-... fre peut en principe être rétractée, mais cette rétractation est encadrée par des délais raisonnables ou fixés par l'offrant, sous peine de responsabilité extracontractuelle [[WIDGET:Reference:5]].
+... isseraient à l'offrant la liberté de ne pas contracter (par exemple, "sous réserve de confirmation").
+
+Une proposition qui ne remplit pas ces conditions ne constitue qu'une invitation à entrer en pourparlers ou un appel d'offres.
+
+L'offre peut être assortie d'un délai exprès ou tacite. Pendant ce délai, l'offrant ne peut en principe pas la révoquer. Si l'offre est révoquée avant l'expiration du délai ou avant l'acceptation, la rétractation est fautive et engage la responsabilité extracontractuelle de son auteur, mais elle n'empêche pas la formation du contrat (art. [1115](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040737) et [1116 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040739)). L'offre devient caduque à l'expiration du délai ou, à défaut, à l'issue d'un délai raisonnable, ou encore en cas d'incapacité ou de décès de son auteur (art. [1117 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040741)).
 
 ### L'Acceptation
 
-L'acceptation est la manifestation de volonté du destinataire de l'offre d'être lié dans les termes de l'offre. Pour être valable, elle doit être :
-*   **Pure et simple** : Elle doit correspondre exactement à l'offre. Toute modification ou adjonction constitue une contre-proposition, qui équivaut à un refus de l'offre initiale et à l'émission d'une nouvelle offre.
-*   **Non équivoque** : Elle doit clairement exprimer l'intention d'accepter. Le silence ne vaut pas acceptation, sauf exceptions légales, usages professionnels ou relations d'affaires antérieures.
+L'acceptation est la manifestation de volonté du destinataire de l'offre d'être lié dans les termes de celle-ci. Pour être valable, l'acceptation doit être :
+*   **Pure et simple**: Elle doit correspondre exactement à l'offre. Toute modification ou adjonction par le destinataire de l'offre constitue une contre-proposition, qui équivaut à un refus de l'offre initiale et à l'émission d'une nouvelle offre (art. [1118 al. 3 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040743)).
+*   **Extériorisée**: L'acceptation doit être exprimée. Le silence ne vaut pas acceptation, sauf exceptions prévues par la loi, les usages, les relations d'affaires ou des circonstances particulières (art. [1120 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040747)).
 
-L'acceptation peut être expresse ou tacite (par exemple, l'exécution du contrat par le destinataire de l'offre).
+### Moment et lieu de formation du contrat
 
-### La Rencontre des Volontés et la Conclusion du Contrat
+La détermination du moment et du lieu de la formation du contrat est cruciale car elle permet de fixer la loi applicable, le point de départ des délais de prescription, ou encore le transfert de propriété et des risques.
 
-Le contrat est formé au moment où l'acceptation parvient à l'offrant. C'est la [[WIDGET:ConceptLink:theorie_reception:théorie de la réception]] qui est consacrée en droit français, et non la théorie de l'émission (moment où l'acceptation est envoyée) [[WIDGET:Reference:2]]. Le lieu de formation du contrat est celui où l'acceptation est parvenue à l'offrant. Ces précisions sont cruciales pour déterminer la loi applicable en cas de conflit de lois ou la juridiction compétente.
+Avant la réforme de 2016, la jurisprudence était divisée entre la théorie de l'émission (le contrat est formé dès que l'acceptation est émise) et la théorie de la réception (le contrat est formé lorsque l'offrant reçoit l'acceptation). L'Ordonnance de 2016 a clarifié cette question en consacrant la **théorie de la réception** à l'[article 1121 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040749) : "Le contrat est conclu dès que l'acceptation parvient à l'offrant. Il est réputé l'être au lieu où l'acceptation est parvenue."
 
-[[WIDGET:CustomFigure:contract_formation_diagram:Schéma de la formation du contrat par offre et acceptation]]
-
-### Les Pourparlers et les Avant-Contrats
-
-Avant la rencontre définitive de l'offre et de l'acceptation, les parties peuvent entrer en phase de [[WIDGET:Glossary:pourparlers:pourparlers]] (négociations préliminaires). Ces discussions ne sont pas contractuelles en elles-mêmes, mais elles doivent être menées de bonne foi. La rupture abusive des pourparlers peut engager la responsabilité extracontractuelle de son auteur, notamment si elle est brutale et sans motif légitime, causant un préjudice au partenaire [[WIDGET:Reference:1]].
-
-Par ailleurs, les parties peuvent conclure des **avant-contrats** pour sécuriser leurs négociations ou préparer la conclusion du contrat définitif. Les principaux avant-contrats sont :
-*   **Le pacte de préférence** : Une partie s'engage à proposer prioritairement la conclusion d'un contrat à une autre partie si elle décide de contracter.
-*   **La promesse unilatérale de contrat** : Une partie (le promettant) s'engage à conclure un contrat si l'autre partie (le bénéficiaire) lève l'option dans un certain délai. Le promettant est déjà lié, le bénéficiaire a une option.
-*   **La promesse synallagmatique de contrat** : Les deux parties s'engagent réciproquement à conclure le contrat définitif, mais subordonnent cette conclusion à la réalisation de certaines formalités (ex: signature de l'acte authentique pour une vente immobilière). Elle vaut généralement contrat définitif, sous réserve de ces formalités.
+[[WIDGET:Mermaid:formation_contrat_flowchart:Processus schématique de la formation du contrat]]
+mermaid
+graph TD
+    A[Offre (Précise et Ferme)] --> B{Réception par le Destinataire};
+    B --> C{Acceptation (Pure et Simple)};
+    C --> D{Envoi de l'Acceptation};
+    D --> E[Réception de l'Acceptation par l'Offrant];
+    E --> F[Contrat Formé];
 """
 
 ---
@@ -100,6 +102,20 @@ Par ailleurs, les parties peuvent conclure des **avant-contrats** pour sécurise
 7. ACADEMIC REFERENCES CITATION MANDATE: You MUST actively cite the references listed under "### GLOBAL CONTEXT:" (if any) throughout the prose. Cite them inline using the format [[WIDGET:Reference:1]], [[WIDGET:Reference:2]], etc., where [[WIDGET:Reference:1]] maps to the first reference in the Global Context list, [[WIDGET:Reference:2]] to the second, and so on. Exclusively use [[WIDGET:Reference:num]] anchors. Do not define a bibliography section here; simply cite them inline in this format.
 8. MANDATORY DESCRIPTION FOR MEDIA WIDGETS: For all media/visual widgets (including Image, CustomFigure, Video, Audio, and Mermaid), you MUST append the description/caption as the third parameter in the widget anchor: [[WIDGET:Type:id:description]]. Absolute prohibition on placing external descriptions, captions, or comments (such as "*Description: ...*", "Caption: ...", "Légende: ...") directly in the narrative prose outside the anchor.
 9. ABSOLUTE PROHIBITION ON RAW MERMAID DIAGRAMS. Never write raw Mermaid diagram code (e.g. wrapped in ```mermaid ... ```) directly in the narrative prose. Instead, you MUST only generate a widget anchor like `[[WIDGET:Mermaid:id:description]]` on a separate blank line, describing what the diagram should display in the description. The actual Mermaid diagram code will be generated later by the Widgets Architect (Agent 3b).
+
+
+=============================================================================
+🚨 MANDATORY LEGIFRANCE HYPERLINKING REQUIREMENT FOR LAW COURSES 🚨
+Since this lesson belongs to a Law/Legal Studies course, you MUST enrich your prose with a very dense set of direct hyperlinks to Legifrance (https://www.legifrance.gouv.fr) for:
+- EVERY article of a code (e.g., Code civil, Code pénal, Code de commerce, Code du travail, etc.).
+- Major jurisprudence, court decisions, and institutional rulings.
+
+Link Formatting Rules:
+- Exclusively use standard markdown links, for example: [article 1101 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040713) or [article 1240 du Code civil](https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006070721/) or [arrêt de la Cour de cassation](https://www.legifrance.gouv.fr/juri/id/JURITEXT000006935293/).
+- Ensure the URLs point to Legifrance. Do NOT invent URLs; use real Legifrance search or article links or standard mock links pointing to the official site if the exact ID is unknown.
+- Do NOT use custom HTML/JSX tags. Exclusively write standard markdown links: `[link text](https://www.legifrance.gouv.fr/...)`.
+- Ensure a massive density of Légifrance links to make this an exceptionally authoritative academic and professional resource!
+=============================================================================
 
 
 

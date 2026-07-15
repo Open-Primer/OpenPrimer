@@ -2,48 +2,13 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 5:
 {
   "interactiveComponents": [
     {
-      "id": "contract_lifecycle",
-      "componentType": "Mermaid",
-      "sectionAnchor": "Cycle de vie du contrat",
+      "id": "1",
+      "componentType": "Reference",
+      "sectionAnchor": "## Introduction au droit des contrats",
       "props": {
-        "chart": "graph TD\n    A[Négociation Précontractuelle] --> B{Offre et Acceptation};\n    B --> C{Formation du Contrat};\n    C --> D[Exécution des Obligations];\n    D --> E{Incidents d'Exécution?};\n    E -- Oui --> F[Sanctions de l'Inexécution];\n    E -- Non --> G[Extinction du Contrat];\n    F --> G;\n    G --> H[Conséquences Post-Contractuelles];"
-      }
-    },
-    {
-      "id": "conditions_validite",
-      "componentType": "Mermaid",
-      "sectionAnchor": "Conditions de validité du contrat",
-      "props": {
-        "chart": "graph TD\n    A[Contrat Valide] --> B{Consentement};\n    B -- Oui --> C{Capacité des Parties};\n    C -- Oui --> D{Objet Licite et Certain};\n    D -- Oui --> E{Cause Licite};\n    E -- Oui --> F[Contrat Formé];\n    B -- Non --> G[Nullité Relative];\n    C -- Non --> G;\n    D -- Non --> H[Nullité Absolue];\n    E -- Non --> H;"
-      }
-    },
-    {
-      "id": "sanctions_inexecution",
-      "componentType": "Mermaid",
-      "sectionAnchor": "Sanctions de l'inexécution contractuelle",
-      "props": {
-        "chart": "graph TD\n    A[Inexécution Contractuelle] --> B{Mise en Demeure};\n    B --> C{Options du Créancier};\n    C --> D[Exécution Forcée en Nature];\n    C --> E[Réduction du Prix];\n    C --> F[Résolution du Contrat];\n    C --> G[Réparation du Préjudice (Dommages et Intérêts)];\n    D --> H[Contrat Exécuté];\n    E --> H;\n    F --> I[Contrat Anéanti];\n    G --> J[Compensation];"
-      }
-    },
-    {
-      "id": "synthese_contrat",
-      "componentType": "Mermaid",
-      "sectionAnchor": "Synthèse du cycle de vie du contrat",
-      "props": {
-        "chart": "graph TD\n    A[Phase Précontractuelle] --> B[Formation du Contrat];\n    B --> C[Exécution du Contrat];\n    C --> D[Inexécution?];\n    D -- Oui --> E[Sanctions];\n    D -- Non --> F[Extinction du Contrat];\n    E --> F;"
-      }
-    },
-    {
-      "id": "carbonnier_loi_parties",
-      "componentType": "Citation",
-      "sectionAnchor": "La force obligatoire du contrat",
-      "props": {
-        "quote": "Le contrat est la loi des parties.",
         "author": "Jean Carbonnier",
-        "source": "Droit civil, Tome 4: Les Obligations",
-        "year": "1955",
-        "commentary": "Cette formule lapidaire de Jean Carbonnier, juriste français influent, encapsule le principe fondamental de la force obligatoire du contrat (pacta sunt servanda) en droit civil. Elle signifie que les engagements contractuels ont une valeur quasi-législative entre les parties qui les ont librement consentis, soulignant l'autonomie de la volonté comme pierre angulaire du droit des contrats. Le respect de cette 'loi des parties' est essentiel à la sécurité juridique et à la prévisibilité des relations économiques.",
-        "original": ""
+        "title": "Droit civil, Tome 4: Les Obligations",
+        "year": "2000"
       }
     }
   ]

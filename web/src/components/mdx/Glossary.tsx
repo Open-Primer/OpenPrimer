@@ -85,7 +85,7 @@ export const Glossary = ({
   const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const glossaryHeader = t.glossary_definition || "Glossary Definition";
   const readWikiLabel = isGoogleTranslateUrl
-    ? (language.toLowerCase() === 'fr' ? 'Approfondir (traduit)' : `Read on Wikipedia (${language.toUpperCase()}, translated)`)
+    ? (language.toLowerCase() === 'fr' ? 'Approfondir (traduit)' : 'Read on Wikipedia (translated)')
     : (language.toLowerCase() === 'fr' ? 'Approfondir sur Wikipédia' : 'Read on Wikipedia');
 
   // Clean definition formatting for popover content
@@ -158,7 +158,7 @@ export const Glossary = ({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-wider mt-1"
               >
-                {readWikiLabel} ({language.toUpperCase()})
+                {readWikiLabel}
                 <ExternalLink className="w-3 h-3" />
               </a>
             )}

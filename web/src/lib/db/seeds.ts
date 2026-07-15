@@ -827,6 +827,64 @@ export const mockCourses: MockCourse[] = [
     }
   },
   {
+    id: 20,
+    title: "Astrophysique Stellaire : Structure et Évolution",
+    slug: "stellar_evolution",
+    level: "L1",
+    subject: "Astrophysics",
+    description: "Cours universitaire d'introduction à l'astrophysique stellaire, couvrant l'équilibre hydrostatique, les équations d'état et la nucléosynthèse.",
+    languages: ["fr"],
+    langs: ["fr"],
+    ects: 6,
+    hours: 150,
+    prerequisites: ["Classical Mechanics", "General Chemistry"],
+    recommended_next_steps: ["Quantum Physics"],
+    recommendedNextSteps: ["Quantum Physics"],
+    units: [
+      { title: "Structure Stellaire", modules: ["L'Équilibre Hydrostatique", "Équations d'État", "Transferts d'Énergie"] },
+      { title: "Nucléosynthèse Stellaire", modules: ["Chaîne p-p et Cycle CNO", "Processus Triple-Alpha", "Cœur de Fer et Supernovas"] }
+    ],
+    popularity: 450,
+    is_active: true,
+    validations: 1,
+    created_at: new Date(2026, 6, 12).toISOString(),
+    last_revision_date: new Date(2026, 6, 12).toISOString(),
+    translations: {
+      FR: { title: "Astrophysique Stellaire : Structure et Évolution", description: "Cours universitaire d'introduction à l'astrophysique stellaire, couvrant l'équilibre hydrostatique, les équations d'état et la nucléosynthèse." },
+      EN: { title: "Stellar Astrophysics: Structure and Evolution", description: "University-level introductory course on stellar astrophysics, covering hydrostatic equilibrium, equations of state, and nucleosynthesis." }
+    }
+  },
+  {
+    id: 25,
+    title: "Introduction to Cryptography",
+    slug: "cryptography",
+    level: "L1",
+    subject: "Computer_Science",
+    description: "An academic introduction to the mathematical foundations of cryptography. Covers historical ciphers, symmetric encryption, entropy, public-key key exchange, and the RSA cryptosystem.",
+    languages: ["en", "es"],
+    langs: ["en", "es"],
+    ects: 6,
+    hours: 150,
+    prerequisites: ["Modular Arithmetic", "Introduction to Computer Science"],
+    recommended_next_steps: ["Information Security"],
+    recommendedNextSteps: ["Information Security"],
+    units: [
+      { title: "Symmetric Encryption & Foundations", modules: ["Historical Ciphers", "Symmetric Algorithms"] },
+      { title: "Asymmetric Cryptography", modules: ["Asymmetric Key Exchange", "Asymmetric RSA"] },
+      { title: "Summative Terminal Exam", modules: ["Final Evaluation"] }
+    ],
+    popularity: 1450,
+    is_active: true,
+    validations: 8,
+    created_at: new Date(2026, 6, 12).toISOString(),
+    last_revision_date: new Date(2026, 6, 12).toISOString(),
+    translations: {
+      EN: { title: "Computer Science: Introduction to Cryptography", description: "An academic introduction to the mathematical foundations of cryptography. Covers historical ciphers, symmetric encryption, entropy, public-key key exchange, and the RSA cryptosystem." },
+      ES: { title: "Informática: Introducción a la Criptografía", description: "Una introducción académica a los fundamentos matemáticos de la criptografía. Cubre cifrados históricos, cifrado simétrico, entropía, intercambio de claves públicas y el criptosistema RSA." },
+      FR: { title: "Informatique : Introduction à la Cryptographie", description: "Une introduction académique aux fondements mathématiques de la cryptographie. Couvre les chiffres historiques, le chiffrement symétrique, l'entropie, l'échange de clés publiques et le cryptosystème RSA." }
+    }
+  },
+  {
     id: 9999,
     title: "Sandbox de Test",
     slug: "test_widgets",

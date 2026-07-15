@@ -4314,8 +4314,8 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       let finalUrl = resolvedUrl;
       const isStable = resolvedUrl && /^https?:\/\//i.test(resolvedUrl) && 
         (
-          /doi\.org|ncbi\.nlm\.nih\.gov|sciencedirect/i.test(resolvedUrl) ||
-          ((/google\..*?\/books|books\.google/i.test(resolvedUrl) || /google\..*?\/scholar|scholar\.google/i.test(resolvedUrl)) && !/[?&]q=/i.test(resolvedUrl))
+          !/google\..*?\/(?:books|scholar)/i.test(resolvedUrl) || 
+          !/[?&]q=/i.test(resolvedUrl)
         );
 
       const isOriginalScholar = resolvedUrl && /google\..*?\/scholar|scholar\.google/i.test(resolvedUrl);
@@ -4333,7 +4333,19 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
         }
       }
 
-      const searchLabel = finalUrl.includes('books.google') ? 'Google Books' : 'Google Scholar';
+      let searchLabel = 'Google Scholar';
+      const lowercaseUrl = finalUrl.toLowerCase();
+      if (lowercaseUrl.includes('wikipedia.org')) {
+        searchLabel = currentLang === 'fr' ? 'Wikipédia' : 'Wikipedia';
+      } else if (lowercaseUrl.includes('youtube.com') || lowercaseUrl.includes('youtu.be') || lowercaseUrl.includes('vimeo.com')) {
+        searchLabel = currentLang === 'fr' ? 'Vidéo' : 'Video';
+      } else if (lowercaseUrl.includes('books.google')) {
+        searchLabel = 'Google Books';
+      } else if (lowercaseUrl.includes('scholar.google')) {
+        searchLabel = 'Google Scholar';
+      } else if (finalUrl && /^https?:\/\//i.test(finalUrl)) {
+        searchLabel = currentLang === 'fr' ? 'Site Web' : 'Website';
+      }
 
       return {
         num: parseInt(numStr, 10),
@@ -4489,6 +4501,21 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       // 6. Replace WFTA widget citations
       const dupWidgetRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*(?:Citation|Reference|Ref)\\s*:\\s*${oldNum}\\b`, 'gi');
       updatedPreRef = updatedPreRef.replace(dupWidgetRegex, `[[WIDGET:Reference:${newNum}`);
+
+      // 7. Replace inline Reference components attributes and children
+      const referenceMatchRegex = new RegExp(`(<Reference\\b[^>]*?>[\\s\\S]*?</Reference>|<Reference\\b[^>]*?/>)`, 'gi');
+      updatedPreRef = updatedPreRef.replace(referenceMatchRegex, (refTag) => {
+        let updatedTag = refTag;
+        // Replace id="..." or id={...} or id=...
+        updatedTag = updatedTag.replace(new RegExp(`\\bid=(["'{]?)${oldNum}\\b(["'}]?)`, 'g'), `id=$1${newNum}$2`);
+        // Replace name="..." or name={...}
+        updatedTag = updatedTag.replace(new RegExp(`\\bname=(["'{]?)${oldNum}\\b(["'}]?)`, 'g'), `name=$1${newNum}$2`);
+        // Replace term="..." or term={...}
+        updatedTag = updatedTag.replace(new RegExp(`\\bterm=(["'{]?)${oldNum}\\b(["'}]?)`, 'g'), `term=$1${newNum}$2`);
+        // Replace child text: >oldNum<
+        updatedTag = updatedTag.replace(new RegExp(`>\\s*${oldNum}\\s*<`, 'g'), `>${newNum}<`);
+        return updatedTag;
+      });
     }
 
     if (finalItems.length > 0) {
@@ -5255,7 +5282,7 @@ function isReferenceUsed(num: number, preRefText: string): boolean {
   const refIdRegex = new RegExp(`\\bref-${num}\\b`, 'i');
   const refNumRegex = new RegExp(`\\brefNum=\\{${num}\\}`, 'i');
   const widgetRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*(?:Citation|Reference|Ref)\\s*:\\s*${num}\\b`, 'i');
-  const elementRegex = new RegExp(`<Reference\\b[^>]*?\\bid=["']?${num}\\b`, 'i');
+  const elementRegex = new RegExp(`<Reference\\b[^>]*?\\b(?:id|name|term)=[{"']?${num}\\b`, 'i');
   
   return citeIdRegex.test(preRefText) || refIdRegex.test(preRefText) || refNumRegex.test(preRefText) || widgetRegex.test(preRefText) || elementRegex.test(preRefText);
 }

@@ -136,6 +136,35 @@ Also a component citation <Citation refNum={2} author="Carlson" source="Physiolo
     expect(items[0].num).toBe(1);
   });
 
+  test('should identify duplicate references, renumber inline Reference component attributes/children, and mark them as active/used', () => {
+    const rawMdx = `
+This is a Reference with curly braces <Reference id={2}>2</Reference> and another with name attribute <Reference name="2" /> and another with term attribute <Reference term='2' /> and simple id <Reference id=2 />.
+
+### References
+
+[1] Carlson, N. R. (2010). *Physiological Psychology*.
+[2] Carlson, N. R. (2010). *Physiological Psychology*.
+    `.trim();
+
+    const processed = preprocessMdx(rawMdx, 'fr');
+
+    // Verify inline Reference components: id/name/term and children should be rewritten to 1
+    expect(processed).toContain('<Reference id={1}>1</Reference>');
+    expect(processed).toContain('<Reference name="1" />');
+    expect(processed).toContain('<Reference term=\'1\' />');
+    expect(processed).toContain('<Reference id=1 />');
+
+    // Verify Reference items: should NOT be marked as isUnused
+    const base64Match = processed.match(/itemsBase64="([^"]+)"/);
+    expect(base64Match).not.toBeNull();
+    const decoded = Buffer.from(base64Match![1], 'base64').toString('utf8');
+    const items = JSON.parse(decoded);
+
+    expect(items.length).toBe(1);
+    expect(items[0].num).toBe(1);
+    expect(items[0].isUnused).toBe(false);
+  });
+
   test('should handle url-encoded garbage in Google Books search link and deduplicate successfully', () => {
     const rawMdx = `
 This is a cite<sup>[1](#ref-1)</sup> and another cite<sup>[2](#ref-2)</sup>.

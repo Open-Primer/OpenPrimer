@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, Sliders, Sparkles, RefreshCw, Layers, Database, Download } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface LoggedMeasurement {
   id: number;
@@ -16,7 +17,41 @@ interface LoggedMeasurement {
 
 export const WaveInterferenceSim = () => {
   const { language } = useLanguage();
-  const isFR = language === 'FR';
+
+  const localFR: Record<string, string> = {
+    "Optics & Young's Double-Slit Lab": "Laboratoire d'Optique & de Fentes de Young",
+    "Analyze wave diffraction: toggle Young's apertures barrier, drag the green oscilloscope probe to extract local amplitudes, and compile CSV reports.": "Expérimentez la diffraction : insérez une double fente de Young, glissez la sonde verte d'oscilloscope pour mesurer les amplitudes locales et exportez vos mesures.",
+    "Free Tank": "Cuve Libre",
+    "Fente Simple": "Fente Simple",
+    "Fentes de Young": "Fentes de Young",
+    "Single Slit": "Fente Simple",
+    "Double Slit": "Fentes de Young",
+    "Virtual Oscilloscope Probe z(t)": "Sonde Oscilloscope Virtuelle z(t)",
+    "Wave Controls": "Paramètres d'onde",
+    "Frequency (f)": "Fréquence (f)",
+    "Wavelength (λ)": "Longueur d'onde (λ)",
+    "Experimental Data Registry": "Journal d'acquisition de données",
+    "Clear": "Effacer",
+    "No logged values yet": "Aucune donnée enregistrée",
+    "Log Amplitude": "Consigner point",
+    "Export CSV": "Exporter CSV",
+    "Huygens-Fresnel Diffraction": "Interférences & Principe de Huygens",
+    "According to Huygens, apertures serve as emitters of coherent secondary wave fronts. Drag the green probe into dark nodes to analyze destructive waves cancelation.": "Selon Huygens, chaque fente se comporte comme une source d'ondes secondaires cohérentes. Glissez la sonde verte dans les zones sombres pour vérifier l'interférence destructive (amplitude minimale).",
+    "Obstacle": "Obstacle",
+    "Freq": "Fréq.",
+    "Lambda": "λ",
+    "Amplitude": "Amp.",
+    "Free": "Libre",
+    "Slits": "Fentes"
+  };
+
+  const t = (key: string) => {
+    const globalT = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+    const translated = globalT?.[key];
+    if (translated && translated !== key) return translated;
+    if (language.toUpperCase() === 'FR' && localFR[key]) return localFR[key];
+    return key;
+  };
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const scopeCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -438,12 +473,10 @@ export const WaveInterferenceSim = () => {
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-            <span>{isFR ? "Laboratoire d'Optique & de Fentes de Young" : "Optics & Young's Double-Slit Lab"}</span>
+            <span>{t("Optics & Young's Double-Slit Lab")}</span>
           </h3>
           <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            {isFR 
-              ? "Expérimentez la diffraction : insérez une double fente de Young, glissez la sonde verte d'oscilloscope pour mesurer les amplitudes locales et exportez vos mesures."
-              : "Analyze wave diffraction: toggle Young's apertures barrier, drag the green oscilloscope probe to extract local amplitudes, and compile CSV reports."}
+            {t("Analyze wave diffraction: toggle Young's apertures barrier, drag the green oscilloscope probe to extract local amplitudes, and compile CSV reports.")}
           </p>
         </div>
 
@@ -456,7 +489,7 @@ export const WaveInterferenceSim = () => {
                 obstacleMode === 'free' ? 'bg-indigo-600 text-white' : 'text-slate-400'
               }`}
             >
-              {isFR ? 'Cuve Libre' : 'Free Tank'}
+              {t("Free Tank")}
             </button>
             <button
               onClick={() => { setObstacleMode('single_slit'); setProbe({ x: 110, y: 60 }); }}
@@ -464,7 +497,7 @@ export const WaveInterferenceSim = () => {
                 obstacleMode === 'single_slit' ? 'bg-indigo-600 text-white' : 'text-slate-400'
               }`}
             >
-              Fente Simple
+              {t("Single Slit")}
             </button>
             <button
               onClick={() => { setObstacleMode('double_slit'); setProbe({ x: 110, y: 60 }); }}
@@ -472,7 +505,7 @@ export const WaveInterferenceSim = () => {
                 obstacleMode === 'double_slit' ? 'bg-indigo-600 text-white' : 'text-slate-400'
               }`}
             >
-              Fentes de Young
+              {t("Double Slit")}
             </button>
           </div>
 
@@ -517,7 +550,7 @@ export const WaveInterferenceSim = () => {
           <div className="rounded-3xl border border-slate-850 bg-[#020617] p-4 flex flex-col">
             <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-              <span>{isFR ? "Sonde Oscilloscope Virtuelle z(t)" : "Virtual Oscilloscope Probe z(t)"}</span>
+              <span>{t("Virtual Oscilloscope Probe z(t)")}</span>
             </span>
             <div className="w-full h-16 rounded-xl overflow-hidden border border-slate-900">
               <canvas ref={scopeCanvasRef} width={380} height={60} className="w-full h-full block" />
@@ -532,13 +565,13 @@ export const WaveInterferenceSim = () => {
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-cyan-400" />
-              <span>{isFR ? "Paramètres d'onde" : "Wave Controls"}</span>
+              <span>{t("Wave Controls")}</span>
             </h4>
 
             {/* Frequency Slider */}
             <div className="space-y-1">
               <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                <span>{isFR ? "Fréquence (f)" : "Frequency (f)"}</span>
+                <span>{t("Frequency (f)")}</span>
                 <span className="font-mono text-indigo-300">{frequency.toFixed(2)} Hz</span>
               </div>
               <input type="range" min="0.5" max="4.0" step="0.1" value={frequency} onChange={(e) => setFrequency(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
@@ -547,7 +580,7 @@ export const WaveInterferenceSim = () => {
             {/* Wavelength Slider */}
             <div className="space-y-1">
               <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                <span>{isFR ? "Longueur d'onde (λ)" : "Wavelength (λ)"}</span>
+                <span>{t("Wavelength (λ)")}</span>
                 <span className="font-mono text-indigo-300">{wavelength} px</span>
               </div>
               <input type="range" min="10" max="45" value={wavelength} onChange={(e) => setWavelength(parseInt(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
@@ -560,11 +593,11 @@ export const WaveInterferenceSim = () => {
               <div className="flex justify-between items-center border-b border-slate-850/50 pb-2">
                 <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2">
                   <Database className="w-4 h-4 text-cyan-400" />
-                  <span>{isFR ? "Journal d'acquisition de données" : "Experimental Data Registry"}</span>
+                  <span>{t("Experimental Data Registry")}</span>
                 </h4>
                 {dataLogs.length > 0 && (
                   <button onClick={handleClearLogs} className="text-[8.5px] font-black text-rose-400 uppercase hover:underline cursor-pointer">
-                    {isFR ? "Effacer" : "Clear"}
+                    {t("Clear")}
                   </button>
                 )}
               </div>
@@ -572,11 +605,11 @@ export const WaveInterferenceSim = () => {
               {/* Data Rows display */}
               <div className="max-h-24 overflow-y-auto pr-1 select-text space-y-1.5 text-[10px] font-mono text-slate-400">
                 {dataLogs.length === 0 ? (
-                  <p className="italic text-slate-500 text-center py-4">{isFR ? "Aucune donnée enregistrée" : "No logged values yet"}</p>
+                  <p className="italic text-slate-500 text-center py-4">{t("No logged values yet")}</p>
                 ) : (
                   dataLogs.map((log, idx) => (
                     <div key={log.id} className="flex justify-between bg-slate-950/40 p-1.5 rounded-lg border border-slate-900">
-                      <span>#{dataLogs.length - idx} [{log.obstacle}]</span>
+                      <span>#{dataLogs.length - idx} [{t(log.obstacle)}]</span>
                       <span>X:{log.x} Y:{log.y}</span>
                       <span className="text-emerald-400 font-bold">{log.amplitude} V</span>
                     </div>
@@ -591,7 +624,7 @@ export const WaveInterferenceSim = () => {
                 onClick={handleLogMeasurement}
                 className="py-2.5 rounded-xl bg-slate-800 text-slate-100 hover:bg-slate-700 transition-colors text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer border border-slate-700/50"
               >
-                <span>{isFR ? "Consigner point" : "Log Amplitude"}</span>
+                <span>{t("Log Amplitude")}</span>
               </button>
               <button
                 disabled={dataLogs.length === 0}
@@ -603,7 +636,7 @@ export const WaveInterferenceSim = () => {
                 }`}
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>{isFR ? "Exporter CSV" : "Export CSV"}</span>
+                <span>{t("Export CSV")}</span>
               </button>
             </div>
           </div>
@@ -612,12 +645,10 @@ export const WaveInterferenceSim = () => {
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-4 text-center select-text">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center justify-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>{isFR ? "Interférences & Principe de Huygens" : "Huygens-Fresnel Diffraction"}</span>
+              <span>{t("Huygens-Fresnel Diffraction")}</span>
             </span>
             <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed">
-              {isFR 
-                ? "Selon Huygens, chaque fente se comporte comme une source d'ondes secondaires cohérentes. Glissez la sonde verte dans les zones sombres pour vérifier l'interférence destructive (amplitude minimale)."
-                : "According to Huygens, apertures serve as emitters of coherent secondary wave fronts. Drag the green probe into dark nodes to analyze destructive waves cancelation."}
+              {t("According to Huygens, apertures serve as emitters of coherent secondary wave fronts. Drag the green probe into dark nodes to analyze destructive waves cancelation.")}
             </p>
           </div>
 

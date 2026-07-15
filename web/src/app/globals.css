@@ -1241,6 +1241,29 @@ body:not(.theme-paper):not(.theme-focus) footer {
 .theme-paper .profile-dropdown-menu p.text-white { color: #0f172a !important; }
 .theme-paper .profile-dropdown-menu p.text-slate-500 { color: #64748b !important; }
 
+/* Inline citations (superscript links) style */
+.prose sup {
+  font-size: 0.85em !important;
+  font-weight: 600;
+  vertical-align: baseline;
+  position: relative;
+  top: -0.4em;
+  margin-left: 0.1em;
+  margin-right: 0.1em;
+}
+.prose sup a {
+  text-decoration: none !important;
+  color: #3b82f6 !important; /* default accent blue */
+  transition: opacity 0.2s ease;
+}
+.prose sup a:hover {
+  opacity: 0.8;
+  text-decoration: underline !important;
+}
+.theme-paper .prose sup a {
+  color: #1d4ed8 !important; /* paper theme contrast blue */
+}
+
 /* Wikipedia Links styled as normal text link inside brackets */
 .prose a[href*="wikipedia.org"],
 .custom-alert a[href*="wikipedia.org"] {

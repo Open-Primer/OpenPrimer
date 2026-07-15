@@ -112,6 +112,32 @@ export const mockDatabaseProvider: DatabaseService = {
     return { data: null, error: null };
   },
   getLesson: async (courseSlug: string, lessonSlug: string, lang: string) => {
+    if ((courseSlug.toLowerCase() === 'droit_des_entreprises' || courseSlug.toLowerCase() === 'difficultes-procedures-collectives') && lessonSlug.toLowerCase() === 'difficultes-procedures-collectives') {
+      return {
+        data: {
+          course_slug: courseSlug,
+          lesson_slug: lessonSlug,
+          lang: lang.toLowerCase(),
+          title: "Les Difficultés et Procédures Collectives",
+          content: `---
+title: "Les Difficultés et Procédures Collectives"
+subject: "Droit des Entreprises"
+level: "L1"
+module: "Droit des Affaires"
+order: 10
+---
+# Les Difficultés et Procédures Collectives
+
+<EssayEvaluation 
+  prompt="Analysez les conditions d'ouverture de la procédure de sauvegarde par rapport au redressement judiciaire." 
+  gradingSystem="0/20" 
+  subject="Droit des Entreprises" 
+/>
+`
+        },
+        error: null
+      };
+    }
     if (courseSlug.toLowerCase() === 'classical_mechanics' && lessonSlug.toLowerCase() === 'newtons_laws_of_motion') {
       return {
         data: {
@@ -196,7 +222,60 @@ summative: true
         error: null
       };
     }
-    if (typeof window !== 'undefined') {
+    if (typeof window === 'undefined') {
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        
+        let contentDir = path.join(process.cwd(), 'content');
+        if (!fs.existsSync(contentDir)) {
+          contentDir = path.join(process.cwd(), 'web/content');
+        }
+        
+        if (fs.existsSync(contentDir)) {
+          const findCourseFolder = (dir: string): string | null => {
+            const items = fs.readdirSync(dir, { withFileTypes: true });
+            for (const item of items) {
+              const fullPath = path.join(dir, item.name);
+              if (item.isDirectory()) {
+                if (item.name.toLowerCase() === courseSlug.toLowerCase()) {
+                  return fullPath;
+                }
+                const sub = findCourseFolder(fullPath);
+                if (sub) return sub;
+              }
+            }
+            return null;
+          };
+          
+          const courseDir = findCourseFolder(contentDir);
+          if (courseDir) {
+            const fileName = `${lessonSlug}.${lang.toLowerCase()}.mdx`;
+            const filePath = path.join(courseDir, fileName);
+            if (fs.existsSync(filePath)) {
+              const fileContent = fs.readFileSync(filePath, 'utf-8');
+              let title = lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+              const fmMatch = fileContent.match(/title:\s*["']?(.*?)["']?\r?\n/);
+              if (fmMatch && fmMatch[1]) {
+                title = fmMatch[1];
+              }
+              return {
+                data: {
+                  course_slug: courseSlug,
+                  lesson_slug: lessonSlug,
+                  lang: lang.toLowerCase(),
+                  title: title,
+                  content: fileContent
+                },
+                error: null
+              };
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error reading lesson file from disk in mock-provider:", err);
+      }
+    } else {
       const stored = window.localStorage.getItem('openprimer_lessons');
       if (stored) {
         try {
@@ -216,10 +295,65 @@ summative: true
   },
 
   getFirstLessonSlug: async (courseSlug: string, lang: string) => {
+    if (courseSlug.toLowerCase() === 'droit_des_entreprises' || courseSlug.toLowerCase() === 'difficultes-procedures-collectives') {
+      return { data: 'difficultes-procedures-collectives', error: null };
+    }
     if (courseSlug.toLowerCase() === 'classical_mechanics') {
       return { data: 'newtons_laws_of_motion', error: null };
     }
-    if (typeof window !== 'undefined') {
+    if (typeof window === 'undefined') {
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        
+        let contentDir = path.join(process.cwd(), 'content');
+        if (!fs.existsSync(contentDir)) {
+          contentDir = path.join(process.cwd(), 'web/content');
+        }
+        
+        if (fs.existsSync(contentDir)) {
+          const findCourseFolder = (dir: string): string | null => {
+            const items = fs.readdirSync(dir, { withFileTypes: true });
+            for (const item of items) {
+              const fullPath = path.join(dir, item.name);
+              if (item.isDirectory()) {
+                if (item.name.toLowerCase() === courseSlug.toLowerCase()) {
+                  return fullPath;
+                }
+                const sub = findCourseFolder(fullPath);
+                if (sub) return sub;
+              }
+            }
+            return null;
+          };
+          
+          const courseDir = findCourseFolder(contentDir);
+          if (courseDir) {
+            const files = fs.readdirSync(courseDir);
+            const matchingFiles = files.filter((f: string) => f.endsWith(`.${lang.toLowerCase()}.mdx`));
+            
+            if (matchingFiles.length > 0) {
+              const lessons = matchingFiles.map((file: string) => {
+                const fullPath = path.join(courseDir, file);
+                const content = fs.readFileSync(fullPath, 'utf-8');
+                const slug = file.replace(/\.[a-z]{2}\.mdx$/i, '');
+                let order = 999;
+                const orderMatch = content.match(/order:\s*(\d+)/);
+                if (orderMatch && orderMatch[1]) {
+                  order = parseInt(orderMatch[1], 10);
+                }
+                return { slug, order };
+              });
+              
+              lessons.sort((a: any, b: any) => a.order - b.order);
+              return { data: lessons[0].slug, error: null };
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error finding first lesson from disk in mock-provider:", err);
+      }
+    } else {
       const stored = window.localStorage.getItem('openprimer_lessons');
       if (stored) {
         try {
@@ -261,6 +395,19 @@ summative: true
 
   getSyllabus: async (id: string) => {
     let course = getMockCourses().find(c => c.slug.toLowerCase() === id.toLowerCase());
+    if (!course && (id.toLowerCase() === 'droit_des_entreprises' || id.toLowerCase() === 'difficultes-procedures-collectives')) {
+      course = {
+        id: 9999,
+        title: "Droit des Entreprises",
+        slug: "droit_des_entreprises",
+        level: "L1",
+        subject: "droit_des_entreprises",
+        archivingLevel: 0,
+        is_active: true,
+        isActive: true,
+        languages: ['en', 'fr']
+      } as any;
+    }
     console.log(`[MOCK PROVIDER] getSyllabus called for id/slug: '${id}'. Found course:`, course ? { id: course.id, slug: course.slug, archivingLevel: course.archivingLevel } : null);
     if (course) {
       let mockLevels: Record<string, number> = {};
@@ -375,6 +522,24 @@ summative: true
 
       return course;
     });
+
+    if (!computedCourses.some(c => c.slug === 'droit_des_entreprises')) {
+      computedCourses.push({
+        id: 9999,
+        title: "Droit des Entreprises",
+        slug: "droit_des_entreprises",
+        level: "L1",
+        subject: "droit_des_entreprises",
+        archivingLevel: 0,
+        is_active: true,
+        isActive: true,
+        languages: ['en', 'fr'],
+        credits: 600,
+        validations: 10,
+        ratingCount: 5,
+        averageRating: 4.8
+      } as any);
+    }
 
     return { data: computedCourses, error: null };
   },

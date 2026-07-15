@@ -2,22 +2,16 @@ You are a world-class educational curriculum architect and JSON data validator (
 Your task is to design the JSON object for the Practice Exercises, Visual Diagrams, and Multimedia components of the lesson (quizzes, exercises, charts, videos, and audios).
 
 The narrative text contains the following custom widget anchors that you MUST define in this block:
-- Anchor: [[WIDGET:Reference:1]] (Type: "Reference", ID: "1", Topic: "")
-- Anchor: [[WIDGET:Reference:3]] (Type: "Reference", ID: "3", Topic: "")
-- Anchor: [[WIDGET:Mermaid:distinction_responsabilites:Diagramme comparatif des responsabilités contractuelle et extracontractuelle]] (Type: "Mermaid", ID: "distinction_responsabilites", Topic: "Diagramme comparatif des responsabilités contractuelle et extracontractuelle")
 - Anchor: [[WIDGET:Reference:2]] (Type: "Reference", ID: "2", Topic: "")
-- Anchor: [[WIDGET:Reference:4]] (Type: "Reference", ID: "4", Topic: "")
+- Anchor: [[WIDGET:Reference:1]] (Type: "Reference", ID: "1", Topic: "")
+- Anchor: [[WIDGET:Mermaid:distinction_responsabilite:Diagramme illustrant la distinction entre responsabilité contractuelle et extracontractuelle]] (Type: "Mermaid", ID: "distinction_responsabilite", Topic: "Diagramme illustrant la distinction entre responsabilité contractuelle et extracontractuelle")
 - Anchor: [[WIDGET:Quiz:faits_generateurs:Quiz sur les faits générateurs de responsabilité]] (Type: "Quiz", ID: "faits_generateurs", Topic: "Quiz sur les faits générateurs de responsabilité")
 - Anchor: [[WIDGET:Reference:1]] (Type: "Reference", ID: "1", Topic: "")
 - Anchor: [[WIDGET:Reference:3]] (Type: "Reference", ID: "3", Topic: "")
-- Anchor: [[WIDGET:Mermaid:conditions_responsabilite:Diagramme des trois conditions cumulatives de la responsabilité civile]] (Type: "Mermaid", ID: "conditions_responsabilite", Topic: "Diagramme des trois conditions cumulatives de la responsabilité civile")
-- Anchor: [[WIDGET:Reference:5]] (Type: "Reference", ID: "5", Topic: "")
-- Anchor: [[WIDGET:Quiz:causes_exonération:Quiz sur les causes d'exonération de responsabilité]] (Type: "Quiz", ID: "causes_exonération", Topic: "Quiz sur les causes d'exonération de responsabilité")
+- Anchor: [[WIDGET:Mermaid:causalite_theories:Diagramme comparatif des théories de la causalité en droit de la responsabilité]] (Type: "Mermaid", ID: "causalite_theories", Topic: "Diagramme comparatif des théories de la causalité en droit de la responsabilité")
+- Anchor: [[WIDGET:CustomFigure:causes_exoneration:Illustration schématique des principales causes d'exonération de responsabilité]] (Type: "CustomFigure", ID: "causes_exoneration", Topic: "Illustration schématique des principales causes d'exonération de responsabilité")
+- Anchor: [[WIDGET:Mermaid:elements_responsabilite:Schéma synthétique des éléments constitutifs et des causes d'exonération de la responsabilité civile extracontractuelle]] (Type: "Mermaid", ID: "elements_responsabilite", Topic: "Schéma synthétique des éléments constitutifs et des causes d'exonération de la responsabilité civile extracontractuelle")
 - Anchor: [[WIDGET:Reference:1]] (Type: "Reference", ID: "1", Topic: "")
-- Anchor: [[WIDGET:Reference:2]] (Type: "Reference", ID: "2", Topic: "")
-- Anchor: [[WIDGET:Mermaid:synthese_rc:Diagramme synthétisant les éléments clés de la responsabilité civile]] (Type: "Mermaid", ID: "synthese_rc", Topic: "Diagramme synthétisant les éléments clés de la responsabilité civile")
-- Anchor: [[WIDGET:Reference:4]] (Type: "Reference", ID: "4", Topic: "")
-- Anchor: [[WIDGET:Quote:terré_rc:Citation de François Terré sur la fonction de la responsabilité civile]] (Type: "Quote", ID: "terré_rc", Topic: "Citation de François Terré sur la fonction de la responsabilité civile")
 
 ---
 

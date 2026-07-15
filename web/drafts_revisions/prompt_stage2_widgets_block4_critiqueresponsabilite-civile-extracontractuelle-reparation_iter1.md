@@ -5,168 +5,172 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
     "props": {
       "questions": [
         {
-          "q": "Quelle est la condition essentielle pour qu'une faute soit génératrice de responsabilité civile extracontractuelle ?",
-          "explanation": "Pour qu'une faute engage la responsabilité civile extracontractuelle, il est impératif qu'elle ait causé un dommage. La nature intentionnelle ou non de la faute n'est pas une condition essentielle pour l'engagement de la responsabilité, bien qu'elle puisse influencer l'étendue de la réparation ou la qualification pénale.",
+          "q": "Quel est le principe fondamental de la réparation en matière de responsabilité civile extracontractuelle en droit français ?",
+          "explanation": "Le principe cardinal de la responsabilité civile est la réparation intégrale du préjudice subi par la victime. Cela signifie que la victime doit être replacée dans la situation où elle se serait trouvée si le dommage ne s'était pas produit, sans que la réparation ne lui procure un enrichissement.",
           "options": [
             {
-              "text": "Elle doit être intentionnelle.",
+              "text": "La punition de l'auteur du dommage.",
               "correct": false
             },
             {
-              "text": "Elle doit causer un dommage.",
+              "text": "La réparation intégrale du préjudice.",
               "correct": true
             },
             {
-              "text": "Elle doit être prévue par la loi.",
+              "text": "La prévention des dommages futurs.",
               "correct": false
             },
             {
-              "text": "Elle doit être commise par un majeur.",
+              "text": "L'enrichissement sans cause de la victime.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Selon la jurisprudence française, qui est généralement considéré comme le 'gardien de la chose' en matière de responsabilité du fait des choses ?",
-          "explanation": "La jurisprudence française, notamment depuis l'arrêt Franck de 1941, définit le gardien de la chose comme celui qui en a l'usage, la direction et le contrôle au moment du dommage, et non nécessairement le propriétaire.",
+          "q": "Quelles sont les trois conditions cumulatives nécessaires pour engager la responsabilité civile extracontractuelle en droit français ?",
+          "explanation": "Pour qu'il y ait responsabilité civile extracontractuelle, il est impératif de prouver l'existence d'un fait générateur (faute ou fait objectif), d'un préjudice (dommage subi) et d'un lien de causalité direct et certain entre ce fait générateur et ce préjudice.",
           "options": [
             {
-              "text": "Le propriétaire de la chose.",
+              "text": "Intention de nuire, dommage, prescription.",
               "correct": false
             },
             {
-              "text": "Celui qui a l'usage, la direction et le contrôle de la chose.",
+              "text": "Contrat, inexécution, mise en demeure.",
+              "correct": false
+            },
+            {
+              "text": "Faute (ou fait générateur), préjudice, lien de causalité.",
               "correct": true
             },
             {
-              "text": "Le fabricant de la chose.",
-              "correct": false
-            },
-            {
-              "text": "La victime du dommage causé par la chose.",
+              "text": "Force majeure, fait du prince, cas fortuit.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Dans le cadre de la responsabilité du fait d'autrui, quelle est la nature de la responsabilité des parents du fait de leurs enfants mineurs ?",
-          "explanation": "La responsabilité des parents du fait de leurs enfants mineurs est une responsabilité de plein droit, ce qui signifie qu'elle est engagée du seul fait du dommage causé par l'enfant, sans que la victime ait à prouver une faute des parents dans l'éducation ou la surveillance.",
+          "q": "Parmi les propositions suivantes, laquelle ne constitue PAS un type de préjudice réparable en droit français ?",
+          "explanation": "Le droit français répare les préjudices matériels (corporels, économiques) et moraux. Un préjudice purement spéculatif, sans lien direct et certain avec le fait générateur, ou un préjudice de pure convenance sans gravité suffisante, n'est généralement pas réparable en soi.",
           "options": [
             {
-              "text": "Une responsabilité pour faute prouvée des parents.",
+              "text": "Le préjudice moral.",
               "correct": false
             },
             {
-              "text": "Une responsabilité objective de plein droit.",
+              "text": "Le préjudice corporel.",
+              "correct": false
+            },
+            {
+              "text": "Le préjudice de pure spéculation sans lien direct avec le fait générateur.",
               "correct": true
             },
             {
-              "text": "Une responsabilité subsidiaire à celle de l'enfant.",
-              "correct": false
-            },
-            {
-              "text": "Une responsabilité contractuelle.",
+              "text": "Le préjudice économique.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Parmi les propositions suivantes, laquelle ne constitue pas une condition pour qu'un dommage soit réparable en droit de la responsabilité civile ?",
-          "explanation": "En responsabilité civile extracontractuelle, le dommage doit être certain (actuel ou futur mais certain), direct (résultant directement du fait générateur) et légitime (protégeant un intérêt juridiquement protégé). L'imprévisibilité n'est pas une condition de non-réparabilité.",
+          "q": "L'article 1240 du Code civil (ancien 1382) fonde quel type de responsabilité ?",
+          "explanation": "L'article 1240 du Code civil dispose que 'Tout fait quelconque de l'homme, qui cause à autrui un dommage, oblige celui par la faute duquel il est arrivé à le réparer'. C'est le fondement de la responsabilité du fait personnel, exigeant la preuve d'une faute.",
           "options": [
             {
-              "text": "Le dommage doit être certain.",
+              "text": "La responsabilité du fait des choses.",
               "correct": false
             },
             {
-              "text": "Le dommage doit être direct.",
+              "text": "La responsabilité du fait d'autrui.",
               "correct": false
             },
             {
-              "text": "Le dommage doit être imprévisible.",
+              "text": "La responsabilité du fait personnel.",
               "correct": true
             },
             {
-              "text": "Le dommage doit être légitime.",
+              "text": "La responsabilité contractuelle.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quelle théorie du lien de causalité est généralement privilégiée par la jurisprudence française en matière de responsabilité civile extracontractuelle ?",
-          "explanation": "La jurisprudence française applique majoritairement la théorie de l'équivalence des conditions, selon laquelle tous les événements qui ont concouru à la réalisation du dommage sont considérés comme des causes équivalentes, dès lors que sans l'un d'eux, le dommage ne se serait pas produit.",
+          "q": "Quelle est la condition principale pour engager la responsabilité du fait des choses (article 1242 al. 1er C. civ.) ?",
+          "explanation": "La responsabilité du fait des choses repose sur la garde de la chose. Il faut que la chose ait été l'instrument du dommage et qu'elle soit sous la garde (usage, direction, contrôle) du responsable au moment du fait dommageable. La dangerosité ou la propriété ne sont pas des conditions nécessaires.",
           "options": [
             {
-              "text": "La théorie de la causalité adéquate.",
+              "text": "La chose doit être dangereuse par nature.",
               "correct": false
             },
             {
-              "text": "La théorie de l'équivalence des conditions.",
+              "text": "La chose doit être la propriété du gardien.",
+              "correct": false
+            },
+            {
+              "text": "La chose doit avoir été l'instrument du dommage et être sous la garde du responsable.",
               "correct": true
             },
             {
-              "text": "La théorie de la cause efficiente.",
-              "correct": false
-            },
-            {
-              "text": "La théorie de la causalité directe.",
+              "text": "La chose doit avoir été utilisée intentionnellement pour causer le dommage.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quel est le principe fondamental qui gouverne la réparation du dommage en droit français de la responsabilité civile ?",
-          "explanation": "Le principe de la réparation intégrale signifie que la victime doit être indemnisée de tout son préjudice, mais rien que son préjudice. Il s'agit de la replacer, autant que possible, dans la situation où elle se serait trouvée si le fait dommageable ne s'était pas produit.",
+          "q": "Parmi les causes d'exonération de responsabilité suivantes, laquelle est la plus susceptible d'exonérer totalement le défendeur ?",
+          "explanation": "La force majeure (caractérisée par l'imprévisibilité, l'irrésistibilité et l'extériorité) est la seule cause d'exonération qui, si elle est prouvée, peut exonérer totalement le défendeur de sa responsabilité. La faute de la victime ou le fait d'un tiers peuvent entraîner une exonération partielle, sauf si elles présentent les caractères de la force majeure.",
           "options": [
             {
-              "text": "Le principe de la réparation forfaitaire.",
+              "text": "La faute de la victime.",
               "correct": false
             },
             {
-              "text": "Le principe de la réparation intégrale.",
+              "text": "Le fait d'un tiers.",
+              "correct": false
+            },
+            {
+              "text": "La force majeure.",
               "correct": true
             },
             {
-              "text": "Le principe de la réparation limitée au préjudice prévisible.",
-              "correct": false
-            },
-            {
-              "text": "Le principe de la réparation punitive.",
+              "text": "L'acceptation des risques.",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quelle est la principale distinction entre la responsabilité civile contractuelle et la responsabilité civile extracontractuelle ?",
-          "explanation": "La responsabilité civile contractuelle sanctionne l'inexécution ou la mauvaise exécution d'une obligation née d'un contrat. La responsabilité civile extracontractuelle (ou délictuelle/quasi-délictuelle) intervient en l'absence de contrat entre l'auteur du dommage et la victime, et découle d'un fait juridique (faute, fait des choses, fait d'autrui).",
+          "q": "Comment le juge évalue-t-il le montant de la réparation du préjudice corporel en droit français ?",
+          "explanation": "La nomenclature Dintilhac est le référentiel quasi-officiel utilisé par les juges et les experts pour évaluer de manière exhaustive et poste par poste les différents chefs de préjudice corporel, afin d'assurer une réparation intégrale et harmonisée.",
           "options": [
             {
-              "text": "La responsabilité contractuelle ne concerne que les dommages matériels, tandis que l'extracontractuelle couvre tous les types de dommages.",
+              "text": "En fonction de la gravité de la faute de l'auteur.",
               "correct": false
             },
             {
-              "text": "La responsabilité contractuelle découle de l'inexécution d'un contrat, tandis que l'extracontractuelle découle d'un fait juridique en dehors de tout contrat.",
+              "text": "En se basant sur un barème fixe pour chaque type de blessure.",
+              "correct": false
+            },
+            {
+              "text": "En se référant à la nomenclature Dintilhac pour une évaluation poste par poste.",
               "correct": true
             },
             {
-              "text": "La responsabilité contractuelle est toujours plus lourde que l'extracontractuelle.",
-              "correct": false
-            },
-            {
-              "text": "La responsabilité extracontractuelle ne s'applique qu'aux professionnels.",
+              "text": "En laissant la victime fixer elle-même le montant.",
               "correct": false
             }
           ]
         }
       ],
-      "durationLimit": 12
+      "durationLimit": 300
     }
   },
   "references": [
-    "Terré, François, Philippe Simler et Yves Lequette. Droit civil : Les obligations. 12e éd., Dalloz, 2019.",
-    "Malaurie, Philippe, Laurent Aynès et Philippe Stoffel-Munck. Droit des obligations. 10e éd., LGDJ, 2020.",
-    "Mazeaud, Henri, Léon Mazeaud, Jean Mazeaud et François Chabas. Leçons de droit civil. Tome II, Volume 1 : Obligations : Théorie générale. 9e éd., Montchrestien, 1998.",
-    "Jourdain, Patrice. Les principes de la responsabilité civile. 8e éd., Dalloz, 2020."
+    "Terré, François, Philippe Simler et Yves Lequette, Droit civil : Les obligations, 12e éd., Dalloz, 2019.",
+    "Malaurie, Philippe, Laurent Aynès et Philippe Stoffel-Munck, Droit des obligations, 10e éd., LGDJ, 2020.",
+    "Carbonnier, Jean, Droit civil : Les obligations, Tome 4, 23e éd., PUF, 2012.",
+    "Mazeaud, Henri, Léon et Jean, Leçons de droit civil : Obligations, Théorie générale des obligations, Tome II, Vol. 1, 10e éd., Montchrestien, 2000.",
+    "Flour, Jean, Jean-Luc Aubert et Éric Savaux, Les obligations : Le fait juridique, 15e éd., Sirey, 2016.",
+    "Jourdain, Patrice, Les principes de la responsabilité civile, 9e éd., Dalloz, 2020.",
+    "Fabre-Magnan, Muriel, Droit des obligations, Tome 2 : Responsabilité civile et quasi-contrats, 6e éd., PUF, 2021.",
+    "Viney, Geneviève et Patrice Jourdain, Traité de droit civil : Les conditions de la responsabilité, 4e éd., LGDJ, 2013."
   ]
 }
 

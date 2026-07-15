@@ -627,8 +627,9 @@ export const EntityLink = ({
   }
 
   const fallbackUrl = `https://${langCode}.wikipedia.org/w/index.php?search=${encodeURIComponent(queryName)}`;
-  const resolvedWikiUrl = propUrl || propHref || fallbackUrl;
-  const resolvedExternalUrl = propUrl || propHref;
+  const isWikiUrl = parsedWiki !== null;
+  const resolvedWikiUrl = isWikiUrl ? (propUrl || propHref) : fallbackUrl;
+  const resolvedExternalUrl = (!isWikiUrl && (propUrl || propHref)) ? (propUrl || propHref) : undefined;
   const resolvedSummary = description || '';
   const formattedSummary = formatSummaryText(resolvedSummary);
 
@@ -818,7 +819,7 @@ export const EntityLink = ({
                   rel="noopener noreferrer"
                   className={`inline-flex items-center gap-1 text-[11px] font-bold transition-colors uppercase tracking-wider ${linkClass}`}
                 >
-                  {t.readWiki} ({activeLang.toUpperCase()})
+                  {t.readWiki}
                   <ExternalLink className="w-3 h-3" />
                 </a>
               )}
@@ -829,7 +830,11 @@ export const EntityLink = ({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-[11px] font-bold transition-colors uppercase tracking-wider text-teal-400 hover:text-teal-300 [.theme-paper_&]:text-teal-700 [.theme-paper_&]:hover:text-teal-800"
                 >
-                  {isFr ? 'Site Officiel' : 'Official Website'}
+                  {
+                    (resolvedType === 'website' || resolvedType === 'project' || resolvedType === 'institution' || resolvedType === 'person')
+                      ? (isFr ? 'Site officiel' : 'Official website')
+                      : (isFr ? 'En savoir plus' : 'Learn more')
+                  }
                   <Globe className="w-3.5 h-3.5" />
                 </a>
               )}

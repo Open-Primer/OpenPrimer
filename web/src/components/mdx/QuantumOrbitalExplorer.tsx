@@ -844,11 +844,23 @@ export const QuantumOrbitalExplorer = ({
     const name = `${customN}${letter}${sub}`;
     
     // Simple descriptions for custom states
-    let desc = `Hydrogenic orbital wave function for state |${customN}, ${customL}, ${customM}⟩.`;
-    if (customL === 0) desc = `Spherical symmetric orbital (l=0) with ${customN - 1} radial nodes. Probability density is highest at the nucleus.`;
-    else if (customL === 1) desc = `Dumbbell-shaped orbital with 1 angular nodal plane and ${customN - 2} radial node shells.`;
-    else if (customL === 2) desc = `Four-lobed clover or dumbbell-ring structure (l=2) with 2 angular nodal planes and ${customN - 3} radial node shells.`;
-    else if (customL === 3) desc = `Complex higher-order angular distribution (l=3) with 3 angular nodal planes. Typical of f-block heavy elements.`;
+    let desc = (t["Hydrogenic orbital wave function for state |n, l, m⟩."] || "Hydrogenic orbital wave function for state |{n}, {l}, {m}⟩.")
+      .replace('{n}', String(customN))
+      .replace('{l}', String(customL))
+      .replace('{m}', String(customM));
+
+    if (customL === 0) {
+      desc = (t["Spherical symmetric orbital (l=0) with radial nodes. Probability density is highest at the nucleus."] || "Spherical symmetric orbital (l=0) with {nodes} radial nodes. Probability density is highest at the nucleus.")
+        .replace('{nodes}', String(customN - 1));
+    } else if (customL === 1) {
+      desc = (t["Dumbbell-shaped orbital with 1 angular nodal plane and radial node shells."] || "Dumbbell-shaped orbital with 1 angular nodal plane and {nodes} radial node shells.")
+        .replace('{nodes}', String(customN - 2));
+    } else if (customL === 2) {
+      desc = (t["Four-lobed clover or dumbbell-ring structure (l=2) with 2 angular nodal planes and radial node shells."] || "Four-lobed clover or dumbbell-ring structure (l=2) with 2 angular nodal planes and {nodes} radial node shells.")
+        .replace('{nodes}', String(customN - 3));
+    } else if (customL === 3) {
+      desc = (t["Complex higher-order angular distribution (l=3) with 3 angular nodal planes. Typical of f-block heavy elements."] || "Complex higher-order angular distribution (l=3) with 3 angular nodal planes. Typical of f-block heavy elements.");
+    }
 
     return { name, desc, geometry: `l = ${customL}, m = ${customM}` };
   };
@@ -866,8 +878,8 @@ export const QuantumOrbitalExplorer = ({
           </h4>
           <p className="text-[11px] text-slate-400 font-semibold mt-1">
             {mode === 'schrodinger'
-              ? "Schrödinger Laboratory: Solve wavefunctions by configuring quantum variables n, l, and m."
-              : t["Drag to rotate 3D wave probability density. Step through energy levels on the sidebar."]}
+              ? (t["Schrödinger Laboratory: Solve wavefunctions by configuring quantum variables n, l, and m."] || "Schrödinger Laboratory: Solve wavefunctions by configuring quantum variables n, l, and m.")
+              : (t["Drag to rotate 3D wave probability density. Step through energy levels on the sidebar."] || "Drag to rotate 3D wave probability density. Step through energy levels on the sidebar.")}
           </p>
         </div>
 
@@ -964,7 +976,7 @@ export const QuantumOrbitalExplorer = ({
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                🔬 Schrödinger Lab
+                🔬 {t["Schrödinger Lab"] || "Schrödinger Lab"}
               </button>
             </div>
 
@@ -973,7 +985,7 @@ export const QuantumOrbitalExplorer = ({
               <div className="space-y-4 animate-in fade-in duration-200">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">
-                    Aufbau Puzzle
+                    {t["Aufbau Puzzle"] || "Aufbau Puzzle"}
                   </span>
 
                   {/* Interactive electron counter */}
@@ -1045,13 +1057,13 @@ export const QuantumOrbitalExplorer = ({
             {/* TAB CONTENT: SCHRODINGER SANDBOX */}
             {mode === 'schrodinger' && (
               <div className="space-y-4 animate-in fade-in duration-200">
-                <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block">Hydrogenic Quantum Numbers</span>
+                <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider block">{t["Hydrogenic Quantum Numbers"] || "Hydrogenic Quantum Numbers"}</span>
                 
                 <div className="space-y-3">
                   {/* n Slider */}
                   <div className="space-y-1 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900">
                     <label className="text-[9px] font-black uppercase text-cyan-400 tracking-wider flex justify-between">
-                      <span>n (Principal)</span>
+                      <span>{t["n (Principal)"] || "n (Principal)"}</span>
                       <span className="font-mono text-white text-xs">{customN}</span>
                     </label>
                     <input
@@ -1068,13 +1080,13 @@ export const QuantumOrbitalExplorer = ({
                       }}
                       className="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                     />
-                    <span className="text-[8px] text-slate-550 font-bold block">Determines shell energy and size (1 to 4)</span>
+                    <span className="text-[8px] text-slate-550 font-bold block">{t["Determines shell energy and size (1 to 4)"] || "Determines shell energy and size (1 to 4)"}</span>
                   </div>
 
                   {/* l Slider */}
                   <div className="space-y-1 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900">
                     <label className="text-[9px] font-black uppercase text-indigo-400 tracking-wider flex justify-between">
-                      <span>l (Azimuthal)</span>
+                      <span>{t["l (Azimuthal)"] || "l (Azimuthal)"}</span>
                       <span className="font-mono text-white text-xs">
                         {customL} ({['s', 'p', 'd', 'f'][customL] || 's'})
                       </span>
@@ -1091,13 +1103,13 @@ export const QuantumOrbitalExplorer = ({
                       }}
                       className="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                     />
-                    <span className="text-[8px] text-slate-550 font-bold block">Determines subshell shape (0 to n-1)</span>
+                    <span className="text-[8px] text-slate-550 font-bold block">{t["Determines subshell shape (0 to n-1)"] || "Determines subshell shape (0 to n-1)"}</span>
                   </div>
 
                   {/* m Slider */}
                   <div className="space-y-1 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900">
                     <label className="text-[9px] font-black uppercase text-amber-400 tracking-wider flex justify-between">
-                      <span>m (Magnetic)</span>
+                      <span>{t["m (Magnetic)"] || "m (Magnetic)"}</span>
                       <span className="font-mono text-white text-xs">{customM >= 0 ? `+${customM}` : customM}</span>
                     </label>
                     <input
@@ -1106,7 +1118,7 @@ export const QuantumOrbitalExplorer = ({
                       className="w-full h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-amber-500"
                       disabled={customL === 0}
                     />
-                    <span className="text-[8px] text-slate-550 font-bold block">Determines spatial orientation (-l to +l)</span>
+                    <span className="text-[8px] text-slate-550 font-bold block">{t["Determines spatial orientation (-l to +l)"] || "Determines spatial orientation (-l to +l)"}</span>
                   </div>
                 </div>
               </div>
@@ -1119,7 +1131,7 @@ export const QuantumOrbitalExplorer = ({
               <CircleDot className="w-3.5 h-3.5 text-cyan-400" />
               <span>
                 {mode === 'schrodinger'
-                  ? `Orbital ${customInfo.name}`
+                  ? `${t["Orbital"] || "Orbital"} ${customInfo.name}`
                   : (t[activePreset.name] || activePreset.name)}
               </span>
             </h5>

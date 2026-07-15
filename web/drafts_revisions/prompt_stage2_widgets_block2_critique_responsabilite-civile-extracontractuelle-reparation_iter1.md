@@ -3,81 +3,131 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 2:
   "interactiveComponents": [
     {
       "id": "responsabilite_civile_extracontractuelle",
-      "componentType": "Glossary",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
-    },
-    {
-      "id": "code_civil",
       "componentType": "ConceptLink",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
+      "sectionAnchor": "Introduction",
+      "props": {
+        "name": "responsabilité civile extracontractuelle",
+        "searchQuery": "responsabilité civile extracontractuelle",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Responsabilit%C3%A9_civile_extracontractuelle_en_droit_fran%C3%A7ais",
+        "year": "null"
+      }
     },
     {
       "id": "responsabilite_contractuelle",
       "componentType": "ConceptLink",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
+      "sectionAnchor": "Introduction",
+      "props": {
+        "name": "responsabilité contractuelle",
+        "searchQuery": "responsabilité contractuelle",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Responsabilit%C3%A9_contractuelle_en_droit_fran%C3%A7ais",
+        "year": "null"
+      }
     },
     {
-      "id": "jean_carbonnier",
+      "id": "pothier",
       "componentType": "RealPerson",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
+      "sectionAnchor": "Introduction",
+      "props": {
+        "name": "Robert Joseph Pothier",
+        "searchQuery": "Robert Joseph Pothier",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Robert_Joseph_Pothier",
+        "year": "null"
+      }
     },
     {
-      "id": "garde_de_la_chose",
-      "componentType": "ConceptLink",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
-    },
-    {
-      "id": "dommage_reparable",
-      "componentType": "ConceptLink",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
-    },
-    {
-      "id": "prejudice",
+      "id": "faute",
       "componentType": "Glossary",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
+      "sectionAnchor": "Introduction",
+      "props": {
+        "searchQuery": "faute en droit civil",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Faute_(droit)",
+        "year": "null"
+      }
     },
     {
-      "id": "lien_de_causalite",
+      "id": "garde_chose",
       "componentType": "ConceptLink",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
+      "sectionAnchor": "Introduction",
+      "props": {
+        "name": "garde d'une chose",
+        "searchQuery": "garde d'une chose",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Garde_d%27une_chose",
+        "year": "null"
+      }
     },
     {
-      "id": "rene_demogue",
-      "componentType": "RealPerson",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
-    },
-    {
-      "id": "fait_generateur",
+      "id": "pretium_doloris",
       "componentType": "Glossary",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
+      "sectionAnchor": "Introduction",
+      "props": {
+        "searchQuery": "Pretium doloris",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Pretium_doloris",
+        "year": "null"
+      }
     },
     {
-      "id": "dommage",
+      "id": "perte_de_chance",
       "componentType": "ConceptLink",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
+      "sectionAnchor": "Introduction",
+      "props": {
+        "name": "perte de chance",
+        "searchQuery": "perte de chance",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Perte_de_chance",
+        "year": "null"
+      }
     },
     {
-      "id": "carbonnier",
+      "id": "carbonnier_jean",
       "componentType": "RealPerson",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
+      "sectionAnchor": "Introduction",
+      "props": {
+        "name": "Jean Carbonnier",
+        "searchQuery": "Jean Carbonnier",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Jean_Carbonnier",
+        "year": "null"
+      }
     },
     {
-      "id": "fabre_magnan",
-      "componentType": "RealPerson",
-      "sectionAnchor": "Introduction to Civil Liability",
-      "props": {}
+      "id": "in_concreto",
+      "componentType": "Glossary",
+      "sectionAnchor": "Introduction",
+      "props": {
+        "searchQuery": "in concreto",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/In_concreto",
+        "year": "null"
+      }
+    },
+    {
+      "id": "partage_responsabilite",
+      "componentType": "ConceptLink",
+      "sectionAnchor": "Introduction",
+      "props": {
+        "name": "partage de responsabilité",
+        "searchQuery": "partage de responsabilité",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Partage_de_responsabilit%C3%A9",
+        "year": "null"
+      }
+    },
+    {
+      "id": "reparation_integrale",
+      "componentType": "ConceptLink",
+      "sectionAnchor": "Introduction",
+      "props": {
+        "name": "réparation intégrale",
+        "searchQuery": "réparation intégrale",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/R%C3%A9paration_int%C3%A9grale",
+        "year": "null"
+      }
+    },
+    {
+      "id": "prejudice_ecologique",
+      "componentType": "Glossary",
+      "sectionAnchor": "Introduction",
+      "props": {
+        "searchQuery": "préjudice écologique",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Pr%C3%A9judice_%C3%A9cologique",
+        "year": "null"
+      }
     }
   ]
 }

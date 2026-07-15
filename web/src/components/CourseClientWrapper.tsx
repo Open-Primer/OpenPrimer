@@ -16,6 +16,7 @@ interface CourseClientWrapperProps {
   courseLevel?: string;
   courseTitle?: string;
   courseSubject?: string;
+  courseLang?: string;
 }
 
 export const CourseClientWrapper = ({ 
@@ -24,9 +25,17 @@ export const CourseClientWrapper = ({
   pageContext,
   courseLevel,
   courseTitle,
-  courseSubject
+  courseSubject,
+  courseLang
 }: CourseClientWrapperProps) => {
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
+
+  // Synchronize global language with the course language
+  useEffect(() => {
+    if (courseLang && language.toLowerCase() !== courseLang.toLowerCase()) {
+      setLanguage(courseLang.toUpperCase());
+    }
+  }, [courseLang, language, setLanguage]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [readingMode, setReadingMode] = useState('default'); // 'default', 'paper', 'focus'
   const [isEnrolled, setIsEnrolled] = useState<boolean>(true);

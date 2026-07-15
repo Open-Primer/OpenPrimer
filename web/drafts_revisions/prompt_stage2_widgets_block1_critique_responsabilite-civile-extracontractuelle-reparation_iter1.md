@@ -5,50 +5,50 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 1:
       {
         "title": "Introduction au Droit des Obligations",
         "slug": "introduction-droit-obligations",
-        "level": "L1",
+        "level": "University Year 1 / Bachelor 1st Year (L1)",
         "subject": "Droit Civil"
       },
       {
-        "title": "Les Sources des Obligations",
-        "slug": "sources-obligations",
-        "level": "L1",
-        "subject": "Droit Civil"
-      },
-      {
-        "title": "La Responsabilité Civile Contractuelle",
-        "slug": "responsabilite-civile-contractuelle",
-        "level": "L2",
+        "title": "La Responsabilité Contractuelle",
+        "slug": "responsabilite-contractuelle",
+        "level": "University Year 2 / Bachelor 2nd Year (L2)",
         "subject": "Droit des Obligations"
+      },
+      {
+        "title": "Concepts Fondamentaux du Droit Civil",
+        "slug": "concepts-fondamentaux-droit-civil",
+        "level": "University Year 1 / Bachelor 1st Year (L1)",
+        "subject": "Droit Civil"
       }
     ]
   },
   "diagnosticQuiz": {
-    "question": "Selon le droit français, quelle est la condition fondamentale pour engager la responsabilité civile extracontractuelle d'une personne?",
+    "question": "Quelle est la condition essentielle pour qu'une personne puisse engager la responsabilité civile extracontractuelle d'une autre personne en droit français?",
     "options": [
-      "L'existence d'un contrat valide entre les parties.",
-      "La preuve d'un dommage, d'un fait générateur et d'un lien de causalité.",
-      "Une intention délibérée de nuire de la part de l'auteur du dommage.",
-      "Une disposition légale spécifique prévoyant expressément cette responsabilité."
+      "L'existence d'un contrat non exécuté entre les parties.",
+      "La preuve d'un dommage, d'une faute et d'un lien de causalité entre eux.",
+      "Une intention de nuire de la part de l'auteur du dommage.",
+      "Une décision de justice préalable reconnaissant la faute."
     ],
     "correctIndex": 1,
-    "targetSectionId": "principes-fondamentaux-responsabilite-civile",
-    "sectionTitle": "Principes Fondamentaux de la Responsabilité Civile"
+    "targetSectionId": "introduction-elements-responsabilite",
+    "sectionTitle": "Les éléments constitutifs de la responsabilité civile extracontractuelle"
   },
   "learningObjectives": {
     "knowledge": [
-      "Analyser les conditions de mise en œuvre de la responsabilité civile extracontractuelle (faute, dommage, lien de causalité).",
-      "Distinguer les différents régimes de responsabilité du fait personnel, du fait d'autrui et du fait des choses.",
-      "Identifier les principaux faits générateurs de responsabilité extracontractuelle."
+      "Analyser les éléments constitutifs de la responsabilité civile extracontractuelle (faute, dommage, lien de causalité).",
+      "Distinguer les différents types de dommages (matériel, moral, corporel) et leurs modalités de réparation.",
+      "Évaluer les faits générateurs de responsabilité (fait personnel, fait d'autrui, fait des choses)."
     ],
     "skills": [
-      "Appliquer les règles de la responsabilité civile extracontractuelle à des cas pratiques.",
-      "Évaluer la pertinence des arguments juridiques relatifs à l'indemnisation des préjudices.",
-      "Rédiger une analyse juridique structurée sur un cas de responsabilité extracontractuelle."
+      "Appliquer les principes juridiques de la responsabilité extracontractuelle à des cas pratiques.",
+      "Formuler une argumentation juridique relative aux conditions d'indemnisation d'un préjudice.",
+      "Critiquer des décisions de jurisprudence concernant l'étendue et les limites de la responsabilité civile."
     ],
     "attitudes": [
-      "Développer un esprit critique face aux évolutions jurisprudentielles en matière de réparation des dommages.",
-      "Adopter une approche rigoureuse dans l'analyse des faits et la qualification juridique des situations.",
-      "Reconnaître l'importance de la protection des victimes dans le système de responsabilité civile."
+      "Adopter une approche rigoureuse et critique dans l'interprétation des textes et de la jurisprudence en matière de responsabilité civile.",
+      "Démontrer une curiosité intellectuelle face à l'évolution du droit de la responsabilité extracontractuelle.",
+      "Cultiver un sens de la justice et de l'équité dans l'appréciation de la réparation des victimes."
     ]
   }
 }

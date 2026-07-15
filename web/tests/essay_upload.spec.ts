@@ -14,11 +14,18 @@ test.describe('Essay Evaluation Upload & Grading Test', () => {
       }
     });
 
-    await context.addCookies([{
-      name: 'openprimer_lang',
-      value: 'FR',
-      url: BASE_URL
-    }]);
+    await context.addCookies([
+      {
+        name: 'openprimer_lang',
+        value: 'FR',
+        url: BASE_URL
+      },
+      {
+        name: 'op_allow_sandbox',
+        value: 'true',
+        url: BASE_URL
+      }
+    ]);
     await page.addInitScript(() => {
       window.localStorage.setItem('openprimer_lang', 'FR');
       window.localStorage.setItem('op_allow_sandbox', 'true');
@@ -43,7 +50,7 @@ test.describe('Essay Evaluation Upload & Grading Test', () => {
     await page.goto(`${BASE_URL}/fr/l1/droit_des_entreprises/difficultes-procedures-collectives`);
     
     // Scroll down to the essay evaluation section
-    const essayHeading = page.locator('h3:has-text("Évaluation Rédactionnelle")');
+    const essayHeading = page.locator('h3:has-text("Évaluation de la rédaction")');
     await expect(essayHeading).toBeVisible();
     await essayHeading.scrollIntoViewIfNeeded();
 

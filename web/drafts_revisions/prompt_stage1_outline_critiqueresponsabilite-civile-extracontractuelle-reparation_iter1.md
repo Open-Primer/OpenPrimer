@@ -3,23 +3,23 @@ You are the Outline Critic Agent (Agent 2). Review this JIT lesson plan:
   "sections": [
     {
       "heading": "## Introduction à la responsabilité civile extracontractuelle",
-      "description": "Cette section introduira le concept de la responsabilité civile extracontractuelle, son rôle fondamental en droit français (articles 1240 et suivants du Code civil), et distinguera ce régime de la responsabilité contractuelle. Elle présentera également le plan général du cours."
+      "description": "Présenter la notion de responsabilité civile extracontractuelle, sa distinction avec la responsabilité contractuelle, son fondement légal (articles 1240 et suivants du Code civil) et l'objectif de la réparation des dommages."
     },
     {
       "heading": "## Le fait générateur de responsabilité",
-      "description": "Cette section détaillera les différentes catégories de faits générateurs de responsabilité. Elle abordera la faute personnelle (responsabilité du fait personnel), la responsabilité du fait d'autrui (parents, commettants, etc.) et la responsabilité du fait des choses (garde de la chose, rôle actif de la chose)."
+      "description": "Détailler les différentes catégories de faits générateurs : la responsabilité du fait personnel (faute), la responsabilité du fait des choses (garde d'une chose), et la responsabilité du fait d'autrui (parents, commettants, etc.). Expliquer les conditions propres à chaque type de fait générateur."
     },
     {
       "heading": "## Le dommage réparable et le lien de causalité",
-      "description": "Cette section analysera les deux autres conditions cumulatives de la responsabilité civile. Elle définira le dommage réparable (préjudice) en explorant ses différentes catégories (matériel, corporel, moral) et ses caractères. Ensuite, elle expliquera le lien de causalité entre le fait générateur et le dommage, en présentant les théories de la causalité (équivalence des conditions, causalité adéquate) et les difficultés d'appréciation."
+      "description": "Analyser la notion de dommage réparable (matériel, corporel, moral), ses caractères (certain, direct, légitime). Expliquer ensuite le lien de causalité entre le fait générateur et le dommage, et les différentes théories de la causalité (équivalence des conditions, causalité adéquate)."
     },
     {
-      "heading": "## Les causes d'exonération de la responsabilité",
-      "description": "Cette section examinera les différentes causes permettant d'atténuer ou d'exclure la responsabilité de l'auteur du dommage. Elle traitera de la force majeure, du fait de la victime et du fait d'un tiers, en précisant leurs conditions d'application et leurs effets sur l'indemnisation."
+      "heading": "## Les causes d'exonération de responsabilité",
+      "description": "Présenter les principales causes d'exonération de responsabilité : la force majeure, le fait d'un tiers et la faute de la victime. Expliquer leurs conditions d'application et leurs effets sur l'obligation de réparation."
     },
     {
       "heading": "## Conclusion générale",
-      "description": "Cette section synthétisera les points clés abordés dans le cours, en rappelant l'importance des trois éléments cumulatifs (fait générateur, dommage, lien de causalité) et des causes d'exonération. Elle pourra également ouvrir sur les enjeux contemporains ou l'évolution future de la responsabilité civile extracontractuelle."
+      "description": "Synthétiser les points clés du cours sur la responsabilité civile extracontractuelle, rappeler l'importance de ses trois éléments cumulatifs et des causes d'exonération, et ouvrir sur les enjeux contemporains ou les évolutions jurisprudentielles en la matière."
     }
   ]
 }

@@ -19,6 +19,11 @@ The platform leverages the most modern, immersive web and AI tools to create a s
 - **University-Grade Standards**: The academic content, vocabulary, definitions, and pedagogical structures of OpenPrimer must be of a quality **at least equal to that of a real-life premier university**. 
 - **Real-World Authenticity**: Avoid overly simplified, generic summaries. Course materials should be deeply educational, feature authentic examples, and offer real-world academic depth close to a genuine curriculum.
 
+### D. Zero-Hardcoding & Multi-Language Extensibility
+- **Zero Language Hardcoding**: Under no circumstances should UI strings or messages be conditionally toggled using hardcoded language-code checks (e.g., `isFR = language === 'FR'`). This restricts compatibility.
+- **Universal Translator Pattern**: All interactive widgets and web interfaces must retrieve localized strings via the universal translator pattern (`t("English original text")` or `t("translation_key")`).
+- **Seamless Extensibility**: Ensure all strings resolved via the translator pattern query the global `STATIC_UI_STRINGS` registry. This allows the system to seamlessly inherit static dictionaries (supporting all 9 languages: EN, FR, ES, DE, ZH, PT, AR, HI, UR) and dynamically resolved translations (via `DYNAMIC_UI_STRINGS` at runtime), making any widget instantly compatible with newly added languages without modifying component code.
+
 ---
 
 ## 2. Directory Governance & Script Sandbox Rules

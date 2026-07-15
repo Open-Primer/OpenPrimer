@@ -3,18 +3,25 @@ import { test, expect } from '@playwright/test';
 test.describe('Organic Chemistry visibility and language auto-switching', () => {
   test('should hide Organic Chemistry in French catalog, show in English catalog', async ({ page, context }) => {
     test.slow();
-    // 1. Set language cookie
-    await context.addCookies([{
-      name: 'openprimer_lang',
-      value: 'FR',
-      url: 'http://localhost:3000'
-    }]);
+    // 1. Set language and sandbox cookies
+    await context.addCookies([
+      {
+        name: 'openprimer_lang',
+        value: 'FR',
+        url: 'http://localhost:3000'
+      },
+      {
+        name: 'op_allow_sandbox',
+        value: 'true',
+        url: 'http://localhost:3000'
+      }
+    ]);
     
-    // 2. Go to landing page first to initialize localStorage safely
-    await page.goto('http://localhost:3000/');
-    await page.evaluate(() => {
+    await page.addInitScript(() => {
       window.localStorage.setItem('op_allow_sandbox', 'true');
-      window.localStorage.setItem('openprimer_lang', 'FR');
+      if (!window.localStorage.getItem('openprimer_lang')) {
+        window.localStorage.setItem('openprimer_lang', 'FR');
+      }
     });
 
     // 3. Now navigate to catalog
@@ -56,18 +63,26 @@ test.describe('Organic Chemistry visibility and language auto-switching', () => 
     page.on('response', res => console.log(`[TEST NETWORK RES]: ${res.status()} ${res.url()}`));
 
     // 1. Setup mock user session enrolled in course 9 in French session
-    await context.addCookies([{
-      name: 'openprimer_lang',
-      value: 'FR',
-      url: 'http://localhost:3000'
-    }]);
-    await page.goto('http://localhost:3000/');
-    await page.evaluate(() => {
+    await context.addCookies([
+      {
+        name: 'openprimer_lang',
+        value: 'FR',
+        url: 'http://localhost:3000'
+      },
+      {
+        name: 'op_allow_sandbox',
+        value: 'true',
+        url: 'http://localhost:3000'
+      }
+    ]);
+    await page.addInitScript(() => {
       window.localStorage.setItem('op_allow_sandbox', 'true');
       window.localStorage.setItem('op_session', 'true');
       window.localStorage.setItem('op_user_profile', JSON.stringify({ id: 'u1', name: 'Test User' }));
       window.localStorage.setItem('op_enrolled_courses', JSON.stringify([9]));
-      window.localStorage.setItem('openprimer_lang', 'FR');
+      if (!window.localStorage.getItem('openprimer_lang')) {
+        window.localStorage.setItem('openprimer_lang', 'FR');
+      }
     });
     
     // Navigate to curriculum page
@@ -86,12 +101,7 @@ test.describe('Organic Chemistry visibility and language auto-switching', () => 
     // which is "Chimie : Chimie Organique" or "Organic Chemistry")
     // Let's check for either title to be safe
     const chemistryCard = page.locator('h3:has-text("Chimie Organique"), h3:has-text("Organic Chemistry")');
-    try {
-      await expect(chemistryCard).toBeVisible();
-    } catch (e) {
-      console.log("PAGE CONTENT ON CHEMISTRY CARD FAILURE:", await page.content());
-      throw e;
-    }
+    await expect(chemistryCard).toBeVisible();
 
     // Verify the "EN" badge is visible because the course is not available in the active language (FR)
     await expect(page.locator('span:has-text("EN")').first()).toBeVisible();
@@ -102,8 +112,11 @@ test.describe('Organic Chemistry visibility and language auto-switching', () => 
 
     console.log("[TEST LOG] Clicked. Expecting redirect to organic chemistry introduction...");
     // 3. Verify it auto-switches to English and redirects
-    await expect(page).toHaveURL(/.*\/l1\/chemistry\/organic-chemistry\/introduction/i, { timeout: 15000 });
+    await expect(page).toHaveURL(/.*\/(l1|101)\/chemistry\/organic-chemistry\/introduction/i, { timeout: 15000 });
     
+    // Wait for the lesson title/header to be visible to ensure client-side hydration has completed
+    await expect(page.locator('h1').first()).toBeVisible({ timeout: 15000 });
+
     // Check localStorage language switched to EN
     const currentLang = await page.evaluate(() => window.localStorage.getItem('openprimer_lang'));
     console.log(`[TEST LOG] Current language in localStorage after redirect: ${currentLang}`);

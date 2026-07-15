@@ -2,19 +2,21 @@ You are a world-class educational curriculum architect and JSON data validator (
 Your task is to design the JSON object for the Enrichment Hover Cards / Entity Links of the lesson (biographies, persons, concepts, events, locations, and glossary terms).
 
 The narrative text contains the following custom widget anchors that you MUST define:
-- Anchor: [[WIDGET:ConceptLink:droit_obligations:Droit des obligations]] (Type: "ConceptLink", ID: "droit_obligations", Topic: "Droit des obligations")
-- Anchor: [[WIDGET:Glossary:accord_volontes:accord de volontés]] (Type: "Glossary", ID: "accord_volontes", Topic: "accord de volontés")
-- Anchor: [[WIDGET:ConceptLink:theorie_reception:théorie de la réception]] (Type: "ConceptLink", ID: "theorie_reception", Topic: "théorie de la réception")
-- Anchor: [[WIDGET:Glossary:pourparlers:pourparlers]] (Type: "Glossary", ID: "pourparlers", Topic: "pourparlers")
-- Anchor: [[WIDGET:ConceptLink:vices_consentement:vice du consentement]] (Type: "ConceptLink", ID: "vices_consentement", Topic: "vice du consentement")
-- Anchor: [[WIDGET:Glossary:reticence_dolosive:réticence dolosive]] (Type: "Glossary", ID: "reticence_dolosive", Topic: "réticence dolosive")
+- Anchor: [[WIDGET:ConceptLink:droit_obligations:droit des obligations]] (Type: "ConceptLink", ID: "droit_obligations", Topic: "droit des obligations")
+- Anchor: [[WIDGET:Glossary:autonomie_volonte:autonomie de la volonté]] (Type: "Glossary", ID: "autonomie_volonte", Topic: "autonomie de la volonté")
+- Anchor: [[WIDGET:ConceptLink:consensualisme:consensualisme]] (Type: "ConceptLink", ID: "consensualisme", Topic: "consensualisme")
+- Anchor: [[WIDGET:Glossary:offre_contrat:offre de contrat]] (Type: "Glossary", ID: "offre_contrat", Topic: "offre de contrat")
+- Anchor: [[WIDGET:Glossary:acceptation_contrat:acceptation du contrat]] (Type: "Glossary", ID: "acceptation_contrat", Topic: "acceptation du contrat")
+- Anchor: [[WIDGET:ConceptLink:integrite_consentement:intégrité du consentement]] (Type: "ConceptLink", ID: "integrite_consentement", Topic: "intégrité du consentement")
+- Anchor: [[WIDGET:Glossary:dol:dol]] (Type: "Glossary", ID: "dol", Topic: "dol")
+- Anchor: [[WIDGET:Glossary:capacite_juridique:capacité juridique]] (Type: "Glossary", ID: "capacite_juridique", Topic: "capacité juridique")
 - Anchor: [[WIDGET:ConceptLink:ordre_public:ordre public]] (Type: "ConceptLink", ID: "ordre_public", Topic: "ordre public")
 - Anchor: [[WIDGET:ConceptLink:force_obligatoire:force obligatoire du contrat]] (Type: "ConceptLink", ID: "force_obligatoire", Topic: "force obligatoire du contrat")
-- Anchor: [[WIDGET:Glossary:mise_en_demeure:mise en demeure]] (Type: "Glossary", ID: "mise_en_demeure", Topic: "mise en demeure")
-- Anchor: [[WIDGET:ConceptLink:responsabilite_contractuelle:responsabilité contractuelle]] (Type: "ConceptLink", ID: "responsabilite_contractuelle", Topic: "responsabilité contractuelle")
+- Anchor: [[WIDGET:Glossary:resolution_contrat:résolution du contrat]] (Type: "Glossary", ID: "resolution_contrat", Topic: "résolution du contrat")
+- Anchor: [[WIDGET:ConceptLink:force_obligatoire:article 1103 du Code civil]] (Type: "ConceptLink", ID: "force_obligatoire", Topic: "article 1103 du Code civil")
 - Anchor: [[WIDGET:ConceptLink:autonomie_volonte:autonomie de la volonté]] (Type: "ConceptLink", ID: "autonomie_volonte", Topic: "autonomie de la volonté")
-- Anchor: [[WIDGET:Glossary:force_obligatoire:force obligatoire]] (Type: "Glossary", ID: "force_obligatoire", Topic: "force obligatoire")
-- Anchor: [[WIDGET:RealPerson:jean_carbonnier:Jean Carbonnier]] (Type: "RealPerson", ID: "jean_carbonnier", Topic: "Jean Carbonnier")
+- Anchor: [[WIDGET:RealPerson:rene_demogue:René Demogue]] (Type: "RealPerson", ID: "rene_demogue", Topic: "René Demogue")
+- Anchor: [[WIDGET:Glossary:bonne_foi:bonne foi]] (Type: "Glossary", ID: "bonne_foi", Topic: "bonne foi")
 
 ---
 
@@ -81,7 +83,7 @@ Return ONLY a valid JSON object matching this schema:
 Do NOT wrap your JSON response in markdown code blocks.
 
 🚨 PREVIOUS CRITIQUE:
-"The widget block contains an incomplete 'RealPerson' interactive component, which lacks essential biographical details. All interactive elements must be fully populated with real, high-quality content.
+"The widget block contains incomplete fields. Specifically, the "year" property for all interactive components is set to "null", which is a placeholder and violates the requirement for fully populated, high-quality content. This is particularly critical for the "RealPerson" component, which requires valid date information.
 Detailed errors:
-- Field "interactiveComponents": The 'RealPerson' component with ID 'jean_carbonnier' is incomplete. It must include full biographical details such as dates, a brief description, and a Wikipedia link within its 'props' object. Currently, its 'props' object is empty, violating the requirement for fully populated interactive elements."
+- Field "interactiveComponents": Multiple interactive components within this array have their "year" property set to "null" in their "props" object. This must be replaced with valid year data, especially for the "RealPerson" component (René Demogue) where a specific year or date range is expected."
 Please fix these issues and regenerate.

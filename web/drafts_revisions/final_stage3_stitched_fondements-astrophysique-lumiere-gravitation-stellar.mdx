@@ -1,0 +1,177 @@
+---
+title: « Fondements de l'Astrophysique : Lumière, Gravitation et Évolution Stellaire »
+subject: « Introduction à l'astrophysique et à la cosmologie moderne »
+level: « L2 »
+module: « Fondements de l'Astrophysique : Lumière, Gravitation et Évolution Stellaire »
+order: 1
+---
+
+
+
+<DiagnosticQuiz question="Selon l'effet Doppler, comment la longueur d'onde de la lumiere emise par une galaxie lointaine est-elle affectee si cette galaxie s'eloigne de nous ?" options="Elle diminue (decalage vers le bleu).|||Elle augmente (decalage vers le rouge).|||Elle reste inchangee.|||Elle depend de la masse de la galaxie." correctIndex="1" targetSectionId="lumiere-doppler" sectionTitle="Lumiere et Effet Doppler en Astrophysique" />
+
+
+
+## Introduction aux Fondements de l'Astrophysique
+
+Ce chapitre introductif pose les bases essentielles à la compréhension de l'Univers tel que le conçoit l'<ConceptLink id="astrophysique_moderne" name="astrophysique moderne" term="astrophysique moderne" unresolved={true}>astrophysique moderne</ConceptLink>. Notre objectif est de familiariser l'étudiant de deuxième année de licence avec les outils conceptuels et observationnels fondamentaux qui permettent aux scientifiques d'explorer les phénomènes cosmiques. Nous aborderons l'importance cruciale de la lumière comme messager universel, les principes régissant l'interaction gravitationnelle à toutes les échelles, et les mécanismes complexes de l'<Glossary id="evolution_stellaire" name="évolution stellaire" term="évolution stellaire">évolution stellaire</Glossary>, depuis la naissance des étoiles jusqu'à leur fin spectaculaire. Ces trois piliers – lumière, gravitation et évolution stellaire – constituent le socle sur lequel repose l'ensemble de l'astrophysique, permettant de décrypter la nature des objets célestes, leur dynamique et leur histoire. Ce cours s'appuiera sur des références clés du domaine, telles que Carroll et Ostlie <Reference id="1" name="1" term="1">1</Reference> ou Maoz <Reference id="4" name="4" term="4">4</Reference>, pour fournir une compréhension solide et approfondie.
+
+<Mermaid caption="Figure 1 : " chart={``} />
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Comprendre les principes fondamentaux de la mécanique céleste et de la gravitation newtonienne et relativiste.</li>
+      <li>Expliquer les propriétés physiques de la lumière, son spectre électromagnétique et son interaction avec la matière cosmique.</li>
+      <li>Décrire les étapes clés de l'évolution stellaire, de la formation à la mort des étoiles. &#123;/* [FIX A3] */&#125;</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser des spectres lumineux pour déduire la composition chimique, la température et le mouvement des objets célestes.</li>
+      <li>Évaluer l'impact des lois de la gravitation sur la dynamique des systèmes stellaires et galactiques.</li>
+      <li>Appliquer les concepts de la physique pour résoudre des problèmes liés à la luminosité, la distance et la classification des étoiles.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Développer une curiosité intellectuelle pour les phénomènes astrophysiques et les grandes questions de la cosmologie.</li>
+      <li>Apprécier la démarche scientifique rigoureuse dans l'étude de l'univers et la formulation de théories.</li>
+      <li>Questionner les modèles actuels de l'univers à la lumière de nouvelles observations et découvertes scientifiques.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Le Rayonnement Électromagnétique et l'Analyse Spectrale
+
+En astrophysique, le <ConceptLink id="rayonnement_electromagnetique" name="rayonnement electromagnetique" term="rayonnement electromagnetique">rayonnement électromagnétique</ConceptLink> est notre unique fenêtre sur l'Univers lointain. Il agit comme un vecteur d'information inestimable, transportant des données sur la composition, la température, la densité, la vitesse et même l'âge des objets célestes. Ce rayonnement, qui englobe les ondes radio, les micro-ondes, l'infrarouge, la lumière visible, l'ultraviolet, les rayons X et les rayons gamma, se propage à la vitesse de la lumière et interagit avec la matière de diverses manières.
+
+Un concept fondamental pour comprendre l'émission de lumière par les corps célestes est celui du <ConceptLink id="corps_noir" name="corps noir" term="corps noir">corps noir</ConceptLink>. Un corps noir est un objet idéal qui absorbe tout le rayonnement électromagnétique qu'il reçoit et émet un spectre de rayonnement caractéristique qui dépend uniquement de sa température. Bien qu'aucun objet réel ne soit un corps noir parfait, de nombreuses sources astrophysiques, comme les étoiles, peuvent être approximées comme telles. La distribution spectrale de l'énergie émise par un corps noir est décrite par la loi de Planck.
+
+Deux lois empiriques dérivées de la loi de Planck sont particulièrement importantes :
+1.  **La <Glossary id="loi_de_wien" name="loi de Wien" term="loi de Wien">loi de Wien</Glossary>** : Formulée par <RealPerson id="wilhelm_wien" name="Wilhelm Wien" term="Wilhelm Wien">Wilhelm Wien</RealPerson>, elle établit une relation inverse entre la température d'un corps noir et la longueur d'onde à laquelle il émet le maximum de son rayonnement. Plus un objet est chaud, plus la longueur d'onde de son pic d'émission est courte (tendant vers le bleu ou l'ultraviolet). Mathématiquement, elle s'exprime par $\lambda_{max} T = b$, où $\lambda_{max}$ est la longueur d'onde du pic, $T$ la température en Kelvin et $b$ la constante de Wien.
+2.  **La <Glossary id="loi_de_stefan_boltzmann" name="loi de Stefan-Boltzmann" term="loi de Stefan-Boltzmann">loi de Stefan-Boltzmann</Glossary>** : Cette loi, développée par <RealPerson id="josef_stefan" name="Josef Stefan" term="Josef Stefan">Josef Stefan</RealPerson> et Ludwig Boltzmann, stipule que la puissance totale rayonnée par unité de surface d'un corps noir est directement proportionnelle à la quatrième puissance de sa température absolue. Cela signifie qu'une petite augmentation de température entraîne une augmentation significative de l'énergie émise. La formule est $P/A = \sigma T^4$, où $P/A$ est la puissance par unité de surface, $\sigma$ la constante de Stefan-Boltzmann et $T$ la température.
+
+<Image description="Visualisations de la densité de probabilité de l'électron pour différentes fonctions d'onde de l'atome d'hydrogène, identifiées par leurs nombres quantiques (n, l, m)." alt="Visualisations de la densité de probabilité de l'électron pour différentes fonctions d'onde de l'atome d'hydrogène, identifiées par leurs nombres quantiques (n, l, m)." caption="Figure 1: Visualisations de la densité de probabilité de l'électron pour différentes fonctions d'onde de l'atome d'hydrogène, identifiées par leurs nombres quantiques (n, l, m). — Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Hydrogen_Density_Plots.png)" src="https://commons.wikimedia.org/wiki/Special:FilePath/Hydrogen_Density_Plots.png" fallbackUrl="https://commons.wikimedia.org/wiki/File:Hydrogen_Density_Plots.png" />
+
+L'<ConceptLink id="analyse_spectrale" name="analyse spectrale" term="analyse spectrale">analyse spectrale</ConceptLink> est l'outil le plus puissant de l'astrophysique observationnelle. Elle consiste à décomposer la lumière des objets célestes en ses différentes longueurs d'onde pour en étudier les caractéristiques. Il existe trois types principaux de spectres :
+*   **Spectre continu** : Produit par un corps chaud et dense (comme le cœur d'une étoile), il contient toutes les longueurs d'onde sans interruption.
+*   **Spectre d'émission** : Produit par un gaz chaud et peu dense, il se caractérise par des raies brillantes à des longueurs d'onde spécifiques, propres aux éléments chimiques présents.
+*   **Spectre d'absorption** : Produit lorsqu'un gaz froid et peu dense se trouve entre une source de lumière continue et l'observateur. Il présente des raies sombres aux mêmes longueurs d'onde que les raies d'émission des éléments du gaz.
+
+En analysant ces spectres, les astrophysiciens peuvent déterminer avec précision la composition chimique des étoiles et des nébuleuses, leur température (grâce à la loi de Wien et aux rapports d'intensité des raies), leur densité, et même leur vitesse radiale via l'effet Doppler-Fizeau. Un décalage des raies spectrales vers le rouge (redshift) indique que l'objet s'éloigne, tandis qu'un décalage vers le bleu (blueshift) signifie qu'il se rapproche. Ces techniques sont cruciales pour comprendre la dynamique des galaxies et l'expansion de l'Univers <Reference id="2" name="2" term="2">2</Reference>, <Reference id="3" name="3" term="3">3</Reference>.
+
+## Le Diagramme de Hertzsprung-Russell et l'Évolution Stellaire
+
+Au-delà de l'analyse spectrale, un outil conceptuel fondamental pour comprendre la vie des étoiles est le <ConceptLink id="hr_diagram" name="Diagramme de Hertzsprung-Russell" term="Diagramme de Hertzsprung-Russell">Diagramme de Hertzsprung-Russell</ConceptLink> (HR). Développé indépendamment par <RealPerson id="ejnar_hertzsprung" name="Ejnar Hertzsprung" term="Ejnar Hertzsprung">Ejnar Hertzsprung</RealPerson> et <RealPerson id="henry_norris_russell" name="Henry Norris Russell" term="Henry Norris Russell">Henry Norris Russell</RealPerson> au début du XXe siècle, ce diagramme est une représentation graphique de la luminosité absolue des étoiles en fonction de leur température de surface (ou de leur type spectral, qui en est un indicateur). Il permet de classer les étoiles et, plus crucialement, de retracer leur parcours évolutif à travers les âges cosmiques <Reference id="1" name="1" term="1">1</Reference>, <Reference id="3" name="3" term="3">3</Reference>.
+
+Sur l'axe des ordonnées, on trouve la luminosité (souvent en unités de luminosité solaire ou en magnitude absolue), tandis que l'axe des abscisses représente la température de surface (décroissante de gauche à droite) ou le type spectral (O, B, A, F, G, K, M). Les étoiles ne sont pas réparties uniformément sur ce diagramme, mais se regroupent dans des régions distinctes, révélant des étapes clés de leur existence :
+
+<Image description="Le diagramme de Hertzsprung-Russell avec les principales regions stellaires" caption="Figure 2: Le diagramme de Hertzsprung-Russell avec les principales regions stellaires — Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:HR-diag-no-text-2.svg)" src="https://commons.wikimedia.org/wiki/Special:FilePath/HR-diag-no-text-2.svg" fallbackUrl="https://commons.wikimedia.org/wiki/File:HR-diag-no-text-2.svg" />
+
+1.  **La <Glossary id="sequence_principale" name="Sequence Principale" term="Sequence Principale">Séquence Principale</Glossary>** : C'est la région la plus peuplée du diagramme, s'étendant en diagonale du coin supérieur gauche (chaud et lumineux) au coin inférieur droit (froid et peu lumineux). Les étoiles de la séquence principale, comme notre Soleil, tirent leur énergie de la fusion de l'hydrogène en hélium dans leur cœur. La position d'une étoile sur la séquence principale est principalement déterminée par sa masse initiale : les étoiles massives sont plus chaudes et plus lumineuses, tandis que les étoiles moins massives sont plus froides et moins lumineuses.
+2.  **Les Géantes et Supergéantes** : Situées dans la partie supérieure droite du diagramme, ces étoiles sont beaucoup plus grandes et plus lumineuses que les étoiles de la séquence principale de même température. Elles ont épuisé l'hydrogène de leur cœur et ont commencé à fusionner l'hélium ou des éléments plus lourds, entraînant une expansion significative de leurs couches externes et un refroidissement de leur surface. Les supergéantes sont les étoiles les plus massives et les plus lumineuses, souvent en fin de vie.
+3.  **Les Naines Blanches** : Ces objets se trouvent dans le coin inférieur gauche du diagramme. Elles sont très chaudes mais extrêmement peu lumineuses en raison de leur petite taille (comparable à celle de la Terre). Les naines blanches sont les vestiges compacts d'étoiles de masse faible à intermédiaire qui ont éjecté leurs couches externes pour former des nébuleuses planétaires. Elles ne produisent plus d'énergie par fusion et se refroidissent lentement au fil du temps.
+
+L'évolution stellaire est un voyage dicté par la masse initiale de l'étoile. Tout commence par l'effondrement gravitationnel d'un nuage moléculaire géant, formant une protoétoile. Une fois que la pression et la température au centre sont suffisantes pour initier la fusion de l'hydrogène, l'étoile entre dans la séquence principale. La durée de cette phase dépend inversement de la masse : les étoiles massives brûlent leur carburant rapidement et ont une vie courte (quelques millions d'années), tandis que les étoiles de faible masse vivent des milliards, voire des milliers de milliards d'années.
+
+Après la séquence principale, le destin de l'étoile diverge :
+*   **Étoiles de faible à moyenne masse** (jusqu'à environ 8 masses solaires) : Elles évoluent en géantes rouges, puis éjectent leurs couches externes pour former une nébuleuse planétaire, laissant derrière elles un cœur inerte qui devient une naine blanche.
+*   **Étoiles massives** (plus de 8 masses solaires) : Elles deviennent des supergéantes, subissant des cycles de fusion nucléaire de plus en plus complexes (carbone, oxygène, silicium, jusqu'au fer). L'effondrement de leur cœur en fer déclenche une explosion spectaculaire appelée supernova, laissant derrière elle soit une étoile à neutrons, soit un trou noir, selon la masse du cœur résiduel <Reference id="4" name="4" term="4">4</Reference>.
+
+<Mermaid caption="Figure 4 : Diagramme de flux de l'évolution stellaire en fonction de la masse initiale" id="stellar_evolution_flowchart" description="Diagramme de flux de l'évolution stellaire en fonction de la masse initiale" />
+
+## La Gravitation : De Newton à la Relativité Générale
+
+La gravitation est l'une des quatre forces fondamentales de l'Univers et joue un rôle prépondérant dans la structure et la dynamique des objets célestes. Pendant plus de deux siècles, la <ConceptLink id="gravitation_newtonienne" name="gravitation newtonienne" term="gravitation newtonienne">gravitation newtonienne</ConceptLink>, formulée par <RealPerson id="isaac_newton" name="Isaac Newton" term="Isaac Newton">Isaac Newton</RealPerson> au XVIIe siècle, a fourni une description remarquablement précise de cette force. Sa loi universelle de la gravitation, $F = G \frac{m_1 m_2}{r^2}$, a permis d'expliquer le mouvement des planètes autour du Soleil, la formation des systèmes stellaires et, dans une certaine mesure, la dynamique des galaxies <Reference id="1" name="1" term="1">1</Reference>. Elle a été le pilier de la mécanique céleste, permettant des prédictions d'une précision inégalée pour son époque.
+
+Cependant, à la fin du XIXe et au début du XXe siècle, des observations et des réflexions théoriques ont révélé les limites de cette théorie. Le problème le plus célèbre fut l'anomalie de la précession du périhélie de Mercure, qui ne pouvait être entièrement expliquée par les perturbations gravitationnelles des autres planètes selon les lois de Newton. De plus, la gravitation newtonienne décrivait une « action à distance » instantanée, ce qui était incompatible avec le principe de la vitesse finie de la lumière établi par la relativité restreinte.
+
+C'est dans ce contexte qu'<RealPerson id="albert_einstein" name="Albert Einstein" term="Albert Einstein">Albert Einstein</RealPerson> a révolutionné notre compréhension de la gravitation avec sa <Glossary id="relativite_generale" name="Relativite générale" term="Relativite générale">Relativité Générale</Glossary>, publiée en 1915. Plutôt que de considérer la gravité comme une force agissant entre les masses, Einstein a postulé qu'elle est une manifestation de la courbure de l'espace-temps, causée par la présence de masse et d'énergie. Les objets se déplacent le long des « géodésiques » (les chemins les plus courts) dans cet espace-temps courbé, ce que nous interprétons comme l'effet de la gravité. Le célèbre principe d'équivalence, qui stipule que les effets de la gravitation sont localement indiscernables de ceux d'une accélération, est au cœur de cette nouvelle vision <Reference id="2" name="2" term="2">2</Reference>, <Reference id="5" name="5" term="5">5</Reference>.
+
+<Image description="Portrait d'Albert Einstein en costume, tenant de la craie devant un tableau noir avec des inscriptions." alt="Portrait d'Albert Einstein en costume, tenant de la craie devant un tableau noir avec des inscriptions." caption="Figure 3: Portrait d'Albert Einstein en costume, tenant de la craie devant un tableau noir avec des inscriptions. — Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Einstein_1921_by_F_Schmutzer_-_restoration.jpg)" src="https://commons.wikimedia.org/wiki/Special:FilePath/Einstein_1921_by_F_Schmutzer_-_restoration.jpg" fallbackUrl="https://commons.wikimedia.org/wiki/File:Einstein_1921_by_F_Schmutzer_-_restoration.jpg" />
+
+La relativité générale a non seulement résolu l'énigme de Mercure, mais elle a également prédit de nouveaux phénomènes qui ont depuis été confirmés par l'observation :
+*   **La déflexion de la lumière** par les corps massifs (confirmée par Arthur Eddington lors de l'éclipse solaire de 1919).
+*   **La dilatation du temps gravitationnelle**.
+*   **L'existence des trous noirs**, des régions de l'espace-temps où la courbure est si extrême que rien, pas même la lumière, ne peut s'échapper.
+*   **Les ondes gravitationnelles**, des ondulations de l'espace-temps se propageant à la vitesse de la lumière, dont la première détection directe en 2015 par l'expérience LIGO a ouvert une nouvelle fenêtre sur l'Univers.
+
+La relativité générale est devenue la pierre angulaire de l'astrophysique moderne pour la description des phénomènes extrêmes et de la cosmologie. Elle est indispensable pour comprendre la physique des trous noirs, des étoiles à neutrons, l'expansion de l'Univers, et la formation des grandes structures cosmiques <Reference id="4" name="4" term="4">4</Reference>.
+
+## Conclusion
+Ce chapitre introductif a posé les jalons essentiels à la compréhension de l'univers en explorant trois piliers fondamentaux de l'astrophysique. Nous avons d'abord appréhendé la lumière non seulement comme un phénomène physique, mais comme le vecteur principal de toute information cosmique, dont l'analyse spectrale révèle la composition, la température et le mouvement des objets célestes. Ensuite, nous avons tracé l'évolution de notre compréhension de la gravitation, de la mécanique céleste de Isaac Newton à la courbure de l'espace-temps d'Albert Einstein, soulignant son rôle prépondérant dans la formation et la dynamique des structures à toutes les échelles, des systèmes planétaires aux galaxies entières <Reference id="1" name="1" term="1">1</Reference>, <Reference id="4" name="4" term="4">4</Reference>. Enfin, nous avons esquissé les grandes lignes de l'évolution stellaire, un processus dicté par l'équilibre subtil entre la gravité et la pression de rayonnement, qui non seulement forge les étoiles, mais est aussi le creuset de tous les éléments plus lourds que l'hélium, essentiels à l'émergence de la vie. Ces concepts ne sont pas isolés ; ils s'entrelacent de manière intrinsèque : la lumière nous informe sur les processus gravitationnels et nucléaires au cœur des étoiles, tandis que la gravité régit leur naissance, leur vie et leur mort, influençant ainsi la lumière qu'elles émettent et la distribution des éléments dans l'univers.
+
+<Mermaid caption="Figure 6 : Interconnexion des fondements de l'astrophysique" id="interconnexion_fondements" description="Interconnexion des fondements de l'astrophysique" />
+
+Ces fondements constituent la base de toute l'astrophysique moderne, nous permettant d'interpréter les observations et de construire des modèles de l'univers. Ils nous préparent à explorer des phénomènes plus complexes et des questions encore sans réponse. Les chapitres suivants approfondiront la structure et l'évolution des galaxies, la cosmologie, l'étude des exoplanètes, et les mystères persistants de l'univers, tels que la nature de la <Glossary id="matiere_noire" name="matiere noire" term="matiere noire">matière noire</Glossary> et de l'<Glossary id="energie_noire" name="énergie noire" term="énergie noire">énergie noire</Glossary>, ou encore les conditions d'apparition de la vie au-delà de la Terre <Reference id="2" name="2" term="2">2</Reference>, <Reference id="5" name="5" term="5">5</Reference>. L'astrophysique est un domaine en constante évolution, où chaque découverte ouvre de nouvelles perspectives et soulève de nouvelles interrogations, nous invitant à repousser sans cesse les frontières de notre connaissance.
+
+
+
+
+
+
+<Summary itemsString="" />
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={900}>
+    <Question q="Quelle partie du spectre electromagnetique est principalement utilisee pour observer les regions de formation d'étoiles cachees par la poussiere interstellaire ?" explanation="Les ondes infrarouges ont une longueur d'onde plus longue que la lumiere visible, ce qui leur permet de traverser plus facilement les nuages de gaz et de poussiere interstellaires, revelant ainsi les étoiles en formation.">
+  <Option text="Rayons X" correct={false} />
+  <Option text="Lumiere visible" correct={false} />
+  <Option text="Infrarouge" correct={true} />
+  <Option text="Ondes radio" correct={false} />
+</Question>
+    <Question q="Un objet celeste s'eloignant de la Terre verra sa lumiere decalee vers quelle partie du spectre ?" explanation="L'effet Doppler-Fizeau indique que la lumiere d'une source s'eloignant de l'observateur est etiree vers des longueurs d'onde plus longues, ce qui correspond au decalage vers le rouge (redshift).">
+  <Option text="Le bleu (decalage vers le bleu)" correct={false} />
+  <Option text="Le rouge (decalage vers le rouge)" correct={true} />
+  <Option text="L'ultraviolet" correct={false} />
+  <Option text="Les rayons X" correct={false} />
+</Question>
+    <Question q="Selon la deuxieme loi de Kepler, comment la vitesse orbitale d'une planete varie-t-elle lorsqu'elle se rapproche du Soleil ?" explanation="La deuxieme loi de Kepler (loi des aires) stipule qu'une ligne joignant une planete au Soleil balaie des aires egales en des temps egaux. Pour que cela soit vrai, la planete doit se deplacer plus rapidement lorsqu'elle est plus proche du Soleil (perihelie) et plus lentement lorsqu'elle est plus eloignee (aphelie).">
+  <Option text="Elle diminue" correct={false} />
+  <Option text="Elle augmente" correct={true} />
+  <Option text="Elle reste constante" correct={false} />
+  <Option text="Elle depend de la masse de la planete" correct={false} />
+</Question>
+    <Question q="Quelle est la principale source d'énergie des étoiles sur la sequence principale ?" explanation="Les étoiles passent la majeure partie de leur vie sur la sequence principale, ou elles generent de l'énergie par la fusion nucleaire de l'hydrogene en helium dans leur cur.">
+  <Option text="La contraction gravitationnelle" correct={false} />
+  <Option text="La fusion nucleaire de l'hydrogene en helium" correct={true} />
+  <Option text="La fusion nucleaire de l'helium en carbone" correct={false} />
+  <Option text="L'effondrement gravitationnel" correct={false} />
+</Question>
+    <Question q="Quel est le destin final d'une étoile de masse similaire a celle du Soleil apres avoir epuise son carburant nucleaire ?" explanation="Les étoiles de masse faible a intermediaire (jusqu'a environ 8 masses solaires) finissent leur vie en ejectant leurs couches externes pour former une nebuleuse planetaire, laissant derriere elles un cur dense et chaud appele naine blanche.">
+  <Option text="Trou noir" correct={false} />
+  <Option text="étoile a neutrons" correct={false} />
+  <Option text="Naine blanche" correct={true} />
+  <Option text="Supernova" correct={false} />
+</Question>
+    <Question q="La loi de Wien decrit la relation entre la temperature d'un corps noir et quelle caracteristique de son rayonnement ?" explanation="La loi de Wien stipule que la longueur d'onde a laquelle un corps noir emet le plus de rayonnement est inversement proportionnelle a sa temperature. Plus un corps est chaud, plus le pic d'emission se deplace vers les courtes longueurs d'onde (bleu/ultraviolet).">
+  <Option text="L'intensite totale emise" correct={false} />
+  <Option text="La longueur d'onde du pic d'emission" correct={true} />
+  <Option text="La frequence minimale d'emission" correct={false} />
+  <Option text="La vitesse de la lumiere" correct={false} />
+</Question>
+    <Question q="Dans la théorie de la relativite générale d'Einstein, la gravite est decrite comme une consequence de quoi ?" explanation="La relativite générale postule que la gravite n'est pas une force, mais une manifestation de la courbure de l'espace-temps causee par la présence de masse et d'énergie.">
+  <Option text="Une force mysterieuse agissant a distance" correct={false} />
+  <Option text="L'echange de particules appelees gravitons" correct={false} />
+  <Option text="La courbure de l'espace-temps" correct={true} />
+  <Option text="L'expansion de l'univers" correct={false} />
+</Question>
+    <Question q="Les étoiles se forment à partir de l'effondrement gravitationnel de quelles structures ?" explanation="Les étoiles naissent de l'effondrement gravitationnel de regions denses au sein de vastes nuages de gaz et de poussiere, appelees nebuleuses moleculaires geantes.">
+  <Option text="Des galaxies" correct={false} />
+  <Option text="Des amas globulaires" correct={false} />
+  <Option text="Des nebuleuses moleculaires geantes" correct={true} />
+  <Option text="Des trous noirs" correct={false} />
+</Question>
+</Quiz>
+
+#
+
+#
+
+### Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiQW4gSW50cm9kdWN0aW9uIHRvIE1vZGVybiBBc3Ryb3BoeXNpY3MgYnkgQ2Fycm9sbC4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMTcvOTc4MTEwODM4MDk4MCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoyLCJ0ZXh0IjoiU3RlbGxhciBTdHJ1Y3R1cmUgYW5kIMOpdm9sdXRpb24gYnkgS2lwcGVuaGFobi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNjQyLTYxNTIzLTgiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MywidGV4dCI6IkRvbWluaWMgSi4gT+KAmU1lYXJhLCAyMDE3LiBDb3Ntb2xvZ3kgYW5kIFBvbGl0aWNzIGluIFBsYXRv4oCZcyBMYXRlciBXb3Jrcy4gQ2FtYnJpZGdlOiBDYW1icmlkZ2UgVW5pdmVyc2l0eSBQcmVzcy4geGkgKyAxNTcgcHAuIGJ5IFbDoXpxdWV6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTQxOTUvMjE4My00MTA1XzIwXzE4Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjQsInRleHQiOiJUb3BpY3MgaW4gQXN0cm9waHlzaWNzOiA8aT5Bc3Ryb3BoeXNpY3Mgb2YgR2FzZW91cyBOZWJ1bGFlIGFuZCBBY3RpdmUgR2FsYWN0aWMgTnVjbGVpPC9pPiAuIERvbmFsZCBFLiBPc3RlcmJyb2NrLiBVbml2ZXJzaXR5IFNjaWVuY2UgQm9va3MsIE1pbGwgVmFsbGV5LCBDQSwgMTk4OC4geHZpaWksIDQwOCBwcC4sIGlsbHVzLiAkMzYuIGJ5IFBoaW5uZXkuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVRvcGljcyUyMGluJTIwQXN0cm9waHlzaWNzJTNBJTIwQXN0cm9waHlzaWNzJTIwb2YlMjBHYXNlb3VzJTIwTmVidWxhZSUyMCUyMlRvcGljcyUyMGluJTIwQXN0cm9waHlzaWNzJTIyJTIwMTk4OCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NSwidGV4dCI6IkNhbWJyaWRnZSBVbml2ZXJzaXR5IFByZXNzIGJ5IFVuaXZlcnNpdHkgUHJlc3MuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4yNjIyNi9tb3JyZXNzaWVyLjYwYzhkODNjYmVhMTQ0NWVmZDlhMTkwNSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo2LCJ0ZXh0IjoiR3Jhdml0YXRpb24gYW5kIENvc21vbG9neS4gUHJpbmNpcGxlcyBhbmQgQXBwbGljYXRpb25zIG9mIHRoZSBnw6luw6lyYWwgVGhlb3J5IG9mIFJlbGF0aXZpdHkuIFN0ZXZlbiBXZWluYmVyZy4gV2lsZXksIE5ldyBZb3JrLCAxOTcyLiB4eHgsIDY1OCBwcC4sIGlsbHVzLiAkMTguOTUgYnkgQW5kZXJzb24uIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUdyYXZpdGF0aW9uJTIwJTIyUHJpbmNpcGxlcyUyMGFuZCUyMEFwcGxpY2F0aW9ucyUyMG9mJTIwdGhlJTIwZyVDMyVBOW4lQzMlQTlyYWwlMjBUaGVvcnklMjBvZiUyMFJlbGF0aXYlMjIlMjAxOTcyIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjcsInRleHQiOiJNLiBTLiBMb25nYWlyLGhpZ2ggZW5lcmd5IGFzdHJvcGh5c2ljcywgdm9sLiAxLHBhcnRpY2xlcyBwaG90b25zIGFuZCB0aGVpciBkZXRlY3Rpb24sIENhbWJyaWRnZSBVbml2ZXJzaXR5IFByZXNzLCBDYW1icmlkZ2UsIDE5OTIgYnkgR2VwcGVydC4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvYmYwMDYyNjk5MCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjgsInRleHQiOiJHYWxhY3RpYyBEeW5hbWljcyBieSBCaW5uZXkuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xNTE1Lzk3ODE0MDA4Mjg3MjIiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOnRydWV9XQ==" />
+

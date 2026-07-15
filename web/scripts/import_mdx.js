@@ -76,10 +76,24 @@ async function importMdxFiles(dir = '') {
           const lang = matches[2].toLowerCase();
           
           const fileContent = fs.readFileSync(path.join(CONTENT_PATH, relPath), 'utf-8');
-          const { data: frontmatter } = matter(fileContent);
-          const title = frontmatter.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          let frontmatter = {};
+          let title = lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          let order = null;
+          
+          try {
+            const parsed = matter(fileContent);
+            frontmatter = parsed.data || {};
+            if (frontmatter.title) {
+              title = frontmatter.title;
+            }
+            if (frontmatter.order !== undefined && frontmatter.order !== null) {
+              order = Number(frontmatter.order);
+            }
+          } catch (yamlErr) {
+            console.warn(`⚠️ Warning: Failed to parse frontmatter for ${relPath}: ${yamlErr.message}. Importing with fallback metadata.`);
+          }
 
-          console.log(`⏳ Importing [${lang.toUpperCase()}] ${courseSlug} -> ${lessonSlug}...`);
+          console.log(`⏳ Importing [${lang.toUpperCase()}] ${courseSlug} -> ${lessonSlug} (order: ${order})...`);
 
           const { error } = await supabase
             .from('lessons')
@@ -89,7 +103,8 @@ async function importMdxFiles(dir = '') {
                 lesson_slug: lessonSlug,
                 lang: lang,
                 title: title,
-                content: fileContent
+                content: fileContent,
+                order: order
               },
               { onConflict: 'course_slug,lesson_slug,lang' }
             );

@@ -1,0 +1,95 @@
+---
+title: "5. Evaluación Sumativa Final"
+subject: "Ciencias_de_la_Computación"
+level: "L1"
+module: "Examen Terminal Sumativo"
+order: 5
+summative: true
+---
+
+<Prerequisites items={[
+  "Lesson 1: Historical Ciphers & Foundations",
+  "Lesson 2: Symmetric Encryption & Entropy",
+  "Lesson 3: Public Key Cryptography & Key Exchange",
+  "Lesson 4: The RSA Cryptosystem & Digital Signatures"
+]} />
+
+# 5. Evaluación Sumativa Final
+
+Bienvenido/a a la Evaluación Sumativa Final del curso de **Introducción a la Criptografía**. Este examen está diseñado para evaluar su comprensión de los cifrados clásicos, la encriptación simétrica, la entropía, el intercambio de claves y los fundamentos matemáticos del criptosistema RSA.
+
+Esta evaluación consta de una serie de preguntas teóricas, ejercicios de cálculo matemático y evaluaciones de pensamiento crítico. Por favor, lea cada pregunta cuidadosamente y asegúrese de que sus respuestas sean precisas y matemáticamente rigurosas.
+
+---
+## Parte 1: Evaluación Teórica Integral
+
+Utilice el cuestionario interactivo a continuación para poner a prueba sus conocimientos sobre los paradigmas simétricos y asimétricos.
+
+<Quiz isFinal={true} durationLimit={600} limit={1}>
+  <Question q="¿Cuál es la distinción fundamental entre la seguridad teórica de la información (secreto perfecto) y la seguridad teórica de la complejidad?" explanation="La seguridad teórica de la información (como el One-Time Pad) significa que el cifrado no puede romperse incluso con una potencia computacional infinita porque el texto cifrado no contiene información. La seguridad teórica de la complejidad (como AES o RSA) significa que romper el cifrado es computacionalmente inviable para un adversario con tiempo limitado bajo suposiciones matemáticas estándar.">
+  <Option text="La seguridad teórica de la información se basa en el secreto del algoritmo, mientras que la seguridad teórica de la complejidad se basa en el Principio de Kerckhoffs." correct={false} />
+  <Option text="La seguridad teórica de la información no puede romperse incluso con una potencia computacional infinita, mientras que la seguridad teórica de la complejidad asume una potencia computacional limitada del adversario." correct={true} />
+  <Option text="La seguridad teórica de la información requiere pares de claves asimétricas, mientras que la seguridad teórica de la complejidad requiere claves simétricas." correct={false} />
+  <Option text="La seguridad teórica de la información solo es aplicable a cifrados clásicos como el cifrado César." correct={false} />
+</Question>
+
+  <Question q="En el Estándar de Cifrado Avanzado (AES), ¿qué transformación representa la única fuente de confusión no lineal?" explanation="SubBytes es la única transformación no lineal en AES, utilizando una S-Box para traducir bytes. ShiftRows y MixColumns son operaciones lineales que proporcionan difusión, y AddRoundKey es un XOR lineal simple.">
+  <Option text="SubBytes" correct={true} />
+  <Option text="ShiftRows" correct={false} />
+  <Option text="MixColumns" correct={false} />
+  <Option text="AddRoundKey" correct={false} />
+</Question>
+
+  <Question q="¿Qué es el Problema del Logaritmo Discreto (DLP) matemáticamente?" explanation="El DLP es el problema de encontrar el entero 'a' dados A, g y p tal que g^a = A mod p, donde p es primo y g es un generador.">
+  <Option text="Encontrar los factores primos p y q de un número compuesto masivo n." correct={false} />
+  <Option text="Encontrar el exponente 'a' dados A, g y p tal que g^a = A mod p." correct={true} />
+  <Option text="Encontrar el inverso multiplicativo modular de e módulo phi(n)." correct={false} />
+  <Option text="Calcular el máximo común divisor de dos enteros extremadamente grandes." correct={false} />
+</Question>
+
+  <Question q="¿Por qué el modo Electronic Codebook (ECB) de un cifrado por bloques se considera altamente inseguro para datos complejos?" explanation="El modo ECB cifra bloques de texto plano idénticos en bloques de texto cifrado idénticos, preservando patrones visuales o estadísticos de los datos originales.">
+  <Option text="Requiere una clave compartida que es el doble de larga que el tamaño del bloque." correct={false} />
+  <Option text="No utiliza ninguna clave, basándose completamente en la oscuridad de la tabla de sustitución." correct={false} />
+  <Option text="Cifra bloques de texto plano idénticos en bloques de texto cifrado idénticos, preservando patrones visuales o estadísticos." correct={true} />
+  <Option text="Solo puede usarse para cifrar mensajes de texto de exactamente 128 caracteres." correct={false} />
+</Question>
+</Quiz>
+
+---
+## Parte 2: Revisión Académica en Formato de Ensayo
+
+Por favor, redacte una respuesta detallada a la siguiente pregunta teórica. Su respuesta será analizada y evaluada por nuestro tutor académico de IA.
+
+<EssayEvaluation prompt="Analice críticamente cómo el 'Problema de Distribución de Claves' en la criptografía simétrica condujo a la creación de Intercambios de Claves Asimétricas como Diffie-Hellman. En su ensayo, detalle: (1) por qué la criptografía simétrica es logísticamente desafiante para redes globales masivas, (2) cómo Diffie-Hellman elude este problema matemáticamente utilizando grupos cíclicos, y (3) el modelo de amenaza exacto (p. ej., adversarios activos vs. pasivos) que aborda Diffie-Hellman." subject="Fundamentos de Criptografía Asimétrica" gradingSystem="0/20" />
+
+---
+## Parte 3: Lógica Matemática Avanzada
+
+Evalúe su comprensión de las relaciones de aritmética modular que subyacen a los cifrados asimétricos.
+
+<CardSort pairsString="Perfect Secrecy:P(M|C) = P(M)||RSA Key Relation:ed = 1 mod phi(n)||AES Block Size:128 bits||Diffie-Hellman Secret:g^(ab) mod p" />
+
+---
+## Parte 4: Autorreflexión Socrática
+
+Para concluir su evaluación final, reflexione sobre los panoramas de amenazas prácticas de los sistemas matemáticos que ha estudiado.
+
+<SocraticInput 
+  question="If Alice and Bob execute a perfect Diffie-Hellman Key Exchange over a public channel, but an active adversary, Mallory, intercepts the messages and injects her own public keys (Man-in-the-Middle attack), why does the mathematics of Diffie-Hellman fail to detect this attack?" 
+  idealAnswer="Diffie-Hellman does not provide authentication. The mathematics only guarantees that two parties can negotiate a key, but it cannot verify the identity of the parties. Therefore, Mallory can execute separate exchanges with Alice and Bob, acting as a secret middleman without either party knowing." 
+  customCriteriaString="Must mention that Diffie-Hellman lacks authentication, and explain that a Man-in-the-Middle can intercept and negotiate separate keys with each party."
+/>
+
+---
+
+<Summary itemsString="" items={[
+  "You have completed the comprehensive assessment of your L1 Cryptography course.",
+  "Classical ciphers demonstrate the vulnerabilities of mono-alphabetic substitution, which are solved by Shannon's perfect secrecy or modern block ciphers.",
+  "Public-key key exchange and RSA represent the pinnacle of modern internet transport security.",
+  "Security in the real world is a combination of mathematical complexity, correct implementation modes, and proper identity authentication."
+]} />
+
+<References>
+  * **Koblitz, N.** (1994). *A Course in Number Theory and Cryptography*. Springer-Verlag.
+  * **Paar, C., & Pelzl, J.** (2009). *Understanding Cryptography: A Textbook for Students and Practitioners*. Springer.
+</References>

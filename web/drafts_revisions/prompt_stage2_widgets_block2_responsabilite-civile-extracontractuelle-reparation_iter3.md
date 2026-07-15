@@ -2,20 +2,19 @@ You are a world-class educational curriculum architect and JSON data validator (
 Your task is to design the JSON object for the Enrichment Hover Cards / Entity Links of the lesson (biographies, persons, concepts, events, locations, and glossary terms).
 
 The narrative text contains the following custom widget anchors that you MUST define:
-- Anchor: [[WIDGET:Glossary:responsabilite_civile_extracontractuelle:responsabilité civile extracontractuelle]] (Type: "Glossary", ID: "responsabilite_civile_extracontractuelle", Topic: "responsabilité civile extracontractuelle")
-- Anchor: [[WIDGET:ConceptLink:code_civil:Code civil]] (Type: "ConceptLink", ID: "code_civil", Topic: "Code civil")
+- Anchor: [[WIDGET:ConceptLink:responsabilite_civile_extracontractuelle:responsabilité civile extracontractuelle]] (Type: "ConceptLink", ID: "responsabilite_civile_extracontractuelle", Topic: "responsabilité civile extracontractuelle")
 - Anchor: [[WIDGET:ConceptLink:responsabilite_contractuelle:responsabilité contractuelle]] (Type: "ConceptLink", ID: "responsabilite_contractuelle", Topic: "responsabilité contractuelle")
-- Anchor: [[WIDGET:RealPerson:jean_carbonnier:Jean Carbonnier]] (Type: "RealPerson", ID: "jean_carbonnier", Topic: "Jean Carbonnier")
-- Anchor: [[WIDGET:ConceptLink:garde_de_la_chose:garde de la chose]] (Type: "ConceptLink", ID: "garde_de_la_chose", Topic: "garde de la chose")
-- Anchor: [[WIDGET:ConceptLink:dommage_reparable:dommage réparable]] (Type: "ConceptLink", ID: "dommage_reparable", Topic: "dommage réparable")
-- Anchor: [[WIDGET:Glossary:prejudice:préjudice]] (Type: "Glossary", ID: "prejudice", Topic: "préjudice")
-- Anchor: [[WIDGET:ConceptLink:lien_de_causalite:lien de causalité]] (Type: "ConceptLink", ID: "lien_de_causalite", Topic: "lien de causalité")
-- Anchor: [[WIDGET:RealPerson:rene_demogue:René Demogue]] (Type: "RealPerson", ID: "rene_demogue", Topic: "René Demogue")
-- Anchor: [[WIDGET:Glossary:fait_generateur:fait générateur]] (Type: "Glossary", ID: "fait_generateur", Topic: "fait générateur")
-- Anchor: [[WIDGET:ConceptLink:dommage:dommage]] (Type: "ConceptLink", ID: "dommage", Topic: "dommage")
-- Anchor: [[WIDGET:ConceptLink:lien_de_causalite:lien de causalité]] (Type: "ConceptLink", ID: "lien_de_causalite", Topic: "lien de causalité")
-- Anchor: [[WIDGET:RealPerson:carbonnier:Jean Carbonnier]] (Type: "RealPerson", ID: "carbonnier", Topic: "Jean Carbonnier")
-- Anchor: [[WIDGET:RealPerson:fabre_magnan:Muriel Fabre-Magnan]] (Type: "RealPerson", ID: "fabre_magnan", Topic: "Muriel Fabre-Magnan")
+- Anchor: [[WIDGET:RealPerson:pothier:Robert Joseph Pothier]] (Type: "RealPerson", ID: "pothier", Topic: "Robert Joseph Pothier")
+- Anchor: [[WIDGET:Glossary:faute:faute]] (Type: "Glossary", ID: "faute", Topic: "faute")
+- Anchor: [[WIDGET:ConceptLink:garde_chose:garde d'une chose]] (Type: "ConceptLink", ID: "garde_chose", Topic: "garde d'une chose")
+- Anchor: [[WIDGET:Glossary:pretium_doloris:Pretium doloris]] (Type: "Glossary", ID: "pretium_doloris", Topic: "Pretium doloris")
+- Anchor: [[WIDGET:ConceptLink:perte_de_chance:perte de chance]] (Type: "ConceptLink", ID: "perte_de_chance", Topic: "perte de chance")
+- Anchor: [[WIDGET:RealPerson:carbonnier_jean:Jean Carbonnier]] (Type: "RealPerson", ID: "carbonnier_jean", Topic: "Jean Carbonnier")
+- Anchor: [[WIDGET:Glossary:in_concreto:in concreto]] (Type: "Glossary", ID: "in_concreto", Topic: "in concreto")
+- Anchor: [[WIDGET:ConceptLink:partage_responsabilite:partage de responsabilité]] (Type: "ConceptLink", ID: "partage_responsabilite", Topic: "partage de responsabilité")
+- Anchor: [[WIDGET:ConceptLink:responsabilite_civile_extracontractuelle:responsabilité civile extracontractuelle]] (Type: "ConceptLink", ID: "responsabilite_civile_extracontractuelle", Topic: "responsabilité civile extracontractuelle")
+- Anchor: [[WIDGET:ConceptLink:reparation_integrale:réparation intégrale]] (Type: "ConceptLink", ID: "reparation_integrale", Topic: "réparation intégrale")
+- Anchor: [[WIDGET:Glossary:prejudice_ecologique:préjudice écologique]] (Type: "Glossary", ID: "prejudice_ecologique", Topic: "préjudice écologique")
 
 ---
 
@@ -82,7 +81,7 @@ Return ONLY a valid JSON object matching this schema:
 Do NOT wrap your JSON response in markdown code blocks.
 
 🚨 PREVIOUS CRITIQUE:
-"The widget block is rejected because all interactive components (Glossary, ConceptLink, RealPerson) have empty 'props' objects. This means they are not fully populated with the necessary educational content, making them placeholders. Each component type requires specific properties to be functional and informative.
+"The 'year' property within the 'props' of every interactive component is set to the placeholder string "null". This is not allowed. For 'RealPerson' components, this field must contain valid date information (e.g., birth/death years). For 'ConceptLink' and 'Glossary' components, if 'year' is not applicable, it should be omitted or set to JSON null, not the string "null". All placeholders and incomplete fields must be resolved.
 Detailed errors:
-- Field "interactiveComponents": All interactive components within this array have empty 'props' objects. For example, 'RealPerson' components require properties like 'name', 'description', 'wikipediaLink', 'birthDate', and 'deathDate'. 'Glossary' components need 'term' and 'definition'. 'ConceptLink' components need 'concept' and 'description'. Without these properties, the components are incomplete and lack educational value."
+- Field "interactiveComponents": Every interactive component within this array has 'props.year' set to the placeholder string "null". This needs to be corrected. For 'RealPerson' components (e.g., 'pothier', 'carbonnier_jean'), 'year' must be populated with actual date ranges. For other component types, if 'year' is not relevant, it should be omitted or set to JSON null."
 Please fix these issues and regenerate.

@@ -500,6 +500,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
         courseLevel={formatCourseLevel(level, lang)}
         courseTitle={title}
         courseSubject={subject}
+        courseLang={lang}
       >
         <div className="max-w-4xl mx-auto py-16 px-12 pb-40">
           {/* Breadcrumbs & Export */}
@@ -646,6 +647,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           courseLevel={formatCourseLevel(pageData?.meta?.level || 'L1', lang)}
           courseTitle={title}
           courseSubject={subject}
+          courseLang={lang}
         >
           <div className="max-w-4xl mx-auto py-16 px-12 pb-40 relative min-h-[600px]">
             {/* Blurred background layout to give context */}

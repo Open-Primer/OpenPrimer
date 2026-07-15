@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Play, Pause, RefreshCw, Compass, ShieldAlert, Sparkles, Orbit, Sliders } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 
 interface Planet {
   id: string;
@@ -60,7 +61,40 @@ const PLANETS_DB: Planet[] = [
 
 export const SolarSystemOrrery = () => {
   const { language } = useLanguage();
-  const isFR = language === 'FR';
+
+  const localFR: Record<string, string> = {
+    "Mercury": "Mercure",
+    "Venus": "Vénus",
+    "Earth": "Terre",
+    "Mars": "Mars",
+    "Jupiter": "Jupiter",
+    "Saturn": "Saturne",
+    "The closest planet to the Sun. Highly eccentric orbit exhibiting extreme speed fluctuations.": "Planète la plus proche du Soleil. Orbite très excentrique caractérisée par de forts écarts de vitesse.",
+    "Nearly perfect circular orbit. Enshrouded in a dense atmosphere triggering a massive greenhouse effect.": "Orbite presque circulaire. Enveloppée d'une atmosphère dense provoquant un puissant effet de serre.",
+    "Our home world. Highly stable orbit ideal for studying tangential velocity vectors.": "Notre planète bleue. Orbite stable idéale pour l'étude cinématique des vecteurs vitesse tangents.",
+    "The red planet. Moderately eccentric orbit, which originally inspired Kepler's orbital discoveries.": "La planète rouge. Présente une excentricité modérée propice aux premières vérifications des lois de Kepler.",
+    "Massive gas giant. Exerts dominant gravitational fields affecting satellite trajectories.": "Géante gazeuse massive. Exerce une influence gravitationnelle majeure perturbant les corps environnants.",
+    "Stunning ringed giant. Features an extensive system of moons orbiting in stable resonances.": "Magnifique géante annelée. Possède un grand nombre de lunes en orbites de résonance stable.",
+    "Kepler's Laws & Mechanics Lab": "Laboratoire des Lois de Kepler",
+    "Explore angular momentum conservation: deform elliptical excentricity parameters and analyze velocity vs gravitational acceleration vectors.": "Étudiez la physique de la conservation du moment cinétique : manipulez l'excentricité elliptique et analysez les vecteurs d'accélération et d'aires.",
+    "Select Celestial Target": "Corps Céleste en observation",
+    "Adjust Eccentricity (e)": "Ajustement de l'Excentricité (e)",
+    "Eccentricity Coefficient": "Coefficient d'excentricité",
+    "Velocity Vector (v)": "Vecteur Vitesse (v⃗)",
+    "Gravity Force (F)": "Force d'Attraction (F⃗g)",
+    "Second Law of Kepler": "Deuxième Loi de Kepler",
+    "« Equal orbital areas are swept out in equal times ». Observe that all violet sector segments are identical in surface: the planet moves faster at perihelion.": "« Des surfaces égales sont balayées dans des intervalles de temps égaux ». Observez que les portions d'aires elliptiques violettes ont toutes la même surface : la planète accélère près du Soleil.",
+    "Vectors ⇾": "Vecteurs ⇾",
+    "Swept Areas (2nd Law)": "Aires Balayées (2e Loi)"
+  };
+
+  const t = (key: string) => {
+    const globalT = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+    const translated = globalT?.[key];
+    if (translated && translated !== key) return translated;
+    if (language.toUpperCase() === 'FR' && localFR[key]) return localFR[key];
+    return key;
+  };
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -322,12 +356,10 @@ export const SolarSystemOrrery = () => {
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-            <span>{isFR ? "Laboratoire des Lois de Kepler" : "Kepler's Laws & Mechanics Lab"}</span>
+            <span>{t("Kepler's Laws & Mechanics Lab")}</span>
           </h3>
           <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            {isFR 
-              ? "Étudiez la physique de la conservation du moment cinétique : manipulez l'excentricité elliptique et analysez les vecteurs d'accélération et d'aires."
-              : "Explore angular momentum conservation: deform elliptical excentricity parameters and analyze velocity vs gravitational acceleration vectors."}
+            {t("Explore angular momentum conservation: deform elliptical excentricity parameters and analyze velocity vs gravitational acceleration vectors.")}
           </p>
         </div>
 
@@ -340,7 +372,7 @@ export const SolarSystemOrrery = () => {
               showVectors ? 'bg-indigo-600/25 border border-indigo-500/50 text-indigo-300' : 'bg-slate-900/40 border border-slate-850 text-slate-400'
             }`}
           >
-            Vecteurs ⇾
+            {t("Vectors ⇾")}
           </button>
 
           {/* Sweeper toggler */}
@@ -350,7 +382,7 @@ export const SolarSystemOrrery = () => {
               showSweeper ? 'bg-violet-600/25 border border-violet-500/50 text-violet-300' : 'bg-slate-900/40 border border-slate-850 text-slate-400'
             }`}
           >
-            Aires Balayées (2e Loi)
+            {t("Swept Areas (2nd Law)")}
           </button>
 
           <button 
@@ -392,7 +424,7 @@ export const SolarSystemOrrery = () => {
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-2">
               <Orbit className="w-4 h-4 text-cyan-400" />
-              <span>{isFR ? "Corps Céleste en observation" : "Select Celestial Target"}</span>
+              <span>{t("Select Celestial Target")}</span>
             </h4>
             <div className="grid grid-cols-3 gap-2">
               {PLANETS_DB.map((p) => (
@@ -405,7 +437,7 @@ export const SolarSystemOrrery = () => {
                       : 'bg-slate-900/20 border-slate-850 text-slate-400 hover:border-slate-800'
                   }`}
                 >
-                  {isFR ? p.nameFR : p.nameEN}
+                  {t(p.nameEN)}
                 </button>
               ))}
             </div>
@@ -415,12 +447,12 @@ export const SolarSystemOrrery = () => {
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-cyan-400" />
-              <span>{isFR ? "Ajustement de l'Excentricité (e)" : "Adjust Eccentricity (e)"}</span>
+              <span>{t("Adjust Eccentricity (e)")}</span>
             </h4>
 
             <div className="space-y-1">
               <div className="flex justify-between text-[11px] font-bold text-slate-400">
-                <span>Coefficient d'excentricité</span>
+                <span>{t("Eccentricity Coefficient")}</span>
                 <span className="font-mono text-cyan-300">{eccentricity.toFixed(3)}</span>
               </div>
               <input 
@@ -441,12 +473,12 @@ export const SolarSystemOrrery = () => {
               <div className="flex justify-between items-start border-b border-slate-850/50 pb-2 mb-3">
                 <h4 className="text-xs font-black text-slate-100 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedPlanet.color }} />
-                  <span>{isFR ? selectedPlanet.nameFR : selectedPlanet.nameEN}</span>
+                  <span>{t(selectedPlanet.nameEN)}</span>
                 </h4>
                 <span className="text-[9px] font-bold text-slate-500 uppercase">{selectedPlanet.massText}</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                {isFR ? selectedPlanet.descFR : selectedPlanet.descEN}
+                {t(selectedPlanet.descEN)}
               </p>
             </div>
 
@@ -455,11 +487,11 @@ export const SolarSystemOrrery = () => {
               <div className="border-t border-slate-850/50 pt-3.5 mt-4 grid grid-cols-2 gap-3 text-[9.5px] font-black uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <span className="w-4 h-1.5 rounded-sm bg-[#06b6d4]" />
-                  <span className="text-cyan-400">{isFR ? "Vecteur Vitesse (v⃗)" : "Velocity Vector (v)"}</span>
+                  <span className="text-cyan-400">{t("Velocity Vector (v)")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-4 h-1.5 rounded-sm bg-[#f43f5e]" />
-                  <span className="text-rose-400">{isFR ? "Force d'Attraction (F⃗g)" : "Gravity Force (F)"}</span>
+                  <span className="text-rose-400">{t("Gravity Force (F)")}</span>
                 </div>
               </div>
             )}
@@ -469,12 +501,10 @@ export const SolarSystemOrrery = () => {
           <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-4 text-center select-text">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center justify-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>{isFR ? "Deuxième Loi de Kepler" : "Second Law of Kepler"}</span>
+              <span>{t("Second Law of Kepler")}</span>
             </span>
             <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed">
-              {isFR 
-                ? "« Des surfaces égales sont balayées dans des intervalles de temps égaux ». Observez que les portions d'aires elliptiques violettes ont toutes la même surface : la planète accélère près du Soleil."
-                : "« Equal orbital areas are swept out in equal times ». Observe that all violet sector segments are identical in surface: the planet moves faster at perihelion."}
+              {t("« Equal orbital areas are swept out in equal times ». Observe that all violet sector segments are identical in surface: the planet moves faster at perihelion.")}
             </p>
           </div>
 

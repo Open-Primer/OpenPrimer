@@ -3,81 +3,131 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 2:
   "interactiveComponents": [
     {
       "id": "responsabilite_civile_extracontractuelle",
-      "componentType": "Glossary",
-      "sectionAnchor": "## Introduction",
-      "props": {}
-    },
-    {
-      "id": "code_civil",
       "componentType": "ConceptLink",
       "sectionAnchor": "## Introduction",
-      "props": {}
+      "props": {
+        "name": "responsabilité civile extracontractuelle",
+        "searchQuery": "responsabilité civile extracontractuelle",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Responsabilit%C3%A9_civile_en_droit_fran%C3%A7ais#Responsabilit%C3%A9_extracontractuelle",
+        "year": ""
+      }
     },
     {
       "id": "responsabilite_contractuelle",
       "componentType": "ConceptLink",
       "sectionAnchor": "## Introduction",
-      "props": {}
+      "props": {
+        "name": "responsabilité contractuelle",
+        "searchQuery": "responsabilité contractuelle",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Responsabilit%C3%A9_contractuelle_en_droit_fran%C3%A7ais",
+        "year": ""
+      }
     },
     {
-      "id": "jean_carbonnier",
+      "id": "pothier",
       "componentType": "RealPerson",
       "sectionAnchor": "## Introduction",
-      "props": {}
+      "props": {
+        "name": "Robert Joseph Pothier",
+        "searchQuery": "Robert Joseph Pothier",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Robert_Joseph_Pothier",
+        "year": "1699-1772"
+      }
     },
     {
-      "id": "garde_de_la_chose",
-      "componentType": "ConceptLink",
-      "sectionAnchor": "## Introduction",
-      "props": {}
-    },
-    {
-      "id": "dommage_reparable",
-      "componentType": "ConceptLink",
-      "sectionAnchor": "## Introduction",
-      "props": {}
-    },
-    {
-      "id": "prejudice",
+      "id": "faute",
       "componentType": "Glossary",
       "sectionAnchor": "## Introduction",
-      "props": {}
+      "props": {
+        "searchQuery": "faute droit",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Faute_(droit)",
+        "year": ""
+      }
     },
     {
-      "id": "lien_de_causalite",
+      "id": "garde_chose",
       "componentType": "ConceptLink",
       "sectionAnchor": "## Introduction",
-      "props": {}
+      "props": {
+        "name": "garde d'une chose",
+        "searchQuery": "garde d'une chose droit",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Garde_d%27une_chose",
+        "year": ""
+      }
     },
     {
-      "id": "rene_demogue",
-      "componentType": "RealPerson",
-      "sectionAnchor": "## Introduction",
-      "props": {}
-    },
-    {
-      "id": "fait_generateur",
+      "id": "pretium_doloris",
       "componentType": "Glossary",
       "sectionAnchor": "## Introduction",
-      "props": {}
+      "props": {
+        "searchQuery": "Pretium doloris",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Pretium_doloris",
+        "year": ""
+      }
     },
     {
-      "id": "dommage",
+      "id": "perte_de_chance",
       "componentType": "ConceptLink",
       "sectionAnchor": "## Introduction",
-      "props": {}
+      "props": {
+        "name": "perte de chance",
+        "searchQuery": "perte de chance droit",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Perte_de_chance",
+        "year": ""
+      }
     },
     {
-      "id": "carbonnier",
+      "id": "carbonnier_jean",
       "componentType": "RealPerson",
       "sectionAnchor": "## Introduction",
-      "props": {}
+      "props": {
+        "name": "Jean Carbonnier",
+        "searchQuery": "Jean Carbonnier",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Jean_Carbonnier",
+        "year": "1908-2003"
+      }
     },
     {
-      "id": "fabre_magnan",
-      "componentType": "RealPerson",
+      "id": "in_concreto",
+      "componentType": "Glossary",
       "sectionAnchor": "## Introduction",
-      "props": {}
+      "props": {
+        "searchQuery": "in concreto droit",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/In_concreto",
+        "year": ""
+      }
+    },
+    {
+      "id": "partage_responsabilite",
+      "componentType": "ConceptLink",
+      "sectionAnchor": "## Introduction",
+      "props": {
+        "name": "partage de responsabilité",
+        "searchQuery": "partage de responsabilité droit",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Partage_de_responsabilit%C3%A9",
+        "year": ""
+      }
+    },
+    {
+      "id": "reparation_integrale",
+      "componentType": "ConceptLink",
+      "sectionAnchor": "## Introduction",
+      "props": {
+        "name": "réparation intégrale",
+        "searchQuery": "réparation intégrale droit",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/R%C3%A9paration_int%C3%A9grale",
+        "year": ""
+      }
+    },
+    {
+      "id": "prejudice_ecologique",
+      "componentType": "Glossary",
+      "sectionAnchor": "## Introduction",
+      "props": {
+        "searchQuery": "préjudice écologique",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Pr%C3%A9judice_%C3%A9cologique",
+        "year": ""
+      }
     }
   ]
 }

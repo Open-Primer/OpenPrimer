@@ -3,87 +3,131 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 2:
   "interactiveComponents": [
     {
       "id": "responsabilite_civile_extracontractuelle",
-      "componentType": "Glossary",
-      "sectionAnchor": "Main Content",
-      "props": {}
-    },
-    {
-      "id": "code_civil",
       "componentType": "ConceptLink",
-      "sectionAnchor": "Main Content",
-      "props": {}
+      "sectionAnchor": "Enrichment Hover Cards / Entity Links",
+      "props": {
+        "name": "responsabilité civile extracontractuelle",
+        "searchQuery": "responsabilité civile extracontractuelle",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Responsabilit%C3%A9_civile_en_droit_fran%C3%A7ais#Responsabilit%C3%A9_extracontractuelle",
+        "year": "null"
+      }
     },
     {
       "id": "responsabilite_contractuelle",
       "componentType": "ConceptLink",
-      "sectionAnchor": "Main Content",
-      "props": {}
+      "sectionAnchor": "Enrichment Hover Cards / Entity Links",
+      "props": {
+        "name": "responsabilité contractuelle",
+        "searchQuery": "responsabilité contractuelle",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Responsabilit%C3%A9_contractuelle_en_droit_fran%C3%A7ais",
+        "year": "null"
+      }
     },
     {
-      "id": "jean_carbonnier",
+      "id": "pothier",
       "componentType": "RealPerson",
-      "sectionAnchor": "Main Content",
-      "props": {}
+      "sectionAnchor": "Enrichment Hover Cards / Entity Links",
+      "props": {
+        "name": "Robert Joseph Pothier",
+        "searchQuery": "Robert Joseph Pothier",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Robert_Joseph_Pothier",
+        "year": "null"
+      }
     },
     {
-      "id": "garde_de_la_chose",
-      "componentType": "ConceptLink",
-      "sectionAnchor": "Main Content",
-      "props": {}
-    },
-    {
-      "id": "dommage_reparable",
-      "componentType": "ConceptLink",
-      "sectionAnchor": "Main Content",
-      "props": {}
-    },
-    {
-      "id": "prejudice",
+      "id": "faute",
       "componentType": "Glossary",
-      "sectionAnchor": "Main Content",
-      "props": {}
+      "sectionAnchor": "Enrichment Hover Cards / Entity Links",
+      "props": {
+        "searchQuery": "faute en droit civil français",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Faute_(droit)",
+        "year": "null"
+      }
     },
     {
-      "id": "lien_de_causalite",
+      "id": "garde_chose",
       "componentType": "ConceptLink",
-      "sectionAnchor": "Main Content",
-      "props": {}
+      "sectionAnchor": "Enrichment Hover Cards / Entity Links",
+      "props": {
+        "name": "garde d'une chose",
+        "searchQuery": "garde d'une chose droit français",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Responsabilit%C3%A9_du_fait_des_choses",
+        "year": "null"
+      }
     },
     {
-      "id": "rene_demogue",
-      "componentType": "RealPerson",
-      "sectionAnchor": "Main Content",
-      "props": {}
-    },
-    {
-      "id": "fait_generateur",
+      "id": "pretium_doloris",
       "componentType": "Glossary",
-      "sectionAnchor": "Main Content",
-      "props": {}
+      "sectionAnchor": "Enrichment Hover Cards / Entity Links",
+      "props": {
+        "searchQuery": "Pretium doloris",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Pretium_doloris",
+        "year": "null"
+      }
     },
     {
-      "id": "dommage",
+      "id": "perte_de_chance",
       "componentType": "ConceptLink",
-      "sectionAnchor": "Main Content",
-      "props": {}
+      "sectionAnchor": "Enrichment Hover Cards / Entity Links",
+      "props": {
+        "name": "perte de chance",
+        "searchQuery": "perte de chance droit français",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Perte_de_chance",
+        "year": "null"
+      }
     },
     {
-      "id": "lien_de_causalite",
+      "id": "carbonnier_jean",
+      "componentType": "RealPerson",
+      "sectionAnchor": "Enrichment Hover Cards / Entity Links",
+      "props": {
+        "name": "Jean Carbonnier",
+        "searchQuery": "Jean Carbonnier",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Jean_Carbonnier",
+        "year": "null"
+      }
+    },
+    {
+      "id": "in_concreto",
+      "componentType": "Glossary",
+      "sectionAnchor": "Enrichment Hover Cards / Entity Links",
+      "props": {
+        "searchQuery": "in concreto droit",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/In_concreto",
+        "year": "null"
+      }
+    },
+    {
+      "id": "partage_responsabilite",
       "componentType": "ConceptLink",
-      "sectionAnchor": "Main Content",
-      "props": {}
+      "sectionAnchor": "Enrichment Hover Cards / Entity Links",
+      "props": {
+        "name": "partage de responsabilité",
+        "searchQuery": "partage de responsabilité droit français",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Responsabilit%C3%A9_civile_en_droit_fran%C3%A7ais#Pluralit%C3%A9_de_responsables",
+        "year": "null"
+      }
     },
     {
-      "id": "carbonnier",
-      "componentType": "RealPerson",
-      "sectionAnchor": "Main Content",
-      "props": {}
+      "id": "reparation_integrale",
+      "componentType": "ConceptLink",
+      "sectionAnchor": "Enrichment Hover Cards / Entity Links",
+      "props": {
+        "name": "réparation intégrale",
+        "searchQuery": "réparation intégrale droit français",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/R%C3%A9paration_int%C3%A9grale",
+        "year": "null"
+      }
     },
     {
-      "id": "fabre_magnan",
-      "componentType": "RealPerson",
-      "sectionAnchor": "Main Content",
-      "props": {}
+      "id": "prejudice_ecologique",
+      "componentType": "Glossary",
+      "sectionAnchor": "Enrichment Hover Cards / Entity Links",
+      "props": {
+        "searchQuery": "préjudice écologique droit français",
+        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Pr%C3%A9judice_%C3%A9cologique",
+        "year": "null"
+      }
     }
   ]
 }

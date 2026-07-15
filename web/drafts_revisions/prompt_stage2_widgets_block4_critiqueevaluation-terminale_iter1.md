@@ -5,337 +5,336 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
     "props": {
       "questions": [
         {
-          "q": "Quelle est l'échelle de grandeur typique des nanomatériaux ?",
-          "explanation": "Les nanomatériaux sont généralement définis comme ayant au moins une dimension comprise entre 1 et 100 nanomètres.",
+          "q": "Quelle est la théorie cosmologique dominante décrivant l'origine et l'évolution de l'univers ?",
+          "explanation": "La théorie du Big Bang est le modèle cosmologique le plus largement accepté, décrivant comment l'univers a évolué à partir d'un état initial extrêmement chaud et dense.",
           "options": [
             {
-              "text": "1 à 100 micromètres",
+              "text": "La théorie de l'état stationnaire",
               "correct": false
             },
             {
-              "text": "1 à 100 nanomètres",
+              "text": "La théorie du Big Bang",
               "correct": true
             },
             {
-              "text": "1 à 100 picomètres",
+              "text": "La théorie de l'univers oscillant",
               "correct": false
             },
             {
-              "text": "1 à 100 angströms",
+              "text": "La théorie de l'univers cyclique",
               "correct": false
             }
           ]
         },
         {
-          "q": "La lithographie est une technique de fabrication qui relève principalement de quelle approche ?",
-          "explanation": "La lithographie est une technique 'top-down' où des structures sont créées en enlevant de la matière ou en la modifiant à partir d'un matériau plus grand.",
+          "q": "Quel phénomène a été découvert par Edwin Hubble et indique que l'univers est en expansion ?",
+          "explanation": "La loi de Hubble décrit la relation linéaire entre la distance des galaxies et leur vitesse de récession, prouvant l'expansion de l'univers.",
           "options": [
             {
-              "text": "Bottom-up",
+              "text": "L'effet Doppler",
               "correct": false
             },
             {
-              "text": "Top-down",
+              "text": "Le fond diffus cosmologique",
+              "correct": false
+            },
+            {
+              "text": "La loi de Hubble",
               "correct": true
             },
             {
-              "text": "Auto-assemblage",
-              "correct": false
-            },
-            {
-              "text": "Synthèse chimique",
+              "text": "La lentille gravitationnelle",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quel microscope est le plus approprié pour visualiser la topographie de surface d'un échantillon à l'échelle nanométrique sans nécessiter de préparation conductrice ?",
-          "explanation": "Le Microscope à Force Atomique (MFA) permet d'obtenir des images topographiques de surface à l'échelle nanométrique, même pour des échantillons non conducteurs, en mesurant les forces d'interaction entre une pointe et la surface.",
+          "q": "Qu'est-ce que le fond diffus cosmologique (CMB) ?",
+          "explanation": "Le CMB est le rayonnement résiduel de l'époque de la recombinaison, lorsque l'univers est devenu transparent aux photons, environ 380 000 ans après le Big Bang.",
           "options": [
             {
-              "text": "Microscope Électronique à Transmission (MET)",
+              "text": "Le rayonnement émis par les étoiles les plus anciennes",
               "correct": false
             },
             {
-              "text": "Microscope Électronique à Balayage (MEB)",
-              "correct": false
-            },
-            {
-              "text": "Microscope à Force Atomique (MFA)",
+              "text": "Le rayonnement résiduel du Big Bang",
               "correct": true
             },
             {
-              "text": "Microscope Optique",
+              "text": "Le rayonnement des trous noirs supermassifs",
+              "correct": false
+            },
+            {
+              "text": "Le rayonnement ultraviolet des galaxies lointaines",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quelle est la propriété exceptionnelle des nanotubes de carbone qui les rend intéressants pour l'électronique ?",
-          "explanation": "Les nanotubes de carbone possèdent une conductivité électrique et thermique exceptionnellement élevée, ce qui les rend prometteurs pour des applications en électronique et en transfert de chaleur.",
+          "q": "Quelle est la principale preuve de l'existence de la matière noire ?",
+          "explanation": "La matière noire est inférée par ses effets gravitationnels sur la matière visible, notamment les courbes de rotation des galaxies qui ne peuvent être expliquées par la seule matière lumineuse.",
           "options": [
             {
-              "text": "Leur faible conductivité thermique",
+              "text": "L'expansion accélérée de l'univers",
               "correct": false
             },
             {
-              "text": "Leur transparence optique",
-              "correct": false
-            },
-            {
-              "text": "Leur conductivité électrique et thermique élevée",
+              "text": "Les courbes de rotation des galaxies",
               "correct": true
             },
             {
-              "text": "Leur faible rapport surface/volume",
+              "text": "Le décalage vers le rouge des galaxies",
+              "correct": false
+            },
+            {
+              "text": "La formation des étoiles",
               "correct": false
             }
           ]
         },
         {
-          "q": "Qu'est-ce que l'auto-assemblage en ingénierie moléculaire ?",
-          "explanation": "L'auto-assemblage est un processus où des composants pré-programmés (molécules, nanoparticules) s'organisent spontanément en structures plus grandes et fonctionnelles grâce à des interactions non-covalentes.",
+          "q": "Quel est le rôle de l'énergie noire dans l'univers ?",
+          "explanation": "L'énergie noire est une forme d'énergie hypothétique qui est responsable de l'accélération de l'expansion de l'univers.",
           "options": [
             {
-              "text": "Un processus où des molécules sont manipulées individuellement par un robot.",
+              "text": "Elle ralentit l'expansion de l'univers",
               "correct": false
             },
             {
-              "text": "Un processus où des composants désordonnés forment spontanément des structures organisées grâce à des interactions locales.",
+              "text": "Elle est responsable de la formation des galaxies",
+              "correct": false
+            },
+            {
+              "text": "Elle provoque l'accélération de l'expansion de l'univers",
               "correct": true
             },
             {
-              "text": "Une technique de fabrication 'top-down' utilisant des lasers.",
-              "correct": false
-            },
-            {
-              "text": "La création de molécules complexes par synthèse organique.",
+              "text": "Elle est la source de la matière noire",
               "correct": false
             }
           ]
         },
         {
-          "q": "Comment les nanotechnologies peuvent-elles améliorer l'administration de médicaments ?",
-          "explanation": "Les nanotechnologies permettent de concevoir des nanovecteurs (nanoparticules, liposomes) qui peuvent encapsuler des médicaments et les délivrer de manière ciblée à des cellules ou tissus spécifiques, réduisant ainsi les effets secondaires et augmentant l'efficacité.",
+          "q": "Quelle est l'étape la plus longue de la vie d'une étoile comme le Soleil ?",
+          "explanation": "La séquence principale est l'étape où une étoile fusionne l'hydrogène en hélium dans son cœur, et c'est la phase la plus stable et la plus longue de sa vie.",
           "options": [
             {
-              "text": "En augmentant la taille des molécules médicamenteuses.",
+              "text": "Géante rouge",
               "correct": false
             },
             {
-              "text": "En permettant une libération ciblée et contrôlée des médicaments.",
+              "text": "Naine blanche",
+              "correct": false
+            },
+            {
+              "text": "Séquence principale",
               "correct": true
             },
             {
-              "text": "En rendant les médicaments plus solubles dans l'eau uniquement.",
-              "correct": false
-            },
-            {
-              "text": "En diminuant l'efficacité des principes actifs.",
+              "text": "Supernova",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quel est l'un des principaux défis liés à l'évaluation des risques des nanomatériaux pour la santé humaine et l'environnement ?",
-          "explanation": "Les propriétés uniques des nanomatériaux, différentes de celles de leurs homologues macroscopiques, rendent leur évaluation toxicologique complexe et peuvent entraîner des effets inattendus sur les systèmes biologiques et l'environnement.",
+          "q": "Quel est le destin final d'une étoile massive (plus de 8 masses solaires) après l'épuisement de son carburant nucléaire ?",
+          "explanation": "Les étoiles très massives terminent leur vie par une explosion de supernova, laissant derrière elles un trou noir ou une étoile à neutrons.",
           "options": [
             {
-              "text": "Leur grande taille les rend facilement détectables.",
+              "text": "Naine blanche",
               "correct": false
             },
             {
-              "text": "Leur réactivité chimique est toujours la même que celle de leurs homologues macroscopiques.",
+              "text": "Naine brune",
               "correct": false
             },
             {
-              "text": "Leurs propriétés uniques (taille, surface, forme) peuvent entraîner des interactions biologiques et environnementales imprévues.",
+              "text": "Trou noir ou étoile à neutrons",
               "correct": true
             },
             {
-              "text": "Ils sont toujours biodégradables et non toxiques.",
+              "text": "Géante rouge",
               "correct": false
             }
           ]
         },
         {
-          "q": "Le graphène est un matériau 2D composé d'une seule couche d'atomes de carbone. Quelle est sa structure cristalline ?",
-          "explanation": "Le graphène est caractérisé par une structure cristalline hexagonale, où les atomes de carbone sont arrangés en un réseau en nid d'abeille.",
+          "q": "Quel type de galaxie est la Voie lactée ?",
+          "explanation": "La Voie lactée est une galaxie spirale barrée, caractérisée par un bulbe central allongé et des bras spiraux.",
           "options": [
             {
-              "text": "Cubique à faces centrées",
+              "text": "Galaxie elliptique",
               "correct": false
             },
             {
-              "text": "Hexagonale",
+              "text": "Galaxie irrégulière",
+              "correct": false
+            },
+            {
+              "text": "Galaxie spirale barrée",
               "correct": true
             },
             {
-              "text": "Tétragonale",
-              "correct": false
-            },
-            {
-              "text": "Amorphe",
+              "text": "Galaxie lenticulaire",
               "correct": false
             }
           ]
         },
         {
-          "q": "Qu'est-ce que la plasmonique ?",
-          "explanation": "La plasmonique est un domaine qui étudie l'interaction entre la lumière et les plasmons de surface (oscillations collectives d'électrons libres) dans les nanostructures métalliques, permettant de confiner la lumière à l'échelle nanométrique.",
+          "q": "Où se situe le Soleil dans la Voie lactée ?",
+          "explanation": "Le Soleil est situé dans le bras d'Orion, l'un des bras spiraux de la Voie lactée, à environ deux tiers du chemin du centre galactique.",
           "options": [
             {
-              "text": "L'étude des propriétés optiques des matériaux à l'échelle macroscopique.",
+              "text": "Au centre galactique",
               "correct": false
             },
             {
-              "text": "L'étude de l'interaction entre la lumière et les électrons libres dans les métaux à l'échelle nanométrique.",
+              "text": "Dans le halo galactique",
+              "correct": false
+            },
+            {
+              "text": "Dans un bras spiral, à environ deux tiers du centre",
               "correct": true
             },
             {
-              "text": "La fabrication de lasers à l'aide de nanomatériaux.",
-              "correct": false
-            },
-            {
-              "text": "L'utilisation de la lumière pour manipuler des atomes individuels.",
+              "text": "Dans le bulbe galactique",
               "correct": false
             }
           ]
         },
         {
-          "q": "Comment les nanotechnologies peuvent-elles améliorer les biosenseurs ?",
-          "explanation": "Les nanotechnologies permettent de concevoir des biosenseurs avec une surface de détection accrue, une meilleure affinité pour les cibles et des signaux amplifiés, conduisant à une détection plus rapide, plus sensible et plus spécifique de biomolécules.",
+          "q": "Quelle méthode de détection d'exoplanètes observe les légères baisses de luminosité d'une étoile lorsque la planète passe devant elle ?",
+          "explanation": "La méthode des transits est la plus efficace pour détecter des exoplanètes, mesurant la diminution périodique de la lumière d'une étoile lorsque la planète transite devant elle.",
           "options": [
             {
-              "text": "En diminuant leur sensibilité et leur spécificité.",
+              "text": "La méthode des vitesses radiales",
               "correct": false
             },
             {
-              "text": "En augmentant la taille des éléments de détection.",
+              "text": "L'imagerie directe",
               "correct": false
             },
             {
-              "text": "En permettant une détection plus rapide, plus sensible et plus spécifique de biomolécules.",
+              "text": "La méthode des transits",
               "correct": true
             },
             {
-              "text": "En les rendant uniquement utilisables en laboratoire.",
+              "text": "La microlentille gravitationnelle",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quel est un enjeu éthique majeur lié au développement des nanotechnologies ?",
-          "explanation": "Les nanotechnologies soulèvent des questions éthiques importantes, notamment en ce qui concerne la vie privée, la surveillance, l'équité d'accès aux bénéfices, et les risques potentiels pour la santé et l'environnement.",
+          "q": "Quelle est la période de l'histoire de l'univers caractérisée par une expansion exponentielle extrêmement rapide ?",
+          "explanation": "La théorie de l'inflation cosmique postule une phase d'expansion exponentielle très rapide de l'univers primordial, résolvant plusieurs problèmes du modèle du Big Bang standard.",
           "options": [
             {
-              "text": "Le coût de production des nanomatériaux.",
+              "text": "L'ère de la recombinaison",
               "correct": false
             },
             {
-              "text": "La difficulté de trouver des applications pratiques.",
+              "text": "L'ère de la nucléosynthèse",
               "correct": false
             },
             {
-              "text": "Les préoccupations concernant la vie privée et la surveillance si les nanotechnologies sont utilisées pour des dispositifs de suivi.",
+              "text": "L'inflation cosmique",
               "correct": true
             },
             {
-              "text": "Le manque de personnel qualifié dans le domaine.",
+              "text": "L'ère des ténèbres",
               "correct": false
             }
           ]
         },
         {
-          "q": "Quel est un avantage clé de l'approche 'bottom-up' par rapport à l'approche 'top-down' pour la fabrication de nanostructures ?",
-          "explanation": "L'approche 'bottom-up', notamment via l'auto-assemblage moléculaire, permet de construire des structures avec une précision atomique ou moléculaire, créant des architectures complexes et fonctionnelles à partir de composants de base.",
+          "q": "Quels éléments légers ont été principalement formés lors de la nucléosynthèse primordiale ?",
+          "explanation": "La nucléosynthèse primordiale, qui a eu lieu quelques minutes après le Big Bang, a produit la majeure partie de l'hélium, du deutérium et du lithium présents dans l'univers.",
           "options": [
             {
-              "text": "Elle permet de créer des structures plus grandes et moins précises.",
+              "text": "Carbone, oxygène, fer",
               "correct": false
             },
             {
-              "text": "Elle est généralement plus coûteuse et moins efficace.",
-              "correct": false
-            },
-            {
-              "text": "Elle permet un contrôle atomique ou moléculaire précis et la création de structures complexes à partir de blocs de construction.",
+              "text": "Hydrogène, hélium, lithium",
               "correct": true
             },
             {
-              "text": "Elle est limitée aux matériaux inorganiques.",
+              "text": "Silicium, soufre, calcium",
+              "correct": false
+            },
+            {
+              "text": "Uranium, thorium, plomb",
               "correct": false
             }
           ]
         },
         {
-          "q": "Pourquoi les nanoparticules d'or peuvent-elles apparaître de couleurs différentes (rouge, bleu, etc.) alors que l'or macroscopique est jaune ?",
-          "explanation": "Les nanoparticules d'or présentent des propriétés optiques uniques, notamment des résonances plasmoniques de surface, qui dépendent fortement de leur taille, de leur forme et de leur environnement, entraînant des couleurs différentes de celles de l'or massif.",
+          "q": "Quel phénomène prédit par la relativité générale d'Einstein permet d'observer des objets célestes lointains et déformés ?",
+          "explanation": "La lentille gravitationnelle est un effet de la relativité générale où la masse d'un objet (comme une galaxie ou un amas de galaxies) courbe l'espace-temps, déviant la lumière des objets situés derrière lui.",
           "options": [
             {
-              "text": "À cause de la présence d'impuretés.",
+              "text": "L'effet Doppler",
               "correct": false
             },
             {
-              "text": "En raison de la diffraction de la lumière.",
-              "correct": false
-            },
-            {
-              "text": "En raison de leurs propriétés plasmoniques de surface qui dépendent fortement de leur taille et de leur forme.",
+              "text": "La lentille gravitationnelle",
               "correct": true
             },
             {
-              "text": "C'est une illusion d'optique.",
+              "text": "Le décalage vers le rouge",
+              "correct": false
+            },
+            {
+              "text": "L'horizon des événements",
               "correct": false
             }
           ]
         },
         {
-          "q": "Qu'est-ce qu'une machine moléculaire ?",
-          "explanation": "Une machine moléculaire est une entité moléculaire capable d'effectuer des mouvements mécaniques (rotation, translation, etc.) en réponse à des stimuli spécifiques (lumière, pH, température, etc.), transformant l'énergie en travail mécanique.",
+          "q": "Quel type de télescope est utilisé pour détecter les ondes radio provenant de l'espace ?",
+          "explanation": "Les radiotélescopes sont conçus pour capter les ondes radio, qui sont une forme de rayonnement électromagnétique, permettant d'étudier des phénomènes cosmiques invisibles en lumière visible.",
           "options": [
             {
-              "text": "Un robot macroscopique utilisé pour manipuler des molécules.",
+              "text": "Télescope optique",
               "correct": false
             },
             {
-              "text": "Une molécule ou un assemblage de molécules capable d'effectuer des mouvements mécaniques en réponse à des stimuli externes.",
+              "text": "Télescope à rayons X",
+              "correct": false
+            },
+            {
+              "text": "Radiotélescope",
               "correct": true
             },
             {
-              "text": "Un ordinateur quantique.",
-              "correct": false
-            },
-            {
-              "text": "Un dispositif de purification d'eau à l'échelle nanométrique.",
+              "text": "Télescope infrarouge",
               "correct": false
             }
           ]
         },
         {
-          "q": "Comment les nanotechnologies peuvent-elles contribuer à la remédiation environnementale ?",
-          "explanation": "Les nanotechnologies offrent des solutions pour la nanoremédiation, où des nanoparticules (par exemple, de fer zéro-valent) sont utilisées pour dégrader, adsorber ou transformer des polluants dans l'eau, le sol ou l'air.",
+          "q": "Quel est le scénario le plus probable pour l'avenir lointain de l'univers, compte tenu de l'énergie noire ?",
+          "explanation": "L'énergie noire provoque une expansion accélérée de l'univers, ce qui conduit au scénario du 'Big Freeze' ou 'Mort thermique', où l'univers continue de s'étendre et de se refroidir indéfiniment.",
           "options": [
             {
-              "text": "En augmentant la pollution des sols et de l'eau.",
+              "text": "Le Big Crunch (re-effondrement)",
               "correct": false
             },
             {
-              "text": "En utilisant des nanoparticules pour dégrader ou adsorber des polluants.",
+              "text": "Le Big Rip (déchirure de l'univers)",
+              "correct": false
+            },
+            {
+              "text": "Le Big Freeze (mort thermique)",
               "correct": true
             },
             {
-              "text": "En rendant les processus de filtration moins efficaces.",
-              "correct": false
-            },
-            {
-              "text": "En créant de nouveaux polluants.",
+              "text": "L'univers cyclique",
               "correct": false
             }
           ]
         }
-      ],
-      "durationLimit": 1800
+      ]
     }
   },
   "references": []

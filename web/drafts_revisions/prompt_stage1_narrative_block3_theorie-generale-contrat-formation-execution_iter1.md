@@ -4,13 +4,13 @@ Your task is to write a section of the academic MDX narrative content for the sp
 We are writing the lesson block-by-block.
 - This is Block 3 out of 3.
 - You MUST write the content for the following sections:
-* Heading: "## Conclusion : Synthèse et Perspectives"
-  Instructions: "Récapituler les points clés de la théorie générale du contrat, souligner son rôle fondamental dans les relations juridiques et ouvrir sur les enjeux contemporains ou les développements futurs du droit des contrats."
+* Heading: "## Conclusion : Synthèse et perspectives"
+  Instructions: "Récapituler les points clés abordés dans le chapitre concernant la formation, la validité et l'exécution du contrat. Ouvrir sur les enjeux contemporains du droit des contrats et son application pratique."
 
 ---
 
 ### GLOBAL CONTEXT:
-- Course Name: "Droit des Obligations et Responsabilité Civile"
+- Course Name: "Droit des obligations et responsabilité civile"
 - Academic Level: "University Year 2 / Bachelor 2nd Year (L2)"
 - Lesson Title: "La théorie générale du contrat : De la formation à l'exécution de l'acte juridique"
 - Discipline: "Droit"
@@ -60,19 +60,47 @@ Please write them exactly in this anchor format [[WIDGET:Type:unique_id:descript
 ### PREVIOUS TEXT (for transitions and context):
 Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
 """
-...  contrats (article 1199 du Code civil) dispose que le contrat ne crée d'obligations qu'entre les parties. Les tiers ne peuvent ni se voir imposer les obligations du contrat, ni en demander l'exécution. Cependant, le contrat est opposable aux tiers : il constitue une situation juridique que les tiers doivent respecter et dont ils peuvent se prévaloir comme un fait juridique. Des exceptions existent, comme la stipulation pour autrui (article 1205 du Code civil), où une partie (le stipulant) fait promettre à l'autre (le promettant) d'exécuter une prestation au profit d'un tiers (le bénéficiaire), ou la promesse de porte-fort (article 1204 du Code civil), par laquelle une partie s'engage à ce qu'un tiers accomplisse une prestation.
+... n demeure, faire exécuter l'obligation par un tiers aux frais du débiteur ([article 1222 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040869)).
 
-### Les Sanctions de l'Inexécution Contractuelle
+#### La réduction du prix
 
-En cas d'inexécution, de mauvaise exécution ou de retard dans l'exécution d'une obligation contractuelle, le créancier dispose de plusieurs options, souvent après une [[WIDGET:Glossary:mise_en_demeure:mise en demeure]] préalable du débiteur (article 1217 du Code civil) :
+Nouvelle sanction introduite par la réforme, la réduction du prix permet au créancier d'une prestation imparfaitement exécutée d'accepter l'exécution imparfaite et de solliciter une réduction proportionnelle du prix ([article 1223 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040871)). Cette réduction peut être unilatérale, après mise en demeure, ou demandée en justice.
 
-1.  **L'Exception d'Inexécution** (articles 1219 et 1220 du Code civil) : Permet à une partie de refuser d'exécuter sa propre obligation si l'autre partie n'exécute pas la sienne et si cette inexécution est suffisamment grave. Elle peut être préventive si l'inexécution est manifeste.
-2.  **L'Exécution Forcée en Nature** (articles 1221 et 1222 du Code civil) : Le créancier peut demander au juge de contraindre le débiteur à exécuter la prestation telle que prévue au contrat. Cette exécution forcée est écartée si elle est impossible ou s'il existe une disproportion manifeste entre son coût pour le débiteur et son intérêt pour le créancier.
-3.  **La Réduction du Prix** (article 1223 du Code civil) : En cas d'exécution imparfaite de la prestation, le créancier peut, après mise en demeure, accepter cette exécution imparfaite et solliciter une réduction proportionnelle du prix.
-4.  **La Résolution du Contrat** (articles 1224 et suivants du Code civil) : En cas d'inexécution suffisamment grave, le contrat peut être résolu, ce qui entraîne son anéantissement rétroactif ou pour l'avenir. La résolution peut être judiciaire (prononcée par le juge), unilatérale (par notification du créancier, à ses risques et périls), ou résulter de l'application d'une clause résolutoire expresse prévue au contrat.
-5.  **La Responsabilité Contractuelle** (articles 1231-1 et suivants du Code civil) : Indépendamment ou en complément des autres sanctions, le créancier peut demander des dommages et intérêts pour réparer le préjudice subi du fait de l'inexécution. Cette [[WIDGET:ConceptLink:responsabilite_contractuelle:responsabilité contractuelle]] suppose la réunion de trois conditions : une faute contractuelle (l'inexécution), un préjudice (matériel, moral, corporel) et un lien de causalité entre la faute et le préjudice [[WIDGET:Reference:5]].
+#### La résolution du contrat
 
-[[WIDGET:Mermaid:sanctions_inexecution:Schéma des sanctions de l'inexécution contractuelle]]
+La [[WIDGET:Glossary:resolution_contrat:résolution du contrat]] met fin au contrat en raison de l'inexécution d'une obligation essentielle par l'une des parties ([article 1224 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040873)). Elle peut être :
+*   **Judiciaire**: Prononcée par le juge.
+*   **Unilatérale**: Par notification du créancier au débiteur, après mise en demeure et si l'inexécution est suffisamment grave ([article 1226 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040877)).
+*   **Par clause résolutoire**: Si le contrat contient une clause prévoyant sa résolution de plein droit en cas d'inexécution ([article 1225 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040875)).
+La résolution a généralement un effet rétroactif, anéantissant le contrat et entraînant la restitution des prestations déjà exécutées.
+
+#### La responsabilité contractuelle (dommages et intérêts)
+
+Indépendamment des autres sanctions, le créancier peut toujours demander des dommages et intérêts en réparation du préjudice subi du fait de l'inexécution ([article 1231-1 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040885)). Pour cela, trois conditions doivent être réunies :
+*   Une faute contractuelle (l'inexécution ou la mauvaise exécution).
+*   Un préjudice (matériel, moral, corporel).
+*   Un lien de causalité direct entre la faute et le préjudice.
+Les dommages et intérêts visent à compenser la perte subie (dommage émergent) et le gain manqué (lucrum cessans) par le créancier.
+
+[[WIDGET:Mermaid:sanctions_inexecution:Diagramme des sanctions de l'inexécution contractuelle]]
+mermaid
+graph TD
+    A[Inexécution Contractuelle] --> B{Mise en Demeure};
+    B --> C{Sanctions possibles (Art. 1217 C. civ.)};
+    C --> C1[Exception d'inexécution];
+    C1 --> C1a[Suspension de l'exécution];
+    C --> C2[Exécution forcée en nature];
+    C2 --> C2a[Demande au juge];
+    C2 --> C2b[Faire exécuter par un tiers];
+    C --> C3[Réduction du prix];
+    C3 --> C3a[Unilatérale ou Judiciaire];
+    C --> C4[Résolution du contrat];
+    C4 --> C4a[Judiciaire];
+    C4 --> C4b[Unilatérale];
+    C4 --> C4c[Clause résolutoire];
+    C --> C5[Dommages et Intérêts];
+    C5 --> C5a[Réparation du préjudice];
+    C5 --> C5b[Cumulable avec d'autres sanctions];
 """
 
 ---
@@ -87,6 +115,20 @@ En cas d'inexécution, de mauvaise exécution ou de retard dans l'exécution d'u
 7. ACADEMIC REFERENCES CITATION MANDATE: You MUST actively cite the references listed under "### GLOBAL CONTEXT:" (if any) throughout the prose. Cite them inline using the format [[WIDGET:Reference:1]], [[WIDGET:Reference:2]], etc., where [[WIDGET:Reference:1]] maps to the first reference in the Global Context list, [[WIDGET:Reference:2]] to the second, and so on. Exclusively use [[WIDGET:Reference:num]] anchors. Do not define a bibliography section here; simply cite them inline in this format.
 8. MANDATORY DESCRIPTION FOR MEDIA WIDGETS: For all media/visual widgets (including Image, CustomFigure, Video, Audio, and Mermaid), you MUST append the description/caption as the third parameter in the widget anchor: [[WIDGET:Type:id:description]]. Absolute prohibition on placing external descriptions, captions, or comments (such as "*Description: ...*", "Caption: ...", "Légende: ...") directly in the narrative prose outside the anchor.
 9. ABSOLUTE PROHIBITION ON RAW MERMAID DIAGRAMS. Never write raw Mermaid diagram code (e.g. wrapped in ```mermaid ... ```) directly in the narrative prose. Instead, you MUST only generate a widget anchor like `[[WIDGET:Mermaid:id:description]]` on a separate blank line, describing what the diagram should display in the description. The actual Mermaid diagram code will be generated later by the Widgets Architect (Agent 3b).
+
+
+=============================================================================
+🚨 MANDATORY LEGIFRANCE HYPERLINKING REQUIREMENT FOR LAW COURSES 🚨
+Since this lesson belongs to a Law/Legal Studies course, you MUST enrich your prose with a very dense set of direct hyperlinks to Legifrance (https://www.legifrance.gouv.fr) for:
+- EVERY article of a code (e.g., Code civil, Code pénal, Code de commerce, Code du travail, etc.).
+- Major jurisprudence, court decisions, and institutional rulings.
+
+Link Formatting Rules:
+- Exclusively use standard markdown links, for example: [article 1101 du Code civil](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032040713) or [article 1240 du Code civil](https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006070721/) or [arrêt de la Cour de cassation](https://www.legifrance.gouv.fr/juri/id/JURITEXT000006935293/).
+- Ensure the URLs point to Legifrance. Do NOT invent URLs; use real Legifrance search or article links or standard mock links pointing to the official site if the exact ID is unknown.
+- Do NOT use custom HTML/JSX tags. Exclusively write standard markdown links: `[link text](https://www.legifrance.gouv.fr/...)`.
+- Ensure a massive density of Légifrance links to make this an exceptionally authoritative academic and professional resource!
+=============================================================================
 
 10. Since this is the LAST block, you MUST end with the ## Conclusion section containing at least two comprehensive academic paragraphs, and all conclusion widgets in this exact order:
   [[WIDGET:conclusionSummary]]

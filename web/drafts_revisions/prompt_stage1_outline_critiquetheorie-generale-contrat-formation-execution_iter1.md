@@ -3,23 +3,23 @@ You are the Outline Critic Agent (Agent 2). Review this JIT lesson plan:
   "sections": [
     {
       "heading": "## Introduction à la théorie générale du contrat",
-      "description": "Présenter l'importance du contrat en droit civil français, définir la notion de contrat et situer le chapitre dans le cadre de la réforme du droit des obligations de 2016. Annoncer les points clés qui seront abordés : la formation, les conditions de validité et les sanctions de l'inexécution contractuelle."
+      "description": "Présenter l'importance du contrat en droit civil, sa place dans le Code civil et les objectifs de ce chapitre. Aborder brièvement l'évolution du droit des contrats, notamment la réforme de 2016."
     },
     {
       "heading": "## La formation du contrat : Rencontre des volontés",
-      "description": "Expliquer le processus de conclusion du contrat. Détailler les notions d'offre et d'acceptation, leurs caractéristiques (fermeté, précision) et les règles relatives à leur rencontre (moment et lieu de formation du contrat, contrats entre absents)."
+      "description": "Détailler le processus de conclusion du contrat. Expliquer les notions d'offre et d'acceptation, leurs caractéristiques et les règles relatives à leur rencontre (moment et lieu de formation du contrat)."
     },
     {
-      "heading": "## Les conditions de validité du contrat : Une protection des parties et de l'ordre public",
-      "description": "Aborder les conditions essentielles de validité du contrat issues de la réforme de 2016 : le consentement (intégrité du consentement, vices du consentement : erreur, dol, violence), la capacité des parties, et le contenu licite et certain du contrat. Mettre en lumière les sanctions en cas de non-respect de ces conditions (nullité relative et absolue)."
+      "heading": "## Les conditions de validité du contrat : Les piliers de l'engagement",
+      "description": "Analyser les conditions essentielles à la validité d'un contrat selon la réforme de 2016. Traiter du consentement (intégrité du consentement et vices du consentement : erreur, dol, violence), de la capacité des parties et du contenu licite et certain du contrat (objet et cause, puis licéité et équilibre)."
     },
     {
       "heading": "## L'exécution et les sanctions de l'inexécution contractuelle",
-      "description": "Décrire les principes de l'exécution forcée en nature, de la résolution du contrat (unilatérale, judiciaire, clause résolutoire), de l'exception d'inexécution et des dommages et intérêts. Expliquer les conditions de mise en œuvre de ces différentes sanctions et leurs effets."
+      "description": "Expliquer les principes de l'exécution du contrat (force obligatoire, bonne foi). Aborder les différentes sanctions en cas d'inexécution : l'exécution forcée en nature, la réduction du prix, l'exception d'inexécution, la résolution du contrat et la responsabilité contractuelle (dommages et intérêts)."
     },
     {
       "heading": "## Conclusion : Synthèse et perspectives",
-      "description": "Récapituler les points essentiels abordés concernant la formation, la validité et l'exécution du contrat. Ouvrir sur les enjeux contemporains du droit des contrats et son évolution, notamment face aux nouvelles formes de contractualisation."
+      "description": "Récapituler les points clés abordés dans le chapitre concernant la formation, la validité et l'exécution du contrat. Ouvrir sur les enjeux contemporains du droit des contrats et son application pratique."
     }
   ]
 }
