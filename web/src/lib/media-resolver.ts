@@ -2169,17 +2169,21 @@ export async function resolveAndPersistMedia(
             if (!originalCaption.includes('Source\u00a0:') && !originalCaption.includes('Source:')) {
               const finalLabel = compileFinalLabel(resolved.sourceLabel, resolved.sourceUrl);
               
-              let updatedCaption = originalCaption;
-              if (resolved.description) {
-                const figNumMatch = originalCaption.match(/^\*Figure\s*(\d*)\s*:\s*/i);
-                const figNumPrefix = figNumMatch ? `Figure ${figNumMatch[1]}: ` : '';
-                let desc = resolved.description.trim();
-                if (!desc.endsWith('.')) desc += '.';
-                updatedCaption = `*${figNumPrefix}${desc} Source\u00a0: ${finalLabel}*`;
-              } else {
-                let baseCaption = originalCaption.replace(/\*$/, '').trim();
+              const figNumMatch = originalCaption.match(/^\*Figure\s*(\d*)\s*:\s*/i);
+              const figNumPrefix = figNumMatch ? `Figure ${figNumMatch[1]}: ` : '';
+              
+              let baseCaption = originalCaption
+                .replace(/^\*Figure\s*\d*\s*:\s*/i, '')
+                .replace(/\*$/, '')
+                .trim();
+              baseCaption = baseCaption.split(/\s*(?:—|--|-)?\s*Source\s*:/i)[0].trim();
+              
+              let updatedCaption = '';
+              if (baseCaption) {
                 if (!baseCaption.endsWith('.')) baseCaption += '.';
-                updatedCaption = `${baseCaption} Source\u00a0: ${finalLabel}*`;
+                updatedCaption = `*${figNumPrefix}${baseCaption} Source\u00a0: ${finalLabel}*`;
+              } else {
+                updatedCaption = `*${figNumPrefix}Source\u00a0: ${finalLabel}*`;
               }
 
               updatedContent = updatedContent.slice(0, afterImg) +
@@ -2417,21 +2421,19 @@ export async function resolveAndPersistMedia(
           
           if (resolved.description) {
             currentAttrs.alt = resolved.description;
-            currentAttrs.description = resolved.description;
-            let desc = resolved.description.trim();
-            if (!desc.endsWith('.')) desc += '.';
-            currentAttrs.caption = `${desc} Source: ${finalLabel}`;
           } else {
-            // Rebuild/override the caption by stripping any outdated "Source:" part and attaching the new one
-            const rawCap = (description || altText || caption || '').trim();
-            const cleanCap = rawCap.split(/\s*(?:—|--|-)?\s*Source\s*:/i)[0].trim();
-            if (cleanCap) {
-              let capText = cleanCap;
-              if (!capText.endsWith('.')) capText += '.';
-              currentAttrs.caption = `${capText} Source: ${finalLabel}`;
-            } else {
-              currentAttrs.caption = `Source: ${finalLabel}`;
-            }
+            currentAttrs.alt = altText || description || caption || '';
+          }
+          
+          // Always keep original caption/legend explaining academic relevance and append source
+          const rawCap = (caption || description || altText || '').trim();
+          const cleanCap = rawCap.split(/\s*(?:—|--|-)?\s*Source\s*:/i)[0].trim();
+          if (cleanCap) {
+            let capText = cleanCap;
+            if (!capText.endsWith('.')) capText += '.';
+            currentAttrs.caption = `${capText} Source: ${finalLabel}`;
+          } else {
+            currentAttrs.caption = `Source: ${finalLabel}`;
           }
           
           if (resolved.sourceUrl) {
@@ -2703,11 +2705,16 @@ async function validateImageWithGemini(imageUrl: string, description: string): P
     const arrayBuffer = await resImg.arrayBuffer();
     const base64Data = Buffer.from(arrayBuffer).toString('base64');
 
-    const promptText = `Considère la description suivante : "${description}".
-Analyse l'image fournie en pièce jointe.
-Cette image correspond-elle fidèlement, logiquement ou historiquement à cette description ?
-Par exemple, s'il s'agit d'une statue d'un personnage historique, l'image doit montrer cette statue ou ce personnage, et non un paysage, de la nourriture ou un groupe de personnes sans rapport.
-Réponds uniquement par OUI ou NON.`;
+    const promptText = `Analyze the attached image and determine if it directly and accurately depicts the following subject: "${description}".
+    
+CRITICAL VALIDATION RULES:
+1. The image must be a direct visual representation of the subject.
+2. Reject the image (answer NO) if it shows a different concept, mathematical diagram, or object, even if it is historically, contextually, or biographically related to the subject (e.g., showing a geometric right-triangle diagram for a "monochord" or "monocorde" is a failure and MUST be rejected; showing a map of Greece for "Pythagoras" is a failure and MUST be rejected).
+3. If the subject is a specific instrument, tool, or object, the image must show that object.
+4. If the subject is a person, the image must show a portrait, bust, statue, or painting of that person.
+5. If the image is unrelated, generic, or incorrect, reject it.
+
+Does the image directly represent the subject? Respond with exactly one word: YES or NO.`;
 
     const res = await callVertexAI({
       task: 'course_generation',
@@ -2735,7 +2742,7 @@ Réponds uniquement par OUI ou NON.`;
       const json = await res.json();
       const answer = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()?.toUpperCase() || '';
       console.log(`[MEDIA-RESOLVER] Gemini validation answer for "${description}" against image: "${answer}"`);
-      if (answer.includes('NON')) {
+      if (answer.includes('NON') || answer.includes('NO')) {
         console.warn(`[MEDIA-RESOLVER] Gemini REJECTED image for description "${description}": ${imageUrl}`);
         return false;
       }
@@ -3100,17 +3107,33 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
                 const finalAltText = resolution.description || altText;
                 updatedContent = updatedContent.replaceAll(fullMatch, `![${finalAltText}](${publicUrl})`);
                 
-                if (resolution.description) {
-                  const afterImg = updatedContent.indexOf(`![${finalAltText}](${publicUrl})`);
-                  if (afterImg !== -1) {
-                    const snippet = updatedContent.slice(afterImg, afterImg + 400);
-                    const captionMatch = snippet.match(/(\*Figure\s*:[^\n*]+)(\*)/);
-                    if (captionMatch) {
-                      const originalCaption = captionMatch[0];
+                const afterImg = updatedContent.indexOf(`![${finalAltText}](${publicUrl})`);
+                if (afterImg !== -1) {
+                  const snippet = updatedContent.slice(afterImg, afterImg + 400);
+                  const captionMatch = snippet.match(/(\*Figure\s*:[^\n*]+)(\*)/);
+                  if (captionMatch) {
+                    const originalCaption = captionMatch[0];
+                    if (!originalCaption.includes('Source\u00a0:') && !originalCaption.includes('Source:')) {
                       const figNumMatch = originalCaption.match(/^\*Figure\s*(\d*)\s*:\s*/i);
                       const figNumPrefix = figNumMatch ? `Figure ${figNumMatch[1]}: ` : '';
+                      
+                      let baseCaption = originalCaption
+                        .replace(/^\*Figure\s*\d*\s*:\s*/i, '')
+                        .replace(/\*$/, '')
+                        .trim();
+                      baseCaption = baseCaption.split(/\s*(?:—|--|-)?\s*Source\s*:/i)[0].trim();
+                      
                       const sourceLabel = resolution.sourceLabel || 'Wikimedia Commons';
-                      const updatedCaption = `*${figNumPrefix}${resolution.description} — Source\u00a0: ${sourceLabel}*`;
+                      const finalLabel = compileFinalLabel(sourceLabel, resolution.fallbackUrl);
+                      
+                      let updatedCaption = '';
+                      if (baseCaption) {
+                        if (!baseCaption.endsWith('.')) baseCaption += '.';
+                        updatedCaption = `*${figNumPrefix}${baseCaption} Source\u00a0: ${finalLabel}*`;
+                      } else {
+                        updatedCaption = `*${figNumPrefix}Source\u00a0: ${finalLabel}*`;
+                      }
+                      
                       updatedContent = updatedContent.slice(0, afterImg) +
                         updatedContent.slice(afterImg).replace(originalCaption, updatedCaption);
                     }
@@ -3194,11 +3217,21 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
                   }
                   if (resolution.description) {
                     currentAttrs.alt = resolution.description;
-                    currentAttrs.description = resolution.description;
-                    const sourceLabel = resolution.sourceLabel || 'Wikimedia Commons';
-                    let desc = resolution.description.trim();
-                    if (!desc.endsWith('.')) desc += '.';
-                    currentAttrs.caption = `${desc} Source: ${sourceLabel}`;
+                  } else {
+                    currentAttrs.alt = altText || caption || searchQuery || '';
+                  }
+                  
+                  const sourceLabel = resolution.sourceLabel || 'Wikimedia Commons';
+                  const finalLabel = compileFinalLabel(sourceLabel, resolution.fallbackUrl);
+                  
+                  const rawCap = (caption || altText || searchQuery || '').trim();
+                  const cleanCap = rawCap.split(/\s*(?:—|--|-)?\s*Source\s*:/i)[0].trim();
+                  if (cleanCap) {
+                    let capText = cleanCap;
+                    if (!capText.endsWith('.')) capText += '.';
+                    currentAttrs.caption = `${capText} Source: ${finalLabel}`;
+                  } else {
+                    currentAttrs.caption = `Source: ${finalLabel}`;
                   }
                   console.log(`[RESTITUTION-REPAIR] Successfully repaired CustomFigure to: ${publicUrl}`);
                   success = true;

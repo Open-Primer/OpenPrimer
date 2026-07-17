@@ -140,12 +140,8 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
     >
       <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-indigo-600/5 rounded-full blur-[40px] pointer-events-none" />
       
-      {/* Section header — mirrors H2 border-bottom style from globals.css prose */}
-      <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/60">
-        <div className="flex items-center gap-2.5">
-          <BookMarked className="w-4 h-4 text-indigo-400 shrink-0" />
-          <span className="text-sm font-black uppercase tracking-wider text-slate-200">{t("references_title")}</span>
-        </div>
+      {/* Section header */}
+      <div className="flex items-center justify-end mb-6">
         {/* Toggle Pill Buttons */}
         <div className="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-800 w-fit">
           <button
