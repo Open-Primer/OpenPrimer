@@ -130,7 +130,7 @@ export const WhatsNext = ({ title, items, itemsBase64, children }: WhatsNextProp
               <CardComponent
                 key={idx}
                 {...(extraProps as any)}
-                className={`p-4 rounded-2xl bg-slate-950/40 border border-slate-850/50 transition-all duration-300 flex flex-col justify-between group ${
+                className={`p-4 rounded-2xl bg-slate-950/40 border border-slate-800/50 transition-all duration-300 flex flex-col justify-between group ${
                   exists 
                     ? 'hover:border-violet-500/35 hover:bg-slate-900/40 cursor-pointer' 
                     : 'opacity-65 cursor-default'

@@ -237,11 +237,11 @@ export const Timeline = () => {
   };
 
   return (
-    <div className="my-8 rounded-[40px] border border-slate-850 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
+    <div className="my-8 rounded-[40px] border border-slate-800 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
       <div className="absolute -left-16 -top-16 w-36 h-36 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
 
       {/* Header controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-6 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6 mb-6">
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
@@ -253,7 +253,7 @@ export const Timeline = () => {
         </div>
 
         {/* Thematic track selectors (Channels filters) */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-slate-900/40 border border-slate-850 p-1 rounded-xl">
+        <div className="flex flex-wrap items-center gap-1.5 bg-slate-900/40 border border-slate-800 p-1 rounded-xl">
           <button
             onClick={() => setActiveCategory('all')}
             className={`px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
@@ -290,7 +290,7 @@ export const Timeline = () => {
       </div>
 
       {/* Main interactive scrollbar and ruler grid */}
-      <div className="bg-slate-950/60 rounded-3xl p-5 border border-slate-850/80 mb-6">
+      <div className="bg-slate-950/60 rounded-3xl p-5 border border-slate-800/80 mb-6">
         
         {/* Timeline Centennial Ruler */}
         <div className="relative h-14 w-full flex items-center justify-between border-b border-slate-800/40 mb-4 px-2">
@@ -360,13 +360,13 @@ export const Timeline = () => {
             className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch"
           >
             {/* Left Drawer metadata info */}
-            <div className="md:col-span-8 bg-slate-900/30 border border-slate-850 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden">
+            <div className="md:col-span-8 bg-slate-900/30 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden">
               <div className="absolute -right-12 -bottom-12 w-28 h-28 rounded-full bg-indigo-500/5 blur-2xl pointer-events-none" />
 
               <div>
                 {/* Year tag & Category tag */}
                 <div className="flex items-center gap-2">
-                  <span className="px-3.5 py-1.5 text-xs font-black font-mono tracking-widest bg-slate-950 rounded-xl text-indigo-300 border border-slate-850">
+                  <span className="px-3.5 py-1.5 text-xs font-black font-mono tracking-widest bg-slate-950 rounded-xl text-indigo-300 border border-slate-800">
                     {activeMilestone.year} CE
                   </span>
                   <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${
@@ -396,7 +396,7 @@ export const Timeline = () => {
                 </p>
 
                 {/* Historical impact badge overlay */}
-                <div className="bg-slate-950/40 rounded-2xl border border-slate-850/80 p-4 mt-5">
+                <div className="bg-slate-950/40 rounded-2xl border border-slate-800/80 p-4 mt-5">
                   <span className="text-[9px] text-slate-500 font-black uppercase tracking-wider block mb-1">
                     {t("timeline_impact_label")}
                   </span>
@@ -407,7 +407,7 @@ export const Timeline = () => {
               </div>
 
               {/* Slider jump forward back buttons */}
-              <div className="flex items-center justify-between border-t border-slate-850/60 pt-4 mt-6">
+              <div className="flex items-center justify-between border-t border-slate-800/60 pt-4 mt-6">
                 <button 
                   onClick={handlePrevMilestone}
                   className="px-3.5 py-2 text-[10px] font-black uppercase tracking-wider rounded-xl bg-slate-800 text-slate-300 border border-slate-700/60 hover:text-white hover:bg-slate-700 cursor-pointer flex items-center gap-1.5 transition-all"
@@ -432,7 +432,7 @@ export const Timeline = () => {
             </div>
 
             {/* Right details / Score stats rating card */}
-            <div className="md:col-span-4 rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col justify-between">
+            <div className="md:col-span-4 rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col justify-between">
               <div>
                 <h5 className="text-[10px] font-black tracking-widest uppercase text-slate-400 mb-3 flex items-center gap-1.5">
                   <Award className="w-4 h-4 text-indigo-400" />
@@ -457,7 +457,7 @@ export const Timeline = () => {
               </div>
 
               {/* Checklist completion indicator */}
-              <div className="border-t border-slate-850/50 pt-4 mt-4 flex items-center gap-3 bg-slate-950/20 p-3 rounded-2xl border border-slate-850/50">
+              <div className="border-t border-slate-800/50 pt-4 mt-4 flex items-center gap-3 bg-slate-950/20 p-3 rounded-2xl border border-slate-800/50">
                 <CheckCircle className="w-4 h-4 text-emerald-400" />
                 <div className="flex-1 text-[10.5px]">
                   <span className="font-bold text-slate-200 block leading-tight">
@@ -472,7 +472,7 @@ export const Timeline = () => {
 
           </motion.div>
         ) : (
-          <div className="text-center py-10 text-slate-500 text-xs uppercase font-mono tracking-wider bg-slate-900/20 border border-slate-850 rounded-3xl">
+          <div className="text-center py-10 text-slate-500 text-xs uppercase font-mono tracking-wider bg-slate-900/20 border border-slate-800 rounded-3xl">
             {t("timeline_no_milestone")}
           </div>
         )}

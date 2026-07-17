@@ -877,7 +877,7 @@ export const QuantumOrbitalExplorer = ({
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-slate-800/85 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8">
       {/* Upper header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-5 mb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5 mb-5">
         <div>
           <h4 className="text-sm font-black text-slate-100 uppercase tracking-widest flex items-center gap-2">
             <CircleDot className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -913,7 +913,7 @@ export const QuantumOrbitalExplorer = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* Render Viewport (7 cols) */}
-        <div className="lg:col-span-7 relative h-[320px] lg:h-[360px] rounded-2xl border border-slate-850 bg-slate-950 overflow-hidden select-none">
+        <div className="lg:col-span-7 relative h-[320px] lg:h-[360px] rounded-2xl border border-slate-800 bg-slate-950 overflow-hidden select-none">
           <canvas
             ref={canvasRef}
             onMouseDown={handleMouseDown}
@@ -961,7 +961,7 @@ export const QuantumOrbitalExplorer = ({
         </div>
 
         {/* Quantum Sidebar: Interactive Tabbed Panel (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col justify-between bg-slate-900/30 border border-slate-850 rounded-2xl p-5 space-y-4">
+        <div className="lg:col-span-5 flex flex-col justify-between bg-slate-900/30 border border-slate-800 rounded-2xl p-5 space-y-4">
           <div className="space-y-4">
             {/* Tab switch buttons */}
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-950/60 border border-slate-900 rounded-xl">
@@ -1133,7 +1133,7 @@ export const QuantumOrbitalExplorer = ({
           </div>
 
           {/* Active Preset or Custom detailed chemical annotation */}
-          <div className="pt-4 border-t border-slate-850/80 space-y-2">
+          <div className="pt-4 border-t border-slate-800/80 space-y-2">
             <h5 className="text-xs font-black text-white flex items-center gap-1.5">
               <CircleDot className="w-3.5 h-3.5 text-cyan-400" />
               <span>
@@ -1148,7 +1148,7 @@ export const QuantumOrbitalExplorer = ({
                 : (t[activePreset.description] || activePreset.description)}
             </p>
 
-            <div className="bg-slate-950/40 border border-slate-850 p-2.5 rounded-xl flex justify-between items-center text-[10px] font-bold">
+            <div className="bg-slate-950/40 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center text-[10px] font-bold">
               <span className="text-slate-500 uppercase">{t["Bond Geometry"] || "Geometry"}</span>
               <span className="text-cyan-400 font-black">
                 {mode === 'schrodinger'

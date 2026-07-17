@@ -566,10 +566,10 @@ export const QueueTab: React.FC<QueueTabProps> = ({
           </div>
         </div>
 
-        <div className="overflow-x-auto custom-scrollbar rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
+        <div className="overflow-x-auto custom-scrollbar rounded-3xl border border-slate-800 bg-slate-900/20 shadow-xl">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
+              <tr className="border-b border-slate-800 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
                 <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                   if (queueSortField === 'id') {
                     setQueueSortDir(queueSortDir === 'asc' ? 'desc' : 'asc');
@@ -653,7 +653,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                 <th className="px-6 py-4">{tr("Actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-850/50">
+            <tbody className="divide-y divide-slate-800/50">
               {paginatedQueue.map(task => {
                 const isPaused = task.status === 'paused';
                 const isTranslation = task.type === 'translation';
@@ -795,21 +795,21 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                             <button 
                               type="button"
                               onClick={() => setErrorDetailsTarget(task)}
-                              className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-amber-500/20 text-slate-500 hover:text-amber-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                              className="px-3 py-1.5 bg-slate-950 border border-slate-800 hover:border-amber-500/20 text-slate-500 hover:text-amber-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
                             >
                               {tr('Logs')}
                             </button>
                             <button 
                               type="button"
                               onClick={() => handleRetryTask(task.id)}
-                              className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-emerald-500/20 text-slate-500 hover:text-emerald-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                              className="px-3 py-1.5 bg-slate-950 border border-slate-800 hover:border-emerald-500/20 text-slate-500 hover:text-emerald-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
                             >
                               {tr('Retry')}
                             </button>
                             <button 
                               type="button"
                               onClick={() => setCancelTaskTarget(task)}
-                              className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                              className="px-3 py-1.5 bg-slate-950 border border-slate-800 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
                             >
                               {tr('Cancel')}
                             </button>
@@ -826,7 +826,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                               <button 
                                 type="button"
                                 onClick={() => handleTogglePauseTask(task.id)}
-                                className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-amber-500/20 text-slate-500 hover:text-amber-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                className="px-3 py-1.5 bg-slate-950 border border-slate-800 hover:border-amber-500/20 text-slate-500 hover:text-amber-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
                               >{tr('Pause')}</button>
                             )}
                             
@@ -834,7 +834,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                               <button 
                                 type="button"
                                 onClick={() => handleForceResetTask(task.id)}
-                                className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                className="px-3 py-1.5 bg-slate-950 border border-slate-800 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
                               >{tr('Force Reset')}</button>
                             )}
                             
@@ -849,7 +849,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                               <button 
                                 type="button"
                                 onClick={() => setCancelTaskTarget(task)}
-                                className="px-3 py-1.5 bg-slate-950 border border-slate-850 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
+                                className="px-3 py-1.5 bg-slate-950 border border-slate-800 hover:border-red-500/20 text-slate-500 hover:text-red-400 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all"
                               >{tr('Cancel')}</button>
                             )}
                           </>
@@ -880,9 +880,9 @@ export const QueueTab: React.FC<QueueTabProps> = ({
         </div>
         {totalQueuePages > 1 && (
           <div className="flex justify-center items-center gap-4">
-            <button type="button" disabled={queuePage === 1} onClick={() => setQueuePage(p => Math.max(1, p - 1))} className="px-4 py-2 bg-slate-950 border border-slate-850 hover:border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">{tr("◀ Prev")}</button>
+            <button type="button" disabled={queuePage === 1} onClick={() => setQueuePage(p => Math.max(1, p - 1))} className="px-4 py-2 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">{tr("◀ Prev")}</button>
             <span className="text-[10px] font-mono font-black text-slate-500">{safeQueuePage} / {totalQueuePages}</span>
-            <button type="button" disabled={queuePage === totalQueuePages} onClick={() => setQueuePage(p => Math.min(totalQueuePages, p + 1))} className="px-4 py-2 bg-slate-950 border border-slate-850 hover:border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">{tr("Next ▶")}</button>
+            <button type="button" disabled={queuePage === totalQueuePages} onClick={() => setQueuePage(p => Math.min(totalQueuePages, p + 1))} className="px-4 py-2 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all">{tr("Next ▶")}</button>
           </div>
         )}
       </div>
@@ -899,7 +899,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
               className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
             />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden">
-              <div className="p-8 border-b border-slate-850 bg-red-955/20 flex items-center gap-3">
+              <div className="p-8 border-b border-slate-800 bg-red-955/20 flex items-center gap-3">
                 <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
                 <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">
                   {pStrings.cancel_task_title || "Cancel Task"}
@@ -914,7 +914,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                   <button 
                     type="button"
                     onClick={() => setCancelTaskTarget(null)}
-                    className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer"
+                    className="flex-1 py-4 border border-slate-800 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer"
                   >
                     {pStrings.purge_badge_cancel_btn}
                   </button>
@@ -953,7 +953,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
               exit={{ opacity: 0, scale: 0.95 }} 
               className="relative z-10 w-full max-w-2xl bg-slate-900 border border-amber-500/30 rounded-[40px] shadow-2xl overflow-hidden"
             >
-              <div className="p-8 border-b border-slate-850 bg-amber-955/20 flex items-center justify-between">
+              <div className="p-8 border-b border-slate-800 bg-amber-955/20 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <AlertCircle className="w-6 h-6 text-amber-500 animate-pulse" />
                   <h3 className="text-lg font-black text-amber-400 uppercase tracking-widest">
@@ -976,7 +976,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
 
                 <div className="space-y-2">
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">{tr("Error Stack & Logs")}</h4>
-                  <div className="p-6 bg-slate-950 border border-slate-850 rounded-2xl font-mono text-[10px] text-red-400 max-h-60 overflow-y-auto custom-scrollbar leading-relaxed whitespace-pre-wrap">
+                  <div className="p-6 bg-slate-950 border border-slate-800 rounded-2xl font-mono text-[10px] text-red-400 max-h-60 overflow-y-auto custom-scrollbar leading-relaxed whitespace-pre-wrap">
                     {Array.isArray(errorDetailsTarget.logs) && errorDetailsTarget.logs.length > 0 
                       ? errorDetailsTarget.logs.join('\n') 
                       : errorDetailsTarget.logs || tr("No log information recorded.")}
@@ -987,7 +987,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                   <button 
                     type="button"
                     onClick={() => setErrorDetailsTarget(null)}
-                    className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer"
+                    className="flex-1 py-4 border border-slate-800 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer"
                   >
                     {tr("Close")}
                   </button>

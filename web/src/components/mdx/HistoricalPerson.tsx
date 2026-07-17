@@ -37,6 +37,7 @@ export interface EntityLinkProps {
   creation?: string;
   era?: string;
   unresolved?: boolean;
+  domain?: string;
 }
 
 const getLocalizedName = (name: string, lang: string): string => {
@@ -624,7 +625,8 @@ export const EntityLink = ({
   dates,
   creation,
   era,
-  unresolved
+  unresolved,
+  domain
 }: EntityLinkProps) => {
   const { markDegraded } = useMdxStatus();
   const { disableOverlays } = useNesting();
@@ -819,9 +821,9 @@ export const EntityLink = ({
                 </div>
                 <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest [.theme-paper_&]:text-slate-700">{headerLabel}</span>
               </div>
-              {rightLabel && (
+              {(domain || rightLabel) && (
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider [.theme-paper_&]:text-slate-500">
-                  {rightLabel}
+                  {domain && rightLabel ? `${domain} · ${rightLabel}` : domain || rightLabel}
                 </span>
               )}
             </div>
@@ -850,7 +852,7 @@ export const EntityLink = ({
                   <ExternalLink className="w-3 h-3" />
                 </a>
               )}
-              {resolvedExternalUrl && (
+              {resolvedExternalUrl && resolvedType !== 'person' && (
                 <a 
                   href={resolvedExternalUrl} 
                   target="_blank" 

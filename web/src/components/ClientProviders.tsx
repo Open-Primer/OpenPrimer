@@ -525,7 +525,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
                 </div>
                 <button
                   onClick={() => setShowShortcutsHelp(false)}
-                  className="p-2 text-slate-500 hover:text-white rounded-full bg-slate-950/40 border border-slate-850 hover:bg-slate-950/80 transition-all cursor-pointer"
+                  className="p-2 text-slate-500 hover:text-white rounded-full bg-slate-950/40 border border-slate-800 hover:bg-slate-950/80 transition-all cursor-pointer"
                   aria-label="Close"
                 >
                   <X className="w-5 h-5" />
@@ -537,7 +537,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
                 {(HUD_TRANSLATIONS[activeLang as keyof typeof HUD_TRANSLATIONS]?.shortcuts || HUD_TRANSLATIONS.EN.shortcuts).map((shortcut, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950/40 border border-slate-850 hover:border-slate-800 transition-colors"
+                    className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800 hover:border-slate-800 transition-colors"
                   >
                     <span className="text-xs text-slate-400">{shortcut.desc}</span>
                     <kbd className="bg-slate-950 text-[10px] font-black text-blue-400 border border-slate-800 px-2.5 py-1 rounded-xl shadow-lg font-mono">

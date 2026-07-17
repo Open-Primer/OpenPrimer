@@ -23,7 +23,7 @@ export const ArchivingLevelButtons: React.FC<ArchivingLevelButtonsProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-1.5 bg-slate-950 p-1 border border-slate-850 rounded-2xl w-fit">
+    <div className="flex items-center gap-1.5 bg-slate-950 p-1 border border-slate-800 rounded-2xl w-fit">
       {[0, 1, 2, 3].map((lvl) => {
         const isActive = currentLevel === lvl;
         const isDisabled = lvl === 3 && disableLevel3;

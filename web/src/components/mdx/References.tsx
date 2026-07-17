@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
+import { BookMarked } from 'lucide-react';
 
 interface ReferenceItem {
   num: number;
@@ -139,10 +140,14 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
     >
       <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-indigo-600/5 rounded-full blur-[40px] pointer-events-none" />
       
-      {/* Header and Toggle Controls */}
-      <div className="flex items-center justify-end gap-4 mb-6 pb-4 border-b border-slate-800/50">
+      {/* Section header — mirrors H2 border-bottom style from globals.css prose */}
+      <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/60">
+        <div className="flex items-center gap-2.5">
+          <BookMarked className="w-4 h-4 text-indigo-400 shrink-0" />
+          <span className="text-sm font-black uppercase tracking-wider text-slate-200">{t("references_title")}</span>
+        </div>
         {/* Toggle Pill Buttons */}
-        <div className="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-850 w-fit">
+        <div className="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-800 w-fit">
           <button
             onClick={() => setSortOrder('appearance')}
             className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-300 select-none cursor-pointer ${
@@ -166,9 +171,8 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
         </div>
       </div>
 
-
       {/* References List */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {displayedItems.map((item) => (
           <div key={item.num} className="text-sm leading-relaxed text-slate-300 flex items-start gap-3 select-text group">
             {/* Scroll target anchors for all merged numbers (only for active references) */}
@@ -207,7 +211,7 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
                 const rawText = (item.scholarText || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
                 const displayText = rawText.length > 60 ? rawText.slice(0, 57) + '…' : rawText || 'Google Scholar';
                 return (
-                  <span className="text-xs text-slate-500 font-normal select-none">
+                  <span className="text-sm text-slate-500 font-normal select-none">
                     {' '}|{' '}
                     <a 
                       href={item.scholarUrl} 

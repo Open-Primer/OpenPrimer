@@ -1155,7 +1155,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
     if (!WidgetComponent) {
       return (
-        <div className="flex flex-col items-center justify-center p-12 text-center h-80 bg-slate-950/40 rounded-[30px] border border-slate-850 space-y-4">
+        <div className="flex flex-col items-center justify-center p-12 text-center h-80 bg-slate-950/40 rounded-[30px] border border-slate-800 space-y-4">
           <div className="w-16 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-400">
             <Cpu className="w-8 h-8" />
           </div>
@@ -1176,7 +1176,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
     try {
       return (
-        <div className="bg-slate-950/20 rounded-[30px] border border-slate-850 p-6 min-h-[350px] flex flex-col justify-between shadow-inner">
+        <div className="bg-slate-950/20 rounded-[30px] border border-slate-800 p-6 min-h-[350px] flex flex-col justify-between shadow-inner">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-4 border-b border-slate-900">
             <div className="flex flex-wrap gap-2 items-center">
               {presets.length > 0 ? (
@@ -1191,7 +1191,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                         setActivePresetIndex(idx);
                         setRandomProps(null);
                       }}
-                      className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${randomProps === null && activePresetIndex === idx ? 'bg-teal-500 text-slate-950 shadow-lg shadow-teal-500/10' : 'bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white'}`}
+                      className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${randomProps === null && activePresetIndex === idx ? 'bg-teal-500 text-slate-950 shadow-lg shadow-teal-500/10' : 'bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white'}`}
                     >
                       {tr(p.label)}
                     </button>
@@ -1238,7 +1238,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
             <h4 className="text-sm font-black text-red-400 uppercase tracking-wider">
               {tr("Sandbox Render Exception")}
             </h4>
-            <p className="text-[10px] text-slate-400 font-mono bg-slate-950/60 p-4 rounded-xl text-left border border-slate-850/50">
+            <p className="text-[10px] text-slate-400 font-mono bg-slate-950/60 p-4 rounded-xl text-left border border-slate-800/50">
               {e.message}
             </p>
           </div>
@@ -1302,7 +1302,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
           <button
             onClick={loadWidgets}
             disabled={loading || isExecuting}
-            className="px-4 py-2.5 border border-slate-850 hover:border-teal-500/25 bg-slate-900/40 text-slate-400 hover:text-teal-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className="px-4 py-2.5 border border-slate-800 hover:border-teal-500/25 bg-slate-900/40 text-slate-400 hover:text-teal-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
             title={tr("Re-scan MDX directory to load physical disk changes")}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -1321,7 +1321,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       </div>
 
       {/* TOP SECTION: FULL WIDTH SEARCH AND CATALOG GRID */}
-      <div className="bg-slate-900/40 border border-slate-850 rounded-[35px] p-6 space-y-6 shadow-xl backdrop-blur-xl">
+      <div className="bg-slate-900/40 border border-slate-800 rounded-[35px] p-6 space-y-6 shadow-xl backdrop-blur-xl">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3 w-full sm:max-w-2xl flex-grow">
             <div className="relative flex-grow max-w-md">
@@ -1331,7 +1331,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={tr("Filter components, subjects...")}
-                className="w-full bg-slate-950/80 border border-slate-850/60 hover:border-slate-800 rounded-2xl py-2.5 pl-11 pr-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-600 transition-colors"
+                className="w-full bg-slate-950/80 border border-slate-800/60 hover:border-slate-800 rounded-2xl py-2.5 pl-11 pr-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-600 transition-colors"
               />
             </div>
             {/* Sort Selector Dropdown */}
@@ -1339,7 +1339,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="appearance-none bg-slate-950/80 border border-slate-850/60 hover:border-slate-800 text-slate-300 hover:text-white rounded-2xl py-2.5 pl-4 pr-10 text-xs focus:outline-none focus:border-teal-555 transition-colors cursor-pointer"
+                className="appearance-none bg-slate-950/80 border border-slate-800/60 hover:border-slate-800 text-slate-300 hover:text-white rounded-2xl py-2.5 pl-4 pr-10 text-xs focus:outline-none focus:border-teal-555 transition-colors cursor-pointer"
                 style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%252394a3b8'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3e%3c/svg%3e")`, backgroundPosition: 'right 12px center', backgroundSize: '16px', backgroundRepeat: 'no-repeat' }}
               >
                 <option value="alphabetical">{tr("Sort: Alphabetical")}</option>
@@ -1395,7 +1395,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                         {getWidgetName(widget)}
                       </h4>
                       {!isLockedByOther && (
-                        <span className="px-2 py-0.5 bg-slate-950/80 border border-slate-850/80 rounded-md text-[7px] font-mono font-bold text-slate-450 shrink-0">
+                        <span className="px-2 py-0.5 bg-slate-950/80 border border-slate-800/80 rounded-md text-[7px] font-mono font-bold text-slate-450 shrink-0">
                           {widget.linesCount} LOC
                         </span>
                       )}
@@ -1424,7 +1424,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[7px] font-mono bg-slate-950/60 text-slate-500 px-1.5 py-0.5 rounded border border-slate-850/60">
+                      <span className="text-[7px] font-mono bg-slate-950/60 text-slate-500 px-1.5 py-0.5 rounded border border-slate-800/60">
                         {widget.id}
                       </span>
                       <span className="text-[7px] font-bold text-slate-500 uppercase font-mono">
@@ -1442,7 +1442,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       {/* BOTTOM SECTION: FULL WIDTH WORKSPACE PANEL */}
       <div className="w-full">
         {selectedWidget ? (
-          <div className="bg-slate-900/40 border border-slate-850 rounded-[35px] p-8 space-y-6 shadow-xl backdrop-blur-xl relative overflow-hidden">
+          <div className="bg-slate-900/40 border border-slate-800 rounded-[35px] p-8 space-y-6 shadow-xl backdrop-blur-xl relative overflow-hidden">
             
             {/* CONCURRENCY LOCK HEADER NOTIFICATION BANNER */}
             {(() => {
@@ -1562,7 +1562,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               {workshopTab === 'preview' && (
                 <button
                   onClick={() => setIsFullscreenOpen(true)}
-                  className="px-3 py-1.5 border border-slate-850 hover:border-teal-500/20 bg-slate-950/40 text-slate-400 hover:text-teal-400 rounded-lg text-[9px] font-bold uppercase transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1.5 border border-slate-800 hover:border-teal-500/20 bg-slate-950/40 text-slate-400 hover:text-teal-400 rounded-lg text-[9px] font-bold uppercase transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Maximize2 className="w-3 h-3" />
                   {tr("Fullscreen Preview")}
@@ -1595,7 +1595,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                         showToast(tr("Source code copied to clipboard!"), 'success');
                         setTimeout(() => setIsCopied(false), 2000);
                       }}
-                      className="absolute top-4 right-4 z-10 px-3 py-1.5 bg-slate-900/90 hover:bg-slate-850 border border-slate-800 rounded-lg text-[9px] font-black uppercase tracking-wider text-slate-300 hover:text-white flex items-center gap-1.5 transition-all opacity-0 group-hover/code:opacity-100 cursor-pointer"
+                      className="absolute top-4 right-4 z-10 px-3 py-1.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-lg text-[9px] font-black uppercase tracking-wider text-slate-300 hover:text-white flex items-center gap-1.5 transition-all opacity-0 group-hover/code:opacity-100 cursor-pointer"
                     >
                       {isCopied ? (
                         <>
@@ -1610,7 +1610,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                       )}
                     </button>
                     
-                    <div className="bg-slate-950/80 rounded-2xl border border-slate-850 p-6 max-h-[350px] overflow-y-auto font-mono text-[9px] text-slate-400 leading-relaxed scrollbar-thin scrollbar-thumb-slate-800">
+                    <div className="bg-slate-950/80 rounded-2xl border border-slate-800 p-6 max-h-[350px] overflow-y-auto font-mono text-[9px] text-slate-400 leading-relaxed scrollbar-thin scrollbar-thumb-slate-800">
                       <pre className="whitespace-pre-wrap">{selectedWidget.code}</pre>
                     </div>
                   </div>
@@ -1623,7 +1623,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   <p className="text-[10px] text-slate-455 leading-relaxed font-medium">
                     {tr("Pedagogical parameters signature and React properties registered for this interactive simulator.")}
                   </p>
-                  <div className="bg-slate-950/40 rounded-2xl border border-slate-850 p-6 space-y-4 font-mono text-[10px]">
+                  <div className="bg-slate-950/40 rounded-2xl border border-slate-800 p-6 space-y-4 font-mono text-[10px]">
                     <div className="space-y-2">
                       <div className="text-teal-400 font-bold">interface {selectedWidget.id}Props</div>
                       <div className="border-l border-slate-800 pl-4 py-2 space-y-2 text-slate-400">
@@ -1675,7 +1675,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     key={i}
                     onClick={() => setPrompt(p)}
                     disabled={isExecuting || (selectedWidget.lock !== null && selectedWidget.lock.adminId !== adminId && Date.now() < selectedWidget.lock.expiresAt)}
-                    className="px-3 py-1.5 border border-slate-850 bg-slate-950/30 text-[9px] font-bold text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-900/20 rounded-xl transition-all cursor-pointer max-w-xs truncate disabled:opacity-40"
+                    className="px-3 py-1.5 border border-slate-800 bg-slate-950/30 text-[9px] font-bold text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-900/20 rounded-xl transition-all cursor-pointer max-w-xs truncate disabled:opacity-40"
                   >
                     💡 {tr(p)}
                   </button>
@@ -1690,7 +1690,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   onChange={(e) => setPrompt(e.target.value)}
                   disabled={isExecuting || (selectedWidget.lock !== null && selectedWidget.lock.adminId !== adminId && Date.now() < selectedWidget.lock.expiresAt)}
                   placeholder={tr("Instruct the AI to enhance, modify, or add features to \"{id}\"...").replace("{id}", selectedWidget.id)}
-                  className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-600 transition-colors resize-none pr-12 scrollbar-thin disabled:opacity-50"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-600 transition-colors resize-none pr-12 scrollbar-thin disabled:opacity-50"
                 />
                 
                 <button
@@ -1726,7 +1726,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="p-6 bg-slate-950 border border-slate-850 rounded-2xl space-y-4"
+                    className="p-6 bg-slate-950 border border-slate-800 rounded-2xl space-y-4"
                   >
                     <div className="flex items-center gap-3">
                       <Loader2 className="w-5 h-5 text-teal-500 animate-spin shrink-0" />
@@ -1792,7 +1792,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center p-16 text-center h-96 bg-slate-900/10 border border-slate-850 border-dashed rounded-[35px] space-y-4">
+          <div className="flex flex-col items-center justify-center p-16 text-center h-96 bg-slate-900/10 border border-slate-800 border-dashed rounded-[35px] space-y-4">
             <div className="w-16 h-16 bg-slate-950/40 rounded-full flex items-center justify-center text-slate-500">
               <Wrench className="w-8 h-8" />
             </div>
@@ -1824,12 +1824,12 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
             >
               <button 
                 onClick={() => setIsEditModalOpen(false)}
-                className="absolute top-6 right-6 p-2 bg-slate-950 hover:bg-slate-850 rounded-full text-slate-400 hover:text-white transition-colors cursor-pointer z-10"
+                className="absolute top-6 right-6 p-2 bg-slate-950 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors cursor-pointer z-10"
               >
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="space-y-1 shrink-0 border-b border-slate-850 pb-4 pr-12">
+              <div className="space-y-1 shrink-0 border-b border-slate-800 pb-4 pr-12">
                 <h3 className="text-lg font-black text-white flex items-center gap-2">
                   <Edit className="w-5 h-5 text-teal-400" />
                   {tr("Edit parameters: {id}").replace(/[:：]\s*\{id\}/, "").trim()}
@@ -1852,7 +1852,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           type="text"
                           value={editNameFR}
                           onChange={(e) => setEditNameFR(e.target.value)}
-                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${editNameFR.trim().length < 3 || editNameFR.trim().length > 50 ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-850'}`}
+                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${editNameFR.trim().length < 3 || editNameFR.trim().length > 50 ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-800'}`}
                         />
                         {/* Display Name Tip Warning */}
                         <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
@@ -1874,7 +1874,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                               setIsEditLevelDropdownOpen(!isEditLevelDropdownOpen);
                               setIsEditSubjectDropdownOpen(false);
                             }}
-                            className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 flex items-center justify-between cursor-pointer"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 flex items-center justify-between cursor-pointer"
                           >
                             <span className={!editLevelFR ? "text-slate-600" : ""}>
                               {editLevelFR || tr("Select academic levels...")}
@@ -1888,7 +1888,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                                 initial={{ opacity: 0, y: -5 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -5 }}
-                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-2.5 shadow-xl space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin"
+                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 shadow-xl space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin"
                               >
                                 {ACADEMIC_LEVELS.map(lvl => {
                                   const isChecked = editLevelFR.toLowerCase().split(' / ').map(s => s.trim()).includes(lvl.FR.toLowerCase());
@@ -1918,7 +1918,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           rows={2}
                           value={editDescFR}
                           onChange={(e) => setEditDescFR(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
                         />
                       </div>
                     </>
@@ -1933,7 +1933,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           type="text"
                           value={editNameEN}
                           onChange={(e) => setEditNameEN(e.target.value)}
-                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${editNameEN.trim().length < 3 || editNameEN.trim().length > 50 ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-850'}`}
+                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${editNameEN.trim().length < 3 || editNameEN.trim().length > 50 ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-800'}`}
                         />
                         {/* Display Name Tip Warning */}
                         <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
@@ -1955,7 +1955,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                               setIsEditLevelDropdownOpen(!isEditLevelDropdownOpen);
                               setIsEditSubjectDropdownOpen(false);
                             }}
-                            className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 flex items-center justify-between cursor-pointer"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 flex items-center justify-between cursor-pointer"
                           >
                             <span className={!editLevelEN ? "text-slate-600" : ""}>
                               {editLevelEN || "Select academic levels..."}
@@ -1969,7 +1969,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                                 initial={{ opacity: 0, y: -5 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -5 }}
-                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-2.5 shadow-xl space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin"
+                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 shadow-xl space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin"
                               >
                                 {ACADEMIC_LEVELS.map(lvl => {
                                   const isChecked = editLevelEN.toLowerCase().split(' / ').map(s => s.trim()).includes(lvl.EN.toLowerCase());
@@ -1999,7 +1999,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           rows={2}
                           value={editDescEN}
                           onChange={(e) => setEditDescEN(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
                         />
                       </div>
                     </>
@@ -2015,7 +2015,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           setIsEditSubjectDropdownOpen(!isEditSubjectDropdownOpen);
                           setIsEditLevelDropdownOpen(false);
                         }}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 flex items-center justify-between cursor-pointer"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 flex items-center justify-between cursor-pointer"
                       >
                         <span className={editDisciplines.length === 0 ? "text-slate-600" : ""}>
                           {getDisciplinesSummary(editDisciplines)}
@@ -2029,7 +2029,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                             initial={{ opacity: 0, y: -5 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -5 }}
-                            className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-3 shadow-xl space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-850"
+                            className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-800 rounded-xl p-3 shadow-xl space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-800"
                           >
                             <div className="grid grid-cols-2 gap-1.5">
                               {DISCIPLINES_LIST.map((disc) => {
@@ -2039,7 +2039,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                                     key={disc}
                                     type="button"
                                     onClick={() => toggleDiscipline(disc, 'edit')}
-                                    className={`px-2.5 py-2 border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors text-left flex items-center justify-between cursor-pointer ${isChecked ? 'bg-teal-500 border-teal-400 text-slate-950' : 'bg-slate-900/60 border-slate-850 text-slate-400 hover:border-slate-750 hover:text-white'}`}
+                                    className={`px-2.5 py-2 border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors text-left flex items-center justify-between cursor-pointer ${isChecked ? 'bg-teal-500 border-teal-400 text-slate-950' : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-750 hover:text-white'}`}
                                   >
                                     <span className="truncate mr-1">{getDisciplineLabel(disc, lang)}</span>
                                     {isChecked && <Check className="w-3 h-3 text-slate-950 shrink-0" />}
@@ -2070,11 +2070,11 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               </div> {/* Closes <div className="flex-grow overflow-y-auto..."> */}
 
               {/* Edit Modal Footer Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-850 shrink-0">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-5 py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-950 border border-slate-800 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
                 >
                   {tr("Cancel")}
                 </button>
@@ -2114,12 +2114,12 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
             >
               <button 
                 onClick={() => setIsCreateModalOpen(false)}
-                className="absolute top-6 right-6 p-2 bg-slate-950 hover:bg-slate-850 rounded-full text-slate-400 hover:text-white transition-colors cursor-pointer z-10"
+                className="absolute top-6 right-6 p-2 bg-slate-950 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors cursor-pointer z-10"
               >
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="space-y-1 shrink-0 border-b border-slate-850 pb-4 pr-12">
+              <div className="space-y-1 shrink-0 border-b border-slate-800 pb-4 pr-12">
                 <h3 className="text-lg font-black text-white flex items-center gap-2">
                   <Plus className="w-5 h-5 text-teal-400" />
                   {tr("Create Brand New Interactive Widget")}
@@ -2142,7 +2142,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           value={newWidgetNameFR}
                           onChange={(e) => setNewWidgetNameFR(e.target.value)}
                           placeholder="Ex: Laboratoire Optique Lumineuse"
-                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 ${newWidgetNameFR.trim().length < 3 || newWidgetNameFR.trim().length > 50 || namingCollisionError ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-850'}`}
+                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 ${newWidgetNameFR.trim().length < 3 || newWidgetNameFR.trim().length > 50 || namingCollisionError ? 'border-rose-500/50 focus:border-rose-500' : 'border-slate-800'}`}
                         />
                         {/* Naming Collision and Length Indicators */}
                         <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
@@ -2168,7 +2168,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                               setIsCreateLevelDropdownOpen(!isCreateLevelDropdownOpen);
                               setIsCreateSubjectDropdownOpen(false);
                             }}
-                            className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-550 flex items-center justify-between cursor-pointer"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-550 flex items-center justify-between cursor-pointer"
                           >
                             <span className={!newWidgetLevelFR ? "text-slate-600" : ""}>
                               {newWidgetLevelFR || tr("Select academic levels...")}
@@ -2182,7 +2182,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                                 initial={{ opacity: 0, y: -5 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -5 }}
-                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-2.5 shadow-xl space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin"
+                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 shadow-xl space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin"
                               >
                                 {ACADEMIC_LEVELS.map(lvl => {
                                   const isChecked = newWidgetLevelFR.toLowerCase().split(' / ').map(s => s.trim()).includes(lvl.FR.toLowerCase());
@@ -2211,7 +2211,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           value={newWidgetDescFR}
                           onChange={(e) => setNewWidgetDescFR(e.target.value)}
                           placeholder="Ex: Simulation physique de la réfraction de la lumière à travers des prismes."
-                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
                         />
                       </div>
                     </>
@@ -2224,7 +2224,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           value={newWidgetNameEN}
                           onChange={(e) => setNewWidgetNameEN(e.target.value)}
                           placeholder="Ex: Light Optics Simulator"
-                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${newWidgetNameEN.trim().length < 3 || newWidgetNameEN.trim().length > 50 || namingCollisionError ? 'border-rose-500/50 focus:border-rose-555' : 'border-slate-850'}`}
+                          className={`w-full bg-slate-950 border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 ${newWidgetNameEN.trim().length < 3 || newWidgetNameEN.trim().length > 50 || namingCollisionError ? 'border-rose-500/50 focus:border-rose-555' : 'border-slate-800'}`}
                         />
                         {/* Naming Collision and Length Indicators */}
                         <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
@@ -2250,7 +2250,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                               setIsCreateLevelDropdownOpen(!isCreateLevelDropdownOpen);
                               setIsCreateSubjectDropdownOpen(false);
                             }}
-                            className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-550 flex items-center justify-between cursor-pointer"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-550 flex items-center justify-between cursor-pointer"
                           >
                             <span className={!newWidgetLevelEN ? "text-slate-600" : ""}>
                               {newWidgetLevelEN || tr("Select academic levels...")}
@@ -2264,7 +2264,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                                 initial={{ opacity: 0, y: -5 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -5 }}
-                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-2.5 shadow-xl space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin"
+                                className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 shadow-xl space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin"
                               >
                                 {ACADEMIC_LEVELS.map(lvl => {
                                   const isChecked = newWidgetLevelEN.toLowerCase().split(' / ').map(s => s.trim()).includes(lvl.EN.toLowerCase());
@@ -2293,7 +2293,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           value={newWidgetDescEN}
                           onChange={(e) => setNewWidgetDescEN(e.target.value)}
                           placeholder="Ex: Physics simulation of light refraction through interactive glass prisms."
-                          className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-555 resize-none"
                         />
                       </div>
                     </>
@@ -2309,7 +2309,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                           setIsCreateSubjectDropdownOpen(!isCreateSubjectDropdownOpen);
                           setIsCreateLevelDropdownOpen(false);
                         }}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-550 flex items-center justify-between cursor-pointer"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-550 flex items-center justify-between cursor-pointer"
                       >
                         <span className={newWidgetDisciplines.length === 0 ? "text-slate-600" : ""}>
                           {getDisciplinesSummary(newWidgetDisciplines)}
@@ -2323,7 +2323,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                             initial={{ opacity: 0, y: -5 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -5 }}
-                            className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-850 rounded-xl p-3 shadow-xl space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-850"
+                            className="absolute z-10 mt-1.5 w-full bg-slate-950 border border-slate-800 rounded-xl p-3 shadow-xl space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-800"
                           >
                             <div className="grid grid-cols-2 gap-1.5">
                               {DISCIPLINES_LIST.map((disc) => {
@@ -2333,7 +2333,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                                     key={disc}
                                     type="button"
                                     onClick={() => toggleDiscipline(disc, 'new')}
-                                    className={`px-2.5 py-2 border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors text-left flex items-center justify-between cursor-pointer ${isChecked ? 'bg-teal-500 border-teal-400 text-slate-950' : 'bg-slate-900/60 border-slate-850 text-slate-400 hover:border-slate-750 hover:text-white'}`}
+                                    className={`px-2.5 py-2 border rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors text-left flex items-center justify-between cursor-pointer ${isChecked ? 'bg-teal-500 border-teal-400 text-slate-950' : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-750 hover:text-white'}`}
                                   >
                                     <span className="truncate mr-1">{getDisciplineLabel(disc, lang)}</span>
                                     {isChecked && <Check className="w-3 h-3 text-slate-950 shrink-0" />}
@@ -2356,17 +2356,17 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                     value={newWidgetPrompt}
                     onChange={(e) => setNewWidgetPrompt(e.target.value)}
                     placeholder="Ex: Crée un simulateur physique interactif de réfraction de la lumière. L'utilisateur peut déplacer un rayon lumineux sur un canevas 2D, ajouter des prismes de verre de différentes formes (triangle, rectangle) et ajuster l'indice de réfraction du verre avec un slider. Calcule les angles réels de réfraction."
-                    className="w-full bg-slate-950 border border-slate-850 rounded-xl p-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-650 resize-none scrollbar-thin font-medium leading-relaxed"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs focus:outline-none focus:border-teal-555 text-white placeholder-slate-650 resize-none scrollbar-thin font-medium leading-relaxed"
                   />
                 </div>
 
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-850">
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-5 py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-950 border border-slate-800 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
                 >
                   {tr("Cancel")}
                 </button>
@@ -2401,7 +2401,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               </div>
               <button 
                 onClick={() => setIsFullscreenOpen(false)}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-2 cursor-pointer border border-slate-850"
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors flex items-center gap-2 cursor-pointer border border-slate-800"
               >
                 <Minimize2 className="w-4 h-4 text-teal-400" />
                 {tr("Exit Fullscreen")}
@@ -2409,7 +2409,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
             </div>
 
             {/* Immersive Expanded Canvas */}
-            <div className="flex-grow w-full overflow-hidden bg-slate-950/20 rounded-[30px] border border-slate-850/60 p-8 shadow-inner flex flex-col justify-center relative">
+            <div className="flex-grow w-full overflow-hidden bg-slate-950/20 rounded-[30px] border border-slate-800/60 p-8 shadow-inner flex flex-col justify-center relative">
               <div className="w-full h-full">
                 {renderLiveWidget()}
               </div>
@@ -2450,7 +2450,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setWidgetToValidate(null)}
-                  className="px-5 py-2.5 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-950 border border-slate-800 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer"
                 >
                   {tr("Cancel")}
                 </button>

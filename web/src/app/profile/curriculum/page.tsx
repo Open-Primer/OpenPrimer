@@ -1462,7 +1462,7 @@ export default function CurriculumPage() {
             
             <button
               onClick={() => setDismissedConflicts(prev => [...prev, conflict.standalone.id])}
-              className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-950/40 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-850 flex items-center justify-center transition-all cursor-pointer z-30"
+              className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-950/40 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 flex items-center justify-center transition-all cursor-pointer z-30"
               title={DISMISS_ALERT[lang.toUpperCase()] || DISMISS_ALERT.EN}
             >
               <Icons.X className="w-4 h-4" />
@@ -1786,7 +1786,7 @@ export default function CurriculumPage() {
                                     {isMandatoryChild ? (
                                       <div
                                         title={MANDATORY_CURRICULUM_COURSE_LABEL[upperLang] || MANDATORY_CURRICULUM_COURSE_LABEL.EN}
-                                        className="p-2 rounded-xl text-slate-655 bg-slate-950/30 border border-slate-850 flex items-center justify-center cursor-not-allowed"
+                                        className="p-2 rounded-xl text-slate-655 bg-slate-950/30 border border-slate-800 flex items-center justify-center cursor-not-allowed"
                                       >
                                         <Icons.Lock className="w-4 h-4" />
                                       </div>
@@ -2120,7 +2120,7 @@ export default function CurriculumPage() {
               )}
 
               {activeCourses.length === 0 && completedCourses.length === 0 && (
-                <div className="p-16 border border-slate-850 rounded-[48px] bg-slate-900/10 text-center max-w-2xl mx-auto my-12 backdrop-blur-3xl shadow-xl">
+                <div className="p-16 border border-slate-800 rounded-[48px] bg-slate-900/10 text-center max-w-2xl mx-auto my-12 backdrop-blur-3xl shadow-xl">
                   <Book className="w-16 h-16 text-slate-650 mx-auto mb-6" />
                   <h3 className="text-2xl font-black text-white mb-3">
                     {t.empty_curriculum_title}
@@ -2174,7 +2174,7 @@ export default function CurriculumPage() {
                               e.stopPropagation();
                               handleDismissRecommendation(recCourse.id);
                             }}
-                            className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-950/40 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-850 flex items-center justify-center transition-all cursor-pointer z-30"
+                            className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-950/40 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 flex items-center justify-center transition-all cursor-pointer z-30"
                             title={DISMISS_RECOMMENDATION_LABEL[upperLang] || DISMISS_RECOMMENDATION_LABEL.EN}
                           >
                             <Icons.X className="w-4 h-4" />
@@ -2246,7 +2246,7 @@ export default function CurriculumPage() {
                                         {recCourse.hours || (recCourse.ects ? recCourse.ects * 25 : 150)}h
                                       </span>
                                       {/* Level badge */}
-                                      <span className="px-2.5 py-1 bg-slate-850 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
+                                      <span className="px-2.5 py-1 bg-slate-800 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
                                         {formatCourseLevel(recCourse.level, lang)}
                                       </span>
                                     </div>
@@ -2807,7 +2807,7 @@ export default function CurriculumPage() {
                 </div>
                 <button 
                   onClick={() => setShowTutorModal(false)}
-                  className="p-3 text-slate-500 hover:text-white rounded-2xl hover:bg-slate-850 transition-all cursor-pointer"
+                  className="p-3 text-slate-500 hover:text-white rounded-2xl hover:bg-slate-800 transition-all cursor-pointer"
                 >
                   <Icons.X className="w-5 h-5" />
                 </button>
@@ -2836,7 +2836,7 @@ export default function CurriculumPage() {
                       className={`p-6 rounded-3xl border transition-all cursor-pointer flex items-center justify-between gap-6 group relative overflow-hidden ${
                         isSelected 
                           ? 'bg-blue-600/10 border-blue-500/60 shadow-lg shadow-blue-500/5' 
-                          : 'bg-slate-950/30 border-slate-850 hover:border-slate-700 hover:bg-slate-950/50'
+                          : 'bg-slate-950/30 border-slate-800 hover:border-slate-700 hover:bg-slate-950/50'
                       }`}
                     >
                       <div className="flex items-center gap-5">
@@ -2863,7 +2863,7 @@ export default function CurriculumPage() {
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
                         isSelected 
                           ? 'bg-blue-600 border-blue-500 text-white shadow-lg' 
-                          : 'border-slate-850 group-hover:border-slate-750 text-transparent group-hover:text-slate-655'
+                          : 'border-slate-800 group-hover:border-slate-750 text-transparent group-hover:text-slate-655'
                       }`}>
                         <Icons.Check className="w-4 h-4 stroke-[3]" />
                       </div>
@@ -3009,7 +3009,7 @@ export default function CurriculumPage() {
                     setShowReviewModal(false);
                     setSelectedReviewCourse(null);
                   }}
-                  className="absolute top-6 right-6 p-2 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-500 hover:text-white rounded-xl cursor-pointer transition-colors"
+                  className="absolute top-6 right-6 p-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-500 hover:text-white rounded-xl cursor-pointer transition-colors"
                   title={CLOSE_LABEL[upperLang] || CLOSE_LABEL.EN}
                 >
                   <Icons.X className="w-4 h-4" />
@@ -3096,7 +3096,7 @@ export default function CurriculumPage() {
                         setShowReviewModal(false);
                         setSelectedReviewCourse(null);
                       }}
-                      className="flex-1 py-4 bg-slate-950 hover:bg-slate-850 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl border border-slate-800 transition-all cursor-pointer"
+                      className="flex-1 py-4 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl border border-slate-800 transition-all cursor-pointer"
                     >
                       {CLOSE_LABEL[upperLang] || CLOSE_LABEL.EN}
                     </button>
@@ -3107,7 +3107,7 @@ export default function CurriculumPage() {
                         className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-xl ${
                           localRating > 0 && !submittingReview
                             ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/10 cursor-pointer active:scale-95' 
-                            : 'bg-slate-850 text-slate-500 border border-slate-800 cursor-not-allowed'
+                            : 'bg-slate-800 text-slate-500 border border-slate-800 cursor-not-allowed'
                         }`}
                       >
                         {SUBMIT_REVIEW_LABEL[upperLang] || SUBMIT_REVIEW_LABEL.EN}

@@ -600,7 +600,7 @@ export const DynamicSimulation = ({ presetId = "mitosis", gradeLevel }: { preset
           </defs>
         </svg>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-950/60 p-4 border border-slate-850 rounded-xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-950/60 p-4 border border-slate-800 rounded-xl">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
               <span className="uppercase tracking-wider">{t["Wave Frequency (f)"] || "Wave Frequency (f)"}</span>
@@ -717,7 +717,7 @@ export const DynamicSimulation = ({ presetId = "mitosis", gradeLevel }: { preset
           </div>
         </div>
 
-        <div className="space-y-1.5 bg-slate-950/60 p-4 border border-slate-850 rounded-xl">
+        <div className="space-y-1.5 bg-slate-950/60 p-4 border border-slate-800 rounded-xl">
           <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
             <span className="uppercase tracking-wider">{t["Source Laser Wavelength (λ)"] || "Source Laser Wavelength (λ)"}</span>
             <span style={{ color: laserColor }} className="font-extrabold">{wavelength} nm</span>
@@ -848,7 +848,7 @@ export const DynamicSimulation = ({ presetId = "mitosis", gradeLevel }: { preset
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8">
       {/* Simulation Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850/80 pb-5 mb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-5 mb-5">
         <div>
           <h4 className="text-sm font-black text-slate-100 uppercase tracking-widest flex items-center gap-2">
             <Activity className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -996,7 +996,7 @@ export const DynamicSimulation = ({ presetId = "mitosis", gradeLevel }: { preset
                 className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider border select-none cursor-pointer transition-all ${
                   mitosisPathological
                     ? 'bg-rose-600 border-rose-500 text-white shadow-lg shadow-rose-500/20'
-                    : 'bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
                 {mitosisPathological ? '🦠 Pathological ON (Cancer Mode)' : '✅ Normal Mitosis'}
@@ -1010,7 +1010,7 @@ export const DynamicSimulation = ({ presetId = "mitosis", gradeLevel }: { preset
       )}
 
       {/* Control center panel HUD with timeline scrubber and description */}
-      <div className="mt-5 space-y-4 pt-4 border-t border-slate-850/80">
+      <div className="mt-5 space-y-4 pt-4 border-t border-slate-800/80">
         
         {/* Scrubber Playback row */}
         <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -1057,7 +1057,7 @@ export const DynamicSimulation = ({ presetId = "mitosis", gradeLevel }: { preset
         </div>
 
         {/* Step-by-Step Didactic readout description block */}
-        <div className="bg-slate-900/30 border border-slate-850 rounded-2xl p-4 flex items-start gap-3">
+        <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-4 flex items-start gap-3">
           <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mt-0.5">
             <Info className="w-4 h-4" />
           </div>

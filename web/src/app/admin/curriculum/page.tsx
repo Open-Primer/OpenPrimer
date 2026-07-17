@@ -2495,7 +2495,7 @@ export default function AdminCurriculumPage() {
                <button 
                  key={tab.id}
                  onClick={() => setView(tab.id as any)} 
-                 className={`px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${view === tab.id ? `${tab.color} text-white shadow-lg` : 'bg-slate-900 text-slate-500 hover:text-white border border-slate-850'}`}
+                 className={`px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${view === tab.id ? `${tab.color} text-white shadow-lg` : 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800'}`}
                >
                   {tab.label}
                </button>
@@ -2684,13 +2684,13 @@ export default function AdminCurriculumPage() {
               className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
             />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-sm bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
-              <div className="p-8 border-b border-slate-850 flex items-center gap-3">
+              <div className="p-8 border-b border-slate-800 flex items-center gap-3">
                 <ShieldAlert className="w-6 h-6 text-red-500" />
                 <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">{infoModal.title}</h3>
               </div>
               <div className="p-10 space-y-6">
                 <p className="text-xs text-slate-400 leading-relaxed text-center">{infoModal.message}</p>
-                <button onClick={() => setInfoModal(null)} className="w-full py-4 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white font-black uppercase text-[10px] rounded-xl transition-all cursor-pointer">
+                <button onClick={() => setInfoModal(null)} className="w-full py-4 bg-slate-950 border border-slate-800 text-slate-400 hover:text-white font-black uppercase text-[10px] rounded-xl transition-all cursor-pointer">
                   {tr("Dismiss")}
                 </button>
               </div>

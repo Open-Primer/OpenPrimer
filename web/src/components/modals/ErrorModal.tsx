@@ -69,11 +69,11 @@ export const ErrorModal = ({ lang, subject, title, nextPagePath }: ErrorModalPro
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="max-w-2xl w-full bg-slate-900 border border-slate-850 rounded-[40px] p-8 md:p-10 shadow-2xl relative cursor-default text-left"
+        className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-[40px] p-8 md:p-10 shadow-2xl relative cursor-default text-left"
       >
         <button 
           onClick={handleOuterClick}
-          className="absolute top-6 right-6 p-2 rounded-xl bg-slate-950 border border-slate-850 text-slate-500 hover:text-white transition-all cursor-pointer"
+          className="absolute top-6 right-6 p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-500 hover:text-white transition-all cursor-pointer"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" />
@@ -90,7 +90,7 @@ export const ErrorModal = ({ lang, subject, title, nextPagePath }: ErrorModalPro
         </div>
 
         <div className="space-y-4 mb-8 text-left">
-          <p className="text-xs font-black uppercase text-slate-500 tracking-widest border-b border-slate-850 pb-2">
+          <p className="text-xs font-black uppercase text-slate-500 tracking-widest border-b border-slate-800 pb-2">
             {lang.toLowerCase() === 'fr' ? 'Avis technique' : 'Technical Advisory'}
           </p>
           <p className="text-sm text-slate-300 leading-relaxed">
@@ -98,7 +98,7 @@ export const ErrorModal = ({ lang, subject, title, nextPagePath }: ErrorModalPro
           </p>
         </div>
 
-        <div className="flex gap-4 mt-8 pt-6 border-t border-slate-850">
+        <div className="flex gap-4 mt-8 pt-6 border-t border-slate-800">
           {nextPagePath && (
             <button
               onClick={() => router.push(nextPagePath)}
@@ -110,7 +110,7 @@ export const ErrorModal = ({ lang, subject, title, nextPagePath }: ErrorModalPro
           )}
           <button
             onClick={() => router.push('/catalog')}
-            className="px-6 py-3 bg-slate-950 border border-slate-850 text-slate-400 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
+            className="px-6 py-3 bg-slate-950 border border-slate-800 text-slate-400 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
           >
             {t.catalog}
           </button>

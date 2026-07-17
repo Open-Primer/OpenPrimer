@@ -58,7 +58,7 @@ export const PointOfView = ({ topic, perspectives: rawPerspectives }: PointOfVie
         ))}
       </div>
 
-      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-850/60 shadow-inner min-h-[100px] transition-all duration-305">
+      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 shadow-inner min-h-[100px] transition-all duration-305">
         {perspectives[activeTab].title && (
           <h5 className="text-[13px] font-black text-slate-800 dark:text-slate-200 mb-2">
             {perspectives[activeTab].title}

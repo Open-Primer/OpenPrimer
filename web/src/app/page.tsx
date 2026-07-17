@@ -1020,7 +1020,7 @@ export default function Home() {
                     <button
                       key={idx}
                       onClick={() => router.push(`/catalog?search=${encodeURIComponent(sug.title)}`)}
-                      className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-slate-850 rounded-2xl transition-colors text-left cursor-pointer"
+                      className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-slate-800 rounded-2xl transition-colors text-left cursor-pointer"
                     >
                       <div>
                         <p className="text-sm font-bold text-white">{sug.title}</p>
@@ -1310,7 +1310,7 @@ export default function Home() {
                     <button 
                       type="button"
                       onClick={handleGoogleSignIn}
-                      className="w-full py-3.5 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 text-white font-black text-[9px] uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-3 cursor-pointer"
+                      className="w-full py-3.5 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-800 text-white font-black text-[9px] uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-3 cursor-pointer"
                     >
                       <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-.1.13-1.14 2.19l3.07 2.38c1.8-1.66 2.83-4.1 2.83-6.42z"/>
@@ -1439,7 +1439,7 @@ export default function Home() {
                     <button 
                       type="button"
                       onClick={handleGoogleSignIn}
-                      className="w-full py-3.5 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 text-white font-black text-[9px] uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-3 cursor-pointer"
+                      className="w-full py-3.5 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-800 text-white font-black text-[9px] uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-3 cursor-pointer"
                     >
                       <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-.1.13-1.14 2.19l3.07 2.38c1.8-1.66 2.83-4.1 2.83-6.42z"/>
@@ -1474,7 +1474,7 @@ export default function Home() {
                     </p>
 
                     {process.env.NODE_ENV !== 'production' && (
-                      <div className="bg-slate-950/40 border border-slate-850/50 rounded-2xl p-4 text-left mb-6 text-xs text-slate-400">
+                      <div className="bg-slate-950/40 border border-slate-800/50 rounded-2xl p-4 text-left mb-6 text-xs text-slate-400">
                         <div className="text-[8px] font-black uppercase tracking-wider text-amber-500 mb-1">
                           [DEV MODE] Local Verification Fallback
                         </div>

@@ -146,7 +146,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
           </p>
           
           {/* Dynamic Archiving Conditions */}
-          <div className="bg-slate-950/50 p-6 rounded-3xl border border-slate-850">
+          <div className="bg-slate-950/50 p-6 rounded-3xl border border-slate-800">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-xs font-bold text-pink-400 uppercase tracking-wider">
                 <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" /> {tr("Combined Trigger: Low Rating After Minimum Revisions")}
@@ -165,7 +165,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">{tr("Archiving Control Parameters")}</h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* 1. Auto-Approve Archivals */}
-            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Auto-Approve Archivals")}</span>
                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">
@@ -185,7 +185,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
             </div>
 
             {/* 2. Rating Threshold */}
-            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Rating Threshold")}</span>
                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">
@@ -207,7 +207,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
             </div>
 
             {/* 3. Min Votes */}
-            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Min Votes")}</span>
                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">
@@ -227,7 +227,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
             </div>
 
             {/* 4. Min Revisions */}
-            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Min Revisions")}</span>
                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">
@@ -247,7 +247,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
             </div>
 
             {/* 5. Auto-Approve Delay */}
-            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Auto-Approve Delay")}</span>
                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">
@@ -267,7 +267,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
             </div>
 
             {/* 6. Log Retention Cooldown */}
-            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Log Retention Cooldown")}</span>
                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">
@@ -343,12 +343,12 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
                   </p>
 
                   <div className="flex flex-wrap items-center gap-3 pt-1">
-                    <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-850 rounded-xl text-[9px] font-mono font-bold text-slate-400">
+                    <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-800 rounded-xl text-[9px] font-mono font-bold text-slate-400">
                       <span>Rating:</span>
                       <span className="text-yellow-400 font-black">⭐ {Number(item.overallRating).toFixed(1)}/5</span>
                       <span className="text-slate-600">({item.overallVotes} reviews)</span>
                     </div>
-                    <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-850 rounded-xl text-[9px] font-mono font-bold text-slate-400">
+                    <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-800 rounded-xl text-[9px] font-mono font-bold text-slate-400">
                       <span>Revisions:</span>
                       <span className="text-blue-400 font-black">{item.revisionCount}</span>
                     </div>
@@ -416,7 +416,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
                 <button 
                   type="button"
                   onClick={() => handleDeleteRefusedArchival(item.id)} 
-                  className="px-3 py-1.5 border border-slate-850 hover:border-slate-700 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase text-center"
+                  className="px-3 py-1.5 border border-slate-800 hover:border-slate-700 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase text-center"
                 >
                   {tr("Re-Propose")}
                 </button>
@@ -453,15 +453,15 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
               placeholder={tr("Search courses...")}
               value={archiveSearch}
               onChange={(e) => setArchiveSearch(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-850 rounded-2xl pl-11 pr-4 py-3 text-xs focus:outline-none focus:border-pink-500/50 text-white placeholder-slate-655"
+              className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-11 pr-4 py-3 text-xs focus:outline-none focus:border-pink-500/50 text-white placeholder-slate-655"
             />
           </div>
         </div>
 
-        <div className="overflow-x-auto custom-scrollbar rounded-3xl border border-slate-850 bg-slate-900/20 shadow-xl">
+        <div className="overflow-x-auto custom-scrollbar rounded-3xl border border-slate-800 bg-slate-900/20 shadow-xl">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-850 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
+              <tr className="border-b border-slate-800 text-slate-500 text-[9px] font-black uppercase tracking-widest bg-slate-950/40">
                 <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                   if (courseSortField === 'title') {
                     setCourseSortDir(courseSortDir === 'asc' ? 'desc' : 'asc');
@@ -554,7 +554,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-850/50">
+            <tbody className="divide-y divide-slate-800/50">
               {displayedCourses.map(course => {
                 const currentLevel = typeof course.archivingLevel === 'number' ? course.archivingLevel : 0;
                 const isCurriculum = course.isCurriculum || false;
@@ -690,7 +690,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
               className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
             />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
-              <div className="p-8 border-b border-slate-850 flex items-center gap-3">
+              <div className="p-8 border-b border-slate-800 flex items-center gap-3">
                 <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
                 <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">{tr("Confirm Archive")}</h3>
               </div>
@@ -699,7 +699,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
                   {pStrings.course_confirm.replace('{title}', courseArchiveTarget.course?.title || '')}
                 </p>
                 <div className="flex gap-4 pt-2">
-                  <button onClick={() => setCourseArchiveTarget(null)} className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer">
+                  <button onClick={() => setCourseArchiveTarget(null)} className="flex-1 py-4 border border-slate-800 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer">
                     {pStrings.purge_badge_cancel_btn}
                   </button>
                   <button onClick={async () => {
@@ -733,7 +733,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
               className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
             />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-amber-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
-              <div className="p-8 border-b border-slate-850 flex items-center gap-3">
+              <div className="p-8 border-b border-slate-800 flex items-center gap-3">
                 <AlertCircle className="w-6 h-6 text-amber-500 animate-pulse" />
                 <h3 className="text-lg font-black text-amber-400 uppercase tracking-widest">
                   {tr("Active Dependency")}
@@ -750,7 +750,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
                     .replace('{level}', String(curriculumArchivalPending.nextLevel))}
                 </p>
                 <div className="flex gap-4 pt-2">
-                  <button onClick={() => setCurriculumArchivalPending(null)} className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer">
+                  <button onClick={() => setCurriculumArchivalPending(null)} className="flex-1 py-4 border border-slate-800 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer">
                     {tr("Cancel")}
                   </button>
                   <button onClick={async () => {
@@ -802,7 +802,7 @@ export const ArchivingTab: React.FC<ArchivingTabProps> = ({
               className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
             />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-violet-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
-              <div className="p-8 border-b border-slate-850 flex items-center gap-3">
+              <div className="p-8 border-b border-slate-800 flex items-center gap-3">
                 <Layers className="w-6 h-6 text-violet-500 animate-pulse" />
                 <h3 className="text-lg font-black text-violet-400 uppercase tracking-widest">
                   {tr("Cascade Option")}

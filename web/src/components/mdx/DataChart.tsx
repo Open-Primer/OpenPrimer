@@ -1254,19 +1254,19 @@ export const DataChart = ({
               {langKey === 'FR' ? 'Analyse de Régression' : 'Regression Analysis'}
             </span>
             <div className="grid grid-cols-3 gap-2 mt-1 text-slate-300 text-xs">
-              <div className="flex flex-col bg-slate-950/40 p-2 rounded-xl border border-slate-850">
+              <div className="flex flex-col bg-slate-950/40 p-2 rounded-xl border border-slate-800">
                 <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Modèle (y=)</span>
                 <span className="font-mono font-bold text-slate-200 mt-0.5">
                   {slope.toFixed(2)}x {intercept >= 0 ? '+' : '-'} {Math.abs(intercept).toFixed(2)}
                 </span>
               </div>
-              <div className="flex flex-col bg-slate-950/40 p-2 rounded-xl border border-slate-850">
+              <div className="flex flex-col bg-slate-950/40 p-2 rounded-xl border border-slate-800">
                 <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Pearson R</span>
                 <span className="font-mono font-bold text-emerald-400 mt-0.5">
                   {(rValue >= 0 ? '+' : '') + rValue.toFixed(3)}
                 </span>
               </div>
-              <div className="flex flex-col bg-slate-950/40 p-2 rounded-xl border border-slate-850">
+              <div className="flex flex-col bg-slate-950/40 p-2 rounded-xl border border-slate-800">
                 <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">R² (Déterm.)</span>
                 <span className="font-mono font-bold text-cyan-400 mt-0.5">{rSquared.toFixed(3)}</span>
               </div>
@@ -1299,12 +1299,12 @@ export const DataChart = ({
   };
 
   return (
-    <div className="my-8 rounded-[40px] overflow-visible border border-slate-850/80 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative">
+    <div className="my-8 rounded-[40px] overflow-visible border border-slate-800/80 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative">
       <div className="absolute -right-12 -top-12 w-32 h-32 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
       <div className="absolute -left-12 -bottom-12 w-32 h-32 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
 
       {/* Top Header Selector Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-850/80 pb-4 mb-6 relative z-10 select-none">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4 mb-6 relative z-10 select-none">
         {title && (
           <h4 className="text-xs font-black text-slate-200 uppercase tracking-[0.2em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
@@ -1313,7 +1313,7 @@ export const DataChart = ({
         )}
 
         {/* Dynamic selector buttons */}
-        <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-2xl border border-slate-850/85">
+        <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-2xl border border-slate-800/85">
           <button
             onClick={() => setActiveRep('bar')}
             className={`p-2 rounded-xl transition-all duration-300 cursor-pointer ${
@@ -1373,7 +1373,7 @@ export const DataChart = ({
 
       {/* Multi-series general legends in non-table views */}
       {normalized.isMultiSeries && activeRep !== 'table' && activeRep !== 'donut' && (
-        <div className="flex flex-wrap justify-center gap-4 mt-6 border-t border-slate-850/60 pt-4 select-none">
+        <div className="flex flex-wrap justify-center gap-4 mt-6 border-t border-slate-800/60 pt-4 select-none">
           {normalized.seriesData.map((series, idx) => {
             const color = LINE_COLORS[idx % LINE_COLORS.length];
             return (

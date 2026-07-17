@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     const wasSuccessful = data.length > 0;
     try {
-      await dbService.addSearchHistoryEntry({ query, wasSuccessful });
+      await dbService.addSearchHistoryEntry({ query, wasSuccessful, ipAddress: ip });
     } catch (e) {
       console.warn('[SEARCH LOGGING ERROR] Failed to record search log.', e);
     }
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('[SEARCH ERROR]', error);
     try {
-      await dbService.addSearchHistoryEntry({ query, wasSuccessful: false });
+      await dbService.addSearchHistoryEntry({ query, wasSuccessful: false, ipAddress: ip });
     } catch (e) {}
     return NextResponse.json({ error: 'Search failed' }, { status: 500 });
   }

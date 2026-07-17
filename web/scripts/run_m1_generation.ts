@@ -19,7 +19,7 @@ if (fs.existsSync(envPath)) {
 }
 
 // 2. Force debug mode & CLI worker flags — all intermediate files will be saved to drafts_revisions/
-process.env.ONLY_FIRST_LESSON = 'false';
+process.env.ONLY_FIRST_LESSON = 'true';
 process.env.CLI_WORKER = 'true';
 process.env.DEBUG = 'true';  // Enables saveDraftRevision() calls throughout the pipeline
 

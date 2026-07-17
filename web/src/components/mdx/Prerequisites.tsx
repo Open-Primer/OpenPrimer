@@ -134,7 +134,7 @@ export const Prerequisites = ({ items, itemsBase64 }: PrerequisitesProps) => {
             return (
               <div
                 key={index}
-                className="p-4 rounded-2xl border bg-slate-950/20 border-slate-850/60 flex flex-col justify-between gap-3 transition-all duration-200"
+                className="p-4 rounded-2xl border bg-slate-950/20 border-slate-800/60 flex flex-col justify-between gap-3 transition-all duration-200"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -169,7 +169,7 @@ export const Prerequisites = ({ items, itemsBase64 }: PrerequisitesProps) => {
                   ? isMastered
                     ? "bg-emerald-500/5 border-emerald-500/20"
                     : "bg-amber-500/5 border-amber-500/20"
-                  : "bg-slate-950/20 border-slate-850/60"
+                  : "bg-slate-950/20 border-slate-800/60"
               }`}
             >
               <div className="flex items-start justify-between gap-2">

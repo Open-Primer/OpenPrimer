@@ -7,6 +7,7 @@ import { MDXRemote } from 'next-mdx-remote';
 import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
 import { Quiz, Question, Option } from './Quiz';
 import { Glossary } from './Glossary';
+import { GlossaryBlock } from './GlossaryBlock';
 import { Video } from './Video';
 import { FillInBlanks, MetaNote, ExternalSandbox, FillInBlanksQuestion } from './Interactive';
 import { SolvedProblem, Summary, SelfEval, SelfAssessment } from './AdvancedLearning';
@@ -765,7 +766,7 @@ const unescapeQuotes = (text: string): string => {
 
 const renderCaptionWithLinks = (captionTextRaw: string, fallbackUrl?: string) => {
   const captionText = unescapeQuotes(captionTextRaw);
-  const parts = captionText.split(/(\bSource\s*[:：]\s*)/i);
+  const parts = captionText.split(/(\b(?:Source|Quelle|Fuente|Fonte)\s*[:：]\s*|(?:来源|مصدر|स्रोत)\s*[:：]\s*)/i);
   if (parts.length < 3) {
     return <span className="select-text">{captionText}</span>;
   }
@@ -961,12 +962,12 @@ const Knowledge = ({ children }: { children: React.ReactNode }) => {
   const t = STATIC_UI_STRINGS[langKey] || STATIC_UI_STRINGS.EN;
 
   return (
-    <div className="flex flex-col gap-2 p-4 bg-slate-950/30 border border-slate-850/50 rounded-2xl">
+    <div className="flex flex-col gap-2 p-4 bg-slate-950/30 border border-slate-800/50 rounded-2xl">
       <div className="flex items-center gap-2 text-blue-400 mb-1 select-none">
         <BookOpen className="w-4 h-4" />
         <span className="text-xs font-black uppercase tracking-wider">{t.obj_knowledge}</span>
       </div>
-      <div className="text-slate-300 text-xs leading-relaxed prose-li:my-1 prose-ul:pl-4 prose-ul:list-disc">
+      <div className="text-slate-300 text-sm leading-relaxed prose-li:my-1 prose-ul:pl-4 prose-ul:list-disc">
         {children}
       </div>
     </div>
@@ -980,12 +981,12 @@ const Skills = ({ children }: { children: React.ReactNode }) => {
   const t = STATIC_UI_STRINGS[langKey] || STATIC_UI_STRINGS.EN;
 
   return (
-    <div className="flex flex-col gap-2 p-4 bg-slate-950/30 border border-slate-850/50 rounded-2xl">
+    <div className="flex flex-col gap-2 p-4 bg-slate-950/30 border border-slate-800/50 rounded-2xl">
       <div className="flex items-center gap-2 text-emerald-400 mb-1 select-none">
         <Key className="w-4 h-4" />
         <span className="text-xs font-black uppercase tracking-wider">{t.obj_skills}</span>
       </div>
-      <div className="text-slate-300 text-xs leading-relaxed prose-li:my-1 prose-ul:pl-4 prose-ul:list-disc">
+      <div className="text-slate-300 text-sm leading-relaxed prose-li:my-1 prose-ul:pl-4 prose-ul:list-disc">
         {children}
       </div>
     </div>
@@ -999,12 +1000,12 @@ const Attitudes = ({ children }: { children: React.ReactNode }) => {
   const t = STATIC_UI_STRINGS[langKey] || STATIC_UI_STRINGS.EN;
 
   return (
-    <div className="flex flex-col gap-2 p-4 bg-slate-950/30 border border-slate-850/50 rounded-2xl">
+    <div className="flex flex-col gap-2 p-4 bg-slate-950/30 border border-slate-800/50 rounded-2xl">
       <div className="flex items-center gap-2 text-violet-400 mb-1 select-none">
         <Compass className="w-4 h-4" />
         <span className="text-xs font-black uppercase tracking-wider">{t.obj_attitudes}</span>
       </div>
-      <div className="text-slate-300 text-xs leading-relaxed prose-li:my-1 prose-ul:pl-4 prose-ul:list-disc">
+      <div className="text-slate-300 text-sm leading-relaxed prose-li:my-1 prose-ul:pl-4 prose-ul:list-disc">
         {children}
       </div>
     </div>
@@ -2032,6 +2033,9 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
 };
 
 const SummativeEvaluation = ({ children, durationLimit }: { children: React.ReactNode; durationLimit?: number }) => {
+  const { language } = useLanguage();
+  const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
+
   if (isChildrenEmpty(children)) return null;
 
   const childrenArray = React.Children.toArray(children);
@@ -2069,8 +2073,8 @@ const SummativeEvaluation = ({ children, durationLimit }: { children: React.Reac
             <Award className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-white leading-tight">Évaluation sommative</h3>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Validation du module</p>
+            <h3 className="text-lg font-black text-white leading-tight">{t.summative_eval}</h3>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{t.module_validation}</p>
           </div>
         </div>
         <div className="space-y-6 text-slate-300 text-sm leading-relaxed">
@@ -2193,7 +2197,7 @@ const FinalQuiz = ({ children }: { children: React.ReactNode }) => {
   const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
   if (isChildrenEmpty(children)) return null;
   return (
-    <div className="p-5 bg-slate-950/30 border border-slate-850 rounded-2xl my-6">
+    <div className="p-5 bg-slate-950/30 border border-slate-800 rounded-2xl my-6">
       <div className="flex items-center gap-2 text-violet-400 mb-3 select-none">
         <HelpCircle className="w-4 h-4" />
         <span className="text-xs font-black uppercase tracking-wider">{t.final_quiz}</span>
@@ -2228,7 +2232,7 @@ const FormativeQuiz = ({ children }: { children: React.ReactNode }) => {
   const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
   if (isChildrenEmpty(children)) return null;
   return (
-    <div className="p-5 bg-slate-950/30 border border-slate-850 rounded-2xl my-6">
+    <div className="p-5 bg-slate-950/30 border border-slate-800 rounded-2xl my-6">
       <div className="flex items-center gap-2 text-emerald-400 mb-3 select-none">
         <HelpCircle className="w-4 h-4" />
         <span className="text-xs font-black uppercase tracking-wider">{t.formative_quiz}</span>
@@ -2477,6 +2481,7 @@ const components = {
   // Registering New Interactivity Widgets
   References,
   Reference,
+  GlossaryBlock,
   Mermaid,
   FunctionPlotter,
   InteractiveDiagram,
@@ -2656,6 +2661,33 @@ const components = {
   DiagramItem: () => null,
   Hotspot: () => null,
   Content: () => null,
+};
+
+const UnregisteredComponentFallback = ({ componentName }: { componentName: string }) => {
+  const { markDegraded } = useMdxStatus();
+  
+  React.useEffect(() => {
+    console.warn(`[MDX Fallback] Unregistered component encountered: <${componentName} />. Triggering degradation.`);
+    markDegraded('widget');
+  }, [componentName, markDegraded]);
+
+  return (
+    <div className="my-6 p-6 rounded-3xl border border-red-500/20 bg-red-500/5 backdrop-blur-md text-left">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 border border-red-500/25">
+          ⚠️
+        </div>
+        <div>
+          <h4 className="text-red-400 text-xs font-black uppercase tracking-widest">
+            Composant indisponible / Component unavailable
+          </h4>
+          <p className="text-[10px] text-red-500/70 font-semibold tracking-wide">
+            {componentName}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 interface MdxErrorBoundaryProps {
@@ -3230,16 +3262,51 @@ function stripJsxAndRender(rawMdx: string) {
     return `\n\n🔄 **[Comparatif : ${left} vs ${right}]** *(Version interactive non disponible)*\n`;
   });
 
+  // Helper to extract attributes from JSX tags
+  const getAttr = (attrs: string, name: string): string => {
+    let match = attrs.match(new RegExp(`\\b${name}="([^"]*)"`, 'i'));
+    if (match) return match[1];
+    match = attrs.match(new RegExp(`\\b${name}='([^']*)'`, 'i'));
+    if (match) return match[1];
+    match = attrs.match(new RegExp(`\\b${name}=\\{([^}]*)\\}`, 'i'));
+    if (match) return match[1];
+    return '';
+  };
+
   // 6. Flatten SolvedExercise & UnsolvedExercise
-  clean = clean.replace(/<SolvedExercise([^>]*?)>([\s\S]*?)<\/SolvedExercise>/gi, (m, attrs, content) => {
-    const titleMatch = attrs.match(/title="([^"]+)"/);
-    const title = titleMatch ? titleMatch[1] : 'Exercice d\'application';
-    return `\n\n✏️ **[Exercice résolu : ${title}]**\n${content}\n`;
+  clean = clean.replace(/<SolvedExercise([\s\S]*?)(?:\/>|>([\s\S]*?)<\/SolvedExercise>)/gi, (m, attrs, content) => {
+    const title = getAttr(attrs, 'title') || "Exercice d'application";
+    const solution = getAttr(attrs, 'solution');
+    const mainContent = (content || '').trim();
+    
+    let result = `\n\n✏️ **[Exercice résolu : ${title}]**\n`;
+    if (mainContent) {
+      result += `${mainContent}\n`;
+    }
+    if (solution) {
+      result += `**Solution :** ${solution}\n`;
+    }
+    return result;
   });
-  clean = clean.replace(/<UnsolvedExercise([^>]*?)>([\s\S]*?)<\/UnsolvedExercise>/gi, (m, attrs, content) => {
-    const titleMatch = attrs.match(/title="([^"]+)"/);
-    const title = titleMatch ? titleMatch[1] : 'Exercice à résoudre';
-    return `\n\n✏️ **[Exercice pratique : ${title}]**\n${content}\n`;
+  clean = clean.replace(/<UnsolvedExercise([\s\S]*?)(?:\/>|>([\s\S]*?)<\/UnsolvedExercise>)/gi, (m, attrs, content) => {
+    const title = getAttr(attrs, 'title') || 'Exercice à résoudre';
+    const question = getAttr(attrs, 'question');
+    const hint = getAttr(attrs, 'hint');
+    const solution = getAttr(attrs, 'solution');
+    const mainContent = (content || '').trim();
+    
+    let result = `\n\n✏️ **[Exercice pratique : ${title}]**\n`;
+    const body = question || mainContent;
+    if (body) {
+      result += `${body}\n`;
+    }
+    if (hint) {
+      result += `*Indice :* ${hint}\n`;
+    }
+    if (solution) {
+      result += `*Solution :* ${solution}\n`;
+    }
+    return result;
   });
 
   // 7. Flatten mathematical/science utility manipulators
@@ -3321,7 +3388,7 @@ interface MdxContentProps {
 
 export function MdxContent(props: MdxContentProps) {
   return (
-    <MdxStatusProvider>
+    <MdxStatusProvider courseSlug={props.courseSlug} lessonSlug={props.lessonSlug}>
       <MdxContentInner {...props} />
     </MdxStatusProvider>
   );
@@ -3397,11 +3464,37 @@ function MdxContentInner({ source, rawMdx, courseSlug, lessonSlug }: MdxContentP
       });
     };
 
-    return {
+    const baseComponents = {
       ...components,
       FillInBlanks: wrapper,
       'FillInBlanks.Input': wrapper.Input,
     };
+
+    return new Proxy(baseComponents, {
+      get(target, prop, receiver) {
+        if (typeof prop === 'string') {
+          // If it starts with a lowercase letter, it's a standard HTML element, do not intercept
+          if (prop[0] === prop[0].toLowerCase() || prop.startsWith('_') || prop.startsWith('$$')) {
+            return Reflect.get(target, prop, receiver);
+          }
+          
+          if (prop in target) {
+            return Reflect.get(target, prop, receiver);
+          }
+
+          // Case-insensitive fallback check
+          const keys = Object.keys(target);
+          const matchedKey = keys.find(k => k.toLowerCase() === prop.toLowerCase());
+          if (matchedKey) {
+            return target[matchedKey as keyof typeof target];
+          }
+
+          // Return a functional component that logs and returns a warning
+          return (props: any) => <UnregisteredComponentFallback componentName={prop} {...props} />;
+        }
+        return Reflect.get(target, prop, receiver);
+      }
+    });
   }, []);
 
   return (

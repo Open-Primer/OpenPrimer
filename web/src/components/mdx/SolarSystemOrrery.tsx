@@ -348,11 +348,11 @@ export const SolarSystemOrrery = () => {
   };
 
   return (
-    <div className="my-8 rounded-[40px] border border-slate-850 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
+    <div className="my-8 rounded-[40px] border border-slate-800 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
       <div className="absolute -left-16 -top-16 w-36 h-36 rounded-full bg-cyan-500/5 blur-3xl pointer-events-none" />
 
       {/* Header element */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-6 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6 mb-6">
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
@@ -369,7 +369,7 @@ export const SolarSystemOrrery = () => {
           <button
             onClick={() => setShowVectors(!showVectors)}
             className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-              showVectors ? 'bg-indigo-600/25 border border-indigo-500/50 text-indigo-300' : 'bg-slate-900/40 border border-slate-850 text-slate-400'
+              showVectors ? 'bg-indigo-600/25 border border-indigo-500/50 text-indigo-300' : 'bg-slate-900/40 border border-slate-800 text-slate-400'
             }`}
           >
             {t("Vectors ⇾")}
@@ -379,7 +379,7 @@ export const SolarSystemOrrery = () => {
           <button
             onClick={() => setShowSweeper(!showSweeper)}
             className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-              showSweeper ? 'bg-violet-600/25 border border-violet-500/50 text-violet-300' : 'bg-slate-900/40 border border-slate-850 text-slate-400'
+              showSweeper ? 'bg-violet-600/25 border border-violet-500/50 text-violet-300' : 'bg-slate-900/40 border border-slate-800 text-slate-400'
             }`}
           >
             {t("Swept Areas (2nd Law)")}
@@ -394,7 +394,7 @@ export const SolarSystemOrrery = () => {
 
           <button 
             onClick={handleResetOrbits}
-            className="p-2 rounded-xl bg-slate-850 text-slate-400 cursor-pointer hover:text-slate-200 transition-colors"
+            className="p-2 rounded-xl bg-slate-800 text-slate-400 cursor-pointer hover:text-slate-200 transition-colors"
             title="Reset orbits"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -407,7 +407,7 @@ export const SolarSystemOrrery = () => {
         
         {/* Planet Board Canvas */}
         <div className="lg:col-span-7 flex justify-center items-center">
-          <div className="relative rounded-3xl overflow-hidden border border-slate-850 bg-[#020617] p-2 w-full max-w-[440px] aspect-square">
+          <div className="relative rounded-3xl overflow-hidden border border-slate-800 bg-[#020617] p-2 w-full max-w-[440px] aspect-square">
             <canvas
               ref={canvasRef}
               width={400}
@@ -421,7 +421,7 @@ export const SolarSystemOrrery = () => {
         <div className="lg:col-span-5 flex flex-col gap-6">
           
           {/* Planet Selector Tabs */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-2">
               <Orbit className="w-4 h-4 text-cyan-400" />
               <span>{t("Select Celestial Target")}</span>
@@ -433,8 +433,8 @@ export const SolarSystemOrrery = () => {
                   onClick={() => setSelectedPlanetId(p.id)}
                   className={`px-2 py-1.5 rounded-xl text-[10px] font-bold text-center cursor-pointer transition-colors border ${
                     selectedPlanetId === p.id 
-                      ? 'bg-slate-850 border-cyan-500/50 text-cyan-300' 
-                      : 'bg-slate-900/20 border-slate-850 text-slate-400 hover:border-slate-800'
+                      ? 'bg-slate-800 border-cyan-500/50 text-cyan-300' 
+                      : 'bg-slate-900/20 border-slate-800 text-slate-400 hover:border-slate-800'
                   }`}
                 >
                   {t(p.nameEN)}
@@ -444,7 +444,7 @@ export const SolarSystemOrrery = () => {
           </div>
 
           {/* Kepler Custom Eccentricity Slider */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-4">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-cyan-400" />
               <span>{t("Adjust Eccentricity (e)")}</span>
@@ -468,9 +468,9 @@ export const SolarSystemOrrery = () => {
           </div>
 
           {/* Physical Planet Specs Card */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/30 p-5 flex-1 flex flex-col justify-between">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/30 p-5 flex-1 flex flex-col justify-between">
             <div>
-              <div className="flex justify-between items-start border-b border-slate-850/50 pb-2 mb-3">
+              <div className="flex justify-between items-start border-b border-slate-800/50 pb-2 mb-3">
                 <h4 className="text-xs font-black text-slate-100 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedPlanet.color }} />
                   <span>{t(selectedPlanet.nameEN)}</span>
@@ -484,7 +484,7 @@ export const SolarSystemOrrery = () => {
 
             {/* Vector Legend Indicators */}
             {showVectors && (
-              <div className="border-t border-slate-850/50 pt-3.5 mt-4 grid grid-cols-2 gap-3 text-[9.5px] font-black uppercase tracking-wider">
+              <div className="border-t border-slate-800/50 pt-3.5 mt-4 grid grid-cols-2 gap-3 text-[9.5px] font-black uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <span className="w-4 h-1.5 rounded-sm bg-[#06b6d4]" />
                   <span className="text-cyan-400">{t("Velocity Vector (v)")}</span>
@@ -498,7 +498,7 @@ export const SolarSystemOrrery = () => {
           </div>
 
           {/* Theoretical acoustics insight */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-4 text-center select-text">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-4 text-center select-text">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center justify-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
               <span>{t("Second Law of Kepler")}</span>

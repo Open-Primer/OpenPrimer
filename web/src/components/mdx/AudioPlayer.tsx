@@ -258,7 +258,7 @@ export const AudioPlayer = ({ url, title, duration, aiGenerated, unresolved, alt
 
         <button
           onClick={toggleMute}
-          className="p-2 hover:bg-slate-850 rounded-xl text-slate-500 hover:text-slate-350 transition-colors shrink-0"
+          className="p-2 hover:bg-slate-800 rounded-xl text-slate-500 hover:text-slate-350 transition-colors shrink-0"
           aria-label={isMuted ? 'Unmute' : 'Mute'}
         >
           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}

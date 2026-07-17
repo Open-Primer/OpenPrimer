@@ -1000,7 +1000,7 @@ export const StructureViewer3D = ({
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8">
       {/* Molecule Details Header Row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850/80 pb-5 mb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-5 mb-5">
         <div>
           <h4 className="text-sm font-black text-slate-100 uppercase tracking-widest flex items-center gap-2">
             <Zap className="w-4 h-4 text-amber-400 shrink-0" />
@@ -1057,7 +1057,7 @@ export const StructureViewer3D = ({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
         
         {/* Canvas Render Panel (3 cols) */}
-        <div className="lg:col-span-3 relative h-[340px] rounded-2xl border border-slate-850 bg-slate-950 overflow-hidden group select-none">
+        <div className="lg:col-span-3 relative h-[340px] rounded-2xl border border-slate-800 bg-slate-950 overflow-hidden group select-none">
           <canvas
             ref={canvasRef}
             onMouseDown={handleMouseDown}
@@ -1092,7 +1092,7 @@ export const StructureViewer3D = ({
                   setActivePreset(PRESETS[0]);
                   setSelectedAtomIndex(null);
                 }}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-xs font-black text-slate-300 uppercase rounded-xl transition-all cursor-pointer"
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs font-black text-slate-300 uppercase rounded-xl transition-all cursor-pointer"
               >
                 {t["Return to Water (H₂O)"]}
               </button>
@@ -1146,7 +1146,7 @@ export const StructureViewer3D = ({
         </div>
 
         {/* Compound details & Info card (1 col) */}
-        <div className="lg:col-span-1 flex flex-col justify-between bg-slate-900/30 border border-slate-850 rounded-2xl p-5 space-y-4">
+        <div className="lg:col-span-1 flex flex-col justify-between bg-slate-900/30 border border-slate-800 rounded-2xl p-5 space-y-4">
           
           {selectedAtom && selectedElement ? (
             /* Premium Atom Inspector Panel */
@@ -1163,7 +1163,7 @@ export const StructureViewer3D = ({
                 </button>
               </div>
 
-              <div className="flex items-center gap-3 bg-slate-950/40 border border-slate-850 p-3 rounded-xl">
+              <div className="flex items-center gap-3 bg-slate-950/40 border border-slate-800 p-3 rounded-xl">
                 <div 
                   className="w-11 h-11 rounded-lg flex items-center justify-center text-lg font-black text-white shadow-md border border-slate-800"
                   style={{ backgroundColor: selectedAtom.color }}
@@ -1176,7 +1176,7 @@ export const StructureViewer3D = ({
                 </div>
               </div>
 
-              <div className="space-y-1.5 border-t border-slate-850/80 pt-3">
+              <div className="space-y-1.5 border-t border-slate-800/80 pt-3">
                 <div className="flex justify-between items-center text-[10px] font-bold">
                   <span className="text-slate-500 uppercase tracking-wide">{t["Atomic Number"]}</span>
                   <span className="text-slate-300 font-black">{selectedElement.num}</span>
@@ -1213,7 +1213,7 @@ export const StructureViewer3D = ({
             </div>
           )}
 
-          <div className="pt-4 border-t border-slate-850/80 space-y-2">
+          <div className="pt-4 border-t border-slate-800/80 space-y-2">
             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">
               {t["Atom Legend"]}
             </span>

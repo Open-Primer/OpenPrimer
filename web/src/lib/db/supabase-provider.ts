@@ -1368,7 +1368,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
     return await performCascadeCourseDeletion(courseId);
   },
 
-  submitReport: async (course: string, page: string, comment: string) => {
+  submitReport: async (course: string, page: string, comment: string, userId?: string) => {
     if (comment && comment.trim()) {
       if (isSpam(comment) || detectPromptInjection(comment)) {
         return { data: null, error: new Error('Flagged as spam or unsafe content') };
@@ -1380,18 +1380,70 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
     const issueSummary = cleanComment ? `Page: ${cleanPage}. Comment: ${cleanComment}` : `Page: ${cleanPage}. General report.`;
     try {
-      const { data, error } = await supabaseAdmin.from('report_clusters').insert({
-        course: cleanCourse,
-        issue_summary: issueSummary,
-        count: 1,
-        status: 'Pending',
-        ai_proposal: `Address issue reported on page "${cleanPage}"`,
-        priority: 'Medium'
-      });
-      if (error) throw error;
+      // ── Uniqueness guard: check if an identical cluster on the same page already exists ──
+      // If so, and if the same user_id already contributed, deduplicate silently.
+      let targetClusterId: string | null = null;
+      let isDuplicate = false;
 
-      // Check if it's an MDX Rendering Failure to trigger the revision pipeline
-      if (comment && comment.includes('MDX_RENDERING_FAILURE')) {
+      const { data: existingClusters } = await supabaseAdmin
+        .from('report_clusters')
+        .select('id, count, user_ids')
+        .eq('course', cleanCourse)
+        .ilike('issue_summary', `Page: ${cleanPage}%`)
+        .neq('status', 'Fixed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingClusters) {
+        targetClusterId = existingClusters.id;
+        const contributorIds: string[] = Array.isArray(existingClusters.user_ids)
+          ? existingClusters.user_ids
+          : [];
+
+        if (userId && contributorIds.includes(userId)) {
+          // Same user already reported this exact issue — deduplicate
+          isDuplicate = true;
+          console.info(`[REPORT] Deduplicated report from user "${userId}" on "${cleanPage}": cluster ${targetClusterId} already contains this contributor.`);
+          return { data: { id: targetClusterId, deduplicated: true }, error: null };
+        }
+
+        // New unique contributor → increment count and record user_id
+        const updatedContributors = userId
+          ? Array.from(new Set([...contributorIds, userId]))
+          : contributorIds;
+
+        await supabaseAdmin
+          .from('report_clusters')
+          .update({
+            count: (existingClusters.count || 1) + 1,
+            user_ids: updatedContributors
+          })
+          .eq('id', targetClusterId);
+
+        isDuplicate = false; // treat as a valid incremental contribution
+      } else {
+        // No existing matching cluster — insert a new one
+        const initialUserIds = userId ? [userId] : [];
+        const { data: inserted, error: insertError } = await supabaseAdmin
+          .from('report_clusters')
+          .insert({
+            course: cleanCourse,
+            issue_summary: issueSummary,
+            count: 1,
+            status: 'Pending',
+            ai_proposal: `Address issue reported on page "${cleanPage}"`,
+            priority: 'Medium',
+            user_ids: initialUserIds
+          })
+          .select('id')
+          .single();
+        if (insertError) throw insertError;
+        targetClusterId = inserted?.id ?? null;
+      }
+
+      // ── MDX Rendering Failure fast-track: enqueue a revision task immediately ──
+      if (!isDuplicate && comment && comment.includes('MDX_RENDERING_FAILURE')) {
         let courseTitle = cleanCourse;
         try {
           const { data: courseData } = await supabaseAdmin
@@ -1434,7 +1486,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
         });
       }
 
-      return { data, error: null };
+      return { data: { id: targetClusterId, deduplicated: isDuplicate }, error: null };
     } catch (e) {
       handleDatabaseError(e);
       return { data: null, error: e as any };
@@ -1644,21 +1696,27 @@ export const supabaseDatabaseProvider: DatabaseService = {
     }
   },
 
-  addSearchHistoryEntry: async (entry: Partial<SearchHistoryEntry> & { query: string; wasSuccessful: boolean; userId?: string; userLanguage?: string }) => {
+  addSearchHistoryEntry: async (entry: Partial<SearchHistoryEntry> & { query: string; wasSuccessful: boolean; userId?: string; userLanguage?: string; ipAddress?: string }) => {
     try {
-      const { data, error } = await supabase.from('search_logs').insert({
+      const insertPayload: Record<string, any> = {
         query: entry.query,
         was_successful: entry.wasSuccessful,
         user_id: entry.userId || null,
         timestamp: entry.timestamp || new Date().toISOString()
-      }).select().single();
+      };
+      // Store IP address for failed-search uniqueness auditing (graceful: ignored if column absent)
+      if (entry.ipAddress) {
+        insertPayload.ip_address = entry.ipAddress;
+      }
+      const { data, error } = await supabase.from('search_logs').insert(insertPayload).select().single();
       if (error) throw error;
       return { data: error ? null : {
         id: data.id,
         query: data.query,
         timestamp: data.timestamp,
         wasSuccessful: data.was_successful,
-        userId: data.user_id
+        userId: data.user_id,
+        ipAddress: data.ip_address
       }, error: null };
     } catch (e) {
       handleDatabaseError(e);

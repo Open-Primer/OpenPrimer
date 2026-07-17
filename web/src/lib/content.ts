@@ -4,7 +4,123 @@ import path from 'path';
 import matter from './matter';
 import { cleanPathSegment, getLocalizedLevelSlug, getCanonicalLevelFromSlug, getLocalizedSubjectSlug, getCanonicalSubjectFromSlug, sanitizeMetadataValue } from './translations';
 import { repairMediaOnRestitution } from './media-resolver';
+import { supabase, supabaseAdmin } from './supabase';
+import { dbService } from './db';
+import { callVertexAI } from './vertex-client';
 
+
+// ── Translation helper (used for Wikipedia fallback summaries) ──────────────
+async function translateText(text: string, targetLang: string): Promise<string> {
+  if (!text || !text.trim()) return text;
+  const prompt = `You are a precise translator. Translate the following text into ${targetLang.toUpperCase()}. Keep all technical/academic terms accurate. Return ONLY the translated text, no explanations or markdown.
+
+TEXT TO TRANSLATE:
+${text}`;
+  try {
+    const res = await callVertexAI({
+      task: 'course_generation',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.1 }
+    });
+    if (res && res.ok) {
+      const resJson = await res.json();
+      const resultText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const cleanRes = resultText.replace(/```[a-z]*/g, '').replace(/```/g, '').trim();
+      if (cleanRes.length < text.length * 0.2) return text;
+      return cleanRes;
+    }
+  } catch (_) {}
+  return text;
+}
+
+// ── Local glossary fuzzy-match helpers ───────────────────────────────────────
+function cleanStringForMatching(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+}
+
+function levenshteinDistance(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
+    Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
+  );
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i-1] === b[j-1]
+        ? dp[i-1][j-1]
+        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+
+/**
+ * Parses the glossary section of an MDX lesson into a term→{definition,url} map.
+ * Handles bold markdown terms, colon/dash separators, and embedded Wikipedia links.
+ */
+export function parseLocalGlossary(content: string): Map<string, { definition: string; url?: string }> {
+  const glossaryMap = new Map<string, { definition: string; url?: string }>();
+  const glossaryIndex = content.search(/##{1,2}\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表|Glossário|Glossario|المعجم|قاموس المصطلحات|शब्दावली|فرہنگ)/iu);
+  if (glossaryIndex === -1) return glossaryMap;
+
+  let glossarySection = content.slice(glossaryIndex);
+  const nextHeadingIndex = glossarySection.slice(1).search(/\r?\n\s*#{2,3}\s+/);
+  if (nextHeadingIndex !== -1) glossarySection = glossarySection.slice(0, nextHeadingIndex + 1);
+
+  for (const line of glossarySection.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('-') && !trimmed.startsWith('*')) continue;
+    const withoutBullet = trimmed.replace(/^[-*]\s*/, '').trim();
+    let sepIndex = withoutBullet.indexOf(':');
+    if (sepIndex === -1) {
+      const dashMatch = withoutBullet.match(/\s+-\s+/);
+      sepIndex = dashMatch ? (dashMatch.index! + dashMatch[0].indexOf('-')) : withoutBullet.indexOf('-');
+    }
+    if (sepIndex === -1) continue;
+    let term = withoutBullet.slice(0, sepIndex).replace(/^\*+/, '').replace(/\*+$/, '').trim();
+    let definition = withoutBullet.slice(sepIndex + 1).replace(/^\*+\s*/, '').replace(/\*+\s*$/, '').trim();
+    if (!term || !definition) continue;
+    let url: string | undefined;
+    const wikiMatch = definition.match(/\[[^\]]+\]\((https?:\/\/[^\s)]+wikipedia\.org[^\s)]+)\)/i);
+    if (wikiMatch) {
+      url = wikiMatch[1];
+      definition = definition.replace(wikiMatch[0], '').trim().replace(/\.\s*$/, '').trim();
+    }
+    glossaryMap.set(term, { definition, url });
+  }
+  return glossaryMap;
+}
+
+/**
+ * Finds the best matching glossary entry for a query term using fuzzy matching.
+ * Returns null if no sufficiently close match is found.
+ */
+function findGlossaryMatch(
+  queryName: string,
+  glossaryMap: Map<string, { definition: string; url?: string }>
+): { definition: string; url?: string } | null {
+  const cleanQuery = cleanStringForMatching(queryName);
+  if (!cleanQuery) return null;
+  let bestMatch: { definition: string; url?: string } | null = null;
+  let bestDist = Infinity;
+  for (const [term, entry] of glossaryMap) {
+    const cleanTerm = cleanStringForMatching(term);
+    if (!cleanTerm) continue;
+    const minLen = Math.min(cleanQuery.length, cleanTerm.length);
+    if (minLen < 3) continue;
+    const dist = levenshteinDistance(cleanQuery, cleanTerm);
+    const threshold = minLen >= 12 ? 3 : minLen >= 6 ? 2 : 1;
+    if (dist <= threshold && dist < bestDist) {
+      bestDist = dist;
+      bestMatch = entry;
+    }
+  }
+  return bestMatch;
+}
 
 export function stripOuterCodeFences(content: string): string {
   if (!content) return '';
@@ -161,7 +277,7 @@ function getLearnMoreWikipediaLabel(lang: string): string {
 
 
 export async function enrichGlossaryWithWikipediaLinks(content: string, lang: string): Promise<string> {
-  const glossaryIndex = content.search(/###\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary)/iu);
+  const glossaryIndex = content.search(/##{1,2}\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表|Glossário|Glossario|المعجم|قاموس المصطلحات|शब्दावली|فرہنگ)/iu);
   if (glossaryIndex === -1) return content;
 
   const preGlossary = content.slice(0, glossaryIndex);
@@ -252,7 +368,7 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
   const placeholderSuffix = '___';
   
   // Replace code blocks and inline code with placeholders to prevent matching headings inside them
-  let processedMdx = mdx.replace(/```[\s\S]*?```|`[^`\n]*`/g, (match) => {
+  const processedMdx = mdx.replace(/```[\s\S]*?```|`[^`\n]*`/g, (match) => {
     const idx = codeBlocks.length;
     codeBlocks.push(match);
     return `${placeholderPrefix}${idx}${placeholderSuffix}`;
@@ -289,18 +405,18 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
       zh: '## 最终评估',
     },
     glossaire: {
-      fr: '### Glossaire',
-      en: '### Glossary',
-      es: '### Glosario',
-      de: '### Glossar',
-      zh: '### 词汇表',
+      fr: '## Glossaire',
+      en: '## Glossary',
+      es: '## Glosario',
+      de: '## Glossar',
+      zh: '## 词汇表',
     },
     references: {
-      fr: '### Références',
-      en: '### References',
-      es: '### Referencias',
-      de: '### Referenzen',
-      zh: '### 参考文献',
+      fr: '## Références',
+      en: '## References',
+      es: '## Referencias',
+      de: '## Referenzen',
+      zh: '## 参考文献',
     },
   };
 
@@ -405,7 +521,7 @@ export function reorderMdxSections(mdx: string, lang: string = 'en'): string {
 
 export function parseAndStripFrontmatter(content: string) {
   content = stripOuterCodeFences(content);
-  const meta: Record<string, any> = {};
+  const meta: Record<string, unknown> = {};
   let body = content;
   
   while (true) {
@@ -490,12 +606,12 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
     
     let resolvedSandboxAllowed = false;
     try {
-      const { cookies } = require('next/headers');
-      const cookieStore = await cookies();
+      const nextHeaders = await import('next/headers');
+      const cookieStore = await nextHeaders.cookies();
       if (cookieStore.get('op_mock_archiving_levels')?.value || cookieStore.get('op_allow_sandbox')?.value === 'true') {
         resolvedSandboxAllowed = true;
       }
-    } catch (e) {}
+    } catch {}
 
     if (resolvedSandboxAllowed) {
       if (courseSlug.toLowerCase() === 'classical_mechanics') {
@@ -547,7 +663,6 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
     }
 
     try {
-      const { supabase } = require('./supabase');
       const { data: dbLessons } = await supabase
         .from('lessons')
         .select('lesson_slug, title')
@@ -556,7 +671,7 @@ export async function getNavigationTree(dir = '', lang: string = 'en'): Promise<
         .order('order', { ascending: true });
       
       if (dbLessons && dbLessons.length > 0) {
-        return dbLessons.map((l: any) => ({
+        return dbLessons.map((l: { lesson_slug: string; title: string | null }) => ({
           name: l.title || l.lesson_slug.replace(/_/g, ' ').replace(/\b\w/g, (char: string) => char.toUpperCase()),
           type: 'file',
           path: '/' + [level, subject, courseSlug, l.lesson_slug].join('/')
@@ -578,7 +693,6 @@ export async function getPageContent(slug: string[], lang: string = 'en', strict
     const courseSlug = slug[2];
     const lessonSlug = slug[3] || 'introduction';
     try {
-      const { dbService } = require('./db');
       // 1. Try exact language match
       const { data: dbLesson } = await dbService.getLesson(courseSlug, lessonSlug, lang);
       if (dbLesson) {
@@ -590,14 +704,13 @@ export async function getPageContent(slug: string[], lang: string = 'en', strict
         const repairedBody = await repairMediaOnRestitution(cleanBody, lang);
         if (repairedBody !== cleanBody) {
           const newDbContent = matter.stringify(repairedBody, meta || {});
-          const { supabaseAdmin } = require('./supabase');
           supabaseAdmin
             .from('lessons')
             .update({ content: newDbContent })
             .ilike('course_slug', courseSlug)
             .ilike('lesson_slug', lessonSlug)
             .eq('lang', lang.toLowerCase())
-            .then(({ error }: any) => {
+            .then(({ error }: { error: { message: string } | null }) => {
               if (error) {
                 console.error("[Media Repair] Failed to update lesson in database:", error);
               } else {
@@ -609,15 +722,18 @@ export async function getPageContent(slug: string[], lang: string = 'en', strict
         const isSummative = !!(meta?.summative === true || meta?.summative === 'true' || manualMeta?.summative === 'true' || manualMeta?.summative === true);
         const processedContent = preprocessMdx(repairedBody, lang, isSummative, lessonSlug, dbLesson.order);
         const { resolvedContent } = await resolvePrecompiledAnchors(processedContent, lang);
-        const enrichedEntities = await enrichEntityTagsWithWikipedia(resolvedContent, lang);
+
+        // Run glossary enrichment FIRST so local definitions are available for entity tag resolution
+        const metaSubject = sanitizeMetadataValue(meta.subject || manualMeta.subject || getCanonicalSubjectFromSlug(slug[1], lang));
+        const glossaryEnriched = await enrichGlossaryWithWikipediaLinks(resolvedContent, lang);
+        const enrichedEntities = await enrichEntityTagsWithWikipedia(glossaryEnriched, lang, metaSubject);
 
         // Write enriched entity attributes back to DB asynchronously.
         // We patch the attrs into the original repairedBody (pre-preprocessMdx) so the
         // stored content stays processable on next load without double-transformation.
-        if (enrichedEntities !== resolvedContent) {
+        if (enrichedEntities !== glossaryEnriched) {
           const patchedSource = patchEntityAttrsIntoSource(repairedBody, enrichedEntities);
           if (patchedSource !== repairedBody) {
-            const { supabaseAdmin } = require('./supabase');
             const enrichedDbContent = matter.stringify(patchedSource, meta || {});
             supabaseAdmin
               .from('lessons')
@@ -625,18 +741,18 @@ export async function getPageContent(slug: string[], lang: string = 'en', strict
               .ilike('course_slug', courseSlug)
               .ilike('lesson_slug', lessonSlug)
               .eq('lang', lang.toLowerCase())
-              .then(({ error }: any) => {
+              .then(({ error }: { error: { message: string } | null }) => {
                 if (error) console.error('[Entity Enrichment] DB write-back failed:', error);
                 else console.log(`[Entity Enrichment] Wrote enriched entity attrs to DB for ${courseSlug}/${lessonSlug}`);
               });
           }
         }
 
-        const enriched = await enrichGlossaryWithWikipediaLinks(enrichedEntities, lang);
+        const enriched = healLinguisticContent(enrichedEntities, lang);
         return {
           meta: {
             title: sanitizeMetadataValue(dbLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())),
-            subject: sanitizeMetadataValue(meta.subject || manualMeta.subject || getCanonicalSubjectFromSlug(slug[1], lang)),
+            subject: metaSubject,
             level: sanitizeMetadataValue(meta.level || manualMeta.level || getCanonicalLevelFromSlug(slug[0], lang)),
             module: sanitizeMetadataValue(meta.module || manualMeta.module || getLocalizedCoreModuleText(lang))
           },
@@ -649,7 +765,6 @@ export async function getPageContent(slug: string[], lang: string = 'en', strict
       }
 
       // 2. Fallback: lesson exists in DB but in a different language — fetch any available lang
-      const { supabase } = require('./supabase');
       const { data: fallbackLesson } = await supabase
         .from('lessons')
         .select('*')
@@ -668,14 +783,13 @@ export async function getPageContent(slug: string[], lang: string = 'en', strict
         const repairedBody = await repairMediaOnRestitution(cleanBody, fallbackLesson.lang || lang);
         if (repairedBody !== cleanBody) {
           const newDbContent = matter.stringify(repairedBody, meta || {});
-          const { supabaseAdmin } = require('./supabase');
           supabaseAdmin
             .from('lessons')
             .update({ content: newDbContent })
             .ilike('course_slug', courseSlug)
             .ilike('lesson_slug', lessonSlug)
             .eq('lang', fallbackLesson.lang)
-            .then(({ error }: any) => {
+            .then(({ error }: { error: { message: string } | null }) => {
               if (error) {
                 console.error("[Media Repair Fallback] Failed to update database:", error);
               } else {
@@ -685,15 +799,19 @@ export async function getPageContent(slug: string[], lang: string = 'en', strict
         }
 
         const isSummative = !!(meta?.summative === true || meta?.summative === 'true' || manualMeta?.summative === 'true' || manualMeta?.summative === true);
-        const processedContent = preprocessMdx(repairedBody, fallbackLesson.lang || lang, isSummative, lessonSlug, fallbackLesson.order);
-        const { resolvedContent } = await resolvePrecompiledAnchors(processedContent, fallbackLesson.lang || lang);
-        const enrichedEntities = await enrichEntityTagsWithWikipedia(resolvedContent, fallbackLesson.lang || lang);
+        const activeLang = fallbackLesson.lang || lang;
+        const processedContent = preprocessMdx(repairedBody, activeLang, isSummative, lessonSlug, fallbackLesson.order);
+        const { resolvedContent } = await resolvePrecompiledAnchors(processedContent, activeLang);
+
+        // Run glossary enrichment FIRST so local definitions are available for entity tag resolution
+        const fbMetaSubject = sanitizeMetadataValue(meta.subject || manualMeta.subject || getCanonicalSubjectFromSlug(slug[1], lang));
+        const fbGlossaryEnriched = await enrichGlossaryWithWikipediaLinks(resolvedContent, activeLang);
+        const enrichedEntities = await enrichEntityTagsWithWikipedia(fbGlossaryEnriched, activeLang, fbMetaSubject);
 
         // Write enriched entity attributes back to DB asynchronously (fallback lang).
-        if (enrichedEntities !== resolvedContent) {
+        if (enrichedEntities !== fbGlossaryEnriched) {
           const patchedSource = patchEntityAttrsIntoSource(repairedBody, enrichedEntities);
           if (patchedSource !== repairedBody) {
-            const { supabaseAdmin } = require('./supabase');
             const enrichedDbContent = matter.stringify(patchedSource, meta || {});
             supabaseAdmin
               .from('lessons')
@@ -701,20 +819,20 @@ export async function getPageContent(slug: string[], lang: string = 'en', strict
               .ilike('course_slug', courseSlug)
               .ilike('lesson_slug', lessonSlug)
               .eq('lang', fallbackLesson.lang)
-              .then(({ error }: any) => {
+              .then(({ error }: { error: { message: string } | null }) => {
                 if (error) console.error('[Entity Enrichment Fallback] DB write-back failed:', error);
                 else console.log(`[Entity Enrichment Fallback] Wrote enriched entity attrs to DB for ${courseSlug}/${lessonSlug}`);
               });
           }
         }
 
-        const enriched = await enrichGlossaryWithWikipediaLinks(enrichedEntities, fallbackLesson.lang || lang);
+        const enriched = healLinguisticContent(enrichedEntities, activeLang);
         return {
           meta: {
             title: sanitizeMetadataValue(fallbackLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())),
-            subject: sanitizeMetadataValue(meta.subject || manualMeta.subject || getCanonicalSubjectFromSlug(slug[1], lang)),
+            subject: fbMetaSubject,
             level: sanitizeMetadataValue(meta.level || manualMeta.level || getCanonicalLevelFromSlug(slug[0], lang)),
-            module: sanitizeMetadataValue(meta.module || manualMeta.module || getLocalizedCoreModuleText(fallbackLesson.lang || lang))
+            module: sanitizeMetadataValue(meta.module || manualMeta.module || getLocalizedCoreModuleText(activeLang))
           },
           content: enriched
         };
@@ -736,26 +854,24 @@ export async function getFirstAvailableLanguage(slug: string[]): Promise<string 
 
     let resolvedSandboxAllowed = false;
     try {
-      const { cookies } = require('next/headers');
-      const cookieStore = await cookies();
+      const nextHeaders = await import('next/headers');
+      const cookieStore = await nextHeaders.cookies();
       if (cookieStore.get('op_mock_archiving_levels')?.value || cookieStore.get('op_allow_sandbox')?.value === 'true') {
         resolvedSandboxAllowed = true;
       }
-    } catch (e) {}
+    } catch {}
 
     if (resolvedSandboxAllowed) {
       try {
-        const { dbService } = require('./db');
         const { data: courseData } = await dbService.getSyllabus(courseSlug);
         if (courseData && courseData.languages && courseData.languages.length > 0) {
           return courseData.languages[0];
         }
-      } catch (e) {}
+      } catch {}
       return 'en';
     }
 
     try {
-      const { supabase } = require('./supabase');
       const { data: dbLessons } = await supabase
         .from('lessons')
         .select('lang')
@@ -1213,7 +1329,7 @@ function healEmptyExpressionAttributes(mdx: string): string {
 }
 
 
-function parseJsonLikeArray(arrStr: string): any[] {
+function parseJsonLikeArray(arrStr: string): unknown[] {
   const trimmed = arrStr ? arrStr.trim() : '';
   if (!trimmed || trimmed === '{}' || trimmed === '[]') {
     return [];
@@ -1240,7 +1356,7 @@ function parseAttributes(attrStr: string): Record<string, string> {
     }
     if (i >= attrStr.length) break;
     
-    let nameStart = i;
+    const nameStart = i;
     while (i < attrStr.length && /[a-zA-Z0-9_.:-]/.test(attrStr[i])) {
       i++;
     }
@@ -1266,7 +1382,7 @@ function parseAttributes(attrStr: string): Record<string, string> {
     if (attrStr[i] === '"' || attrStr[i] === "'") {
       const quote = attrStr[i];
       i++;
-      let valStart = i;
+      const valStart = i;
       while (i < attrStr.length && attrStr[i] !== quote) {
         if (attrStr[i] === '\\') i++;
         i++;
@@ -1276,7 +1392,7 @@ function parseAttributes(attrStr: string): Record<string, string> {
     } else if (attrStr[i] === '{') {
       i++;
       let braceCount = 1;
-      let valStart = i;
+      const valStart = i;
       while (i < attrStr.length && braceCount > 0) {
         if (attrStr[i] === '{') {
           braceCount++;
@@ -1288,7 +1404,7 @@ function parseAttributes(attrStr: string): Record<string, string> {
       attrs[name] = attrStr.substring(valStart, i).trim();
       i++;
     } else {
-      let valStart = i;
+      const valStart = i;
       while (i < attrStr.length && !/\s/.test(attrStr[i]) && attrStr[i] !== '/' && attrStr[i] !== '>') {
         i++;
       }
@@ -1312,7 +1428,7 @@ function parseItems(attrs: Record<string, string>, body: string): string[] {
     try {
       const parsed = parseJsonLikeArray(attrs.items);
       if (Array.isArray(parsed)) {
-        items.push(...parsed);
+        items.push(...parsed.map(x => String(x)));
       }
     } catch (_) {
       const cleaned = attrs.items.replace(/^\[\s*|,\s*\]$/g, '').split(',');
@@ -1475,7 +1591,7 @@ function parseMarkdownObjectivesToJsx(content: string): string {
 }
 
 function healObjectivesTags(mdx: string): string {
-  let processed = mdx
+  const processed = mdx
     .replace(/<Objectives\.Knowledge\b/gi, '<Knowledge')
     .replace(/<\/Objectives\.Knowledge>/gi, '</Knowledge>')
     .replace(/<Objectives\.Skills\b/gi, '<Skills')
@@ -1642,7 +1758,7 @@ function healFillInBlanks(mdx: string): string {
     if (attrs.sentences) {
       let sentencesArray: string[] = [];
       try {
-        sentencesArray = parseJsonLikeArray(attrs.sentences);
+        sentencesArray = parseJsonLikeArray(attrs.sentences) as string[];
       } catch (_) {
         const cleaned = attrs.sentences.replace(/^\[\s*|,\s*\]$/g, '').split(',');
         sentencesArray = cleaned.map(s => s.trim().replace(/^["']|["']$/g, ''));
@@ -1682,10 +1798,18 @@ function healFillInBlanks(mdx: string): string {
   });
 }
 
+interface HotspotItem {
+  id: string;
+  name: string;
+  description: string;
+  x: number;
+  y: number;
+}
+
 function healInteractiveDiagram(mdx: string): string {
   return mdx.replace(/<InteractiveDiagram\b([^>]*?)>([\s\S]*?)<\/InteractiveDiagram>/gi, (match, attrsStr, body) => {
     const mainAttrs = parseAttributes(attrsStr);
-    const hotspots: any[] = [];
+    const hotspots: HotspotItem[] = [];
     let index = 0;
     
     const itemRe = /<DiagramItem\b([^>]*?)\/?>/gi;
@@ -1786,8 +1910,8 @@ function healQuestionTags(mdx: string): string {
     const attrs = parseAttributes(attrsStr);
     const content = body || '';
     
-    let q = attrs.q || attrs.questionText || attrs.text || attrs.question || '';
-    let type = attrs.type || 'multiple-choice';
+    const q = attrs.q || attrs.questionText || attrs.text || attrs.question || '';
+    const type = attrs.type || 'multiple-choice';
     let correctIndex = attrs.correctIndex !== undefined ? attrs.correctIndex : (attrs.correctAnswerIndex !== undefined ? attrs.correctAnswerIndex : '0');
     let explanation = attrs.explanation || '';
     
@@ -1798,10 +1922,10 @@ function healQuestionTags(mdx: string): string {
       correctIndex = corrAns ? '0' : '1';
     }
     
-    let options: any[] = [];
+    let options: (string | Record<string, unknown>)[] = [];
     if (optionsStr && optionsStr.trim().startsWith('[')) {
       try {
-        options = parseJsonLikeArray(optionsStr);
+        options = parseJsonLikeArray(optionsStr) as (string | Record<string, unknown>)[];
       } catch (_) {
         const cleaned = optionsStr.replace(/^\[\s*|,\s*\]$/g, '').split(',');
         options = cleaned.map(s => s.trim().replace(/^["']|["']$/g, ''));
@@ -1811,8 +1935,8 @@ function healQuestionTags(mdx: string): string {
     }
     
     if (options.length > 0 && typeof options[0] === 'object') {
-      const objOptions = options as any[];
-      options = objOptions.map(o => o.text || '');
+      const objOptions = options as Record<string, unknown>[];
+      options = objOptions.map(o => String(o.text || ''));
       const correctIdx = objOptions.findIndex(o => o.isCorrect === true || o.correct === true);
       if (correctIdx !== -1) {
         correctIndex = String(correctIdx);
@@ -1921,7 +2045,7 @@ function healPrerequisitesAndSummary(mdx: string): string {
     
     if (attrs.items) {
       try {
-        items = parseJsonLikeArray(attrs.items);
+        items = parseJsonLikeArray(attrs.items) as string[];
       } catch (e) {
         items = attrs.items.split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
       }
@@ -2234,7 +2358,15 @@ function healWhatsNextNesting(mdx: string): string {
       .replace(/[“”]/g, '"')
       .replace(/[‘’]/g, "'");
 
-    const steps: any[] = [];
+    interface NextStepItem {
+      title: string;
+      description: string;
+      slug: string;
+      subject: string;
+      level: string;
+    }
+
+    const steps: NextStepItem[] = [];
     
     // Split by potential step starts (including malformed tag starts like /Step or /WhatsNextStep)
     const lines = cleanInner.split(/(?=<WhatsNextStep|<Step|<EtApres\.Card|<WhatsNext\.Card|\/WhatsNextStep|\/Step|\/EtApres\.Card)/gi);
@@ -2738,7 +2870,7 @@ function sanitizeQuotesInComponentTags(mdx: string): string {
         tagContent += '"';
         idx++;
         
-        let valStartIdx = idx;
+        const valStartIdx = idx;
         let trueEndIdx = -1;
         
         while (idx < mdx.length) {
@@ -2774,7 +2906,7 @@ function sanitizeQuotesInComponentTags(mdx: string): string {
         tagContent += "'";
         idx++;
         
-        let valStartIdx = idx;
+        const valStartIdx = idx;
         let trueEndIdx = -1;
         
         while (idx < mdx.length) {
@@ -3140,12 +3272,206 @@ function forceAscii(str: string): string {
     .replace(/[^\x00-\x7F]/g, '');
 }
 
+function sanitizeSmartQuotesAndSpaces(str: string): string {
+  return str
+    .replace(/[\u00A0\u202F]/g, ' ')
+    .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036«»“”]/g, '"')
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035‘’]/g, "'");
+}
+
+export function healFrenchElisions(text: string): string {
+  if (!text) return '';
+  let processed = text;
+
+  // List of French words that undergo elision before a vowel or mute h.
+  const elisionRules = [
+    { pattern: 'le', replacement: "l'" },
+    { pattern: 'la', replacement: "l'" },
+    { pattern: 'de', replacement: "d'" },
+    { pattern: 'que', replacement: "qu'" },
+    { pattern: 'je', replacement: "j'" },
+    { pattern: 'ne', replacement: "n'" },
+    { pattern: 'se', replacement: "s'" },
+    { pattern: 'te', replacement: "t'" },
+    { pattern: 'me', replacement: "m'" },
+    { pattern: 'ce', replacement: "c'" },
+    { pattern: 'jusque', replacement: "jusqu'" },
+    { pattern: 'lorsque', replacement: "lorsqu'" },
+    { pattern: 'puisque', replacement: "puisqu'" },
+    { pattern: 'quoique', replacement: "quoiqu'" }
+  ];
+
+  // Matches standard/accented vowels or 'h' (mute h)
+  const vowelOrH = '[aeiouyéèêëàâîïôûùœæAEIOUYÉÈÊËÀÂÎÏÔÛÙŒÆhH]';
+
+  // 1. Pre-cleanup: clean up any legacy/improper quotes or apostrophes surrounding the article or word.
+  // For example, "' la' explosion" or "'la' explosion" or "le 'explosion" -> "le explosion" / "la explosion"
+  processed = processed.replace(
+    /['"«“]?\s*\b(le|la|de|que|je|ne|se|te|me|ce|jusque|lorsque|puisque|quoique)\b\s*['"»”]?\s+['"«“]?\s*([aeiouyéèêëàâîïôûùœæhAEIOUYÉÈÊËÀÂÎÏÔÛÙŒÆH][a-zA-ZÀ-ÿ]*)\b/gi,
+    (match, article, word) => {
+      return article + ' ' + word;
+    }
+  );
+
+  // 2. Perform direct elisions (e.g. "le explosion" -> "l'explosion")
+  for (const rule of elisionRules) {
+    const regex = new RegExp(`\\b(${rule.pattern})\\s+(${vowelOrH}[a-zA-ZÀ-ÿ]*)\\b`, 'gi');
+    processed = processed.replace(regex, (match, article, word) => {
+      const isCapital = article[0] === article[0].toUpperCase();
+      const rep = isCapital 
+        ? rule.replacement[0].toUpperCase() + rule.replacement.slice(1) 
+        : rule.replacement.toLowerCase();
+      return rep + word;
+    });
+  }
+
+  // 3. Perform elisions separated by a JSX tag (e.g. "le <RealPerson>Einstein</RealPerson>")
+  for (const rule of elisionRules) {
+    const regex = new RegExp(
+      `\\b(${rule.pattern})\\s*(<[A-Za-z][A-Za-z0-9._-]*\\b(?:[^>'"/]|"[^"]*"|'[^']*')*\\/?>)\\s*(${vowelOrH}[a-zA-ZÀ-ÿ]*)\\b`,
+      'gi'
+    );
+    processed = processed.replace(regex, (match, article, tag, word) => {
+      const isCapital = article[0] === article[0].toUpperCase();
+      const rep = isCapital 
+        ? rule.replacement[0].toUpperCase() + rule.replacement.slice(1) 
+        : rule.replacement.toLowerCase();
+      return rep + tag + word;
+    });
+  }
+
+  // 4. Clean up any spaces after l', d', qu', j', n', s', t', m', c', etc. (e.g. "l' explosion" -> "l'explosion")
+  processed = processed.replace(/\b(l|d|qu|j|n|s|t|m|c|jusqu|lorsqu|puisqu|quoiqu)'\s+/gi, "$1'");
+
+  return processed;
+}
+
+export function healEnglishContractions(text: string): string {
+  if (!text) return '';
+  return text.replace(/\b(\w+)\s*'\s*(s|t|re|d|ll|m|ve)\b/gi, "$1'$2");
+}
+
+export function healSpanishPhonotactics(text: string): string {
+  if (!text) return '';
+  let processed = text;
+  
+  // Replace 'y' with 'e' before words starting with 'i' or 'hi' (not followed by 'e' or 'a')
+  // e.g. "y inteligente" -> "e inteligente", but "y hierro" remains "y hierro"
+  processed = processed.replace(/\by\s+(i(?!e|a)|hi(?!e|a))/gi, (match, word) => {
+    const isUpper = match.startsWith('Y');
+    return (isUpper ? 'E ' : 'e ') + word;
+  });
+
+  // Replace 'o' with 'u' before words starting with 'o' or 'ho'
+  // e.g. "o otro" -> "u otro"
+  processed = processed.replace(/\bo\s+(o|ho)/gi, (match, word) => {
+    const isUpper = match.startsWith('O');
+    return (isUpper ? 'U ' : 'u ') + word;
+  });
+
+  return processed;
+}
+
+export function healItalianElisions(text: string): string {
+  if (!text) return '';
+  let processed = text;
+  
+  const elisionTargets = ['lo', 'la', 'una', 'di', 'da', 'ne', 'se', 'ci', 'vi', 'mi', 'ti', 'si'];
+  
+  elisionTargets.forEach(target => {
+    const regex = new RegExp(`\\b(${target})\\s+([aeiouyàèìòùAEIOUYÀÈÌÒÙ])`, 'gi');
+    processed = processed.replace(regex, (match, article, nextChar) => {
+      if (article.toLowerCase() === 'una') {
+        return (article.startsWith('U') ? "Un'" : "un'") + nextChar;
+      }
+      const firstLetter = article.charAt(0);
+      return `${firstLetter}'${nextChar}`;
+    });
+  });
+
+  // Clean up space: l' amica -> l'amica
+  processed = processed.replace(/\b(l|d|un|n|s|c|v|m|t)'\s+/gi, "$1'");
+
+  return processed;
+}
+
+export function healChinesePunctuation(text: string): string {
+  if (!text) return '';
+  let processed = text;
+
+  // 1. Remove spaces between Chinese characters (looping to handle overlapping matches)
+  let last = '';
+  while (processed !== last) {
+    last = processed;
+    processed = processed.replace(/([\u4e00-\u9fa5])\s+([\u4e00-\u9fa5])/g, '$1$2');
+  }
+
+  // 2. Convert standard punctuation to full-width when next to Chinese or Latin characters in Chinese prose
+  // comma: , -> ，
+  processed = processed.replace(/([\u4e00-\u9fa5])\s*,\s*/g, '$1，');
+  // period: . -> 。
+  processed = processed.replace(/([\u4e00-\u9fa5])\s*\.\s*/g, '$1。');
+  // question mark: ? -> ？
+  processed = processed.replace(/([\u4e00-\u9fa5a-zA-Z0-9])\s*\?\s*(?=\s|$|[\u4e00-\u9fa5])/g, '$1？');
+  // exclamation: ! -> ！
+  processed = processed.replace(/([\u4e00-\u9fa5a-zA-Z0-9])\s*!\s*(?=\s|$|[\u4e00-\u9fa5])/g, '$1！');
+  // colon: : -> ：
+  processed = processed.replace(/([\u4e00-\u9fa5])\s*:\s*(?![\/a-zA-Z0-9])/g, '$1：');
+  // semicolon: ; -> ；
+  processed = processed.replace(/([\u4e00-\u9fa5])\s*;\s*/g, '$1；');
+  // parentheses: ( ) -> （ ）
+  processed = processed.replace(/\(\s*([\u4e00-\u9fa5])/g, '（$1');
+  processed = processed.replace(/([\u4e00-\u9fa5])\s*\)/g, '$1）');
+
+  return processed;
+}
+
+export function healRtlBiDiAndZwnj(text: string): string {
+  if (!text) return '';
+  let processed = text;
+
+  // 1. Normalize Zero-Width Non-Joiner (ZWNJ) spaces
+  processed = processed.replace(/\s*\u200C\s*/g, '\u200C');
+
+  // 2. Normalize standard punctuation to Arabic/Urdu equivalent next to Arabic characters
+  // Match standard Latin punctuation or existing RTL equivalent and remove spacing before it
+  processed = processed.replace(/([\u0600-\u06FF])\s*[\?\u061F]/g, '$1؟');
+  processed = processed.replace(/([\u0600-\u06FF])\s*[,\u060C]/g, '$1،');
+  processed = processed.replace(/([\u0600-\u06FF])\s*[;\u061B]/g, '$1؛');
+
+  return processed;
+}
+
+export function healLinguisticContent(text: string, lang: string): string {
+  if (!text) return '';
+  const normalizedLang = lang.toLowerCase();
+  let processed = text;
+  
+  if (normalizedLang === 'fr') {
+    processed = healFrenchTypography(processed);
+    processed = healFrenchAccents(processed);
+    processed = healFrenchElisions(processed);
+  } else if (normalizedLang === 'en') {
+    processed = healEnglishContractions(processed);
+  } else if (normalizedLang === 'es') {
+    processed = healSpanishPhonotactics(processed);
+  } else if (normalizedLang === 'it') {
+    processed = healItalianElisions(processed);
+  } else if (normalizedLang === 'zh') {
+    processed = healChinesePunctuation(processed);
+  } else if (normalizedLang === 'ar' || normalizedLang === 'ur') {
+    processed = healRtlBiDiAndZwnj(processed);
+  }
+  
+  return processed;
+}
+
 function healFrenchTypography(text: string): string {
   // 1. Extract all JSX tags to protect them from conversion
   const jsxTags: string[] = [];
   const tagRegex = /<(\/?)([A-Za-z][A-Za-z0-9._-]*)\b((?:[^'">`«»]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|«(?:[^»\\]|\\.)*»)*?)(\/?)>/g;
   
-  let processed = text.replace(tagRegex, (match, closeSlash, tagName, attributesPart, selfCloseSlash) => {
+  const processed = text.replace(tagRegex, (match, closeSlash, tagName, attributesPart, selfCloseSlash) => {
     let sanitizedAttributes = attributesPart || '';
     const attrValueRegex = /(\b[A-Za-z0-9_.-]+\s*=\s*)(?:"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'|«([^»\\]*(?:\\.[^»\\]*)*)»|“([^”\\]*(?:\\.[^”\\]*)*)”)/g;
     sanitizedAttributes = sanitizedAttributes.replace(attrValueRegex, (attrMatch: string, prefix: string, doubleVal: string | undefined, singleVal: string | undefined, guillemetVal: string | undefined, smartVal: string | undefined) => {
@@ -3153,7 +3479,7 @@ function healFrenchTypography(text: string): string {
                   singleVal !== undefined ? singleVal :
                   guillemetVal !== undefined ? guillemetVal :
                   smartVal !== undefined ? smartVal : '';
-      const cleanVal = forceAscii(val);
+      const cleanVal = sanitizeSmartQuotesAndSpaces(val);
       const quote = singleVal !== undefined ? "'" : '"';
       return `${prefix}${quote}${cleanVal}${quote}`;
     });
@@ -3371,12 +3697,37 @@ function deduplicateOriginalQuotes(mdx: string): string {
   return result.join('\n');
 }
 
+function cleanImproperQuotes(str: string): string {
+  if (!str) return '';
+  let cleaned = str.trim();
+  // 1. Unescape any backslashed quotes
+  cleaned = cleaned.replace(/\\"/g, '"').replace(/\\'/g, "'");
+  // 2. Remove outer quotes (single, double, guillemets, typographic quotes) and surrounding spaces/non-breaking spaces
+  const quotePattern = /^[«»"'“”‘’\s\u00A0\u202F\u2007\u200B\\]+|[«»"'“”‘’\s\u00A0\u202F\u2007\u200B\\]+$/g;
+  cleaned = cleaned.replace(quotePattern, '').trim();
+  return cleaned;
+}
+
 export function preprocessMdx(content: string, lang: string = 'en', isSummative: boolean = false, lessonSlug?: string, lessonOrder?: number): string {
   if (lessonSlug === 'evaluation-finale' || lessonSlug === 'final-evaluation' || lessonSlug === 'evaluation-terminale') {
     isSummative = true;
   }
   // Apply systematic healing first so high-fidelity content and components are injected automatically
   let processed = content;
+
+  // Clean frontmatter attributes: strip chevrons and other outer quotes/spaces
+  processed = processed.replace(/^(title|module|subject|level|courseTitle):\s*(.*)$/gm, (match, key, val) => {
+    const cleanVal = cleanImproperQuotes(val);
+    return `${key}: "${cleanVal.replace(/"/g, '\\"')}"`;
+  });
+
+  // Strip H1 headings (e.g. # Heading) from the body to prevent duplicate title rendering
+  processed = processed.replace(/^#\s+.*$/gm, '');
+
+  // Strip chevrons, backslashes, and other quotes from headings (H2 to H6)
+  processed = processed.replace(/^(#{2,6}\s+)(.*)$/gm, (match, prefix, headingContent) => {
+    return prefix + cleanImproperQuotes(headingContent);
+  });
 
   // Convert LaTeX delimiters: \[ -> $$ and \] -> $$ and \( -> $ and \) -> $
   // This allows remark-math to natively parse all math blocks and inline equations,
@@ -3451,10 +3802,10 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     processed = processed.replace(new RegExp(`<(${entityTagsPattern})\\b[^>]*?\\/>`, 'gi'), '');
 
     // 4. Remove any citation anchors (like [[WIDGET:Citation:X]] or [X](#ref-X) or <sup>X</sup>)
-    processed = processed.replace(/\[\[\s*WIDGET\s*:\s*(?:Citation|Reference|Ref)\s*:\s*\\d+\s*\]\]/gi, '');
-    processed = processed.replace(/<sup>\s*<a\b[^>]*?id="ref-src-\\d+"[^>]*?>\s*\\d+\s*<\/a>\s*<\/sup>/gi, '');
-    processed = processed.replace(/\[ref[-_]?\s*(\\d+)\]/gi, '');
-    processed = processed.replace(/<sup>\s*\[?(\\d+)\]?\s*<\/sup>/gi, '');
+    processed = processed.replace(/\[\[\s*WIDGET\s*:\s*(?:Citation|Reference|Ref)\s*:\s*\d+\s*\]\]/gi, '');
+    processed = processed.replace(/<sup>\s*<a\b[^>]*?id="ref-src-\d+"[^>]*?>\s*\d+\s*<\/a>\s*<\/sup>/gi, '');
+    processed = processed.replace(/\[ref[-_]?\s*(\d+)\]/gi, '');
+    processed = processed.replace(/<sup>\s*\[?(\d+)\]?\s*<\/sup>/gi, '');
     processed = processed.replace(/<sup[^>]*>\s*<a[^>]*>[\s\S]*?<\/a>\s*<\/sup>/gi, '');
 
     // 5. Remove prohibited widgets
@@ -3469,11 +3820,8 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   // Decode HTML-encoded tags first so they are correctly recognized as JSX components
   processed = decodeHtmlEncodedTags(processed);
 
-  // Apply French-specific programmatic helpers (typographer and accents) to the prose
-  if (lang.toLowerCase() === 'fr') {
-    processed = healFrenchTypography(processed);
-    processed = healFrenchAccents(processed);
-  }
+  // Apply language-specific programmatic helpers (typography, accents, contractions, elisions) to the prose
+  processed = healLinguisticContent(processed, lang);
 
   // Strip empty/self-closing blocks that crash the MDX compiler (like <CriticalThinking /> or <WhatsNext />)
   processed = processed.replace(/<(CriticalThinking|ScientificMethod|HistoricalAnecdote|HistoricalEvent|WhatsNext|DidYouKnow|BrilliantIdea|PointOfView|DebatScientifique|ScientificDebate|Epistemology)\s*\/?>/gi, '');
@@ -3867,7 +4215,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   });
 
   // 5. Render Glossary as static list at the bottom of the page
-  const glossaryIndex = processed.search(/###\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary)/iu);
+  const glossaryIndex = processed.search(/##{1,2}\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表|Glossário|Glossario|المعجم|قاموس المصطلحات|शब्दावली|فرہنگ)/iu);
   if (glossaryIndex !== -1) {
     const preGlossary = processed.slice(0, glossaryIndex);
     let glossaryContent = processed.slice(glossaryIndex);
@@ -3891,33 +4239,68 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     });
 
     // Alphabetical Sorting and Wikipedia link formatting for Glossary Items
-    const lines = glossaryContent.split(/\r?\n/);
     const nonItemLines: string[] = [];
     const glossaryItems: { term: string; line: string }[] = [];
+    const glossaryMap = new Map<string, { term: string; definition: string; wikipediaUrl?: string }>();
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      // Match typical glossary item format: "- **Term** : Definition"
-      const itemMatch = trimmed.match(/^[-*]\s+\*\*([^*]+)\*\*\s*:\s*([\s\S]*)$/);
-      if (itemMatch) {
-        const term = itemMatch[1].trim();
-        let definition = itemMatch[2].trim();
+    const blockMatch = glossaryContent.match(/<GlossaryBlock\s+itemsBase64="([^"]+)"\s*\/?>/i);
+    if (blockMatch) {
+      try {
+        const base64 = blockMatch[1];
+        const decoded = typeof window !== 'undefined'
+          ? window.atob(base64)
+          : Buffer.from(base64, 'base64').toString('utf-8');
+        const items = JSON.parse(decoded);
+        if (Array.isArray(items)) {
+          items.forEach(it => {
+            glossaryItems.push({
+              term: it.term,
+              line: `- **${it.term}** : ${it.definition}`
+            });
+            glossaryMap.set(it.term.toLowerCase(), {
+              term: it.term,
+              definition: it.definition,
+              wikipediaUrl: it.wikipediaUrl
+            });
+          });
+        }
+      } catch (e) {
+        console.error("Failed to parse existing GlossaryBlock in preprocessMdx:", e);
+      }
 
-        // Format Wikipedia links in the definition to blue underlined links without outer bracket styling
-        definition = definition.replace(/\[?\[?(Wikip[eé]dia|Wikipedia)(?:\s*\([^)]*\))?\]?\]?\((https?:\/\/[^\s)]+)\)\]?/gi, (m, label, url) => {
-          const resolvedLabel = label.toLowerCase().startsWith('wikip') && label.toLowerCase().includes('é') ? 'Wikipédia' : 'Wikipedia';
-          return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 underline font-semibold transition-colors">${resolvedLabel}</a>`;
-        });
-        
-        // Also remove any wrapping brackets around the Wikipedia link if they exist, e.g. " [Wikipédia]" or " (Wikipédia)"
-        definition = definition.replace(/\[\s*(<a\b[^>]*>(?:Wikip[eé]dia|Wikipedia)<\/a>)\s*\]/gi, '$1');
+      // Split non-item lines but exclude the GlossaryBlock tag line
+      const lines = glossaryContent.split(/\r?\n/);
+      for (const line of lines) {
+        if (!line.trim().startsWith('<GlossaryBlock') && !line.trim().match(/^[-*]\s+\*\*([^*]+)\*\*\s*:\s*([\s\S]*)$/)) {
+          nonItemLines.push(line);
+        }
+      }
+    } else {
+      const lines = glossaryContent.split(/\r?\n/);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        // Match typical glossary item format: "- **Term** : Definition"
+        const itemMatch = trimmed.match(/^[-*]\s+\*\*([^*]+)\*\*\s*:\s*([\s\S]*)$/);
+        if (itemMatch) {
+          const term = itemMatch[1].trim();
+          let definition = itemMatch[2].trim();
 
-        glossaryItems.push({
-          term,
-          line: `- **${term}** : ${definition}`
-        });
-      } else {
-        nonItemLines.push(line);
+          // Format Wikipedia links in the definition to blue underlined links without outer bracket styling
+          definition = definition.replace(/\[?\[?(Wikip[eé]dia|Wikipedia)(?:\s*\([^)]*\))?\]?\]?\((https?:\/\/[^\s)]+)\)\]?/gi, (m, label, url) => {
+            const resolvedLabel = label.toLowerCase().startsWith('wikip') && label.toLowerCase().includes('é') ? 'Wikipédia' : 'Wikipedia';
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 underline font-semibold transition-colors">${resolvedLabel}</a>`;
+          });
+          
+          // Also remove any wrapping brackets around the Wikipedia link if they exist, e.g. " [Wikipédia]" or " (Wikipédia)"
+          definition = definition.replace(/\[\s*(<a\b[^>]*>(?:Wikip[eé]dia|Wikipedia)<\/a>)\s*\]/gi, '$1');
+
+          glossaryItems.push({
+            term,
+            line: `- **${term}** : ${definition}`
+          });
+        } else {
+          nonItemLines.push(line);
+        }
       }
     }
 
@@ -3953,10 +4336,70 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     // Sort glossary items alphabetically
     glossaryItems.sort((a, b) => a.term.localeCompare(b.term, 'fr', { sensitivity: 'base' }));
 
+    if (!blockMatch) {
+      glossaryItems.forEach(item => {
+        const term = item.term;
+        const definition = item.line.substring(item.line.indexOf(':') + 1).trim();
+        const wikiMatch = definition.match(/href="([^"]*?wikipedia\.org[^"]*?)"/i) || definition.match(/href='([^']*?wikipedia\.org[^']*?)'/i);
+        const wikipediaUrl = wikiMatch ? wikiMatch[1] : undefined;
+        glossaryMap.set(term.toLowerCase(), { term, definition, wikipediaUrl });
+      });
+    }
+
+    // Inject definitions and wikipediaUrls into all inline <Glossary> tags in the narrative
+    const inlineGlossaryRegex = /<Glossary\b([^>]*?)>([\s\S]*?)<\/Glossary>/gi;
+    const updatedPreGlossary = preGlossary.replace(inlineGlossaryRegex, (match, attrs, children) => {
+      const idMatch = attrs.match(/\bid=(["'])([\s\S]*?)\1/i);
+      const nameMatch = attrs.match(/\bname=(["'])([\s\S]*?)\1/i);
+      const termMatch = attrs.match(/\bterm=(["'])([\s\S]*?)\1/i);
+      
+      const id = idMatch ? idMatch[2] : '';
+      const name = nameMatch ? nameMatch[2] : '';
+      const term = termMatch ? termMatch[2] : '';
+      const childrenText = children.trim();
+
+      const termKeys = [term, name, id, childrenText].filter(Boolean);
+      let foundItem = null;
+      for (const key of termKeys) {
+        const cleanKey = cleanStringForMatching(key);
+        for (const [gTerm, gItem] of glossaryMap.entries()) {
+          if (cleanStringForMatching(gTerm) === cleanKey) {
+            foundItem = gItem;
+            break;
+          }
+        }
+        if (foundItem) break;
+      }
+
+      if (foundItem) {
+        let cleanAttrs = attrs
+          .replace(/\bdefinition=(["'])([\s\S]*?)\1/gi, '')
+          .replace(/\bwikipediaUrl=(["'])([\s\S]*?)\1/gi, '')
+          .replace(/\bwikipedia=(["'])([\s\S]*?)\1/gi, '')
+          .trim();
+        
+        const escapedDef = foundItem.definition.replace(/"/g, '&quot;');
+        const wikiUrlAttr = foundItem.wikipediaUrl ? ` wikipediaUrl="${foundItem.wikipediaUrl}"` : '';
+        return `<Glossary definition="${escapedDef}"${wikiUrlAttr} ${cleanAttrs}>${children}</Glossary>`;
+      }
+      return match;
+    });
+
+    const serializableItems = glossaryItems.map(item => {
+      const gItem = glossaryMap.get(item.term.toLowerCase());
+      return {
+        term: item.term,
+        definition: gItem ? gItem.definition : item.line.substring(item.line.indexOf(':') + 1).trim(),
+        wikipediaUrl: gItem?.wikipediaUrl
+      };
+    });
+
+    const glossaryBase64 = Buffer.from(JSON.stringify(serializableItems)).toString('base64');
+
     // Reconstruct the glossary section with sorted items, ensuring any <References /> tag is appended at the very end
-    const headingLine = nonItemLines[0] || '### Glossaire';
+    const headingLine = nonItemLines[0] ? nonItemLines[0].replace(/^###\s*/, '## ') : '## Glossaire';
     const referencesLines = nonItemLines.slice(1).filter(l => l.trim().startsWith('<References'));
-    const otherNonItemLines = nonItemLines.slice(1).filter(l => l.trim() !== '' && !l.trim().startsWith('<References'));
+    const otherNonItemLines = nonItemLines.slice(1).filter(l => l.trim() !== '' && !l.trim().startsWith('<References') && !l.trim().startsWith('<GlossaryBlock'));
     
     let reconstructedGlossary = headingLine + '\n';
     if (otherNonItemLines.length > 0) {
@@ -3964,13 +4407,13 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     } else {
       reconstructedGlossary += '\n';
     }
-    reconstructedGlossary += glossaryItems.map(item => item.line).join('\n') + '\n';
+    reconstructedGlossary += `<GlossaryBlock itemsBase64="${glossaryBase64}" />\n`;
     
     if (referencesLines.length > 0) {
       postGlossary = '\n' + referencesLines.join('\n') + '\n' + postGlossary;
     }
 
-    processed = preGlossary + reconstructedGlossary + postGlossary;
+    processed = updatedPreGlossary + reconstructedGlossary + postGlossary;
   }
 
   // 5b. Parse Citation / InteractiveQuote / QuoteBlock tags to auto-generate references
@@ -4013,7 +4456,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     const quote = (quoteAttrMatch ? quoteAttrMatch[2] : children || '').trim();
     
     // Check if we already have this work cited to consolidate refNum
-    let existingRef = citationBlocks.find(cb => 
+    const existingRef = citationBlocks.find(cb => 
       cb.author.toLowerCase() === author.toLowerCase() &&
       cb.source.toLowerCase() === source.toLowerCase() &&
       cb.year === year &&
@@ -4036,7 +4479,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       });
     }
 
-    let cleanAttrs = attrs.replace(/\brefNum\s*=\s*\{?\d+\}?/gi, '').trim();
+    const cleanAttrs = attrs.replace(/\brefNum\s*=\s*\{?\d+\}?/gi, '').trim();
     return `<${tagName} refNum={${refNum}} ${cleanAttrs}>${children || ''}</${tagName}>`;
   });
 
@@ -4177,12 +4620,20 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
       customScholarText: scholarText
     });
 
-    let cleanAttrs = attrs.replace(/\brefNum\s*=\s*\{?\d+\}?/gi, '').trim();
+    const cleanAttrs = attrs.replace(/\brefNum\s*=\s*\{?\d+\}?/gi, '').trim();
     return `<GoingFurtherItem refNum={${refNum}} ${cleanAttrs}>${children || ''}</GoingFurtherItem>`;
   });
 
+  interface ReferenceItem {
+    num: string | number;
+    text: string;
+    scholarUrl?: string;
+    scholarText?: string;
+    isUnused?: boolean;
+  }
+
   // 6. Fix references run-on lists, ensure individual lines, and add backlinks
-  const existingRefs: any[] = [];
+  const existingRefs: ReferenceItem[] = [];
   const referencesTagRegex = /<References\s+itemsBase64="([^"]*?)"\s*\/?>/gi;
   let refTagMatch;
   while ((refTagMatch = referencesTagRegex.exec(processed)) !== null) {
@@ -4192,7 +4643,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
         const decoded = Buffer.from(base64, 'base64').toString('utf-8');
         const items = JSON.parse(decoded);
         if (Array.isArray(items)) {
-          existingRefs.push(...items);
+          existingRefs.push(...(items as ReferenceItem[]));
         }
       } catch (e) {
         console.error("[preprocessMdx] Failed to decode existing References base64:", e);
@@ -4202,21 +4653,22 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   processed = processed.replace(referencesTagRegex, '');
 
   const currentLang = (lang || 'en').toLowerCase();
-  let heading = "### References";
-  if (currentLang === 'fr') heading = "### Références";
-  else if (currentLang === 'es') heading = "### Referencias";
-  else if (currentLang === 'de') heading = "### Referenzen";
-  else if (currentLang === 'zh') heading = "### 参考文献";
+  let heading = "## References";
+  if (currentLang === 'fr') heading = "## Références";
+  else if (currentLang === 'es') heading = "## Referencias";
+  else if (currentLang === 'de') heading = "## Referenzen";
+  else if (currentLang === 'zh') heading = "## 参考文献";
 
-  let refIndex = processed.search(/#{2,4}\s*(Réf|References|Bibliography)/i); // [FIX P3] support ##–#### headings
+  let refIndex = processed.search(/#{2,4}\s*[^\p{L}\p{N}\s]*\s*(Réf|References|Bibliography|Referencias|Referenzen|参考文献|Referenze|Referências|المصادر|المراجع|संदर्भ|حوالہ جات)/iu); // [FIX P3] support ##–#### headings
   if (refIndex === -1 && (citationBlocks.length > 0 || existingRefs.length > 0)) {
     processed += `\n\n${heading}\n\n`;
-    refIndex = processed.search(/#{2,4}\s*(Réf|References|Bibliography)/i); // [FIX P3] support ##–####
+    refIndex = processed.search(/#{2,4}\s*[^\p{L}\p{N}\s]*\s*(Réf|References|Bibliography|Referencias|Referenzen|参考文献|Referenze|Referências|المصادر|المراجع|संदर्भ|حوالہ جات)/iu); // [FIX P3] support ##–####
   }
 
   if (refIndex !== -1) {
     const preRef = processed.slice(0, refIndex);
     let refContent = processed.slice(refIndex) + '\n\n';
+    refContent = refContent.replace(/^#{3,4}\s*/, '## ');
 
     // Remove any existing back-links to avoid duplicates
     refContent = refContent.replace(/\[↩\]\(#cite-\d+\)/g, '').replace(/\[↩\]/g, '');
@@ -4357,7 +4809,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     };
 
     // Structure references as clean separate blocks with proper IDs and back-links
-    const parsedItems: any[] = [];
+    const parsedItems: ReferenceItem[] = [];
 
     // Initialize with existingRefs
     existingRefs.forEach(ref => {
@@ -4428,30 +4880,67 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
 
     // Deduplicate parsedItems
     const numberMap: Record<number, number> = {};
-    const deduplicatedItems: any[] = [];
+    const deduplicatedItems: ReferenceItem[] = [];
 
     for (const item of parsedItems) {
       let duplicateOf = -1;
       for (const existing of deduplicatedItems) {
         if (isDuplicateReference(existing.text, item.text)) {
-          duplicateOf = existing.num;
+          duplicateOf = typeof existing.num === 'number' ? existing.num : parseInt(String(existing.num), 10);
           break;
         }
       }
 
+      const itemNum = typeof item.num === 'number' ? item.num : parseInt(String(item.num), 10);
       if (duplicateOf !== -1) {
-        numberMap[item.num] = duplicateOf;
+        numberMap[itemNum] = duplicateOf;
       } else {
         deduplicatedItems.push(item);
       }
     }
 
-    // Renumber deduplicatedItems sequentially from 1 to N to guarantee contiguity
-    const finalItems: any[] = [];
+    // Sort deduplicatedItems so active ones appear in order of appearance in preRef, followed by unused ones
+    const activeItems = deduplicatedItems.filter(item => {
+      const itemNum = typeof item.num === 'number' ? item.num : parseInt(String(item.num), 10);
+      return isReferenceUsed(itemNum, preRef, deduplicatedItems.length);
+    });
+    
+    const unusedItems = deduplicatedItems.filter(item => {
+      const itemNum = typeof item.num === 'number' ? item.num : parseInt(String(item.num), 10);
+      return !isReferenceUsed(itemNum, preRef, deduplicatedItems.length);
+    });
+
+    const getFirstAppearanceIndex = (num: number, text: string): number => {
+      const citeIdIndex = text.indexOf(`cite-${num}`);
+      const refIdIndex = text.indexOf(`ref-${num}`);
+      const refNumIndex = text.indexOf(`refNum={${num}}`);
+      
+      const cleanText = text.replace(/<!--[\s\S]*?-->/g, ''); // strip comments
+      const widgetRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*(?:Citation|Reference|Ref)\\s*:\\s*${num}\\b`, 'i');
+      const widgetIndex = cleanText.search(widgetRegex);
+      
+      const elementRegex = new RegExp(`<Reference\\b[^>]*?\\b(?:id|name|term)=[{"']?${num}\\b`, 'i');
+      const elementIndex = cleanText.search(elementRegex);
+      
+      const indices = [citeIdIndex, refIdIndex, refNumIndex, widgetIndex, elementIndex].filter(idx => idx !== -1);
+      return indices.length > 0 ? Math.min(...indices) : Infinity;
+    };
+
+    activeItems.sort((a, b) => {
+      const aNum = typeof a.num === 'number' ? a.num : parseInt(String(a.num), 10);
+      const bNum = typeof b.num === 'number' ? b.num : parseInt(String(b.num), 10);
+      return getFirstAppearanceIndex(aNum, preRef) - getFirstAppearanceIndex(bNum, preRef);
+    });
+
+    const sortedDeduplicatedItems = [...activeItems, ...unusedItems];
+
+    // Renumber sortedDeduplicatedItems sequentially from 1 to N to guarantee contiguity
+    const finalItems: ReferenceItem[] = [];
     const renumberMap: Record<number, number> = {};
-    deduplicatedItems.forEach((item, idx) => {
+    sortedDeduplicatedItems.forEach((item, idx) => {
       const newNum = idx + 1;
-      renumberMap[item.num] = newNum;
+      const itemNum = typeof item.num === 'number' ? item.num : parseInt(String(item.num), 10);
+      renumberMap[itemNum] = newNum;
       finalItems.push({
         ...item,
         num: newNum
@@ -4467,62 +4956,90 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
     }
     
     // Map non-duplicate items that got renumbered
-    deduplicatedItems.forEach(item => {
-      const newNum = renumberMap[item.num];
-      if (newNum && newNum !== item.num) {
-        finalNumberMap[item.num] = newNum;
+    sortedDeduplicatedItems.forEach(item => {
+      const itemNum = typeof item.num === 'number' ? item.num : parseInt(String(item.num), 10);
+      const newNum = renumberMap[itemNum];
+      if (newNum && newNum !== itemNum) {
+        finalNumberMap[itemNum] = newNum;
       }
     });
 
+    // Flexible fallback for any other cited number in the preRef narrative text that resides outside standard range
+    if (finalItems.length > 0) {
+      const citedNumbers = getCitedNumbers(preRef);
+      for (const num of citedNumbers) {
+        if (finalNumberMap[num] === undefined && renumberMap[num] === undefined) {
+          // Resolve to a valid contiguous index in finalItems (1..finalItems.length)
+          finalNumberMap[num] = ((num - 1) % finalItems.length) + 1;
+        }
+      }
+    }
+
     // Rewrite citation numbers in preRef text
     let updatedPreRef = preRef;
-    for (const [oldNumStr, newNum] of Object.entries(finalNumberMap)) {
-      const oldNum = parseInt(oldNumStr, 10);
-      
-      // 1. Replace structured HTML inline citations
-      const dupCiteRegex = new RegExp(`<sup id="cite-${oldNum}" class="scroll-mt-24"><a href="#ref-${oldNum}">\\[${oldNum}\\]</a></sup>`, 'g');
-      updatedPreRef = updatedPreRef.replace(dupCiteRegex, `<sup id="cite-${newNum}" class="scroll-mt-24"><a href="#ref-${newNum}">[${newNum}]</a></sup>`);
 
-      // 2. Replace simple markdown inline link citations: [X](#ref-X)
-      const dupLinkRegex = new RegExp(`\\[${oldNum}\\]\\(#ref-${oldNum}\\)`, 'g');
-      updatedPreRef = updatedPreRef.replace(dupLinkRegex, `[${newNum}](#ref-${newNum})`);
+    // 1. Replace structured HTML inline citations
+    const HTMLCiteRegex = /<sup id="cite-(\d+)" class="scroll-mt-24"><a href="#ref-\1">(?:\\[)?\d+(?:\\])?<\/a><\/sup>/g;
+    updatedPreRef = updatedPreRef.replace(HTMLCiteRegex, (match, numStr) => {
+      const num = parseInt(numStr, 10);
+      const newNum = finalNumberMap[num];
+      return newNum !== undefined ? `<sup id="cite-${newNum}" class="scroll-mt-24"><a href="#ref-${newNum}">[${newNum}]</a></sup>` : match;
+    });
 
-      // 3. Replace raw superscript bracketed citations: <sup>[X]</sup>
-      const dupSupBracketRegex = new RegExp(`<sup>\\s*\\[${oldNum}\\]\\s*</sup>`, 'g');
-      updatedPreRef = updatedPreRef.replace(dupSupBracketRegex, `<sup>[${newNum}]</sup>`);
+    // 2. Replace simple markdown inline link citations: [X](#ref-X)
+    updatedPreRef = updatedPreRef.replace(/\[(\d+)\]\(#ref-\1\)/g, (match, numStr) => {
+      const num = parseInt(numStr, 10);
+      const newNum = finalNumberMap[num];
+      return newNum !== undefined ? `[${newNum}](#ref-${newNum})` : match;
+    });
 
-      // 4. Replace raw superscript numeric citations: <sup>X</sup>
-      const dupSupRawRegex = new RegExp(`<sup>\\s*${oldNum}\\s*</sup>`, 'g');
-      updatedPreRef = updatedPreRef.replace(dupSupRawRegex, `<sup>[${newNum}]</sup>`);
+    // 3. Replace raw superscript bracketed citations: <sup>[X]</sup>
+    updatedPreRef = updatedPreRef.replace(/<sup>\s*\[(\d+)\]\s*<\/sup>/g, (match, numStr) => {
+      const num = parseInt(numStr, 10);
+      const newNum = finalNumberMap[num];
+      return newNum !== undefined ? `<sup>[${newNum}]</sup>` : match;
+    });
 
-      // 5. Replace citation/quote block component references
-      const dupRefNumRegex = new RegExp(`\\brefNum=\\{${oldNum}\\}`, 'g');
-      updatedPreRef = updatedPreRef.replace(dupRefNumRegex, `refNum={${newNum}}`);
+    // 4. Replace raw superscript numeric citations: <sup>X</sup>
+    updatedPreRef = updatedPreRef.replace(/<sup>\s*(\d+)\s*<\/sup>/g, (match, numStr) => {
+      const num = parseInt(numStr, 10);
+      const newNum = finalNumberMap[num];
+      return newNum !== undefined ? `<sup>[${newNum}]</sup>` : match;
+    });
 
-      // 6. Replace WFTA widget citations
-      const dupWidgetRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*(?:Citation|Reference|Ref)\\s*:\\s*${oldNum}\\b`, 'gi');
-      updatedPreRef = updatedPreRef.replace(dupWidgetRegex, `[[WIDGET:Reference:${newNum}`);
+    // 5. Replace citation/quote block component references
+    updatedPreRef = updatedPreRef.replace(/\brefNum=\{\s*(\d+)\s*\}/g, (match, numStr) => {
+      const num = parseInt(numStr, 10);
+      const newNum = finalNumberMap[num];
+      return newNum !== undefined ? `refNum={${newNum}}` : match;
+    });
 
-      // 7. Replace inline Reference components attributes and children
-      const referenceMatchRegex = new RegExp(`(<Reference\\b[^>]*?>[\\s\\S]*?</Reference>|<Reference\\b[^>]*?/>)`, 'gi');
-      updatedPreRef = updatedPreRef.replace(referenceMatchRegex, (refTag) => {
-        let updatedTag = refTag;
-        // Replace id="..." or id={...} or id=...
-        updatedTag = updatedTag.replace(new RegExp(`\\bid=(["'{]?)${oldNum}\\b(["'}]?)`, 'g'), `id=$1${newNum}$2`);
-        // Replace name="..." or name={...}
-        updatedTag = updatedTag.replace(new RegExp(`\\bname=(["'{]?)${oldNum}\\b(["'}]?)`, 'g'), `name=$1${newNum}$2`);
-        // Replace term="..." or term={...}
-        updatedTag = updatedTag.replace(new RegExp(`\\bterm=(["'{]?)${oldNum}\\b(["'}]?)`, 'g'), `term=$1${newNum}$2`);
-        // Replace child text: >oldNum<
-        updatedTag = updatedTag.replace(new RegExp(`>\\s*${oldNum}\\s*<`, 'g'), `>${newNum}<`);
-        return updatedTag;
+    // 6. Replace WFTA widget citations
+    updatedPreRef = updatedPreRef.replace(/\[\[\s*WIDGET\s*:\s*(?:Citation|Reference|Ref)\s*:\s*(\d+)\b/gi, (match, numStr) => {
+      const num = parseInt(numStr, 10);
+      const newNum = finalNumberMap[num];
+      return newNum !== undefined ? `[[WIDGET:Reference:${newNum}` : match;
+    });
+
+    // 7. Replace inline Reference components attributes and children
+    const referenceMatchRegex = /(<Reference\b[^>]*?>[\s\S]*?<\/Reference>|<Reference\b[^>]*?\/?>)/gi;
+    updatedPreRef = updatedPreRef.replace(referenceMatchRegex, (refTag) => {
+      return refTag.replace(/\b(id|name|term)=(["'{]?)(\d+)\b(["'}]?)/g, (match, attr, q1, numStr, q2) => {
+        const num = parseInt(numStr, 10);
+        const newNum = finalNumberMap[num];
+        return newNum !== undefined ? `${attr}=${q1}${newNum}${q2}` : match;
+      }).replace(/>\s*(\d+)\s*</g, (match, numStr) => {
+        const num = parseInt(numStr, 10);
+        const newNum = finalNumberMap[num];
+        return newNum !== undefined ? `>${newNum}<` : match;
       });
-    }
+    });
 
     if (finalItems.length > 0) {
       // Tag each item as isUnused or active based on its usage in updatedPreRef
       for (const item of finalItems) {
-        item.isUnused = !isReferenceUsed(item.num, updatedPreRef);
+        const itemNum = typeof item.num === 'number' ? item.num : parseInt(String(item.num), 10);
+        item.isUnused = !isReferenceUsed(itemNum, updatedPreRef, finalItems.length);
       }
 
       const base64 = Buffer.from(JSON.stringify(finalItems)).toString('base64');
@@ -4614,7 +5131,7 @@ function removeOrphanedCloseTags(mdx: string): string {
     }
     
     // Find a good place to insert closing tags: before glossary or references, or at the end
-    const insertIndex = result.search(/###\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary|Réf|References|Bibliography)/iu);
+    const insertIndex = result.search(/##{1,2}\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表|Glossário|Glossario|المعجم|قاموس المصطلحات|शब्दावली|فرہنگ|Réf|References|Bibliography|Referencias|Referenzen|参考文献|Referenze|Referências|المصادر|المراجع|संदर्भ|حوالہ جات)/iu);
     if (insertIndex !== -1) {
       result = result.substring(0, insertIndex) + `\n${closingTags}\n\n` + result.substring(insertIndex);
     } else {
@@ -4686,8 +5203,18 @@ function healUnclosedInlineTags(mdx: string): string {
   return result.join('\n');
 }
 
-export function isolateJsxForTranslation(mdx: string): { content: string; registry: Record<string, any> } {
-  const registry: Record<string, any> = {};
+export interface RegistryEntry {
+  type: string;
+  original: string;
+  tagName?: string;
+  attrs?: Record<string, string>;
+  attrsToTranslate?: string[];
+  qKey?: string;
+  isSelfClosing?: boolean;
+}
+
+export function isolateJsxForTranslation(mdx: string): { content: string; registry: Record<string, RegistryEntry> } {
+  const registry: Record<string, RegistryEntry> = {};
   let currentId = 0;
 
   let processed = mdx;
@@ -4872,7 +5399,7 @@ export function isolateJsxForTranslation(mdx: string): { content: string; regist
   return { content: processed, registry };
 }
 
-export function restoreJsxAfterTranslation(translatedMdx: string, registry: Record<string, any>, targetLang?: string): string {
+export function restoreJsxAfterTranslation(translatedMdx: string, registry: Record<string, RegistryEntry>, targetLang?: string): string {
   let processed = translatedMdx;
 
   const LOCALIZED_COMPONENTS = new Set([
@@ -4882,7 +5409,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
     'ProjectLink', 'SpeciesLink', 'ChemicalLink', 'CelestialLink'
   ]);
 
-  function formatAttribute(k: string, v: any, originalTag?: string): string {
+  function formatAttribute(k: string, v: unknown, originalTag?: string): string {
     const cleanV = String(v || '').trim();
     if (originalTag) {
       const escapedK = k.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -4929,13 +5456,13 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       processed = processed.replace(new RegExp(placeholder, 'gi'), entry.original);
     } else if (entry.type === 'open') {
       let original = entry.original;
-      if (targetLang && LOCALIZED_COMPONENTS.has(entry.tagName) && entry.attrs) {
+      if (targetLang && LOCALIZED_COMPONENTS.has(entry.tagName || '') && entry.attrs) {
         const updatedAttrs = { ...entry.attrs, lang: targetLang.toLowerCase() };
         let attrsStr = '';
         for (const [k, v] of Object.entries(updatedAttrs)) {
           attrsStr += formatAttribute(k, v, entry.original);
         }
-        original = `<${entry.tagName}${attrsStr}>`;
+        original = `<${entry.tagName || ''}${attrsStr}>`;
       }
       processed = processed.replace(new RegExp(placeholder, 'gi'), original);
     } else if (entry.type === 'attr_generic') {
@@ -4945,12 +5472,12 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         const translatedContent = match[1].trim();
         const translatedValues = translatedContent.split('|||').map(v => v.trim());
         const updatedAttrs = { ...entry.attrs };
-        entry.attrsToTranslate.forEach((attrName: string, idx: number) => {
+        entry.attrsToTranslate?.forEach((attrName: string, idx: number) => {
           if (translatedValues[idx] !== undefined) {
             updatedAttrs[attrName] = translatedValues[idx];
           }
         });
-        if (targetLang && LOCALIZED_COMPONENTS.has(entry.tagName)) {
+        if (targetLang && LOCALIZED_COMPONENTS.has(entry.tagName || '')) {
           updatedAttrs['lang'] = targetLang.toLowerCase();
         }
         let attrsStr = '';
@@ -4958,8 +5485,8 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
           attrsStr += formatAttribute(k, v, entry.original);
         }
         const restoredTag = entry.isSelfClosing 
-          ? `<${entry.tagName}${attrsStr} />` 
-          : `<${entry.tagName}${attrsStr}>`;
+          ? `<${entry.tagName || ''}${attrsStr} />` 
+          : `<${entry.tagName || ''}${attrsStr}>`;
         processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
       } else {
         processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
@@ -4968,10 +5495,10 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const sentence = match[1].trim() || entry.attrs.sentence || '';
-        const answer = match[2].trim() || entry.attrs.answer || '';
+        const sentence = match[1].trim() || entry.attrs?.sentence || '';
+        const answer = match[2].trim() || entry.attrs?.answer || '';
         let attrsStr = '';
-        for (const [k, v] of Object.entries(entry.attrs)) {
+        for (const [k, v] of Object.entries(entry.attrs || {})) {
           if (k !== 'sentence' && k !== 'answer') {
             attrsStr += formatAttribute(k, v, entry.original);
           }
@@ -4985,10 +5512,10 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const term = match[1].trim() || entry.attrs.term || '';
-        const definition = match[2].trim() || entry.attrs.definition || '';
+        const term = match[1].trim() || entry.attrs?.term || '';
+        const definition = match[2].trim() || entry.attrs?.definition || '';
         let attrsStr = '';
-        for (const [k, v] of Object.entries(entry.attrs)) {
+        for (const [k, v] of Object.entries(entry.attrs || {})) {
           if (k !== 'term' && k !== 'definition') {
             attrsStr += formatAttribute(k, v, entry.original);
           }
@@ -5002,10 +5529,10 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*\\|\\|\\|\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const prompt = match[1].trim() || entry.attrs.prompt || '';
-        const subject = match[2].trim() || entry.attrs.subject || '';
+        const prompt = match[1].trim() || entry.attrs?.prompt || '';
+        const subject = match[2].trim() || entry.attrs?.subject || '';
         let attrsStr = '';
-        for (const [k, v] of Object.entries(entry.attrs)) {
+        for (const [k, v] of Object.entries(entry.attrs || {})) {
           if (k !== 'prompt' && k !== 'subject') {
             attrsStr += formatAttribute(k, v, entry.original);
           }
@@ -5019,10 +5546,10 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const name = match[1].trim() || entry.attrs.name || '';
+        const name = match[1].trim() || entry.attrs?.name || '';
         let attrsStr = '';
         const updatedAttrs = { ...entry.attrs };
-        if (targetLang && LOCALIZED_COMPONENTS.has(entry.tagName)) {
+        if (targetLang && LOCALIZED_COMPONENTS.has(entry.tagName || '')) {
           updatedAttrs['lang'] = targetLang.toLowerCase();
         }
         for (const [k, v] of Object.entries(updatedAttrs)) {
@@ -5030,7 +5557,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
             attrsStr += formatAttribute(k, v, entry.original);
           }
         }
-        const restoredTag = `<${entry.tagName} name="${name}"${attrsStr} />`;
+        const restoredTag = `<${entry.tagName || ''} name="${name}"${attrsStr} />`;
         processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
       } else {
         processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
@@ -5039,9 +5566,9 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const text = match[1].trim() || entry.attrs.text || '';
+        const text = match[1].trim() || entry.attrs?.text || '';
         let attrsStr = '';
-        for (const [k, v] of Object.entries(entry.attrs)) {
+        for (const [k, v] of Object.entries(entry.attrs || {})) {
           if (k !== 'text') {
             attrsStr += formatAttribute(k, v, entry.original);
           }
@@ -5056,16 +5583,16 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
         const qKey = entry.qKey || 'q';
-        const q = match[1].trim() || entry.attrs[qKey] || '';
-        const explanation = match[2].trim() || entry.attrs.explanation || '';
+        const q = match[1].trim() || entry.attrs?.[qKey] || '';
+        const explanation = match[2].trim() || entry.attrs?.explanation || '';
         let attrsStr = '';
-        for (const [k, v] of Object.entries(entry.attrs)) {
+        for (const [k, v] of Object.entries(entry.attrs || {})) {
           if (k !== 'q' && k !== 'questionText' && k !== 'text' && k !== 'question' && k !== 'explanation') {
             attrsStr += formatAttribute(k, v, entry.original);
           }
         }
         const expAttr = explanation ? ` explanation="${explanation}"` : '';
-        const restoredTag = `<${entry.tagName} ${qKey}="${q}"${expAttr}${attrsStr}${entry.isSelfClosing ? ' /' : ''}>`;
+        const restoredTag = `<${entry.tagName || ''} ${qKey}="${q}"${expAttr}${attrsStr}${entry.isSelfClosing ? ' /' : ''}>`;
         processed = processed.replace(new RegExp(regexStr, 'gi'), restoredTag);
       } else {
         processed = processed.replace(new RegExp(placeholder, 'g'), entry.original);
@@ -5074,9 +5601,9 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       const regexStr = `${placeholder}\\s*([\\s\\S]*?)\\s*__JSX_END_${placeholderId}__`;
       const match = new RegExp(regexStr, 'i').exec(processed);
       if (match) {
-        const itemsString = match[1].trim() || entry.attrs.itemsString || '';
+        const itemsString = match[1].trim() || entry.attrs?.itemsString || '';
         let attrsStr = '';
-        for (const [k, v] of Object.entries(entry.attrs)) {
+        for (const [k, v] of Object.entries(entry.attrs || {})) {
           if (k !== 'itemsString') {
             attrsStr += formatAttribute(k, v, entry.original);
           }
@@ -5094,9 +5621,9 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         const parts = contentToParse.split('|||').map(p => p.trim());
         const n = parts.length;
         
-        let q = entry.attrs[entry.qKey || 'q'] || '';
-        let options = entry.attrs.options || '';
-        let sectionTitle = entry.attrs.sectionTitle || '';
+        let q = entry.attrs?.[entry.qKey || 'q'] || '';
+        let options = entry.attrs?.options || '';
+        let sectionTitle = entry.attrs?.sectionTitle || '';
         
         if (n >= 3) {
           q = parts[0];
@@ -5110,7 +5637,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
         }
         
         let attrsStr = '';
-        for (const [k, v] of Object.entries(entry.attrs)) {
+        for (const [k, v] of Object.entries(entry.attrs || {})) {
           if (k !== 'q' && k !== 'questionText' && k !== 'text' && k !== 'question' && k !== 'options' && k !== 'sectionTitle') {
             attrsStr += formatAttribute(k, v, entry.original);
           }
@@ -5277,7 +5804,32 @@ function isDuplicateReference(t1: string, t2: string): boolean {
   return similarity >= 0.65;
 }
 
-function isReferenceUsed(num: number, preRefText: string): boolean {
+function getCitedNumbers(text: string): Set<number> {
+  const nums = new Set<number>();
+  const regexes = [
+    /\bcite-(\d+)\b/gi,
+    /\bref-(\d+)\b/gi,
+    /\brefNum=\{\s*(\d+)\s*\}/gi,
+    /\[\[\s*WIDGET\s*:\s*(?:Citation|Reference|Ref)\s*:\s*(\d+)\b/gi,
+    /<Reference\b[^>]*?\b(?:id|name|term)=[{"']?(\d+)\b/gi,
+    /\[ref[-_]?\s*(\d+)\]/gi,
+    /\[(\d+)\]\(#ref-\1\)/g,
+    /<sup>\s*\[?(\d+)\]?\s*<\/sup>/gi
+  ];
+  
+  for (const regex of regexes) {
+    let match;
+    regex.lastIndex = 0;
+    while ((match = regex.exec(text)) !== null) {
+      if (match[1]) {
+        nums.add(parseInt(match[1], 10));
+      }
+    }
+  }
+  return nums;
+}
+
+function isReferenceUsed(num: number, preRefText: string, totalItems?: number): boolean {
   // Check for various ways a reference might be cited/used in the main body text:
   const citeIdRegex = new RegExp(`\\bcite-${num}\\b`, 'i');
   const refIdRegex = new RegExp(`\\bref-${num}\\b`, 'i');
@@ -5285,11 +5837,28 @@ function isReferenceUsed(num: number, preRefText: string): boolean {
   const widgetRegex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*(?:Citation|Reference|Ref)\\s*:\\s*${num}\\b`, 'i');
   const elementRegex = new RegExp(`<Reference\\b[^>]*?\\b(?:id|name|term)=[{"']?${num}\\b`, 'i');
   
-  return citeIdRegex.test(preRefText) || refIdRegex.test(preRefText) || refNumRegex.test(preRefText) || widgetRegex.test(preRefText) || elementRegex.test(preRefText);
+  if (citeIdRegex.test(preRefText) || refIdRegex.test(preRefText) || refNumRegex.test(preRefText) || widgetRegex.test(preRefText) || elementRegex.test(preRefText)) {
+    return true;
+  }
+
+  // Flexible resolution of out-of-range citations
+  if (totalItems && totalItems > 0) {
+    const citedNums = getCitedNumbers(preRefText);
+    for (const cited of citedNums) {
+      if (cited > totalItems) {
+        const resolved = ((cited - 1) % totalItems) + 1;
+        if (resolved === num) {
+          return true;
+        }
+      }
+    }
+  }
+  
+  return false;
 }
 
 function simplifyCitationQuery(citationText: string): string {
-  let cleanText = citationText
+  const cleanText = citationText
     .replace(/\*\*/g, '')
     .replace(/__/g, '')
     .replace(/<[^>]*>/g, '')
@@ -5686,9 +6255,9 @@ export async function resolveWikiDetails(
         if (pages) {
           const pageId = Object.keys(pages)[0];
           const langlinks = pages[pageId]?.langlinks || [];
-          const match = langlinks.find((l: any) => l.lang === langCode);
+          const match = langlinks.find((l: { lang: string; '*': string }) => l.lang === langCode);
           if (match) {
-            const translatedTitle = (match['*'] as string).replace(/ /g, '_');
+            const translatedTitle = (match['*']).replace(/ /g, '_');
             const r = await fetchWikiDetailsFromRest(translatedTitle, langCode) ||
                       await fetchWikiDetailsFromActionApi(translatedTitle, langCode);
             if (r) return await commit(r);
@@ -5710,9 +6279,9 @@ export async function resolveWikiDetails(
           const enPageId = Object.keys(enPages)[0];
           if (enPageId && enPageId !== '-1') {
             const enLanglinks = enPages[enPageId]?.langlinks || [];
-            const match = enLanglinks.find((l: any) => l.lang === langCode);
+            const match = enLanglinks.find((l: { lang: string; '*': string }) => l.lang === langCode);
             if (match) {
-              const translatedTitle = (match['*'] as string).replace(/ /g, '_');
+              const translatedTitle = (match['*']).replace(/ /g, '_');
               const r = await fetchWikiDetailsFromRest(translatedTitle, langCode) ||
                         await fetchWikiDetailsFromActionApi(translatedTitle, langCode);
               if (r) return await commit(r);
@@ -5720,6 +6289,9 @@ export async function resolveWikiDetails(
               const r = await fetchWikiDetailsFromRest(formattedName, 'en') ||
                         await fetchWikiDetailsFromActionApi(formattedName, 'en');
               if (r) {
+                // Translate summary/description to lesson language before committing
+                if (r.summary) r.summary = await translateText(r.summary, langCode);
+                if (r.description) r.description = await translateText(r.description, langCode);
                 r.url = `https://translate.google.com/translate?sl=en&tl=${langCode}&u=${encodeURIComponent(r.url || '')}`;
                 return await commit(r);
               }
@@ -5736,6 +6308,9 @@ export async function resolveWikiDetails(
       const r = await fetchWikiDetailsFromRest(formattedName, origLang) ||
                 await fetchWikiDetailsFromActionApi(formattedName, origLang);
       if (r) {
+        // Translate summary/description to lesson language before committing
+        if (r.summary) r.summary = await translateText(r.summary, langCode);
+        if (r.description) r.description = await translateText(r.description, langCode);
         r.url = `https://translate.google.com/translate?sl=${origLang}&tl=${langCode}&u=${encodeURIComponent(r.url || '')}`;
         return await commit(r);
       }
@@ -5781,7 +6356,11 @@ function patchEntityAttrsIntoSource(sourceBody: string, enrichedBody: string): s
   });
 }
 
-export async function enrichEntityTagsWithWikipedia(content: string, lang: string): Promise<string> {
+export async function enrichEntityTagsWithWikipedia(content: string, lang: string, domain?: string): Promise<string> {
+
+  // Parse the local glossary section first — provides a high-fidelity, zero-latency
+  // fallback for terms that Wikipedia may not resolve (or that have spelling variations).
+  const localGlossary = parseLocalGlossary(content);
 
   const entityTagsPattern = '(?:RealPerson|HistoricalPerson|FictionalCharacter|Location|Artwork|EventLink|HistoricalEventLink|EvenementHistorique|ÉvénementHistorique|Glossary|ConceptLink|ConceptLien|TheoremLink|TheoremeLien|ThéorèmeLien|InstitutionLink|InstitutionLien|SpeciesLink|SpeciesLien|EspeceLien|EspèceLien|OrganismeLien|ChemicalLink|ChemicalLien|MoleculesLien|MoleculeLien|ChimieLien|CelestialLink|CelestialLien|CorpsCeleste|CorpsCéleste|AstroLien)';
   const tagRegex = new RegExp(`<(${entityTagsPattern})\\b([^>]*?)>([\\s\\S]*?)<\\/\\1>`, 'gi');
@@ -5950,9 +6529,59 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
             }
           }
 
-          const cleanAttrs = newAttrs.replace(/\\s+/g, ' ').trim();
+          // Inject lesson domain/subject so the hovercard can display it in the header
+          if (domain && !parseAttr(item.attrsString, 'domain') && !parseAttr(item.attrsString, 'subject')) {
+            newAttrs += ` domain="${domain.replace(/"/g, '&quot;')}"`;
+          }
+
+          const cleanAttrs = newAttrs.replace(/\s+/g, ' ').trim();
           enriched += `<${item.tagName} ${cleanAttrs}>${item.innerText}</${item.tagName}>`;
           continue;
+        }
+
+        // ── Local glossary fallback ──────────────────────────────────────────
+        // Wikipedia returned nothing — try the pre-parsed local glossary with
+        // fuzzy matching to handle typos like "vraissemblance" → "vraisemblance".
+        if (localGlossary.size > 0) {
+          const glossaryMatch = findGlossaryMatch(queryName, localGlossary);
+          if (glossaryMatch) {
+            let newAttrs = item.attrsString.trim();
+
+            if (glossaryMatch.url) {
+              if (tagLower === 'glossary') {
+                newAttrs = newAttrs.replace(/\b(wikipediaUrl|wikipedia|url|href)=["'][^"']*["']/gi, '').trim();
+                newAttrs += ` wikipediaUrl="${glossaryMatch.url}"`;
+              } else {
+                newAttrs = newAttrs.replace(/\b(url|href|wikipediaUrl|wikipedia)=["'][^"']*["']/gi, '').trim();
+                newAttrs += ` url="${glossaryMatch.url}"`;
+              }
+            }
+
+            if (!descVal) {
+              const escDesc = glossaryMatch.definition.replace(/"/g, '&quot;').replace(/\n/g, ' ').trim();
+              if (tagLower === 'glossary') {
+                newAttrs = newAttrs.replace(/\b(definition|description)=["'][^"']*["']/gi, '').trim();
+                newAttrs += ` definition="${escDesc}"`;
+              } else {
+                newAttrs = newAttrs.replace(/\bdescription=["'][^"']*["']/gi, '').trim();
+                newAttrs += ` description="${escDesc}"`;
+              }
+            }
+
+            if (!parseAttr(item.attrsString, 'type')) newAttrs += ` type="${resolvedType}"`;
+            if (!parseAttr(item.attrsString, 'name') && !parseAttr(item.attrsString, 'term') && !parseAttr(item.attrsString, 'word')) {
+              newAttrs += tagLower === 'glossary'
+                ? ` term="${queryName.replace(/"/g, '&quot;')}"`
+                : ` name="${queryName.replace(/"/g, '&quot;')}"`;
+            }
+            if (domain && !parseAttr(item.attrsString, 'domain') && !parseAttr(item.attrsString, 'subject')) {
+              newAttrs += ` domain="${domain.replace(/"/g, '&quot;')}"`;
+            }
+
+            const cleanAttrs = newAttrs.replace(/\s+/g, ' ').trim();
+            enriched += `<${item.tagName} ${cleanAttrs}>${item.innerText}</${item.tagName}>`;
+            continue;
+          }
         }
       } catch (err) {
         console.error(`[enrichEntityTagsWithWikipedia] Error resolving for "${queryName}":`, err);
@@ -6008,7 +6637,7 @@ export async function resolvePrecompiledAnchors(
   for (const item of matches) {
     const typeLower = item.type.toLowerCase();
 
-    if (typeLower === 'citation') {
+    if (typeLower === 'citation' || typeLower === 'reference' || typeLower === 'ref') {
       const num = item.id;
       const desc = item.topic || '';
       const titleAttr = desc ? ` title="${desc.replace(/"/g, '&quot;')}"` : '';
@@ -6170,11 +6799,20 @@ export function rehypeMdxSanitizer(lang: string = 'en') {
       .replace(/[^\x00-\x7F]/g, '');
   }
 
-  function traverse(node: any) {
+  interface RehypeNode {
+    type: string;
+    name?: string;
+    tagName?: string;
+    properties?: Record<string, unknown>;
+    attributes?: { type: string; name: string; value?: unknown }[];
+    children?: RehypeNode[];
+  }
+
+  function traverse(node: RehypeNode) {
     if (!node) return;
 
     if (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') {
-      if (!whitelistedComponents.has(node.name)) {
+      if (!whitelistedComponents.has(node.name || '')) {
         console.warn(`[Rehype Sanitizer] Found non-whitelisted legacy tag: <${node.name}>. Converting to standard HTML container.`);
         if (node.type === 'mdxJsxFlowElement') {
           node.type = 'element';
@@ -6194,9 +6832,6 @@ export function rehypeMdxSanitizer(lang: string = 'en') {
               val = val.replace(/[\u00A0\u202F]/g, ' ');
               val = val.replace(/[\u201C\u201D\u201E\u201F\u2033\u2036«»“”]/g, '"');
               val = val.replace(/[\u2018\u2019\u201A\u201B\u2032\u2035‘’]/g, "'");
-              if (lang.toLowerCase() === 'fr') {
-                val = forceAsciiLocal(val);
-              }
               attr.value = val;
             }
           }
@@ -6211,7 +6846,7 @@ export function rehypeMdxSanitizer(lang: string = 'en') {
     }
   }
 
-  return (tree: any) => {
+  return (tree: RehypeNode) => {
     traverse(tree);
   };
 }

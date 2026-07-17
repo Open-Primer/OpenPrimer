@@ -890,6 +890,17 @@ export const RAW_STATIC_UI_STRINGS = {
     "periodic_shells_config": "Configuration :",
     "periodic_atomic_mass": "Masse Atomique",
     "periodic_electronegativity": "Électronégativité",
+    "ex_solved_title": "Exemple résolu",
+    "ex_unsolved_title": "Calcul d'application rapide",
+    "ex_check": "Vérifier la réponse",
+    "ex_hint_btn": "Besoin d'un indice ?",
+    "ex_show_sol": "Afficher la solution étape par étape",
+    "ex_hide_sol": "Masquer la solution étape par étape",
+    "ex_correct": "Correct ! Excellent calcul.",
+    "ex_incorrect": "Incorrect. Réévaluez la formule ou les étapes.",
+    "ex_attempts": "Tentatives restantes :",
+    "ex_unlocked_sol": "💡 Solution déverrouillée !",
+    "ex_placeholder": "Saisir la valeur numérique...",
   },
   HI: {
     "physics": "भौतिक विज्ञान",
@@ -1109,6 +1120,17 @@ export const RAW_STATIC_UI_STRINGS = {
     "periodic_shells_config": "कोश :",
     "periodic_atomic_mass": "परमाणु द्रव्यमान",
     "periodic_electronegativity": "वैद्युतीयऋणात्मकता",
+    "ex_solved_title": "हल किया गया उदाहरण",
+    "ex_unsolved_title": "त्वरित गणना चुनौती",
+    "ex_check": "उत्तर सत्यापित करें",
+    "ex_hint_btn": "संकेत चाहिए?",
+    "ex_show_sol": "चरण-दर-चरण समाधान दिखाएं",
+    "ex_hide_sol": "चरण-दर-चरण समाधान छिपाएं",
+    "ex_correct": "सही! उत्कृष्ट गणना।",
+    "ex_incorrect": "गलत। सूत्र या चरणों का पुनर्मूल्यांकन करने का प्रयास करें।",
+    "ex_attempts": "बचे हुए प्रयास:",
+    "ex_unlocked_sol": "💡 समाधान अनलॉक हो गया!",
+    "ex_placeholder": "संख्यात्मक मान दर्ज करें...",
   },
   ES: {
     "physics": "Física",
@@ -1322,6 +1344,17 @@ export const RAW_STATIC_UI_STRINGS = {
     "periodic_shells_config": "Capas :",
     "periodic_atomic_mass": "Masa Atómica",
     "periodic_electronegativity": "Electronegatividad",
+    "ex_solved_title": "Ejemplo resuelto",
+    "ex_unsolved_title": "Cálculo de aplicación rápida",
+    "ex_check": "Verificar respuesta",
+    "ex_hint_btn": "¿Necesitas una pista?",
+    "ex_show_sol": "Mostrar solución paso a paso",
+    "ex_hide_sol": "Ocultar solución paso a paso",
+    "ex_correct": "¡Correcto! Excelente cálculo.",
+    "ex_incorrect": "Incorrecto. Intenta reevaluar la fórmula o los pasos.",
+    "ex_attempts": "Intentos restantes:",
+    "ex_unlocked_sol": "💡 ¡Solución desbloqueada!",
+    "ex_placeholder": "Ingresa el valor numérico...",
   },
   DE: {
     "physics": "Physik",
@@ -1541,6 +1574,17 @@ export const RAW_STATIC_UI_STRINGS = {
     "periodic_shells_config": "Schalen :",
     "periodic_atomic_mass": "Atommasse",
     "periodic_electronegativity": "Elektronegativität",
+    "ex_solved_title": "Gelöstes Beispiel",
+    "ex_unsolved_title": "Schnelle Berechnungsaufgabe",
+    "ex_check": "Antwort überprüfen",
+    "ex_hint_btn": "Benötigen Sie einen Hinweis?",
+    "ex_show_sol": "Schritt-für-Schritt-Lösung anzeigen",
+    "ex_hide_sol": "Schritt-für-Schritt-Lösung ausblenden",
+    "ex_correct": "Richtig! Hervorragende Berechnung.",
+    "ex_incorrect": "Falsch. Versuchen Sie, die Formel oder die Schritte neu zu bewerten.",
+    "ex_attempts": "Verbleibende Versuche:",
+    "ex_unlocked_sol": "💡 Lösung freigeschaltet!",
+    "ex_placeholder": "Numerischen Wert eingeben...",
   },
   ZH: {
     "physics": "物理",
@@ -1760,6 +1804,17 @@ export const RAW_STATIC_UI_STRINGS = {
     "periodic_shells_config": "电子层 :",
     "periodic_atomic_mass": "原子质量",
     "periodic_electronegativity": "电负性",
+    "ex_solved_title": "已解析示例",
+    "ex_unsolved_title": "快速计算挑战",
+    "ex_check": "验证答案",
+    "ex_hint_btn": "需要提示吗？",
+    "ex_show_sol": "显示详细步骤",
+    "ex_hide_sol": "隐藏详细步骤",
+    "ex_correct": "正确！出色的计算。",
+    "ex_incorrect": "不正确。请尝试重新评估公式或步骤。",
+    "ex_attempts": "剩余尝试次数：",
+    "ex_unlocked_sol": "💡 解答已解锁！",
+    "ex_placeholder": "输入数值...",
   },
   PT: {
     "physics": "Física",
@@ -1979,6 +2034,17 @@ export const RAW_STATIC_UI_STRINGS = {
     "periodic_shells_config": "Camadas :",
     "periodic_atomic_mass": "Massa Atônica",
     "periodic_electronegativity": "Eletronegatividade",
+    "ex_solved_title": "Exemplo resolvido",
+    "ex_unsolved_title": "Desafio de cálculo rápido",
+    "ex_check": "Verificar resposta",
+    "ex_hint_btn": "Precisa de uma dica?",
+    "ex_show_sol": "Mostrar solução passo a passo",
+    "ex_hide_sol": "Ocultar solução passo a passo",
+    "ex_correct": "Correto! Excelente cálculo.",
+    "ex_incorrect": "Incorreto. Tente reavaliar a fórmula ou as etapas.",
+    "ex_attempts": "Tentativas restantes:",
+    "ex_unlocked_sol": "💡 Solução desbloqueada!",
+    "ex_placeholder": "Insira o valor numérico...",
   },
   AR: {
     "physics": "الفيزياء",
@@ -2198,6 +2264,17 @@ export const RAW_STATIC_UI_STRINGS = {
     "periodic_shells_config": "الأغلفة :",
     "periodic_atomic_mass": "الكتلة الذرية",
     "periodic_electronegativity": "الكهربية",
+    "ex_solved_title": "مثال محلول",
+    "ex_unsolved_title": "تحدي الحساب السريع",
+    "ex_check": "التحقق من الإجابة",
+    "ex_hint_btn": "هل تحتاج إلى تلميح؟",
+    "ex_show_sol": "عرض الحل خطوة بخطوة",
+    "ex_hide_sol": "إخفاء الحل خطوة بخطوة",
+    "ex_correct": "صحيح! حساب ممتاز.",
+    "ex_incorrect": "غير صحيح. حاول إعادة تقييم الصيغة أو الخطوات.",
+    "ex_attempts": "المحاولات المتبقية:",
+    "ex_unlocked_sol": "💡 تم فتح الحل!",
+    "ex_placeholder": "أدخل القيمة الرقمية...",
   },
   UR: {
     "physics": "طبیعیات",
@@ -2417,6 +2494,17 @@ export const RAW_STATIC_UI_STRINGS = {
     "periodic_shells_config": "شیلز :",
     "periodic_atomic_mass": "ایٹمی ماس",
     "periodic_electronegativity": "برقی منفیت",
+    "ex_solved_title": "حل شدہ مثال",
+    "ex_unsolved_title": "فوری حساب کا چیلنج",
+    "ex_check": "جواب کی تصدیق کریں",
+    "ex_hint_btn": "اشارے کی ضرورت ہے؟",
+    "ex_show_sol": "مرحلہ وار حل دکھائیں",
+    "ex_hide_sol": "مرحلہ وار حل چھپائیں",
+    "ex_correct": "درست! بہترین حساب کتاب۔",
+    "ex_incorrect": "غلط۔ فارمولے یا مراحل کا دوبارہ جائزہ لینے کی کوشش کریں۔",
+    "ex_attempts": "باقی کوششیں:",
+    "ex_unlocked_sol": "💡 حل انلاک ہو گیا!",
+    "ex_placeholder": "عددی قیمت درج کریں...",
   }
 };
 
@@ -2675,10 +2763,11 @@ export const STATIC_ACADEMIC_LEVELS = [
 export function sanitizeMetadataValue(val: string | undefined | null): string {
   if (!val) return '';
   let cleaned = String(val).trim();
-  // Strip French typographic guillemets and other quotation marks, including non-breaking spaces or whitespace around them
-  // Typographic/standard quotes: " ' « » “ ” ‘ ’
-  const quotePattern = /^[«»"'“”‘’\s\xa0]+|[«»"'“”‘’\s\xa0]+$/g;
-  while (quotePattern.test(cleaned)) {
+  // Strip French typographic guillemets, escaped quotes, backslashes, and spacing
+  const quotePattern = /^[\u00AB\u00BB\"\'\u201C\u201D\u2018\u2019\s\\\xa0\u202F\u2007\u200B]+|[\u00AB\u00BB\"\'\u201C\u201D\u2018\u2019\s\\\xa0\u202F\u2007\u200B]+$/g;
+  let last = '';
+  while (cleaned !== last) {
+    last = cleaned;
     cleaned = cleaned.replace(quotePattern, '').trim();
   }
   return cleaned;

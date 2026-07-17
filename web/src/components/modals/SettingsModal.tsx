@@ -1168,7 +1168,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-xl bg-slate-950/40 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-850 flex items-center justify-center transition-all cursor-pointer"
+                className="w-8 h-8 rounded-xl bg-slate-950/40 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 flex items-center justify-center transition-all cursor-pointer"
                 title={t.close || "Fermer"}
               >
                 <X className="w-4 h-4" />
@@ -1372,7 +1372,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     </div>
 
                     {(isNewPasswordFocused || newPassword.length > 0) && (
-                      <div className="p-5 bg-slate-950/40 border border-slate-850 rounded-3xl mt-4">
+                      <div className="p-5 bg-slate-950/40 border border-slate-800 rounded-3xl mt-4">
                         <PasswordRequirements 
                           password={newPassword} 
                           confirmPassword={confirmNewPassword} 
@@ -1400,7 +1400,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                 <div className="space-y-8">
                   <div className="space-y-4">
                     {/* Reduce Motion */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-950/40 border border-slate-850 rounded-3xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-950/40 border border-slate-800 rounded-3xl">
                       <div className="space-y-1">
                         <span className="text-xs font-black uppercase tracking-widest text-slate-200">
                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.reduce_motion || ACC_TRANSLATIONS.EN.reduce_motion}
@@ -1423,7 +1423,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                             syncAccessibilityToCloud({ reduceMotion: val });
                           }
                         }}
-                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${reduceMotion ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
+                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${reduceMotion ? 'bg-blue-600' : 'bg-slate-800 border border-slate-800'}`}
                         aria-checked={reduceMotion}
                         role="switch"
                       >
@@ -1432,7 +1432,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     </div>
 
                     {/* Dyslexia Layout */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-950/40 border border-slate-850 rounded-3xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-950/40 border border-slate-800 rounded-3xl">
                       <div className="space-y-1">
                         <span className="text-xs font-black uppercase tracking-widest text-slate-200">
                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.dyslexia || ACC_TRANSLATIONS.EN.dyslexia}
@@ -1455,7 +1455,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                             syncAccessibilityToCloud({ dyslexiaFriendly: val });
                           }
                         }}
-                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${dyslexiaFriendly ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
+                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${dyslexiaFriendly ? 'bg-blue-600' : 'bg-slate-800 border border-slate-800'}`}
                         aria-checked={dyslexiaFriendly}
                         role="switch"
                       >
@@ -1464,7 +1464,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     </div>
 
                     {/* Fine Visual Controls */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-955/40 border border-slate-850 rounded-3xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-955/40 border border-slate-800 rounded-3xl">
                       <div className="space-y-1">
                         <span className="text-xs font-black uppercase tracking-widest text-slate-200">
                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.visual_ctrl || ACC_TRANSLATIONS.EN.visual_ctrl}
@@ -1487,7 +1487,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                             syncAccessibilityToCloud({ fineVisualControls: val });
                           }
                         }}
-                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${fineVisualControls ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
+                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${fineVisualControls ? 'bg-blue-600' : 'bg-slate-800 border border-slate-800'}`}
                         aria-checked={fineVisualControls}
                         role="switch"
                       >
@@ -1519,7 +1519,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                             syncAccessibilityToCloud({ ttsEnabled: val });
                           }
                         }}
-                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${ttsEnabled ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
+                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${ttsEnabled ? 'bg-blue-600' : 'bg-slate-800 border border-slate-800'}`}
                         aria-checked={ttsEnabled}
                         role="switch"
                       >
@@ -1528,7 +1528,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     </div>
 
                     {/* Extend Assessment Time Limits */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-950/40 border border-slate-850 rounded-3xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-950/40 border border-slate-800 rounded-3xl">
                       <div className="space-y-1">
                         <span className="text-xs font-black uppercase tracking-widest text-slate-200">
                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.extend_time || ACC_TRANSLATIONS.EN.extend_time}
@@ -1551,7 +1551,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                             syncAccessibilityToCloud({ extendAssessmentTime: val });
                           }
                         }}
-                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${extendAssessmentTime ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
+                        className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${extendAssessmentTime ? 'bg-blue-600' : 'bg-slate-800 border border-slate-800'}`}
                         aria-checked={extendAssessmentTime}
                         role="switch"
                       >
@@ -1560,7 +1560,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     </div>
 
                     {/* Colorblind Filtering Themes */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-950/40 border border-slate-850 rounded-3xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-950/40 border border-slate-800 rounded-3xl">
                       <div className="space-y-1">
                         <span className="text-xs font-black uppercase tracking-widest text-slate-200">
                           {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.colorblind || ACC_TRANSLATIONS.EN.colorblind}
@@ -1606,21 +1606,21 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-6 pt-2">
-                      <div className="p-5 bg-slate-950/40 border border-slate-850 rounded-2xl space-y-2">
+                      <div className="p-5 bg-slate-950/40 border border-slate-800 rounded-2xl space-y-2">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-200 flex items-center gap-2">
                           <Eye className="w-3.5 h-3.5 text-violet-500" /> {guide.visual}
                         </span>
                         <p className="text-[11px] text-slate-300 leading-relaxed">{guide.visual_desc}</p>
                       </div>
 
-                      <div className="p-5 bg-slate-955/40 border border-slate-850 rounded-2xl space-y-2">
+                      <div className="p-5 bg-slate-955/40 border border-slate-800 rounded-2xl space-y-2">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-200 flex items-center gap-2">
                           <Volume2 className="w-3.5 h-3.5 text-emerald-500" /> {guide.auditory}
                         </span>
                         <p className="text-[11px] text-slate-300 leading-relaxed">{guide.auditory_desc}</p>
                       </div>
 
-                      <div className="p-5 bg-slate-950/40 border border-slate-850 rounded-2xl space-y-2">
+                      <div className="p-5 bg-slate-950/40 border border-slate-800 rounded-2xl space-y-2">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-200 flex items-center gap-2">
                           <Keyboard className="w-3.5 h-3.5 text-blue-500" /> {guide.keyboard}
                         </span>
@@ -1634,7 +1634,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                         </ul>
                       </div>
 
-                      <div className="p-5 bg-slate-950/40 border border-slate-850 rounded-2xl space-y-2">
+                      <div className="p-5 bg-slate-950/40 border border-slate-800 rounded-2xl space-y-2">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-200 flex items-center gap-2">
                           <BrainIcon className="w-3.5 h-3.5 text-amber-500" /> {guide.cognitive}
                         </span>
@@ -1648,7 +1648,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
               {activeTab === 'tutor' && (
                 <div className="space-y-6">
                   {/* Enable AI Tutor global toggle */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-955/40 border border-slate-850 rounded-3xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-955/40 border border-slate-800 rounded-3xl">
                     <div className="space-y-1">
                       <span className="text-xs font-black uppercase tracking-widest text-slate-200">
                         {ACC_TRANSLATIONS[lang.toUpperCase() as keyof typeof ACC_TRANSLATIONS]?.tutor_toggle || ACC_TRANSLATIONS.EN.tutor_toggle}
@@ -1671,7 +1671,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                           syncAccessibilityToCloud({ tutorEnabled: val });
                         }
                       }}
-                      className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${tutorEnabled ? 'bg-blue-600' : 'bg-slate-850 border border-slate-800'}`}
+                      className={`w-14 h-8 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${tutorEnabled ? 'bg-blue-600' : 'bg-slate-800 border border-slate-800'}`}
                       aria-checked={tutorEnabled}
                       role="switch"
                     >
@@ -1680,7 +1680,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   </div>
 
                   {tutorEnabled && (
-                    <div className="flex flex-col gap-6 p-5 bg-slate-950/20 border border-slate-850 rounded-3xl">
+                    <div className="flex flex-col gap-6 p-5 bg-slate-950/20 border border-slate-800 rounded-3xl">
                       {/* Tutor details settings */}
                       <div className="space-y-2">
                         <span className="text-xs font-black uppercase tracking-widest text-slate-200">
@@ -1692,7 +1692,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                       </div>
 
                       {/* Pros & Cons card */}
-                      <div className="p-4 bg-slate-950/40 border border-slate-850/60 rounded-2xl text-[10px] space-y-1.5">
+                      <div className="p-4 bg-slate-950/40 border border-slate-800/60 rounded-2xl text-[10px] space-y-1.5">
                         <p className="text-emerald-400 font-bold leading-normal">
                           ✓ {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.advantages || PERSONAL_TUTOR_TRANSLATIONS.EN.advantages}
                         </p>
@@ -1719,14 +1719,14 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                                 window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
                               }
                             }}
-                            className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-850 bg-slate-900 cursor-pointer"
+                            className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-800 bg-slate-900 cursor-pointer"
                           />
                           <span className="text-xs font-black uppercase tracking-wider text-slate-200">
                             {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.type_internal || PERSONAL_TUTOR_TRANSLATIONS.EN.type_internal}
                           </span>
                         </label>
 
-                        <label className="flex-1 flex items-center gap-3 p-4 bg-slate-955/50 border border-slate-850 rounded-2xl cursor-pointer hover:border-slate-700 transition-colors">
+                        <label className="flex-1 flex items-center gap-3 p-4 bg-slate-955/50 border border-slate-800 rounded-2xl cursor-pointer hover:border-slate-700 transition-colors">
                           <input
                             type="radio"
                             name="modalTutorType"
@@ -1742,7 +1742,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                                 window.dispatchEvent(new Event('op_accessibility_preferences_changed'));
                               }
                             }}
-                            className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-850 bg-slate-900 cursor-pointer"
+                            className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-800 bg-slate-900 cursor-pointer"
                           />
                           <span className="text-xs font-black uppercase tracking-wider text-slate-200">
                             {PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.type_personal || PERSONAL_TUTOR_TRANSLATIONS.EN.type_personal}
@@ -1770,7 +1770,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                                     if (prov === 'anthropic') setPersonalTutorModel('claude-3-5-haiku-20241022');
                                     if (prov === 'gemini') setPersonalTutorModel('gemini-2.5-flash');
                                   }}
-                                  className={`py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer ${personalTutorProvider === prov ? 'bg-blue-600/10 border-blue-500 text-blue-400' : 'bg-slate-900 border-slate-850 text-slate-400 hover:border-slate-700'}`}
+                                  className={`py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer ${personalTutorProvider === prov ? 'bg-blue-600/10 border-blue-500 text-blue-400' : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'}`}
                                 >
                                   {prov === 'openai' ? 'OpenAI' : prov === 'anthropic' ? 'Anthropic' : 'Gemini'}
                                 </button>
@@ -1887,7 +1887,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                                     setTestStatus('error');
                                   }
                                 }}
-                                className={`py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all ${testStatus === 'loading' ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed' : !personalTutorApiKey ? 'bg-slate-900 border-slate-850 text-slate-650 cursor-not-allowed' : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white cursor-pointer'}`}
+                                className={`py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all ${testStatus === 'loading' ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed' : !personalTutorApiKey ? 'bg-slate-900 border-slate-800 text-slate-650 cursor-not-allowed' : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white cursor-pointer'}`}
                               >
                                 {testStatus === 'loading'
                                   ? (PERSONAL_TUTOR_TRANSLATIONS[lang.toUpperCase() as keyof typeof PERSONAL_TUTOR_TRANSLATIONS]?.test_loading || PERSONAL_TUTOR_TRANSLATIONS.EN.test_loading)

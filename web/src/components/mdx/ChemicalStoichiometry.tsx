@@ -376,7 +376,7 @@ export const ChemicalStoichiometry = ({ equation, reaction, gradeLevel }: { equa
                   className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border select-none transition-all cursor-pointer ${
                     chemIndex === idx
                       ? 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/15'
-                      : 'bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   {presetName}
@@ -392,11 +392,11 @@ export const ChemicalStoichiometry = ({ equation, reaction, gradeLevel }: { equa
           {currentChem.left.map((comp, i) => (
             <React.Fragment key={`left-${i}`}>
               {i > 0 && <span className="text-slate-500 text-lg font-black mx-1">+</span>}
-              <div className="flex items-center gap-3 bg-slate-900/60 p-3 rounded-2xl border border-slate-850">
+              <div className="flex items-center gap-3 bg-slate-900/60 p-3 rounded-2xl border border-slate-800">
                 <div className="flex flex-col gap-1 items-center bg-slate-950 rounded-xl border border-slate-800 p-1">
                   <button
                     onClick={() => updateCoefficient(i, 1)}
-                    className="w-5 h-5 flex items-center justify-center text-[10px] font-bold text-blue-400 bg-slate-900 hover:bg-slate-850 rounded cursor-pointer"
+                    className="w-5 h-5 flex items-center justify-center text-[10px] font-bold text-blue-400 bg-slate-900 hover:bg-slate-800 rounded cursor-pointer"
                   >
                     +
                   </button>
@@ -405,7 +405,7 @@ export const ChemicalStoichiometry = ({ equation, reaction, gradeLevel }: { equa
                   </span>
                   <button
                     onClick={() => updateCoefficient(i, -1)}
-                    className="w-5 h-5 flex items-center justify-center text-[10px] font-bold text-blue-400 bg-slate-900 hover:bg-slate-850 rounded cursor-pointer"
+                    className="w-5 h-5 flex items-center justify-center text-[10px] font-bold text-blue-400 bg-slate-900 hover:bg-slate-800 rounded cursor-pointer"
                   >
                     -
                   </button>
@@ -426,11 +426,11 @@ export const ChemicalStoichiometry = ({ equation, reaction, gradeLevel }: { equa
             return (
               <React.Fragment key={`right-${i}`}>
                 {i > 0 && <span className="text-slate-500 text-lg font-black mx-1">+</span>}
-                <div className="flex items-center gap-3 bg-slate-900/60 p-3 rounded-2xl border border-slate-850">
+                <div className="flex items-center gap-3 bg-slate-900/60 p-3 rounded-2xl border border-slate-800">
                   <div className="flex flex-col gap-1 items-center bg-slate-950 rounded-xl border border-slate-800 p-1">
                     <button
                       onClick={() => updateCoefficient(realIdx, 1)}
-                      className="w-5 h-5 flex items-center justify-center text-[10px] font-bold text-blue-400 bg-slate-900 hover:bg-slate-850 rounded cursor-pointer"
+                      className="w-5 h-5 flex items-center justify-center text-[10px] font-bold text-blue-400 bg-slate-900 hover:bg-slate-800 rounded cursor-pointer"
                     >
                       +
                     </button>
@@ -439,7 +439,7 @@ export const ChemicalStoichiometry = ({ equation, reaction, gradeLevel }: { equa
                     </span>
                     <button
                       onClick={() => updateCoefficient(realIdx, -1)}
-                      className="w-5 h-5 flex items-center justify-center text-[10px] font-bold text-blue-400 bg-slate-900 hover:bg-slate-850 rounded cursor-pointer"
+                      className="w-5 h-5 flex items-center justify-center text-[10px] font-bold text-blue-400 bg-slate-900 hover:bg-slate-800 rounded cursor-pointer"
                     >
                       -
                     </button>
@@ -469,7 +469,7 @@ export const ChemicalStoichiometry = ({ equation, reaction, gradeLevel }: { equa
                     className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300 ${
                       item.isBalanced
                         ? 'border-emerald-500/20 bg-emerald-500/5'
-                        : 'border-slate-850 bg-slate-900/20'
+                        : 'border-slate-800 bg-slate-900/20'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -503,7 +503,7 @@ export const ChemicalStoichiometry = ({ equation, reaction, gradeLevel }: { equa
             </div>
           </div>
 
-          <div className="flex flex-col justify-between p-6 rounded-3xl border border-slate-850 bg-slate-900/30">
+          <div className="flex flex-col justify-between p-6 rounded-3xl border border-slate-800 bg-slate-900/30">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <GraduationCap className="w-5 h-5 text-blue-400" />
@@ -534,7 +534,7 @@ export const ChemicalStoichiometry = ({ equation, reaction, gradeLevel }: { equa
                   className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border cursor-pointer select-none ${
                     atomBalance.overallBalanced
                       ? 'bg-blue-600 hover:bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-500/20'
-                      : 'bg-slate-950 border-slate-850 text-slate-500 cursor-not-allowed'
+                      : 'bg-slate-950 border-slate-800 text-slate-500 cursor-not-allowed'
                   }`}
                 >
                   {t.verify_btn}

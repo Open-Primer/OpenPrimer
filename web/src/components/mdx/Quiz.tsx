@@ -1254,7 +1254,7 @@ export const Question = ({
                   : multiple && multiSubmitted
                   ? multiOptionClass
                   : isEliminated 
-                  ? "bg-slate-900/10 border-slate-850 text-slate-500 opacity-40 cursor-default line-through"
+                  ? "bg-slate-900/10 border-slate-800 text-slate-500 opacity-40 cursor-default line-through"
                   : isReadOnly
                     ? isSelectedOption
                       ? isCorrect

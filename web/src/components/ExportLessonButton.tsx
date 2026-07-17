@@ -1734,7 +1734,7 @@ ${content}`;
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-widest bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border border-slate-800 rounded-xl transition-all cursor-pointer shadow-md select-none"
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-widest bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 rounded-xl transition-all cursor-pointer shadow-md select-none"
           id="export-menu-button"
         >
           <Download className="w-3.5 h-3.5" />

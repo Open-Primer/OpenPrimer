@@ -5,7 +5,7 @@ import { Sliders, Activity, Play, RefreshCw, TrendingUp, Info, MousePointer, Sea
 import { useLanguage } from '@/context/LanguageContext';
 
 interface FunctionPlotterProps {
-  mode?: 'linear' | 'compound-interest' | 'supply-demand' | 'expression';
+  mode?: 'linear' | 'compound-interest' | 'supply-demand' | 'expression' | 'lennard-jones';
   title?: string;
   xLabel?: string;
   yLabel?: string;
@@ -924,19 +924,88 @@ export const FunctionPlotter = ({
     return "";
   };
 
+  const getLjString = (key: string): string => {
+    const dict: Record<string, Record<string, string>> = {
+      epsilon_label: {
+        EN: "Well Depth (ε - Epsilon)",
+        FR: "Profondeur du puits (ε - Epsilon)",
+        ES: "Profundidad del pozo (ε - Epsilon)",
+        DE: "Wellentiefe (ε - Epsilon)",
+        ZH: "势阱深度 (ε - Epsilon)"
+      },
+      sigma_label: {
+        EN: "Collision Diameter (σ - Sigma)",
+        FR: "Diamètre de collision (σ - Sigma)",
+        ES: "Diámetro de colisión (σ - Sigma)",
+        DE: "Kollisionsdurchmesser (σ - Sigma)",
+        ZH: "碰撞直径 (σ - Sigma)"
+      },
+      repulsion_title: {
+        EN: "Repulsive Force (r⁻¹²)",
+        FR: "Force de Répulsion (r⁻¹²)",
+        ES: "Fuerza Repulsiva (r⁻¹²)",
+        DE: "Abstoßungskraft (r⁻¹²)",
+        ZH: "排斥力 (r⁻¹²)"
+      },
+      repulsion_desc: {
+        EN: "At short distances (r < σ), electron cloud overlap causes strong repulsion based on the Pauli exclusion principle.",
+        FR: "À courte distance (r < σ), le recouvrement des nuages électroniques provoque une forte répulsion due au principe d'exclusion de Pauli.",
+        ES: "A distancias cortas (r < σ), la superposición de nubes de electrones causa una fuerte repulsión debido al principio de exclusión de Pauli.",
+        DE: "Bei kurzen Abständen (r < σ) führt die Überlappung der Elektronenwolken zu einer starken Abstoßung basierend auf dem Pauli-Prinzip.",
+        ZH: "在短距离 (r < σ) 内，由于保利不相容原理，电子云重叠会导致强烈的排斥力。"
+      },
+      attraction_title: {
+        EN: "Attractive Force (r⁻⁶)",
+        FR: "Force d'Attraction (r⁻⁶)",
+        ES: "Fuerza Atractiva (r⁻⁶)",
+        DE: "Anziehungskraft (r⁻⁶)",
+        ZH: "吸引力 (r⁻⁶)"
+      },
+      attraction_desc: {
+        EN: "At longer distances, van der Waals (London dispersion) forces create attraction between dipoles.",
+        FR: "À plus longue distance, les forces de van der Waals (dispersion de London) créent une attraction entre les dipoles.",
+        ES: "A distancias más largas, las fuerzas de van der Waals (dispersión de London) crean atracción entre dipolos.",
+        DE: "Bei größeren Abständen erzeugen Van-der-Waals-Kräfte (London-Dispersionskräfte) eine Anziehung zwischen Dipolen.",
+        ZH: "在较长距离内，范德华力 (伦敦色散力) 会在偶极子之间产生吸引力。"
+      },
+      equilibrium_title: {
+        EN: "Equilibrium Distance (rₘ)",
+        FR: "Distance d'Équilibre (rₘ)",
+        ES: "Distancia de Equilibrio (rₘ)",
+        DE: "Gleichgewichtsabstand (rₘ)",
+        ZH: "平衡距离 (rₘ)"
+      },
+      equilibrium_desc: {
+        EN: "The system is most stable at rₘ = 2¹/⁶σ (approx. 1.12σ), where the force is zero and potential energy is at its minimum (-ε).",
+        FR: "Le système est le plus stable à rₘ = 2¹/⁶σ (env. 1,12σ), où la force est nulle et l'énergie potentielle est minimale (-ε).",
+        ES: "El sistema es más estable en rₘ = 2¹/⁶σ (aprox. 1.12σ), donde la fuerza es cero y la energía potencial es mínima (-ε).",
+        DE: "Das System ist bei rₘ = 2¹/⁶σ (ca. 1,12σ) am stabilsten, wo die Kraft null ist und die potenzielle Energie ihr Minimum (-ε) erreicht.",
+        ZH: "系统在 rₘ = 2¹/⁶σ (约 1.12σ) 时最稳定，此时力为零且势能最小 (-ε)。"
+      }
+    };
+    return dict[key]?.[langKey] || dict[key]?.EN || "";
+  };
+
   const [theme, setTheme] = useState<'paper' | 'focus' | 'dark'>('dark');
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const resolvedMode = expression !== undefined ? 'expression' : (mode || 'linear');
+  const isLennardJones = mode === 'lennard-jones' || 
+    title?.toLowerCase().includes('lennard') || 
+    expression?.toLowerCase().includes('lennard') || 
+    (expression && (expression.toLowerCase().includes('lj') || expression.toLowerCase().includes('jones')));
+
+  const resolvedMode = isLennardJones 
+    ? 'lennard-jones' 
+    : (expression !== undefined ? 'expression' : (mode || 'linear'));
   const isExpressionMode = resolvedMode === 'expression';
 
   // Find if initial expression or preset matches our catalog
   const defaultPreset = expression ? MATH_PRESETS.find(p => p.id === expression.toLowerCase().trim()) : null;
-  const initialExpression = defaultPreset ? defaultPreset.formula : (expression || "sin(x)/x");
-  const initialXMin = defaultPreset ? defaultPreset.xMin : (xMin !== undefined ? xMin : (resolvedMode === 'linear' ? -50 : -10));
-  const initialXMax = defaultPreset ? defaultPreset.xMax : (xMax !== undefined ? xMax : (resolvedMode === 'linear' ? 50 : 10));
-  const initialYMin = defaultPreset ? defaultPreset.yMin : (yMin !== undefined ? yMin : (resolvedMode === 'linear' ? -100 : -10));
-  const initialYMax = defaultPreset ? defaultPreset.yMax : (yMax !== undefined ? yMax : (resolvedMode === 'linear' ? 50 : 10));
+  const initialExpression = resolvedMode === 'lennard-jones' ? "4 * ( (1/x)^12 - (1/x)^6 )" : (defaultPreset ? defaultPreset.formula : (expression || "sin(x)/x"));
+  const initialXMin = resolvedMode === 'lennard-jones' ? 0.85 : (defaultPreset ? defaultPreset.xMin : (xMin !== undefined ? xMin : (resolvedMode === 'linear' ? -50 : -10)));
+  const initialXMax = resolvedMode === 'lennard-jones' ? 2.5 : (defaultPreset ? defaultPreset.xMax : (xMax !== undefined ? xMax : (resolvedMode === 'linear' ? 50 : 10)));
+  const initialYMin = resolvedMode === 'lennard-jones' ? -1.3 : (defaultPreset ? defaultPreset.yMin : (yMin !== undefined ? yMin : (resolvedMode === 'linear' ? -100 : -10)));
+  const initialYMax = resolvedMode === 'lennard-jones' ? 2.0 : (defaultPreset ? defaultPreset.yMax : (yMax !== undefined ? yMax : (resolvedMode === 'linear' ? 50 : 10)));
 
   // Stateful plot parameters
   const [plottedExpression, setPlottedExpression] = useState(initialExpression);
@@ -947,6 +1016,18 @@ export const FunctionPlotter = ({
   const [xMaxVal, setXMaxVal] = useState(initialXMax);
   const [yMinVal, setYMinVal] = useState(initialYMin);
   const [yMaxVal, setYMaxVal] = useState(initialYMax);
+
+  const [ljEpsilon, setLjEpsilon] = useState(1.0);
+  const [ljSigma, setLjSigma] = useState(1.0);
+
+  useEffect(() => {
+    if (resolvedMode === 'lennard-jones') {
+      setXMinVal(0.85 * ljSigma);
+      setXMaxVal(2.5 * ljSigma);
+      setYMinVal(-1.3 * ljEpsilon);
+      setYMaxVal(2.0 * ljEpsilon);
+    }
+  }, [resolvedMode, ljSigma, ljEpsilon]);
 
   // ─── Multi-function overlay state ────────────────────────────────────────
   const [overlayExpr2, setOverlayExpr2] = useState('');
@@ -1053,6 +1134,14 @@ export const FunctionPlotter = ({
     }
   };
 
+  const getLennardJonesY = (x: number, epsilon: number, sigma: number) => {
+    if (x <= 0) return NaN;
+    const ratio = sigma / x;
+    const r6 = Math.pow(ratio, 6);
+    const r12 = r6 * r6;
+    return 4 * epsilon * (r12 - r6);
+  };
+
   const getYValueForMode = (x: number) => {
     if (resolvedMode === 'linear') {
       return getProspectValue(x, slope, intercept);
@@ -1060,6 +1149,8 @@ export const FunctionPlotter = ({
       return principal * Math.pow(1 + rate / 100, x);
     } else if (resolvedMode === 'supply-demand') {
       return getSupplyY(x);
+    } else if (resolvedMode === 'lennard-jones') {
+      return getLennardJonesY(x, ljEpsilon, ljSigma);
     } else if (isExpressionMode) {
       return safeEvaluate(plottedExpression, x);
     }
@@ -1129,6 +1220,17 @@ export const FunctionPlotter = ({
     equilibriumY = getSupplyY(equilibriumX);
     currentQD = Math.max(0, Math.min(100, (85 - marketPrice + demandShift) / 0.7));
     currentQS = Math.max(0, Math.min(100, (marketPrice - 15 - supplyShift) / 0.6));
+  } else if (resolvedMode === 'lennard-jones') {
+    const ptArray: string[] = [];
+    const step = (xMaxVal - xMinVal) / 200;
+    for (let i = 0; i <= 200; i++) {
+      const x = xMinVal + i * step;
+      const y = getLennardJonesY(x, ljEpsilon, ljSigma);
+      if (!isNaN(y) && isFinite(y) && y >= yMinVal && y <= yMaxVal) {
+        ptArray.push(`${getSvgX(x, xMaxVal, xMinVal)},${getSvgY(y, yMaxVal, yMinVal)}`);
+      }
+    }
+    points = ptArray.join(" ");
   } else if (isExpressionMode && plottedExpression) {
     const ptArray: string[] = [];
     const step = (xMaxVal - xMinVal) / 150;
@@ -1258,20 +1360,26 @@ export const FunctionPlotter = ({
     ? getUiString('dynamic_plotter') 
     : getUiString('graphical_simulator')
   );
-  const resolvedXLabel = xLabel || (isExpressionMode ? "x" : "X");
-  const resolvedYLabel = yLabel || (isExpressionMode ? "y" : "Y");
+  const resolvedXLabel = resolvedMode === 'lennard-jones'
+    ? (isFR ? "Distance r (Å)" : "Distance r (Å)")
+    : (xLabel || (isExpressionMode ? "x" : "X"));
+  const resolvedYLabel = resolvedMode === 'lennard-jones'
+    ? (isFR ? "Énergie V(r) (eV)" : "Energy V(r) (eV)")
+    : (yLabel || (isExpressionMode ? "y" : "Y"));
 
   return (
     <div className={`my-8 rounded-[32px] border p-6 md:p-8 space-y-6 backdrop-blur-md shadow-md transition-all duration-300
-      ${isPaper ? "bg-[#f5f2e5] border-[#dbd5be]" : isFocus ? "bg-[#050505] border-[#262626]" : "bg-slate-950/30 border-slate-850"}`}>
+      ${isPaper ? "bg-[#f5f2e5] border-[#dbd5be]" : isFocus ? "bg-[#050505] border-[#262626]" : "bg-slate-950/30 border-slate-800"}`}>
       
       {/* Header section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <span className={`text-[9px] font-black uppercase tracking-[0.2em] block mb-1 ${isPaper ? "text-blue-700" : isFocus ? "text-neutral-400" : "text-emerald-400"}`}>
-            {isExpressionMode 
-              ? getUiString('dynamic_plotter_tag') 
-              : getUiString('econometric_plotter_tag')
+            {resolvedMode === 'lennard-jones'
+              ? (isFR ? "🔬 Potentiel de Lennard-Jones" : "🔬 Lennard-Jones Potential")
+              : (isExpressionMode 
+                  ? getUiString('dynamic_plotter_tag') 
+                  : getUiString('econometric_plotter_tag'))
             }
           </span>
           <h4 className={`text-lg font-black uppercase tracking-tight ${textTitleColor}`}>{resolvedTitle}</h4>
@@ -1287,11 +1395,11 @@ export const FunctionPlotter = ({
       {/* Graphical sandbox and control group */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
         {/* Left column: Plot Canvas */}
-        <div className={`col-span-1 md:col-span-7 rounded-2xl border p-4 flex flex-col items-center justify-center relative select-none overflow-hidden ${isPaper ? "bg-white border-[#dbd5be]" : isFocus ? "bg-[#000000] border-[#262626]" : "bg-slate-950/80 border-slate-850"}`}>
+        <div className={`col-span-1 md:col-span-7 rounded-2xl border p-4 flex flex-col items-center justify-center relative select-none overflow-hidden ${isPaper ? "bg-white border-[#dbd5be]" : isFocus ? "bg-[#000000] border-[#262626]" : "bg-slate-950/80 border-slate-800"}`}>
           <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} onMouseMove={handleSvgMouseMove} onMouseDown={handleSvgMouseDown} onMouseLeave={handleSvgMouseLeave} onTouchMove={handleSvgTouchMove} className="w-full h-auto max-w-[360px] cursor-crosshair overflow-visible">
             
             {/* Grid markings & subdivisions */}
-            {!isExpressionMode ? (
+            {!isExpressionMode && resolvedMode !== 'lennard-jones' ? (
               resolvedMode === 'linear' ? (
                 <>
                   {[-50, -25, 0, 25, 50].map((xVal) => {
@@ -1326,14 +1434,14 @@ export const FunctionPlotter = ({
                 <g key={i} className="opacity-25">
                   <line x1={sx} y1={padding} x2={sx} y2={height - padding} stroke={gridStrokeColor} strokeWidth="0.7" strokeDasharray="3,3" />
                   <line x1={padding} y1={sy} x2={width - padding} y2={sy} stroke={gridStrokeColor} strokeWidth="0.7" strokeDasharray="3,3" />
-                  <text x={sx} y={height - padding + 12} fill={isPaper ? "#475569" : "#64748b"} fontSize="7" fontWeight="bold" textAnchor="middle">{xVal.toFixed(1)}</text>
-                  <text x={padding - 6} y={sy + 3} fill={isPaper ? "#475569" : "#64748b"} fontSize="7" fontWeight="bold" textAnchor="end">{yVal.toFixed(1)}</text>
+                  <text x={sx} y={height - padding + 12} fill={isPaper ? "#475569" : "#64748b"} fontSize="7" fontWeight="bold" textAnchor="middle">{xVal.toFixed(2)}</text>
+                  <text x={padding - 6} y={sy + 3} fill={isPaper ? "#475569" : "#64748b"} fontSize="7" fontWeight="bold" textAnchor="end">{yVal.toFixed(2)}</text>
                 </g>
               );
             })}
 
             {/* Coordinate Axes */}
-            {!isExpressionMode ? (
+            {!isExpressionMode && resolvedMode !== 'lennard-jones' ? (
               resolvedMode === 'linear' ? (
                 <>
                   {/* Centered Crossing Axes for Prospect Theory S-Curve */}
@@ -1423,18 +1531,22 @@ export const FunctionPlotter = ({
                 <circle
                   cx={isExpressionMode 
                     ? getSvgX(mouseCoords.x, xMaxVal, xMinVal) 
-                    : (resolvedMode === 'linear' 
-                        ? getSvgX(mouseCoords.x, 50, -50) 
-                        : (resolvedMode === 'compound-interest' 
-                            ? getSvgX(mouseCoords.x, 30, 0) 
-                            : getSvgX(mouseCoords.x)))}
+                    : (resolvedMode === 'lennard-jones'
+                        ? getSvgX(mouseCoords.x, xMaxVal, xMinVal)
+                        : (resolvedMode === 'linear' 
+                            ? getSvgX(mouseCoords.x, 50, -50) 
+                            : (resolvedMode === 'compound-interest' 
+                                ? getSvgX(mouseCoords.x, 30, 0) 
+                                : getSvgX(mouseCoords.x))))}
                   cy={isExpressionMode 
                     ? getSvgY(safeEvaluate(plottedExpression, mouseCoords.x), yMaxVal, yMinVal) 
-                    : (resolvedMode === 'linear' 
-                        ? getSvgY(getYValueForMode(mouseCoords.x), 50, -100) 
-                        : (resolvedMode === 'compound-interest' 
-                            ? getSvgY(getYValueForMode(mouseCoords.x), principal * Math.pow(1.15, 30), 0) 
-                            : getSvgY(getYValueForMode(mouseCoords.x))))}
+                    : (resolvedMode === 'lennard-jones'
+                        ? getSvgY(getYValueForMode(mouseCoords.x), yMaxVal, yMinVal)
+                        : (resolvedMode === 'linear' 
+                            ? getSvgY(getYValueForMode(mouseCoords.x), 50, -100) 
+                            : (resolvedMode === 'compound-interest' 
+                                ? getSvgY(getYValueForMode(mouseCoords.x), principal * Math.pow(1.15, 30), 0) 
+                                : getSvgY(getYValueForMode(mouseCoords.x)))))}
                   r="4.5"
                   fill="#10b981"
                   stroke="#ffffff"
@@ -1449,13 +1561,13 @@ export const FunctionPlotter = ({
             <div className={`absolute bottom-3 left-4 px-3 py-1 rounded-md text-[10px] font-black font-mono shadow-sm border ${
               isPaper ? "bg-white border-[#dbd5be] text-slate-700" : "bg-slate-900/90 border-slate-800 text-emerald-400"
             }`}>
-              x: {mouseCoords.x.toFixed(2)} | y: {
+              {resolvedMode === 'lennard-jones' ? `r: ${mouseCoords.x.toFixed(2)} Å | V(r): ${getYValueForMode(mouseCoords.x).toFixed(3)} eV` : `x: ${mouseCoords.x.toFixed(2)} | y: ${
                 isExpressionMode 
                   ? (safeEvaluate(plottedExpression, mouseCoords.x) ? safeEvaluate(plottedExpression, mouseCoords.x).toFixed(2) : "NaN")
                   : (resolvedMode === 'supply-demand' 
                       ? `QD: ${currentQD.toFixed(0)} QS: ${currentQS.toFixed(0)}` 
                       : getYValueForMode(mouseCoords.x).toFixed(2))
-              }
+              }`}
             </div>
           )}
         </div>
@@ -1532,7 +1644,7 @@ export const FunctionPlotter = ({
         {/* ═══ MULTI-FUNCTION OVERLAY PANEL (expression mode only) ═══ */}
         {isExpressionMode && (
           <div className={`rounded-2xl border p-4 space-y-3 ${
-            isPaper ? 'border-[#dbd5be] bg-white/60' : 'border-slate-850 bg-slate-900/20'
+            isPaper ? 'border-[#dbd5be] bg-white/60' : 'border-slate-800 bg-slate-900/20'
           }`}>
             <div className="flex items-center justify-between">
               <span className={`text-[9px] font-black uppercase tracking-widest ${
@@ -1543,7 +1655,7 @@ export const FunctionPlotter = ({
                 className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border select-none cursor-pointer transition-all ${
                   showOverlay
                     ? 'bg-indigo-600 border-indigo-500 text-white'
-                    : isPaper ? 'bg-slate-100 border-slate-300 text-slate-600' : 'bg-slate-950 border-slate-850 text-slate-400'
+                    : isPaper ? 'bg-slate-100 border-slate-300 text-slate-600' : 'bg-slate-950 border-slate-800 text-slate-400'
                 }`}
               >
                 {showOverlay ? '✓ Overlay ON' : 'Enable Overlay'}
@@ -1583,7 +1695,7 @@ export const FunctionPlotter = ({
         {/* ═══ CALCULUS MODE PANEL (expression mode only) ═══ */}
         {isExpressionMode && (
           <div className={`rounded-2xl border p-4 space-y-3 ${
-            isPaper ? 'border-[#dbd5be] bg-white/60' : 'border-slate-850 bg-slate-900/20'
+            isPaper ? 'border-[#dbd5be] bg-white/60' : 'border-slate-800 bg-slate-900/20'
           }`}>
             <div className="flex items-center justify-between flex-wrap gap-2">
               <span className={`text-[9px] font-black uppercase tracking-widest ${
@@ -1595,7 +1707,7 @@ export const FunctionPlotter = ({
                     className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border select-none cursor-pointer transition-all ${
                       calculusMode === mode
                         ? mode === 'tangent' ? 'bg-cyan-600 border-cyan-500 text-white' : mode === 'riemann' ? 'bg-blue-600 border-blue-500 text-white' : (isPaper ? 'bg-slate-200 border-slate-400 text-slate-700' : 'bg-slate-800 border-slate-700 text-slate-300')
-                        : isPaper ? 'bg-slate-100 border-slate-300 text-slate-600' : 'bg-slate-950 border-slate-850 text-slate-400'
+                        : isPaper ? 'bg-slate-100 border-slate-300 text-slate-600' : 'bg-slate-950 border-slate-800 text-slate-400'
                     }`}>
                     {mode === 'off' ? '✕ Off' : mode === 'tangent' ? "f'(x) Tangent" : '∫ Riemann'}
                   </button>
@@ -1616,7 +1728,7 @@ export const FunctionPlotter = ({
                     className="flex-1 h-1 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
                 </div>
                 <div className={`px-3 py-2 rounded-xl font-mono text-[11px] border font-black ${
-                  isPaper ? 'bg-white border-[#dbd5be] text-slate-800' : 'bg-slate-950/60 border-slate-850 text-cyan-400'
+                  isPaper ? 'bg-white border-[#dbd5be] text-slate-800' : 'bg-slate-950/60 border-slate-800 text-cyan-400'
                 }`}>
                   f({tangentX.toFixed(3)}) ≈ <span className="text-white">{tangentY.toFixed(4)}</span> &nbsp;|&nbsp;
                   f'({tangentX.toFixed(3)}) ≈ <span className="text-white">{tangentSlope.toFixed(4)}</span>
@@ -1662,7 +1774,7 @@ export const FunctionPlotter = ({
                   </div>
                 </div>
                 <div className={`px-3 py-2 rounded-xl font-mono text-[11px] border font-black ${
-                  isPaper ? 'bg-white border-[#dbd5be] text-slate-800' : 'bg-slate-950/60 border-slate-850 text-blue-400'
+                  isPaper ? 'bg-white border-[#dbd5be] text-slate-800' : 'bg-slate-950/60 border-slate-800 text-blue-400'
                 }`}>
                   ∫<sub>{riemannA}</sub><sup>{riemannB}</sup> f(x) dx ≈ <span className={riemannArea >= 0 ? 'text-blue-300' : 'text-red-400'}>{riemannArea.toFixed(4)}</span>
                   <span className={`ml-3 text-[9px] font-semibold ${ isPaper ? 'text-slate-500' : 'text-slate-500'}`}>(Midpoint Riemann, n={riemannN})</span>
@@ -1687,8 +1799,53 @@ export const FunctionPlotter = ({
               </>
             )}
 
+            {resolvedMode === 'lennard-jones' && (
+              <>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold">
+                      <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{getLjString('epsilon_label')}</span>
+                      <span className={`font-mono ${isPaper ? "text-blue-700" : "text-emerald-400"}`}>{ljEpsilon.toFixed(2)} eV</span>
+                    </div>
+                    <input type="range" min="0.2" max="3.0" step="0.05" value={ljEpsilon} onChange={(e) => setLjEpsilon(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold">
+                      <span className={isPaper ? "text-stone-700" : "text-slate-400"}>{getLjString('sigma_label')}</span>
+                      <span className={`font-mono ${isPaper ? "text-blue-700" : "text-emerald-400"}`}>{ljSigma.toFixed(2)} Å</span>
+                    </div>
+                    <input type="range" min="0.8" max="2.0" step="0.05" value={ljSigma} onChange={(e) => setLjSigma(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+                  </div>
+                </div>
+
+                {/* Physical Explanation Block */}
+                <div className={`mt-4 p-4 rounded-2xl border text-xs leading-relaxed space-y-3 ${
+                  isPaper ? 'border-[#dbd5be] bg-stone-50 text-slate-800' : 'border-slate-800 bg-slate-950/40 text-slate-350'
+                }`}>
+                  <div className="font-black flex items-center gap-1.5 text-indigo-400 uppercase tracking-wider text-[10px]">
+                    <Info className="w-3.5 h-3.5 shrink-0 text-indigo-400" />
+                    <span>{isFR ? "Description Physique" : "Physical Description"}</span>
+                  </div>
+                  <div className="space-y-2.5">
+                    <div>
+                      <strong className={isPaper ? "text-slate-900" : "text-slate-200"}>{getLjString('repulsion_title')} :</strong>{' '}
+                      <span>{getLjString('repulsion_desc')}</span>
+                    </div>
+                    <div>
+                      <strong className={isPaper ? "text-slate-900" : "text-slate-200"}>{getLjString('attraction_title')} :</strong>{' '}
+                      <span>{getLjString('attraction_desc')}</span>
+                    </div>
+                    <div>
+                      <strong className={isPaper ? "text-slate-900" : "text-slate-200"}>{getLjString('equilibrium_title')} :</strong>{' '}
+                      <span>{getLjString('equilibrium_desc')}</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
             {isExpressionMode && (
-              <div className={`border rounded-2xl p-5 space-y-4 text-xs leading-relaxed ${isPaper ? "bg-white border-[#dbd5be]" : "bg-slate-950/60 border-slate-850"}`}>
+              <div className={`border rounded-2xl p-5 space-y-4 text-xs leading-relaxed ${isPaper ? "bg-white border-[#dbd5be]" : "bg-slate-950/60 border-slate-800"}`}>
                 
                 {/* Safe real-time formula compiler/input */}
                 <div className="space-y-1.5">
@@ -1736,7 +1893,7 @@ export const FunctionPlotter = ({
                         type="number"
                         value={xMinVal}
                         onChange={(e) => setXMinVal(parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-1.5 font-mono text-xs font-bold rounded-xl bg-slate-950/60 border border-slate-850 text-slate-200 focus:outline-none focus:border-indigo-500"
+                        className="w-full px-3 py-1.5 font-mono text-xs font-bold rounded-xl bg-slate-950/60 border border-slate-800 text-slate-200 focus:outline-none focus:border-indigo-500"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1745,7 +1902,7 @@ export const FunctionPlotter = ({
                         type="number"
                         value={xMaxVal}
                         onChange={(e) => setXMaxVal(parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-1.5 font-mono text-xs font-bold rounded-xl bg-slate-950/60 border border-slate-850 text-slate-200 focus:outline-none focus:border-indigo-500"
+                        className="w-full px-3 py-1.5 font-mono text-xs font-bold rounded-xl bg-slate-950/60 border border-slate-800 text-slate-200 focus:outline-none focus:border-indigo-500"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1754,7 +1911,7 @@ export const FunctionPlotter = ({
                         type="number"
                         value={yMinVal}
                         onChange={(e) => setYMinVal(parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-1.5 font-mono text-xs font-bold rounded-xl bg-slate-950/60 border border-slate-850 text-slate-200 focus:outline-none focus:border-indigo-500"
+                        className="w-full px-3 py-1.5 font-mono text-xs font-bold rounded-xl bg-slate-950/60 border border-slate-800 text-slate-200 focus:outline-none focus:border-indigo-500"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1763,7 +1920,7 @@ export const FunctionPlotter = ({
                         type="number"
                         value={yMaxVal}
                         onChange={(e) => setYMaxVal(parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-1.5 font-mono text-xs font-bold rounded-xl bg-slate-950/60 border border-slate-850 text-slate-200 focus:outline-none focus:border-indigo-500"
+                        className="w-full px-3 py-1.5 font-mono text-xs font-bold rounded-xl bg-slate-950/60 border border-slate-800 text-slate-200 focus:outline-none focus:border-indigo-500"
                       />
                     </div>
                   </div>
@@ -1798,7 +1955,7 @@ export const FunctionPlotter = ({
                 placeholder={getUiString('search_placeholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-950/60 border border-slate-850 text-xs font-bold text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-500"
+                className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs font-bold text-slate-200 focus:outline-none focus:border-indigo-500 placeholder-slate-500"
               />
             </div>
           </div>
@@ -1812,7 +1969,7 @@ export const FunctionPlotter = ({
                 className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border transition-all cursor-pointer ${
                   selectedCategory === cat
                     ? 'bg-indigo-600/20 border-indigo-500 text-indigo-400 font-extrabold shadow-md'
-                    : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:text-slate-200'
+                    : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
                 {CATEGORY_LOCALIZATIONS[cat]?.[langKey] || CATEGORY_LOCALIZATIONS[cat]?.EN || cat}
@@ -1858,19 +2015,19 @@ export const FunctionPlotter = ({
                   className={`group rounded-2xl border p-4 space-y-3 cursor-pointer select-none transition-all duration-350 backdrop-blur-md ${
                     isSelected
                       ? 'bg-indigo-950/20 border-indigo-500 shadow-lg shadow-indigo-500/5'
-                      : 'bg-slate-950/20 border-slate-850 hover:border-slate-700 hover:bg-slate-950/40'
+                      : 'bg-slate-950/20 border-slate-800 hover:border-slate-700 hover:bg-slate-950/40'
                   }`}
                 >
                   <div className="flex justify-between items-start gap-2">
                     <span className={`text-[10px] font-black tracking-tight ${isSelected ? 'text-indigo-400' : 'text-slate-200'}`}>
                       {localizedName}
                     </span>
-                    <span className="text-[7px] font-bold uppercase tracking-wider text-slate-400 bg-slate-950/60 px-2 py-0.5 rounded-full border border-slate-850 shrink-0">
+                    <span className="text-[7px] font-bold uppercase tracking-wider text-slate-400 bg-slate-950/60 px-2 py-0.5 rounded-full border border-slate-800 shrink-0">
                       {localizedCategory}
                     </span>
                   </div>
                   
-                  <div className="p-2 rounded-lg bg-slate-950/60 border border-slate-850 font-mono text-[9px] font-black text-center text-indigo-300 group-hover:text-indigo-200 truncate">
+                  <div className="p-2 rounded-lg bg-slate-950/60 border border-slate-800 font-mono text-[9px] font-black text-center text-indigo-300 group-hover:text-indigo-200 truncate">
                     {preset.formula}
                   </div>
                   

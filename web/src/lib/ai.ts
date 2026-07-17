@@ -2395,8 +2395,7 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       const isPlaceholder = /placeholder|dummy|todo|tbd|tbc|lorem|ipsum|a definir|à définir/i.test(definition) || /placeholder|dummy|todo|tbd|tbc|lorem|ipsum|a definir|à définir/i.test(term) || /^[\[\(].*[\]\)]$/.test(term) || /^[\[\(].*[\]\)]$/.test(definition);
 
       const isWrongLanguage = (targetLang !== 'en') && (
-        /\b(is a|are|refers to|the study of|of the|in the|and the|with the|is the|study of)\b/i.test(definition) ||
-        (targetLang === 'fr' && !/\b(est|une|des|les|dans|pour|avec|qui|que|du|en)\b/i.test(definition))
+        /\b(is a|are|refers to|the study of|of the|in the|and the|with the|is the|study of)\b/i.test(definition)
       );
 
       if (isCircular || isShort || isPlaceholder || isWrongLanguage) {
@@ -2461,6 +2460,11 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
           } catch (tErr) {
             console.error(`[GLOSSARY VALIDATOR] Direct translation of glossary entry failed:`, tErr);
           }
+        }
+
+        if (!healed) {
+          console.log(`[GLOSSARY VALIDATOR] Wikipedia healing and translation both failed. Preserving original entry.`);
+          healedGlossary.push({ term, definition });
         }
       } else {
         healedGlossary.push({ term, definition });
@@ -2623,6 +2627,57 @@ export function extractAndInjectCitations(content: string, references: string[])
   });
   
   return updatedContent;
+}
+
+export function ensureBlockWidgetsOnOwnLines(text: string): string {
+  if (!text) return text;
+
+  // 1. Temporarily extract and replace code blocks (```...```) to avoid corrupting code
+  const codeBlocks: string[] = [];
+  let processed = text.replace(/```[\s\S]*?```/g, (match) => {
+    codeBlocks.push(match);
+    return `__CODE_BLOCK_PLACEHOLDER_${codeBlocks.length - 1}__`;
+  });
+
+  // 2. Temporarily extract and replace inline code (`...`)
+  const inlineCodes: string[] = [];
+  processed = processed.replace(/`[^`\n]+`/g, (match) => {
+    inlineCodes.push(match);
+    return `__INLINE_CODE_PLACEHOLDER_${inlineCodes.length - 1}__`;
+  });
+
+  const blockTags = [
+    'Image', 'CustomFigure', 'Video', 'Audio', 'ClimateImpactMap', 'DataChart',
+    'StructureViewer3D', 'FunctionPlotter', 'FunctionManipulator', 'DynamicSimulation',
+    'FillInBlanks', 'Summary', 'WhatsNext', 'EssayEvaluation', 'GoingFurther',
+    'Quiz', 'SolvedExercise', 'UnsolvedExercise', 'Mermaid',
+    'CriticalThinking', 'ScientificMethod', 'HistoricalAnecdote', 'HistoricalEvent',
+    'HistoricalFact', 'PointOfView', 'AnecdoteHistorique', 'FaitHistorique',
+    'MethodeScientifique', 'PointDeVue', 'AcademicSkeptic', 'SceptiqueAcademique'
+  ];
+
+  for (const tag of blockTags) {
+    // Match either self-closing tag or open/close tag, including surrounding horizontal spaces
+    const pattern = new RegExp(`[ \\t]*(<${tag}\\b[^>]*?\\/>|<${tag}\\b[^>]*?>[\\s\\S]*?<\\/${tag}>)[ \\t]*`, 'gi');
+    processed = processed.replace(pattern, (match) => {
+      return `\n\n${match.trim()}\n\n`;
+    });
+  }
+
+  // Normalize consecutive newlines to exactly two
+  processed = processed.replace(/\n{3,}/g, '\n\n');
+
+  // 3. Restore inline code
+  processed = processed.replace(/__INLINE_CODE_PLACEHOLDER_(\d+)__/g, (match, idx) => {
+    return inlineCodes[parseInt(idx, 10)];
+  });
+
+  // 4. Restore code blocks
+  processed = processed.replace(/__CODE_BLOCK_PLACEHOLDER_(\d+)__/g, (match, idx) => {
+    return codeBlocks[parseInt(idx, 10)];
+  });
+  
+  return processed.trim();
 }
 
 export function stitchLessonContent(narrativeMdx: string, widgets: any, isTerminalEvaluation: boolean = false): string {
@@ -3220,7 +3275,13 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
     .replace(referencesRegex, '');
 
   if (Array.isArray(widgets.glossary) && widgets.glossary.length > 0) {
-    const glossaryStr = `\n\n\n${glossaryHeading}\n\n${widgets.glossary.map((g: any) => `* **${g.term}** : ${cleanGlossaryDef(g.definition)}`).join('\n')}`;
+    const serializableItems = widgets.glossary.map((g: any) => ({
+      term: g.term,
+      definition: cleanGlossaryDef(g.definition),
+      wikipediaUrl: g.wikipediaUrl || undefined
+    }));
+    const glossaryBase64 = Buffer.from(JSON.stringify(serializableItems)).toString('base64');
+    const glossaryStr = `\n\n\n${glossaryHeading}\n\n<GlossaryBlock itemsBase64="${glossaryBase64}" />`;
     content = content.trim() + glossaryStr;
   }
 
@@ -3351,6 +3412,7 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
   }).join('\n');
 
   content = content.replace(/```mdx/g, '').replace(/```/g, '').trim();
+  content = ensureBlockWidgetsOnOwnLines(content);
 
   return content;
 }
@@ -5681,17 +5743,38 @@ Lesson Title: "${item.title}"
 Language: "${targetLang.toUpperCase()}"
 
 You must define the following JSON properties:
-1. "conclusionSummary": A detailed text summarizing the key takeaways of this lesson (at least 5 sentences).
-2. "whatsNext": A text showing the link/transition to the next lesson.
+1. "conclusionSummary": An object containing an "items" array, which contains key takeaways of this lesson as complete sentences ending with periods (at least 5 bullet points).
+2. "whatsNext": An object containing a "steps" array of transition steps/lessons. Each step object must have "title", "description" (a text showing the transition/link), and "slug" (slug of the next lesson).
 3. "goingFurther": An object with an "items" array containing at least 5 to 7 high-quality, authoritative external resources (books, articles, videos, websites, research papers). For video and website types, you must provide a real, valid, functional URL (e.g. a specific working YouTube video URL or a real Wikipedia/academic portal URL). For books and research papers, the URL is optional and can be omitted. If you do not know a real, specific, valid URL, you MUST completely omit the "url" property from that item instead of generating a placeholder URL like "example.com" or "placeholder.com". Generate enough items (at least 5-7) so that even if some links fail automated reachability validation checks, the lesson will still display a rich selection of resources.
 4. "glossary": ${constraintKey === 'university_grad' ? 'An array of at least 12 to 15 key technical terms with detailed definitions.' : constraintKey === 'university_undergrad' ? 'An array of at least 8 to 12 key technical terms with detailed definitions.' : 'An array of at least 3-4 key technical terms with detailed definitions.'}
 
 Return ONLY a valid JSON object matching this schema:
 \`\`\`json
 {
-  "conclusionSummary": "string",
-  "whatsNext": "string",
-  "goingFurther": "string",
+  "conclusionSummary": {
+    "items": ["string"]
+  },
+  "whatsNext": {
+    "steps": [
+      {
+        "title": "string",
+        "description": "string",
+        "slug": "string"
+      }
+    ]
+  },
+  "goingFurther": {
+    "items": [
+      {
+        "title": "string",
+        "type": "string", // "book", "article", "video", "website", "research"
+        "description": "string",
+        "author": "string", // optional
+        "year": "string", // optional
+        "url": "string" // optional
+      }
+    ]
+  },
   "glossary": [
     { "term": "string", "definition": "string" }
   ]
@@ -5821,7 +5904,7 @@ Language: "${targetLang.toUpperCase()}"
 Citation Style: "${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}"
 
 You must define the following JSON properties:
-1. "finalEvaluation": ${isTerminalEvaluation ? 'A comprehensive course-level final exam. Provide a Quiz containing exactly 15 questions covering the entire course. Do not use any hover card tags like RealPerson, ConceptLink, etc., inside quiz questions or options.' : 'A lesson-level final quiz. Provide a Quiz containing 5-10 questions covering this lesson.'}
+1. "finalEvaluation": An object with a "type" property (value "Quiz"), and a "props" object containing a "durationLimit" (integer, e.g. 1800) and a "questions" array. ${isTerminalEvaluation ? 'Provide exactly 15 questions covering the entire course. Do not use any hover card tags like RealPerson, ConceptLink, etc., inside quiz questions or options.' : 'Provide 5-10 questions covering this lesson.'} Each question object in the array must contain "q" (the question string), "explanation" (string), and an "options" array. Each option object in the options array must contain "text" (string) and "correct" (boolean, true if correct, false otherwise).
 2. "references": ${isTerminalEvaluation ? 'An empty array ([]) due to the No-Ref policy.' : (constraintKey === 'university_grad' ? 'An array of 8 to 12 authoritative academic bibliography entries in the requested citation style.' : constraintKey === 'university_undergrad' ? 'An array of 6 to 8 authoritative academic bibliography entries in the requested citation style.' : 'An array of 3-5 authoritative academic bibliography entries in the requested citation style.')}
 
 ${isTerminalEvaluation ? 'SPECIAL INSTRUCTION: Prohibit references, citations, glossaries, and hover cards on this page. Media (images/audio/video) or Mermaid diagrams are strictly prohibited unless they are functional to the assessment itself (i.e. used directly inside the quiz questions or options as a building block for the question itself). Do not include any decorative or non-essential media/diagrams.' : ''}
@@ -5830,14 +5913,23 @@ Return ONLY a valid JSON object matching this schema:
 \\\`\\\`\\\`json
 {
   "finalEvaluation": {
-    "questions": [
-      {
-        "question": "string",
-        "options": ["string"],
-        "correctIndex": integer,
-        "explanation": "string"
-      }
-    ]
+    "type": "Quiz",
+    "props": {
+      "durationLimit": 1800,
+      "questions": [
+        {
+          "q": "string",
+          "explanation": "string",
+          "multiple": false,
+          "options": [
+            {
+              "text": "string",
+              "correct": boolean
+            }
+          ]
+        }
+      ]
+    }
   },
   "references": ["string"]
 }
@@ -5993,7 +6085,13 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
           }
         }
         parsedWidgets.finalEvaluation = block5Parsed.finalEvaluation;
-        parsedWidgets.references = block5Parsed.references;
+        if (!isTerminalEvaluation && courseReferences && courseReferences.length > 0) {
+          parsedWidgets.references = courseReferences;
+        } else {
+          parsedWidgets.references = block5Parsed.references;
+        }
+      } else if (!isTerminalEvaluation && courseReferences && courseReferences.length > 0) {
+        parsedWidgets.references = courseReferences;
       }
       // --- Programmatic Curation-First budget & normalization ---
       const dbCatalogKeys = Object.keys(prunedCatalog);
@@ -6497,16 +6595,21 @@ ${sectionToTranslate}`;
   let translatedMdx = restoreJsxAfterTranslation(reconstructedIsolatedMdx, registry, targetLang);
   
   if (hasFrontmatter) {
+    const cleanTitle = cleanImproperQuotes(transTitle);
+    const cleanSubject = frontmatter.subject ? cleanImproperQuotes(frontmatter.subject) : '';
+    const cleanLevel = frontmatter.level ? cleanImproperQuotes(frontmatter.level) : '';
+    const cleanModule = transModule ? cleanImproperQuotes(transModule) : '';
+
     let reconstructedFrontmatter = `---\n`;
-    reconstructedFrontmatter += `title: "${transTitle.replace(/"/g, '\\"')}"\n`;
-    if (frontmatter.subject) {
-      reconstructedFrontmatter += `subject: "${frontmatter.subject.replace(/"/g, '\\"')}"\n`;
+    reconstructedFrontmatter += `title: "${cleanTitle.replace(/"/g, '\\"')}"\n`;
+    if (cleanSubject) {
+      reconstructedFrontmatter += `subject: "${cleanSubject.replace(/"/g, '\\"')}"\n`;
     }
-    if (frontmatter.level) {
-      reconstructedFrontmatter += `level: "${frontmatter.level.replace(/"/g, '\\"')}"\n`;
+    if (cleanLevel) {
+      reconstructedFrontmatter += `level: "${cleanLevel.replace(/"/g, '\\"')}"\n`;
     }
-    if (transModule) {
-      reconstructedFrontmatter += `module: "${transModule.replace(/"/g, '\\"')}"\n`;
+    if (cleanModule) {
+      reconstructedFrontmatter += `module: "${cleanModule.replace(/"/g, '\\"')}"\n`;
     }
     if (frontmatter.order !== undefined) {
       reconstructedFrontmatter += `order: ${frontmatter.order}\n`;
@@ -8782,8 +8885,9 @@ export async function validateAndFixBibliography(mdx: string, targetLang: string
       replacements.push({ original: fullMatch, replacement: updatedRef, refId });
       console.log(`[BIBLIOGRAPHY VALIDATOR] Successfully resolved to URL: ${resolvedUrl}`);
     } else {
-      replacements.push({ original: fullMatch, replacement: '', refId });
-      console.warn(`[BIBLIOGRAPHY VALIDATOR] Failed to resolve Reference #${refId}. Marking for removal.`);
+      const fallbackRef = `<a id="ref-${refId}"></a>[${refNum}] ${refText}`;
+      replacements.push({ original: fullMatch, replacement: fallbackRef, refId });
+      console.warn(`[BIBLIOGRAPHY VALIDATOR] Failed to resolve Reference #${refId}. Preserving as plain text.`);
     }
   }
 
@@ -10009,7 +10113,7 @@ export function healNarrativeCitations(text: string): string {
 
   // Convert raw stand-alone digits inside brackets like [1], [2] safely to [[WIDGET:Reference:1]]
   // (avoiding array indices or math ranges by requiring preceding non-alphanumeric boundaries)
-  processed = processed.replace(/(^|[^a-zA-Z0-9$_])\\[(\d+)\\]/g, '$1[[WIDGET:Reference:$2]]');
+  processed = processed.replace(/(^|[^a-zA-Z0-9$_])\[(\d+)\]/g, '$1[[WIDGET:Reference:$2]]');
 
   // 4. Restore inline code
   processed = processed.replace(/__INLINE_CODE_PLACEHOLDER_(\d+)__/g, (match, idx) => {
@@ -10022,6 +10126,17 @@ export function healNarrativeCitations(text: string): string {
   });
 
   return processed;
+}
+
+export function cleanImproperQuotes(str: string): string {
+  if (!str) return '';
+  let cleaned = str.trim();
+  // 1. Unescape any backslashed quotes
+  cleaned = cleaned.replace(/\\"/g, '"').replace(/\\'/g, "'");
+  // 2. Remove outer quotes (single, double, guillemets, typographic quotes) and surrounding spaces/non-breaking spaces
+  const quotePattern = /^[«»"'“”‘’\s\u00A0\u202F\u2007\u200B\\]+|[«»"'“”‘’\s\u00A0\u202F\u2007\u200B\\]+$/g;
+  cleaned = cleaned.replace(quotePattern, '').trim();
+  return cleaned;
 }
 
 

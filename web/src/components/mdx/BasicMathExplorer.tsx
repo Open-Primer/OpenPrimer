@@ -577,7 +577,7 @@ export const BasicMathExplorer = ({
           className={`relative w-[48px] h-[48px] rounded-xl flex items-center justify-center border transition-all duration-300 cursor-pointer select-none ${
             isCrossed 
               ? 'bg-rose-500/10 border-rose-500/30' 
-              : 'bg-slate-950 border-slate-850 hover:border-slate-700'
+              : 'bg-slate-950 border-slate-800 hover:border-slate-700'
           }`}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth="2">
@@ -667,7 +667,7 @@ export const BasicMathExplorer = ({
   return (
     <div className="my-10 rounded-[40px] border border-slate-800 bg-slate-900/50 backdrop-blur-3xl shadow-2xl overflow-hidden neon-glow-indigo">
       {/* Header Tabs switcher */}
-      <div className="border-b border-slate-850 bg-slate-950/40 p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="border-b border-slate-800 bg-slate-950/40 p-5 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
             <span className="text-sm">🧮</span>
@@ -691,7 +691,7 @@ export const BasicMathExplorer = ({
               className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border select-none transition-all cursor-pointer ${
                 activeTab === tab
                   ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-500/15 neon-glow-indigo'
-                  : 'bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200 hover:neon-glow-indigo'
+                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:neon-glow-indigo'
               }`}
             >
               {tab === 'add-sub' ? t.tabAddSub :
@@ -709,14 +709,14 @@ export const BasicMathExplorer = ({
         {activeTab === 'add-sub' && (
           <div className="space-y-6">
             {/* Top Config */}
-            <div className="p-5 rounded-3xl border border-slate-850 bg-slate-950/40 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+            <div className="p-5 rounded-3xl border border-slate-800 bg-slate-950/40 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
               <div className="space-y-1">
                 <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block">{t.mode}</span>
                 <div className="grid grid-cols-2 gap-1.5">
                   <button
                     onClick={() => { setAddSubMode('add'); setTab1Feedback(null); }}
                     className={`py-1.5 rounded-xl text-[9px] font-black uppercase border tracking-wider select-none cursor-pointer transition-all ${
-                      addSubMode === 'add' ? 'bg-indigo-600 border-indigo-500 text-white neon-glow-indigo' : 'bg-slate-950 border-slate-850 text-slate-400 hover:neon-glow-indigo'
+                      addSubMode === 'add' ? 'bg-indigo-600 border-indigo-500 text-white neon-glow-indigo' : 'bg-slate-950 border-slate-800 text-slate-400 hover:neon-glow-indigo'
                     }`}
                   >
                     {t.addition}
@@ -724,7 +724,7 @@ export const BasicMathExplorer = ({
                   <button
                     onClick={() => { setAddSubMode('sub'); setTab1Feedback(null); }}
                     className={`py-1.5 rounded-xl text-[9px] font-black uppercase border tracking-wider select-none cursor-pointer transition-all ${
-                      addSubMode === 'sub' ? 'bg-indigo-600 border-indigo-500 text-white neon-glow-indigo' : 'bg-slate-950 border-slate-850 text-slate-400 hover:neon-glow-indigo'
+                      addSubMode === 'sub' ? 'bg-indigo-600 border-indigo-500 text-white neon-glow-indigo' : 'bg-slate-950 border-slate-800 text-slate-400 hover:neon-glow-indigo'
                     }`}
                   >
                     {t.subtraction}
@@ -786,7 +786,7 @@ export const BasicMathExplorer = ({
             </div>
 
             {/* Step-Jump Curved Number Line */}
-            <div className="space-y-4 pt-4 border-t border-slate-850">
+            <div className="space-y-4 pt-4 border-t border-slate-800">
               <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                 {t.graduatedAxis}
               </h5>
@@ -842,7 +842,7 @@ export const BasicMathExplorer = ({
             </div>
 
             {/* Validation Riddle */}
-            <div className="pt-6 border-t border-slate-850 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="pt-6 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-3">
                 <span className="font-mono text-2xl font-black text-slate-300">
                   {numA} {addSubMode === 'add' ? '+' : '-'} {numB} = 
@@ -878,14 +878,14 @@ export const BasicMathExplorer = ({
         {activeTab === 'mul-div' && (
           <div className="space-y-6">
             {/* Top Config */}
-            <div className="p-5 rounded-3xl border border-slate-850 bg-slate-950/40 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+            <div className="p-5 rounded-3xl border border-slate-800 bg-slate-950/40 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
               <div className="space-y-1">
                 <span className="text-[9px] font-black uppercase text-indigo-400 tracking-wider block">{t.mode}</span>
                 <div className="grid grid-cols-2 gap-1.5">
                   <button
                     onClick={() => { setMulDivMode('mul'); setTab2Feedback(null); }}
                     className={`py-1.5 rounded-xl text-[9px] font-black uppercase border tracking-wider select-none cursor-pointer transition-all ${
-                      mulDivMode === 'mul' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-850 text-slate-400'
+                      mulDivMode === 'mul' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
                     }`}
                   >
                     {t.multiplication}
@@ -893,7 +893,7 @@ export const BasicMathExplorer = ({
                   <button
                     onClick={() => { setMulDivMode('div'); setTab2Feedback(null); }}
                     className={`py-1.5 rounded-xl text-[9px] font-black uppercase border tracking-wider select-none cursor-pointer transition-all ${
-                      mulDivMode === 'div' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-850 text-slate-400'
+                      mulDivMode === 'div' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
                     }`}
                   >
                     {t.division}
@@ -1009,7 +1009,7 @@ export const BasicMathExplorer = ({
             </div>
 
             {/* Validation input */}
-            <div className="pt-6 border-t border-slate-850 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="pt-6 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-3">
                 <span className="font-mono text-2xl font-black text-slate-300">
                   {mulDivMode === 'mul' 
@@ -1057,7 +1057,7 @@ export const BasicMathExplorer = ({
                 className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider border select-none cursor-pointer transition-all ${
                   compareMode 
                     ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg neon-glow-indigo' 
-                    : 'bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200 hover:neon-glow-indigo'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:neon-glow-indigo'
                 }`}
               >
                 ⚖️ {compareMode ? "Single Mode" : "Compare Mode"}
@@ -1066,7 +1066,7 @@ export const BasicMathExplorer = ({
 
             <div className={compareMode ? "grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2" : "space-y-6"}>
               {/* Fraction A Card */}
-              <div className="p-5 rounded-3xl border border-slate-850 bg-slate-950/20 space-y-6">
+              <div className="p-5 rounded-3xl border border-slate-800 bg-slate-950/20 space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-900 pb-2">
                   <span className="text-xs font-black uppercase text-indigo-400 tracking-wider">
                     {compareMode ? "Fraction A" : "Fractions"}
@@ -1135,7 +1135,7 @@ export const BasicMathExplorer = ({
                       })}
                     </svg>
                   </div>
-                  <div className="p-4 rounded-2xl border border-slate-850 bg-slate-900/10 flex flex-col items-center justify-center min-h-[180px]">
+                  <div className="p-4 rounded-2xl border border-slate-800 bg-slate-900/10 flex flex-col items-center justify-center min-h-[180px]">
                     <div className="flex flex-col items-center font-mono font-black text-3xl">
                       <span className="text-indigo-400">{fracNum}</span>
                       <div className="w-10 h-0.5 bg-slate-700 my-1 rounded" />
@@ -1150,7 +1150,7 @@ export const BasicMathExplorer = ({
 
               {/* Fraction B Card (Comparison Mode) */}
               {compareMode && (
-                <div className="p-5 rounded-3xl border border-slate-850 bg-slate-950/20 space-y-6 animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-5 rounded-3xl border border-slate-800 bg-slate-950/20 space-y-6 animate-in fade-in zoom-in-95 duration-200">
                   <div className="flex items-center justify-between border-b border-slate-900 pb-2">
                     <span className="text-xs font-black uppercase text-emerald-400 tracking-wider">
                       Fraction B
@@ -1219,7 +1219,7 @@ export const BasicMathExplorer = ({
                         })}
                       </svg>
                     </div>
-                    <div className="p-4 rounded-2xl border border-slate-850 bg-slate-900/10 flex flex-col items-center justify-center min-h-[180px]">
+                    <div className="p-4 rounded-2xl border border-slate-800 bg-slate-900/10 flex flex-col items-center justify-center min-h-[180px]">
                       <div className="flex flex-col items-center font-mono font-black text-3xl">
                         <span className="text-emerald-400">{fracNumB}</span>
                         <div className="w-10 h-0.5 bg-slate-700 my-1 rounded" />
@@ -1235,7 +1235,7 @@ export const BasicMathExplorer = ({
             </div>
 
             {compareMode && (
-              <div className="p-5 bg-slate-950/40 border border-slate-850 rounded-3xl flex flex-col items-center justify-center gap-4 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="p-5 bg-slate-950/40 border border-slate-800 rounded-3xl flex flex-col items-center justify-center gap-4 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <span className="text-[10px] font-black uppercase text-indigo-400 tracking-wider">Comparison Result</span>
                 {(() => {
                   const valA = fracNum / fracDen;
@@ -1288,7 +1288,7 @@ export const BasicMathExplorer = ({
         {/* TAB 4: PARENTHESES / PRIORITIES */}
         {activeTab === 'parentheses' && (
           <div className="space-y-6">
-            <div className="p-5 rounded-3xl border border-slate-850 bg-slate-950/40 space-y-2">
+            <div className="p-5 rounded-3xl border border-slate-800 bg-slate-950/40 space-y-2">
               <span className="text-[9px] font-black uppercase tracking-widest text-amber-500 flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
                 {t.fundamentalRule}
@@ -1354,7 +1354,7 @@ export const BasicMathExplorer = ({
               </div>
 
               {/* Form input and text explaining step */}
-              <div className="p-6 rounded-3xl border border-slate-850 bg-slate-900/30 flex flex-col justify-between min-h-[220px]">
+              <div className="p-6 rounded-3xl border border-slate-800 bg-slate-900/30 flex flex-col justify-between min-h-[220px]">
                 <div className="space-y-4">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{t.yourAnswer}</span>
                   

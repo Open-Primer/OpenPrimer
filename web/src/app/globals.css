@@ -262,7 +262,7 @@ select {
 
 .theme-paper .bg-slate-950,
 .theme-paper .bg-slate-900,
-.theme-paper .bg-slate-850,
+.theme-paper .bg-slate-800,
 .theme-paper .bg-slate-800,
 .theme-paper .bg-slate-950\/95,
 .theme-paper .bg-slate-950\/90,
@@ -295,10 +295,10 @@ select {
 .theme-paper .bg-slate-800\/20,
 .theme-paper .bg-slate-800\/10,
 .theme-paper .bg-slate-955\/75,
-.theme-paper [class*="bg-slate-950"],
-.theme-paper [class*="bg-slate-900"],
-.theme-paper [class*="bg-slate-850"],
-.theme-paper [class*="bg-slate-800"] {
+.theme-paper .bg-slate-950,
+.theme-paper .bg-slate-900,
+.theme-paper .bg-slate-800,
+.theme-paper .bg-slate-800 {
   background-color: #f4f1e5 !important;
   background-image: none !important;
   border-color: #dbd5be !important;
@@ -306,7 +306,7 @@ select {
 }
 
 .theme-paper .border-slate-800,
-.theme-paper .border-slate-850,
+.theme-paper .border-slate-800,
 .theme-paper .border-slate-900,
 .theme-paper .border-slate-700\/30,
 .theme-paper .border-slate-700\/20,
@@ -315,8 +315,8 @@ select {
   border-color: #dbd5be !important;
 }
 
-.theme-paper .divide-slate-850\/50 > *,
-.theme-paper .divide-slate-850 > * {
+.theme-paper .divide-slate-800\/50 > *,
+.theme-paper .divide-slate-800 > * {
   border-color: #dbd5be !important;
 }
 
@@ -328,10 +328,10 @@ select {
 .theme-paper select,
 .theme-paper textarea,
 .theme-paper input,
-.theme-paper textarea[class*="bg-slate-"],
-.theme-paper input[class*="bg-slate-"],
-.theme-paper button[class*="bg-slate-"].w-full.cursor-pointer,
-.theme-paper select[class*="bg-slate-"] {
+.theme-paper textarea.bg-slate-950, .theme-paper textarea.bg-slate-900, .theme-paper textarea.bg-slate-800, .theme-paper textarea.bg-slate-800,
+.theme-paper input.bg-slate-950, .theme-paper input.bg-slate-900, .theme-paper input.bg-slate-800, .theme-paper input.bg-slate-800,
+.theme-paper button.bg-slate-950.w-full.cursor-pointer, .theme-paper button.bg-slate-900.w-full.cursor-pointer, .theme-paper button.bg-slate-800.w-full.cursor-pointer, .theme-paper button.bg-slate-800.w-full.cursor-pointer,
+.theme-paper select.bg-slate-950, .theme-paper select.bg-slate-900, .theme-paper select.bg-slate-800, .theme-paper select.bg-slate-800 {
   background-color: #ffffff !important;
   border-color: #dbd5be !important;
   color: #0f172a !important;
@@ -530,10 +530,10 @@ select {
 }
 
 /* Bulletproof Background and Border overrides for all Slate-based elements */
-.theme-paper [class*="bg-slate-950"],
-.theme-paper [class*="bg-slate-900"],
-.theme-paper [class*="bg-slate-850"],
-.theme-paper [class*="bg-slate-800"] {
+.theme-paper .bg-slate-950,
+.theme-paper .bg-slate-900,
+.theme-paper .bg-slate-800,
+.theme-paper .bg-slate-800 {
   background-color: #f3efe0 !important;
   border-color: #dbd5be !important;
   color: #0f172a !important;
@@ -615,16 +615,25 @@ select {
 .theme-paper .hover\:bg-slate-800:hover,
 .theme-paper .hover\:bg-slate-900:hover,
 .theme-paper .hover\:bg-slate-950:hover,
-.theme-paper .hover\:bg-slate-850:hover,
+.theme-paper .hover\:bg-slate-800:hover,
 .theme-paper .group:hover .group-hover\:bg-slate-800 {
   background-color: #dbd5be !important;
 }
 
-.theme-paper [class*="border-slate-"] {
+.theme-paper .border-slate-950,
+.theme-paper .border-slate-900,
+.theme-paper .border-slate-800,
+.theme-paper .border-slate-800,
+.theme-paper .border-slate-700,
+.theme-paper .border-slate-600 {
   border-color: #dbd5be !important;
 }
 
-.theme-paper [class*="divide-slate-"] > * {
+.theme-paper .divide-slate-950 > *,
+.theme-paper .divide-slate-900 > *,
+.theme-paper .divide-slate-800 > *,
+.theme-paper .divide-slate-800 > *,
+.theme-paper .divide-slate-700 > * {
   border-color: #dbd5be !important;
 }
 
@@ -655,11 +664,10 @@ select {
   animation: none !important;
 }
 
-/* Enforce flat, pure-black backgrounds with neutral borders in Focus Theme */
-.theme-focus [class*="bg-slate-950"],
-.theme-focus [class*="bg-slate-900"],
-.theme-focus [class*="bg-slate-850"],
-.theme-focus [class*="bg-slate-800"] {
+.theme-focus .bg-slate-950,
+.theme-focus .bg-slate-900,
+.theme-focus .bg-slate-800,
+.theme-focus .bg-slate-800 {
   background-color: #000000 !important;
   background-image: none !important;
   border-color: #262626 !important;
@@ -734,7 +742,7 @@ select {
 .theme-focus .bg-violet-500\/10,
 .theme-focus .bg-blue-950\/40,
 .theme-focus .bg-slate-800,
-.theme-focus .bg-slate-850,
+.theme-focus .bg-slate-800,
 .theme-focus .bg-slate-950,
 .theme-focus .bg-slate-900\/20,
 .theme-focus .bg-blue-600 {
@@ -749,7 +757,7 @@ select {
 .theme-focus .border-amber-500\/20,
 .theme-focus .border-violet-500\/30,
 .theme-focus .border-slate-800,
-.theme-focus .border-slate-850,
+.theme-focus .border-slate-800,
 .theme-focus .border-slate-700 {
   border-color: #262626 !important;
 }
@@ -1035,10 +1043,19 @@ body:not(.theme-paper):not(.theme-focus) footer {
 }
 
 /* --- Paper Theme Overlay Backdrop-Blur fixes --- */
-.theme-paper [class*="bg-slate-950/"],
-.theme-paper [class*="bg-slate-900/"],
-.theme-paper [class*="bg-slate-850/"],
-.theme-paper [class*="bg-slate-800/"] {
+.theme-paper .bg-slate-955\/75,
+.theme-paper .bg-slate-950\/60,
+.theme-paper .bg-slate-950\/45,
+.theme-paper .bg-slate-950\/40,
+.theme-paper .bg-slate-950\/30,
+.theme-paper .bg-slate-950\/20,
+.theme-paper .bg-slate-900\/60,
+.theme-paper .bg-slate-900\/40,
+.theme-paper .bg-slate-900\/20,
+.theme-paper .bg-slate-800\/30,
+.theme-paper .bg-slate-800\/60,
+.theme-paper .bg-slate-800\/40,
+.theme-paper .bg-slate-800\/20 {
   background-color: rgba(244, 241, 229, 0.85) !important;
   backdrop-filter: blur(24px) !important;
 }
@@ -1433,9 +1450,9 @@ body:not(.theme-paper):not(.theme-focus) footer {
 }
 
 .theme-paper .pronunciation-sandbox-reset .border-slate-800,
-.theme-paper .pronunciation-sandbox-reset .border-slate-850,
-.theme-paper .pronunciation-sandbox-reset .border-slate-850\/70,
-.theme-paper .pronunciation-sandbox-reset .border-slate-850\/60 {
+.theme-paper .pronunciation-sandbox-reset .border-slate-800,
+.theme-paper .pronunciation-sandbox-reset .border-slate-800\/70,
+.theme-paper .pronunciation-sandbox-reset .border-slate-800\/60 {
   border-color: #e7e2d1 !important;
 }
 
@@ -1503,9 +1520,9 @@ body:not(.theme-paper):not(.theme-focus) footer {
 }
 
 .theme-focus .pronunciation-sandbox-reset .border-slate-800,
-.theme-focus .pronunciation-sandbox-reset .border-slate-850,
-.theme-focus .pronunciation-sandbox-reset .border-slate-850\/70,
-.theme-focus .pronunciation-sandbox-reset .border-slate-850\/60 {
+.theme-focus .pronunciation-sandbox-reset .border-slate-800,
+.theme-focus .pronunciation-sandbox-reset .border-slate-800\/70,
+.theme-focus .pronunciation-sandbox-reset .border-slate-800\/60 {
   border-color: #262626 !important;
 }
 

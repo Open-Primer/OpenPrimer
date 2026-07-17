@@ -283,7 +283,7 @@ export const LogicGateSimulator = ({ gradeLevel = 'high_school' }: { gradeLevel?
             className={`py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border ${
               activePreset === 'comparison'
                 ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-400 shadow-lg"
-                : "bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-850"
+                : "bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800"
             }`}
           >
             {t.preset_comparison}
@@ -293,7 +293,7 @@ export const LogicGateSimulator = ({ gradeLevel = 'high_school' }: { gradeLevel?
             className={`py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border ${
               activePreset === 'halfadder'
                 ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-400 shadow-lg"
-                : "bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-850"
+                : "bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800"
             }`}
           >
             {t.preset_halfadder}
@@ -303,7 +303,7 @@ export const LogicGateSimulator = ({ gradeLevel = 'high_school' }: { gradeLevel?
             className={`py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border ${
               activePreset === 'srlatch'
                 ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-400 shadow-lg"
-                : "bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-850"
+                : "bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800"
             }`}
           >
             {t.preset_srlatch}
@@ -512,7 +512,7 @@ export const LogicGateSimulator = ({ gradeLevel = 'high_school' }: { gradeLevel?
                   <span>{t.challenge_solved}</span>
                 </div>
               ) : (
-                <div className="p-3 bg-slate-900/60 border border-slate-850 rounded-2xl flex items-start gap-2 text-slate-400 text-xs">
+                <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-2xl flex items-start gap-2 text-slate-400 text-xs">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
                   <span>{t.challenge_unsolved}</span>
                 </div>
@@ -526,8 +526,8 @@ export const LogicGateSimulator = ({ gradeLevel = 'high_school' }: { gradeLevel?
               {t.truth_table_title}
             </span>
 
-            <div className="w-full border border-slate-850 rounded-2xl overflow-hidden text-xs bg-slate-950/50">
-              <div className="grid grid-cols-4 gap-1.5 p-2 bg-slate-950 border-b border-slate-850 text-slate-400 font-extrabold uppercase text-[9px] tracking-wider text-center">
+            <div className="w-full border border-slate-800 rounded-2xl overflow-hidden text-xs bg-slate-950/50">
+              <div className="grid grid-cols-4 gap-1.5 p-2 bg-slate-950 border-b border-slate-800 text-slate-400 font-extrabold uppercase text-[9px] tracking-wider text-center">
                 <span>A</span>
                 <span>B</span>
                 <span>SUM</span>
@@ -571,7 +571,7 @@ export const LogicGateSimulator = ({ gradeLevel = 'high_school' }: { gradeLevel?
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed text-slate-350">
             {/* Boolean Formulas */}
-            <div className="space-y-3 bg-slate-950/50 p-4 border border-slate-850 rounded-2xl">
+            <div className="space-y-3 bg-slate-950/50 p-4 border border-slate-800 rounded-2xl">
               <span className="font-bold text-slate-200 uppercase tracking-widest text-[9px] block">
                 {t.formula_label}
               </span>
@@ -607,14 +607,14 @@ export const LogicGateSimulator = ({ gradeLevel = 'high_school' }: { gradeLevel?
             </div>
 
             {/* Karnaugh Map (K-map) */}
-            <div className="space-y-3 bg-slate-950/50 p-4 border border-slate-850 rounded-2xl">
+            <div className="space-y-3 bg-slate-950/50 p-4 border border-slate-800 rounded-2xl">
               <span className="font-bold text-slate-200 uppercase tracking-widest text-[9px] block">
                 {t.kmap_title}
               </span>
               <p className="text-[11px] text-slate-400">{t.kmap_desc}</p>
               
-              <div className="border border-slate-850 rounded-xl overflow-hidden max-w-[160px] text-center font-mono">
-                <div className="grid grid-cols-3 bg-slate-950 text-slate-400 p-1 border-b border-slate-850 font-bold text-[9px]">
+              <div className="border border-slate-800 rounded-xl overflow-hidden max-w-[160px] text-center font-mono">
+                <div className="grid grid-cols-3 bg-slate-950 text-slate-400 p-1 border-b border-slate-800 font-bold text-[9px]">
                   <span>A\B</span>
                   <span>0</span>
                   <span>1</span>

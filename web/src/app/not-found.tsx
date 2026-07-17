@@ -67,7 +67,7 @@ export default function NotFound() {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="max-w-2xl w-full bg-slate-900/90 border border-slate-850 rounded-[40px] p-8 md:p-12 shadow-2xl relative text-center z-10 backdrop-blur-md"
+        className="max-w-2xl w-full bg-slate-900/90 border border-slate-800 rounded-[40px] p-8 md:p-12 shadow-2xl relative text-center z-10 backdrop-blur-md"
       >
         <div className="w-16 h-16 bg-blue-600/10 border border-blue-500/20 rounded-3xl flex items-center justify-center text-blue-400 mx-auto mb-8 shadow-inner shadow-blue-500/10">
           <GraduationCap className="w-8 h-8" />
@@ -93,7 +93,7 @@ export default function NotFound() {
           
           <Link
             href="/"
-            className="w-full sm:w-auto py-4 px-8 bg-slate-950 border border-slate-850 hover:border-slate-700 text-slate-400 hover:text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer text-center"
+            className="w-full sm:w-auto py-4 px-8 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer text-center"
           >
             {t.home}
           </Link>

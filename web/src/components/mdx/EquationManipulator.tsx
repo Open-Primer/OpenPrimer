@@ -829,7 +829,7 @@ export const EquationManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_schoo
                 className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border select-none transition-all cursor-pointer ${
                   mathIndex === idx
                     ? 'bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-500/15'
-                    : 'bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
                 {p.titles[activeLang] || p.titles.EN}
@@ -837,7 +837,7 @@ export const EquationManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_schoo
             ))}
           </div>
           
-          <div className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-850 text-emerald-400 self-start lg:self-center">
+          <div className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-emerald-400 self-start lg:self-center">
             {t.difficulty}{t[currentMath.difficulties[activeLang] as keyof typeof t] || currentMath.difficulties[activeLang] || ''}
           </div>
         </div>
@@ -847,7 +847,7 @@ export const EquationManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_schoo
           <div className="xl:col-span-2 flex flex-col justify-between p-6 md:p-8 rounded-3xl bg-slate-950/60 border border-slate-900 shadow-inner relative min-h-[300px]">
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-900 border border-slate-850 text-emerald-400">
+                <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-emerald-400">
                   {t.step_label} {mathStepIdx + 1} {t.step_of} {currentMath.steps.length - 1}
                 </span>
               </div>
@@ -875,7 +875,7 @@ export const EquationManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_schoo
                       ? 'w-6 bg-emerald-500'
                       : idx < mathStepIdx
                         ? 'w-2 bg-emerald-500/40'
-                        : 'w-2 bg-slate-850'
+                        : 'w-2 bg-slate-800'
                   }`}
                 />
               ))}
@@ -901,7 +901,7 @@ export const EquationManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_schoo
                           ? opt.isCorrect
                             ? 'border-emerald-500/40 bg-emerald-500/10 text-white'
                             : 'border-rose-500/40 bg-rose-500/10 text-white'
-                          : 'border-slate-850 bg-slate-900/30 hover:bg-slate-900/60 hover:border-slate-800 text-slate-300'
+                          : 'border-slate-800 bg-slate-900/30 hover:bg-slate-900/60 hover:border-slate-800 text-slate-300'
                       }`}
                     >
                       <div className="flex items-center gap-3">

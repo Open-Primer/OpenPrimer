@@ -658,7 +658,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
             {/* Main call-to-action: Continue on to the next subsequent course in the curriculum */}
             <Link 
               href={nextCoursePath} 
-              className="flex-1 max-w-md p-6 bg-slate-900/20 hover:bg-emerald-500/10 border border-slate-850 hover:border-emerald-500/30 rounded-[28px] flex items-center justify-between group transition-all duration-300 shadow-xl cursor-pointer"
+              className="flex-1 max-w-md p-6 bg-slate-900/20 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/30 rounded-[28px] flex items-center justify-between group transition-all duration-300 shadow-xl cursor-pointer"
             >
               <div className="space-y-1">
                 <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block">
@@ -668,7 +668,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
                   {nextCourseTitle || t.goToNextCourse}
                 </span>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-600 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-500 transition-all shadow-md shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center text-slate-600 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-500 transition-all shadow-md shrink-0">
                 <ChevronRight className="w-5 h-5" />
               </div>
             </Link>
@@ -676,7 +676,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
             {/* Secondary fallback link: Back to Curriculum list */}
             <Link 
               href="/profile/curriculum" 
-              className="px-6 py-4 rounded-2xl border border-slate-850 hover:border-slate-700 bg-slate-900/10 hover:bg-slate-900/30 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all text-center shrink-0 cursor-pointer"
+              className="px-6 py-4 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-900/10 hover:bg-slate-900/30 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all text-center shrink-0 cursor-pointer"
             >
               {t.backToCurriculum}
             </Link>
@@ -685,14 +685,14 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           /* End of curriculum path, provide return button as main action */
           <Link 
             href="/profile/curriculum" 
-            className="flex-1 p-6 bg-slate-900/20 hover:bg-blue-600/10 border border-slate-850 hover:border-blue-500/30 rounded-[28px] flex items-center justify-between group transition-all duration-300 shadow-xl cursor-pointer"
+            className="flex-1 p-6 bg-slate-900/20 hover:bg-blue-600/10 border border-slate-800 hover:border-blue-500/30 rounded-[28px] flex items-center justify-between group transition-all duration-300 shadow-xl cursor-pointer"
           >
             <div className="space-y-1">
               <span className="text-base font-black text-slate-300 group-hover:text-blue-400 transition-colors block">
                 {t.backToCurriculum}
               </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-600 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all shadow-md shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center text-slate-600 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all shadow-md shrink-0">
               <ChevronRight className="w-5 h-5" />
             </div>
           </Link>

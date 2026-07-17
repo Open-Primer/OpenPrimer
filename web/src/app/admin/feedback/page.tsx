@@ -222,7 +222,7 @@ export default function AdminFeedbackPage() {
                 key={fb.id}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-8 bg-slate-900/35 border border-slate-850/80 rounded-[36px] flex flex-col justify-between space-y-6 shadow-xl hover:border-rose-500/20 hover:bg-slate-900/50 transition-all group"
+                className="p-8 bg-slate-900/35 border border-slate-800/80 rounded-[36px] flex flex-col justify-between space-y-6 shadow-xl hover:border-rose-500/20 hover:bg-slate-900/50 transition-all group"
               >
                 <div className="space-y-5">
                   {/* Header metadata row */}

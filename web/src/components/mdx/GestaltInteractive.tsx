@@ -179,7 +179,7 @@ export const GestaltInteractive = ({ gradeLevel }: { gradeLevel?: 'middle_school
         </div>
 
         {/* Tab Controls */}
-        <div className="flex bg-slate-950/80 p-1 rounded-xl border border-slate-850">
+        <div className="flex bg-slate-950/80 p-1 rounded-xl border border-slate-800">
           {(['similarity', 'proximity', 'closure'] as const).map((tab) => {
             const isActive = activeTab === tab;
             return (
@@ -202,7 +202,7 @@ export const GestaltInteractive = ({ gradeLevel }: { gradeLevel?: 'middle_school
       {/* Main Panel layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
         {/* SVG Visualization Box (7 cols) */}
-        <div className="col-span-1 lg:col-span-7 relative aspect-[4/3] bg-slate-950/90 rounded-2xl border border-slate-850 overflow-hidden flex items-center justify-center p-6 shadow-inner">
+        <div className="col-span-1 lg:col-span-7 relative aspect-[4/3] bg-slate-950/90 rounded-2xl border border-slate-800 overflow-hidden flex items-center justify-center p-6 shadow-inner">
           
           {/* Grid Blueprint Guidelines */}
           <div className="absolute inset-0 pointer-events-none opacity-5">
@@ -372,7 +372,7 @@ export const GestaltInteractive = ({ gradeLevel }: { gradeLevel?: 'middle_school
           </div>
 
           {/* Interactive Controls */}
-          <div className="bg-slate-950/60 border border-slate-850 p-5 rounded-2xl space-y-4">
+          <div className="bg-slate-950/60 border border-slate-800 p-5 rounded-2xl space-y-4">
             
             {/* SIMILARITY CONTROLS */}
             {activeTab === 'similarity' && (
@@ -413,7 +413,7 @@ export const GestaltInteractive = ({ gradeLevel }: { gradeLevel?: 'middle_school
                     max="65"
                     value={hSpacing}
                     onChange={(e) => setHSpacing(Number(e.target.value))}
-                    className="w-full h-1 bg-slate-850 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                   />
                 </div>
 
@@ -429,14 +429,14 @@ export const GestaltInteractive = ({ gradeLevel }: { gradeLevel?: 'middle_school
                     max="65"
                     value={vSpacing}
                     onChange={(e) => setVSpacing(Number(e.target.value))}
-                    className="w-full h-1 bg-slate-850 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                   />
                 </div>
 
                 {/* Reset button */}
                 <button
                   onClick={() => { setHSpacing(30); setVSpacing(30); }}
-                  className="w-full py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-slate-200 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 transition-all"
+                  className="w-full py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 transition-all"
                 >
                   <RefreshCw className="w-3 h-3" /> Recommencer
                 </button>
@@ -480,7 +480,7 @@ export const GestaltInteractive = ({ gradeLevel }: { gradeLevel?: 'middle_school
                     max="80"
                     value={gapSize}
                     onChange={(e) => setGapSize(Number(e.target.value))}
-                    className="w-full h-1 bg-slate-850 rounded-lg appearance-none cursor-pointer accent-pink-500"
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-pink-500"
                   />
                 </div>
               </div>

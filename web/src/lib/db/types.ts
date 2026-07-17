@@ -36,6 +36,7 @@ export interface SearchHistoryEntry {
   timestamp: string; // ISO string
   wasSuccessful: boolean;
   userId?: string;
+  ipAddress?: string; // Requester IP — stored for failed-search uniqueness auditing
 }
 
 export interface TranslationRequestEntry {
@@ -183,6 +184,10 @@ export interface ReportCluster {
   status: 'Pending' | 'In Progress' | 'Fixed';
   aiProposal: string;
   priority?: 'High' | 'Medium' | 'Low';
+  /** Ordered list of unique user IDs who have contributed to this cluster.
+   * Used to prevent a single user from artificially inflating the report count
+   * and triggering an unwanted pedagogical revision. */
+  user_ids?: string[];
 }
 
 export interface MockCourse {
@@ -331,7 +336,7 @@ export interface DatabaseService {
   toggleCourseLanguageArchived(courseId: number, lang: string): Promise<{ data: any; error: any }>;
   archiveAllCourseLanguages(courseId: number, archive: boolean): Promise<{ data: any; error: any }>;
   purgeCourse(courseId: number): Promise<{ data: any; error: any }>;
-  submitReport(course: string, page: string, comment: string): Promise<{ data: any; error: any }>;
+  submitReport(course: string, page: string, comment: string, userId?: string): Promise<{ data: any; error: any }>;
   saveCourseNotification(query: string, email: string): Promise<{ data: any; error: any }>;
   getCourseNotifications(): Promise<{ data: any[]; error: any }>;
   getAvailableLanguages(): Promise<{ data: LanguageInfo[]; error: any }>;

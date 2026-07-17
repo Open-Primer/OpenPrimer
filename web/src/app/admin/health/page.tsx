@@ -689,8 +689,8 @@ function ServiceCard({ svc, t, lang }: { svc: ServiceHealth; t: typeof HEALTH_ST
 
       {/* Vertex Multi-Project Pool Details */}
       {svc.id === 'ai' && details && details.length > 0 && (
-        <div className="flex flex-col gap-3 p-4 bg-slate-950/40 rounded-2xl border border-slate-850/60">
-          <div className="flex items-center justify-between border-b border-slate-850 pb-2">
+        <div className="flex flex-col gap-3 p-4 bg-slate-950/40 rounded-2xl border border-slate-800/60">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
               GCP Service Accounts Pool ({details.length})
             </span>
@@ -736,7 +736,7 @@ function ServiceCard({ svc, t, lang }: { svc: ServiceHealth; t: typeof HEALTH_ST
       )}
 
       {/* Endpoint */}
-      <div className="flex items-center gap-2 p-3 bg-slate-950/40 rounded-xl border border-slate-850">
+      <div className="flex items-center gap-2 p-3 bg-slate-950/40 rounded-xl border border-slate-800">
         <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest flex-shrink-0">{t.endpoint}</p>
         <a
           href={svc.url}
@@ -1154,7 +1154,7 @@ export default function ServerHealthPage() {
           ].map(s => {
             const stats = getServiceStats(s.id);
             return (
-              <div key={s.id} className="p-6 bg-slate-950/60 rounded-3xl border border-slate-850 hover:border-slate-800 transition-all flex flex-col justify-between group relative overflow-hidden">
+              <div key={s.id} className="p-6 bg-slate-950/60 rounded-3xl border border-slate-800 hover:border-slate-800 transition-all flex flex-col justify-between group relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-800 to-transparent opacity-50" />
                 <div>
                   <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block mb-1">{s.label}</span>
@@ -1171,7 +1171,7 @@ export default function ServerHealthPage() {
         </div>
 
         {/* Dynamic Year-long SLA grid timeline */}
-        <div className="p-6 bg-slate-950/40 rounded-3xl border border-slate-850 space-y-4">
+        <div className="p-6 bg-slate-950/40 rounded-3xl border border-slate-800 space-y-4">
             <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider text-slate-400 min-h-8">
               {hoveredDay ? (
                 <div className="flex items-center justify-between w-full text-[10px] text-slate-200 animate-in fade-in duration-200">
@@ -1256,7 +1256,7 @@ export default function ServerHealthPage() {
                      const status = getDayStatus(dayData);
                      const color = status === 'nominal' ? 'bg-emerald-500 border-emerald-400/20 shadow-[0_0_4px_rgba(16,185,129,0.1)] hover:bg-emerald-400'
                         : status === 'degraded' ? 'bg-amber-500 border-amber-400/20 shadow-[0_0_4px_rgba(245,158,11,0.1)] hover:bg-amber-400'
-                        : status === 'no_data' ? 'bg-slate-850/60 border-slate-800/80 shadow-none hover:bg-slate-800 hover:border-slate-700'
+                        : status === 'no_data' ? 'bg-slate-800/60 border-slate-800/80 shadow-none hover:bg-slate-800 hover:border-slate-700'
                         : 'bg-red-500 border-red-400/20 shadow-[0_0_4px_rgba(239,68,68,0.1)] hover:bg-red-400';
 
                      const isHovered = hoveredDay?.date === dayData.date;
@@ -1281,7 +1281,7 @@ export default function ServerHealthPage() {
                      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-emerald-500 border border-emerald-400" /> {t.status_nominal}</span>
                      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-amber-500 border border-amber-400" /> {t.status_degraded}</span>
                      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-red-500 border border-red-400" /> {t.status_outage}</span>
-                      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-slate-850 border border-slate-800" /> {t.status_no_data || 'No Log Data'}</span>
+                      <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-slate-800 border border-slate-800" /> {t.status_no_data || 'No Log Data'}</span>
                    </div>
                    <span>{t.today}</span>
                 </div>

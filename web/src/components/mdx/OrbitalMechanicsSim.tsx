@@ -297,7 +297,7 @@ export const OrbitalMechanicsSim = ({ gradeLevel = 'high_school' }: OrbitalMecha
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850/80 pb-5 mb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-5 mb-5">
         <div>
           <h4 className="text-sm font-black text-slate-100 uppercase tracking-widest flex items-center gap-2">
             <Target className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -327,7 +327,7 @@ export const OrbitalMechanicsSim = ({ gradeLevel = 'high_school' }: OrbitalMecha
           <canvas
             ref={canvasRef}
             onClick={handleCanvasClick}
-            className={`w-full h-[350px] rounded-2xl border border-slate-850 block ${addingBody ? 'cursor-crosshair' : 'cursor-default'}`}
+            className={`w-full h-[350px] rounded-2xl border border-slate-800 block ${addingBody ? 'cursor-crosshair' : 'cursor-default'}`}
           />
           {addingBody && (
             <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-cyan-600 text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg">
@@ -362,7 +362,7 @@ export const OrbitalMechanicsSim = ({ gradeLevel = 'high_school' }: OrbitalMecha
         {/* Sidebar Controls */}
         <div className="lg:col-span-4 flex flex-col gap-4">
           {/* Time Scale */}
-          <div className="p-4 rounded-2xl border border-slate-850 bg-slate-900/30 space-y-2">
+          <div className="p-4 rounded-2xl border border-slate-800 bg-slate-900/30 space-y-2">
             <label className="text-[9px] font-black uppercase text-cyan-400 tracking-wider flex justify-between">
               <span>{t("Time Scale")}</span>
               <span className="font-mono text-cyan-300">{timeScale.toFixed(2)}×</span>
@@ -373,7 +373,7 @@ export const OrbitalMechanicsSim = ({ gradeLevel = 'high_school' }: OrbitalMecha
           </div>
 
           {/* Add Body */}
-          <div className="p-4 rounded-2xl border border-slate-850 bg-slate-900/30 space-y-2">
+          <div className="p-4 rounded-2xl border border-slate-800 bg-slate-900/30 space-y-2">
             <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">{t("Add Body")}</span>
             <div className="grid grid-cols-3 gap-1.5">
               {(['star', 'planet', 'satellite'] as const).map(type => (
@@ -390,7 +390,7 @@ export const OrbitalMechanicsSim = ({ gradeLevel = 'high_school' }: OrbitalMecha
           </div>
 
           {/* Bodies List */}
-          <div className="p-4 rounded-2xl border border-slate-850 bg-slate-900/30 space-y-2 flex-1">
+          <div className="p-4 rounded-2xl border border-slate-800 bg-slate-900/30 space-y-2 flex-1">
             <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">{t("Bodies")} ({bodies.length})</span>
             <div className="space-y-1.5 max-h-[150px] overflow-y-auto pr-1">
               {bodies.map(b => (
@@ -413,7 +413,7 @@ export const OrbitalMechanicsSim = ({ gradeLevel = 'high_school' }: OrbitalMecha
 
           {/* Physics Readout */}
           {gradeLevel === 'university' && (
-            <div className="p-3 rounded-xl border border-slate-850 bg-slate-950/40 space-y-1">
+            <div className="p-3 rounded-xl border border-slate-800 bg-slate-950/40 space-y-1">
               <span className="text-[9px] font-black uppercase text-cyan-400 tracking-wider block">{t("System Energy")}</span>
               <div className="font-mono text-[10px] text-slate-300">
                 <div>KE ≈ <span className="text-cyan-400 font-black">{totalKE.toFixed(1)}</span> (scaled)</div>

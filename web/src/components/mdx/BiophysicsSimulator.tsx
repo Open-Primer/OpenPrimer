@@ -220,21 +220,21 @@ export const BiophysicsSimulator = () => {
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
           <button
             onClick={() => applyPreset('resting')}
-            className="py-2.5 px-4 bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer hover:neon-glow-blue"
+            className="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer hover:neon-glow-blue"
           >
             <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
             {t.preset_resting}
           </button>
           <button
             onClick={() => applyPreset('action_potential')}
-            className="py-2.5 px-4 bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer hover:neon-glow-emerald"
+            className="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer hover:neon-glow-emerald"
           >
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
             {t.preset_ap}
           </button>
           <button
             onClick={() => applyPreset('hyperpolarization')}
-            className="py-2.5 px-4 bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer hover:neon-glow-violet"
+            className="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer hover:neon-glow-violet"
           >
             <div className="w-2.5 h-2.5 rounded-full bg-violet-500" />
             {t.preset_hyper}
@@ -435,7 +435,7 @@ export const BiophysicsSimulator = () => {
             </div>
           </div>
 
-          <svg width="280" height="380" viewBox="0 0 280 380" className="bg-slate-950 rounded-2xl border border-slate-850 p-2 shadow-inner">
+          <svg width="280" height="380" viewBox="0 0 280 380" className="bg-slate-950 rounded-2xl border border-slate-800 p-2 shadow-inner">
             {/* Background vertical rule scale ticks */}
             {[-100, -80, -60, -40, -20, 0, 20, 40, 60].map((v, i) => {
               const y = getScaleY(v);

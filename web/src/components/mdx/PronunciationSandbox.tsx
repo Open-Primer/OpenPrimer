@@ -490,7 +490,7 @@ export const PronunciationSandbox = ({
           <Award className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-md font-black text-slate-850 dark:text-white tracking-wide uppercase leading-tight">{t.title}</h3>
+          <h3 className="text-md font-black text-slate-800 dark:text-white tracking-wide uppercase leading-tight">{t.title}</h3>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{t.subtitle}</p>
         </div>
       </div>
@@ -530,7 +530,7 @@ export const PronunciationSandbox = ({
               className={`flex-1 min-w-[140px] px-5 py-3 rounded-2xl border flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider transition-all duration-300 shadow-sm ${
                 isPlayingRef
                   ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 cursor-not-allowed'
-                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300 hover:text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-850 dark:text-slate-200 dark:border-slate-800 dark:hover:border-slate-750 dark:hover:text-white active:scale-95'
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300 hover:text-slate-900 dark:bg-slate-900 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-800 dark:hover:border-slate-750 dark:hover:text-white active:scale-95'
               }`}
             >
               <Volume2 className={`w-4 h-4 ${isPlayingRef ? 'animate-bounce' : ''}`} />
@@ -593,7 +593,7 @@ export const PronunciationSandbox = ({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900/50 p-3.5 border border-slate-200 dark:border-slate-850 rounded-xl select-text shadow-sm dark:shadow-none"
+                className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900/50 p-3.5 border border-slate-200 dark:border-slate-800 rounded-xl select-text shadow-sm dark:shadow-none"
               >
                 <MessageCircle className="w-4 h-4 shrink-0 mt-0.5 text-blue-500" />
                 <div>
@@ -613,7 +613,7 @@ export const PronunciationSandbox = ({
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="w-full flex flex-col items-center p-6 bg-white dark:bg-slate-950/20 border border-slate-200 dark:border-slate-850/60 rounded-3xl shadow-sm dark:shadow-none"
+                className="w-full flex flex-col items-center p-6 bg-white dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800/60 rounded-3xl shadow-sm dark:shadow-none"
               >
                 {/* Score gauge container */}
                 <div className="relative w-28 h-28 flex items-center justify-center mb-4">
@@ -644,7 +644,7 @@ export const PronunciationSandbox = ({
                   
                   {/* Score text inside the gauge */}
                   <div className="text-center">
-                    <span className="text-3xl font-black text-slate-850 dark:text-white block tracking-tight">
+                    <span className="text-3xl font-black text-slate-800 dark:text-white block tracking-tight">
                       {score}%
                     </span>
                     <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none">
@@ -690,14 +690,14 @@ export const PronunciationSandbox = ({
                     setScore(null);
                     setTranscript('');
                   }}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/60 dark:hover:bg-slate-850 text-slate-650 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all duration-300 active:scale-95 shadow-sm"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/60 dark:hover:bg-slate-800 text-slate-650 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all duration-300 active:scale-95 shadow-sm"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   {t.retry}
                 </button>
               </motion.div>
             ) : (
-              <div className="w-full h-36 border border-dashed border-slate-200/80 dark:border-slate-850/70 rounded-3xl flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-6 text-center select-none">
+              <div className="w-full h-36 border border-dashed border-slate-200/80 dark:border-slate-800/70 rounded-3xl flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-6 text-center select-none">
                 <Mic className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-3 animate-pulse" />
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-600 block mb-1">
                   {t.noSpeech}

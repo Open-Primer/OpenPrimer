@@ -492,14 +492,24 @@ export const AITutorOverlay = ({
         const currentCourseSlug = segments[2];
         const { data: progressData } = await dbService.getUserProgress(userId, lang, currentCourseSlug);
         if (progressData && progressData.aiSummary && active) {
-          setCoachAdvice(progressData.aiSummary);
+          const rawAdvice = progressData.aiSummary.trim();
           
-          const dismissed = sessionStorage.getItem('op_dismiss_resumption_coach_advice');
-          if (!dismissed) {
-            const timer = setTimeout(() => {
-              setShowCoachPopover(true);
-            }, 1500);
-            return () => clearTimeout(timer);
+          // [FIX T1] Suppression guard: only show the popup if the advice is substantive
+          // and pertains to the current lesson context. Generic, very short, or placeholder
+          // summaries must not trigger a popup.
+          const isSubstantive = rawAdvice.length >= 30;
+          const isGenericPlaceholder = /^(bienvenue|welcome|bonjour|hello|salut|démarrez|start|commencez|let's start|bonne chance|good luck|continuez|continue)/i.test(rawAdvice);
+          
+          if (isSubstantive && !isGenericPlaceholder) {
+            setCoachAdvice(rawAdvice);
+            
+            const dismissed = sessionStorage.getItem('op_dismiss_resumption_coach_advice');
+            if (!dismissed) {
+              const timer = setTimeout(() => {
+                setShowCoachPopover(true);
+              }, 1500);
+              return () => clearTimeout(timer);
+            }
           }
         }
       } catch (e) {
@@ -1559,7 +1569,7 @@ export const AITutorOverlay = ({
                                 setCurrentCardIndex((prev) => (prev - 1 + flashcards.length) % flashcards.length);
                               }, 150);
                             }}
-                            className="p-3 bg-slate-900 border border-slate-850 text-slate-400 hover:text-white rounded-2xl transition-all hover:bg-slate-800 focus:outline-none cursor-pointer shrink-0"
+                            className="p-3 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded-2xl transition-all hover:bg-slate-800 focus:outline-none cursor-pointer shrink-0"
                             aria-label={t.prev_card}
                           >
                             <ChevronLeft className="w-5 h-5" />
@@ -1570,7 +1580,7 @@ export const AITutorOverlay = ({
                               animate={{ rotateY: isFlipped ? 180 : 0 }}
                               transition={{ duration: 0.4 }}
                               onClick={() => setIsFlipped(!isFlipped)}
-                              className="w-full min-h-[220px] rounded-3xl bg-slate-900 border border-slate-850 p-8 flex flex-col items-center justify-center text-center cursor-pointer shadow-xl relative preserve-3d"
+                              className="w-full min-h-[220px] rounded-3xl bg-slate-900 border border-slate-800 p-8 flex flex-col items-center justify-center text-center cursor-pointer shadow-xl relative preserve-3d"
                             >
                               {/* Card Front */}
                               <div className={`absolute inset-0 p-8 flex flex-col items-center justify-center backface-hidden ${isFlipped ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
@@ -1621,7 +1631,7 @@ export const AITutorOverlay = ({
                                 setCurrentCardIndex((prev) => (prev + 1) % flashcards.length);
                               }, 150);
                             }}
-                            className="p-3 bg-slate-900 border border-slate-850 text-slate-400 hover:text-white rounded-2xl transition-all hover:bg-slate-800 focus:outline-none cursor-pointer shrink-0"
+                            className="p-3 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded-2xl transition-all hover:bg-slate-800 focus:outline-none cursor-pointer shrink-0"
                             aria-label={t.next_card}
                           >
                             <ChevronRight className="w-5 h-5" />
@@ -1720,7 +1730,7 @@ export const AITutorOverlay = ({
                 </div>
                 <button 
                   onClick={() => setShowTutorModal(false)}
-                  className="p-3 text-slate-500 hover:text-white rounded-2xl hover:bg-slate-850 transition-all cursor-pointer"
+                  className="p-3 text-slate-500 hover:text-white rounded-2xl hover:bg-slate-800 transition-all cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1750,7 +1760,7 @@ export const AITutorOverlay = ({
                       className={`p-6 rounded-3xl border transition-all cursor-pointer flex items-center justify-between gap-6 group relative overflow-hidden ${
                         isSelected 
                           ? 'bg-blue-600/10 border-blue-500/60 shadow-lg shadow-blue-500/5' 
-                          : 'bg-slate-950/30 border-slate-850 hover:border-slate-700 hover:bg-slate-950/50'
+                          : 'bg-slate-950/30 border-slate-800 hover:border-slate-700 hover:bg-slate-950/50'
                       }`}
                     >
                       <div className="flex items-center gap-5">
@@ -1777,7 +1787,7 @@ export const AITutorOverlay = ({
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
                         isSelected 
                           ? 'bg-blue-600 border-blue-500 text-white shadow-lg' 
-                          : 'border-slate-850 group-hover:border-slate-750 text-transparent group-hover:text-slate-655'
+                          : 'border-slate-800 group-hover:border-slate-750 text-transparent group-hover:text-slate-655'
                       }`}>
                         <Check className="w-4 h-4 stroke-[3]" />
                       </div>
@@ -2551,7 +2561,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
               initial={{ opacity: 0, scale: 0.95, y: 20 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-              className="w-full max-w-lg bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default my-auto"
+              className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden cursor-default my-auto"
             >
               <div className="p-8 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
                 <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
@@ -2586,7 +2596,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
                 <div className="flex gap-4 pt-4">
                   <button 
                     onClick={() => { setIsReportModalOpen(false); setReportComment(''); }} 
-                    className="flex-1 py-4 bg-slate-950 border border-slate-850 hover:bg-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all text-slate-400 cursor-pointer"
+                    className="flex-1 py-4 bg-slate-950 border border-slate-800 hover:bg-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all text-slate-400 cursor-pointer"
                   >
                     {t.cancel}
                   </button>

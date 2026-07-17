@@ -245,11 +245,11 @@ export const SankeyDiagram = () => {
   };
 
   return (
-    <div className="my-8 rounded-[40px] border border-slate-850 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
+    <div className="my-8 rounded-[40px] border border-slate-800 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
       <div className="absolute -left-16 -top-16 w-36 h-36 rounded-full bg-teal-500/5 blur-3xl pointer-events-none" />
 
       {/* Header Row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-6 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6 mb-6">
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse" />
@@ -277,7 +277,7 @@ export const SankeyDiagram = () => {
         
         {/* Dynamic Sankey SVG Graph */}
         <div className="lg:col-span-8 flex justify-center items-center">
-          <div className="relative rounded-3xl overflow-hidden border border-slate-850 bg-[#020617] p-2 w-full max-w-[640px]">
+          <div className="relative rounded-3xl overflow-hidden border border-slate-800 bg-[#020617] p-2 w-full max-w-[640px]">
             
             {/* Visual Overload Warning Overlay badge */}
             <AnimatePresence>
@@ -407,7 +407,7 @@ export const SankeyDiagram = () => {
         <div className="lg:col-span-4 flex flex-col gap-6">
           
           {/* Component Thermodynamic Efficiencies Sliders */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-4">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-rose-400" />
               <span>{isFR ? "Rendement Thermique (η)" : "Thermodynamic Efficiencies"}</span>
@@ -449,7 +449,7 @@ export const SankeyDiagram = () => {
           </div>
 
           {/* Load Balancer Sliders */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-4">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-teal-400" />
               <span>{isFR ? "Régulation des Charges" : "Grid Load Balance"}</span>
@@ -491,7 +491,7 @@ export const SankeyDiagram = () => {
           </div>
 
           {/* Renewable Generation Levels */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-4">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sparkles className="w-4 h-4 text-yellow-400" />
               <span>{isFR ? "Génération Renouvelable" : "Renewable Generation"}</span>
@@ -516,7 +516,7 @@ export const SankeyDiagram = () => {
           </div>
 
           {/* Theoretical acoustics insight */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-4 text-center select-text">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-4 text-center select-text">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center justify-center gap-1.5">
               <HelpCircle className="w-3.5 h-3.5 text-rose-400" />
               <span>{isFR ? "Analyse Énergétique Quantitative" : "Quantitative Thermodynamics"}</span>

@@ -248,11 +248,11 @@ export const FinancialChart = () => {
   };
 
   return (
-    <div className="my-8 rounded-[40px] border border-slate-850 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
+    <div className="my-8 rounded-[40px] border border-slate-800 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
       <div className="absolute -right-16 -top-16 w-36 h-36 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
 
       {/* Top controls header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-6 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6 mb-6">
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -268,7 +268,7 @@ export const FinancialChart = () => {
         {/* Action controls */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Draggables selector */}
-          <div className="flex items-center gap-1 bg-slate-900/40 border border-slate-850 p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-slate-900/40 border border-slate-800 p-1 rounded-xl">
             <button
               onClick={() => setActiveDrawing('none')}
               className={`px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
@@ -325,7 +325,7 @@ export const FinancialChart = () => {
         
         {/* Candlestick SVG Board */}
         <div className="lg:col-span-8 flex justify-center items-center">
-          <div className="relative rounded-3xl overflow-hidden border border-slate-850 bg-[#020617] p-2 w-full max-w-[560px]">
+          <div className="relative rounded-3xl overflow-hidden border border-slate-800 bg-[#020617] p-2 w-full max-w-[560px]">
             <svg
               width="100%"
               height="100%"
@@ -582,7 +582,7 @@ export const FinancialChart = () => {
         <div className="lg:col-span-4 flex flex-col gap-6">
           
           {/* Sliders Panels */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-4">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-emerald-400" />
               <span>{isFR ? "Configuration d'indicateurs" : "Moving Average Settings"}</span>
@@ -607,9 +607,9 @@ export const FinancialChart = () => {
           </div>
 
           {/* Active Workstation Insights details */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/30 p-5 flex-1 flex flex-col justify-between">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/30 p-5 flex-1 flex flex-col justify-between">
             <div>
-              <div className="flex justify-between items-start border-b border-slate-850/50 pb-2 mb-3">
+              <div className="flex justify-between items-start border-b border-slate-800/50 pb-2 mb-3">
                 <h4 className="text-xs font-black text-slate-100 flex items-center gap-2">
                   <PenTool className="w-4 h-4 text-indigo-400" />
                   <span>{isFR ? "Outil d'Analyse" : "Selected Drawing Tool"}</span>
@@ -638,7 +638,7 @@ export const FinancialChart = () => {
             </div>
 
             {/* Current measurements tags */}
-            <div className="border-t border-slate-850/50 pt-3.5 mt-4 space-y-2 text-[9.5px] font-mono text-slate-400">
+            <div className="border-t border-slate-800/50 pt-3.5 mt-4 space-y-2 text-[9.5px] font-mono text-slate-400">
               <div className="flex justify-between">
                 <span>{isFR ? "Prix Actuel :" : "Current Streaming Price:"}</span>
                 <span className="text-emerald-400 font-bold">
@@ -653,7 +653,7 @@ export const FinancialChart = () => {
           </div>
 
           {/* Theoretical acoustics insight */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-4 text-center select-text">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-4 text-center select-text">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center justify-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
               <span>{isFR ? "Moyennes Mobiles & Bandes de Bollinger" : "Bollinger Volatility Bands"}</span>

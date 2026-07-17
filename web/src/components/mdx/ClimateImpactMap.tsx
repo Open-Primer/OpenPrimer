@@ -153,11 +153,11 @@ export const ClimateImpactMap = () => {
   }, [activeRegion, scenarioIdx]);
 
   return (
-    <div className="my-8 rounded-[40px] border border-slate-850 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
+    <div className="my-8 rounded-[40px] border border-slate-800 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
       <div className="absolute -right-16 -top-16 w-36 h-36 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
 
       {/* Lab Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-6 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6 mb-6">
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <Globe className="w-5 h-5 text-indigo-400 animate-spin-slow" />
@@ -169,7 +169,7 @@ export const ClimateImpactMap = () => {
         </div>
 
         {/* Layer Selectors */}
-        <div className="flex items-center gap-1 bg-slate-900/40 border border-slate-850 p-1 rounded-xl">
+        <div className="flex items-center gap-1 bg-slate-900/40 border border-slate-800 p-1 rounded-xl">
           <button
             onClick={() => setActiveLayer('temp')}
             className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
@@ -194,7 +194,7 @@ export const ClimateImpactMap = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Side: Interactive SVG GIS Map Canvas */}
-        <div className="lg:col-span-7 bg-slate-950/60 rounded-3xl p-4 border border-slate-850 relative overflow-hidden">
+        <div className="lg:col-span-7 bg-slate-950/60 rounded-3xl p-4 border border-slate-800 relative overflow-hidden">
           
           <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-800 text-[9px] font-mono text-slate-400 flex items-center gap-1.5 z-20">
             <Compass className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
@@ -310,7 +310,7 @@ export const ClimateImpactMap = () => {
         <div className="lg:col-span-5 flex flex-col gap-6">
           
           {/* Carbon Emission Scenario Pathway selection slider */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-4">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-indigo-400" />
               <span>{t("climate_map_scenario_label")}</span>
@@ -341,7 +341,7 @@ export const ClimateImpactMap = () => {
           </div>
 
           {/* Telemetry output for Sonde pin readings */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col justify-between">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col justify-between">
             <div>
               <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-300 flex items-center gap-2 mb-4">
                 <Compass className="w-4 h-4 text-indigo-400" />
@@ -351,7 +351,7 @@ export const ClimateImpactMap = () => {
               <div className="grid grid-cols-2 gap-3 mb-5">
                 
                 {/* Longitude / Latitude */}
-                <div className="bg-slate-950/40 border border-slate-850/80 p-3 rounded-2xl">
+                <div className="bg-slate-950/40 border border-slate-800/80 p-3 rounded-2xl">
                   <span className="text-[8px] text-slate-500 font-black uppercase block">{t("climate_map_coordinates")}</span>
                   <span className="font-mono text-xs font-bold text-slate-200 mt-1 block">
                     {Math.abs(activeRegion.latitude).toFixed(1)}°{activeRegion.latitude >= 0 ? 'N' : 'S'}, {Math.abs(activeRegion.longitude).toFixed(1)}°{activeRegion.longitude >= 0 ? 'E' : 'W'}
@@ -359,7 +359,7 @@ export const ClimateImpactMap = () => {
                 </div>
 
                 {/* Elevation */}
-                <div className="bg-slate-950/40 border border-slate-850/80 p-3 rounded-2xl">
+                <div className="bg-slate-950/40 border border-slate-800/80 p-3 rounded-2xl">
                   <span className="text-[8px] text-slate-500 font-black uppercase block">{t("climate_map_elevation")}</span>
                   <span className="font-mono text-xs font-bold text-indigo-300 mt-1 block">
                     {activeRegion.elevation} m
@@ -367,7 +367,7 @@ export const ClimateImpactMap = () => {
                 </div>
 
                 {/* Base climate Temperature -> Projected Temperature */}
-                <div className="bg-slate-950/40 border border-slate-850/80 p-3 rounded-2xl col-span-2 flex items-center justify-between">
+                <div className="bg-slate-950/40 border border-slate-800/80 p-3 rounded-2xl col-span-2 flex items-center justify-between">
                   <div>
                     <span className="text-[8px] text-slate-500 font-black uppercase block">{t("climate_map_mean_temp")}</span>
                     <div className="flex items-baseline gap-1.5 mt-1">
@@ -390,7 +390,7 @@ export const ClimateImpactMap = () => {
                 </div>
 
                 {/* Precipitation shift */}
-                <div className="bg-slate-950/40 border border-slate-850/80 p-3 rounded-2xl col-span-2 flex items-center justify-between">
+                <div className="bg-slate-950/40 border border-slate-800/80 p-3 rounded-2xl col-span-2 flex items-center justify-between">
                   <div>
                     <span className="text-[8px] text-slate-500 font-black uppercase block">{t("climate_map_annual_precip")}</span>
                     <div className="flex items-baseline gap-1.5 mt-1">
@@ -410,7 +410,7 @@ export const ClimateImpactMap = () => {
               </div>
 
               {/* Bio-Ecological impacts panel details */}
-              <div className="rounded-2xl border border-slate-850 bg-slate-950/40 p-4 relative overflow-hidden">
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 relative overflow-hidden">
                 <div className="flex items-start gap-2.5">
                   <AlertTriangle className={`w-4 h-4 shrink-0 mt-0.5 ${
                     scenarioIdx === 2 ? 'text-rose-400 animate-bounce' : 'text-amber-400'
@@ -428,7 +428,7 @@ export const ClimateImpactMap = () => {
             </div>
 
             {/* Verification marker bottom */}
-            <div className="border-t border-slate-850/50 pt-4 mt-4 flex items-center gap-3 bg-slate-950/20 p-3 rounded-xl">
+            <div className="border-t border-slate-800/50 pt-4 mt-4 flex items-center gap-3 bg-slate-950/20 p-3 rounded-xl">
               <CheckCircle className="w-4 h-4 text-indigo-400" />
               <div className="text-[9.5px]">
                 <span className="font-bold text-slate-200 block leading-tight">IPCC AR6 Calibration</span>

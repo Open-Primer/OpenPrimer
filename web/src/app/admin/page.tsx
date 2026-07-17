@@ -1091,7 +1091,7 @@ export default function AdminDashboard() {
 
 
   const getHeatmapColor = (val: number) => {
-    if (val === 0) return 'bg-slate-900 border-slate-850';
+    if (val === 0) return 'bg-slate-900 border-slate-800';
     if (val < 10) return 'bg-emerald-950 border-emerald-900';
     if (val < 20) return 'bg-emerald-800 border-emerald-700';
     if (val < 30) return 'bg-emerald-600 border-emerald-500';
@@ -1300,10 +1300,10 @@ export default function AdminDashboard() {
             {t.agent_analytics_sub}
           </p>
 
-          <div className="overflow-x-auto rounded-3xl border border-slate-850 bg-slate-950/20">
+          <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-950/20">
             <table className="w-full border-collapse text-left text-xs text-slate-350">
               <thead>
-                <tr className="border-b border-slate-850 bg-slate-950/40 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                <tr className="border-b border-slate-800 bg-slate-950/40 text-[9px] font-black uppercase tracking-widest text-slate-500">
                   <th className="px-6 py-4 cursor-pointer select-none" onClick={() => {
                     if (metricsSortField === 'name') {
                       setMetricsSortDir(metricsSortDir === 'asc' ? 'desc' : 'asc');
@@ -1356,7 +1356,7 @@ export default function AdminDashboard() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-850/50">
+              <tbody className="divide-y divide-slate-800/50">
                 {sortedMetrics.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-900/20 transition-all">
                     <td className="px-6 py-4 font-bold text-slate-200">
@@ -1384,7 +1384,7 @@ export default function AdminDashboard() {
           <div className="grid md:grid-cols-3 gap-6 pt-4">
             {/* 1. Tutor Personality Distribution */}
             <div 
-              className="p-6 bg-slate-955/25 border border-slate-850 rounded-3xl space-y-4 cursor-help transition-all hover:border-slate-800"
+              className="p-6 bg-slate-955/25 border border-slate-800 rounded-3xl space-y-4 cursor-help transition-all hover:border-slate-800"
               title={t.tooltip_personality_dist}
             >
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">
@@ -1411,7 +1411,7 @@ export default function AdminDashboard() {
 
             {/* 2. Token Consumption & Caching Optimization */}
             <div 
-              className="p-6 bg-slate-955/25 border border-slate-850 rounded-3xl space-y-4 cursor-help transition-all hover:border-slate-800"
+              className="p-6 bg-slate-955/25 border border-slate-800 rounded-3xl space-y-4 cursor-help transition-all hover:border-slate-800"
               title={t.tooltip_token_caching}
             >
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">
@@ -1442,27 +1442,27 @@ export default function AdminDashboard() {
             </div>
 
             {/* 3. Sovereign Pedagogical Loop Efficiency */}
-            <div className="p-6 bg-slate-955/25 border border-slate-850 rounded-3xl space-y-4">
+            <div className="p-6 bg-slate-955/25 border border-slate-800 rounded-3xl space-y-4">
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">
                 {t.efficiency_metrics}
               </span>
               <div className="grid grid-cols-1 gap-3">
                 <div 
-                  className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-850/50 cursor-help transition-all hover:bg-slate-900/40"
+                  className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-800/50 cursor-help transition-all hover:bg-slate-900/40"
                   title={t.loop_success_tooltip}
                 >
                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{t.loop_success}</span>
                   <span className="text-[10px] font-black text-emerald-400">{dynamicLoopSuccess.toFixed(1)}%</span>
                 </div>
                 <div 
-                  className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-850/50 cursor-help transition-all hover:bg-slate-900/40"
+                  className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-800/50 cursor-help transition-all hover:bg-slate-900/40"
                   title={t.check_passes_tooltip}
                 >
                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{t.check_passes}</span>
                   <span className="text-[10px] font-black text-violet-400">{dynamicCheckPasses.toFixed(1)} {t.passes_suffix}</span>
                 </div>
                 <div 
-                  className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-850/50 cursor-help transition-all hover:bg-slate-900/40"
+                  className="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-800/50 cursor-help transition-all hover:bg-slate-900/40"
                   title={t.ects_average_tooltip}
                 >
                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">{t.ects_average}</span>
@@ -1570,7 +1570,7 @@ export default function AdminDashboard() {
              </div>
              
              {/* Heatmap GitHub Grid */}
-             <div className="grid grid-cols-7 gap-3 max-w-sm mx-auto p-4 bg-slate-950/40 border border-slate-850 rounded-3xl">
+             <div className="grid grid-cols-7 gap-3 max-w-sm mx-auto p-4 bg-slate-950/40 border border-slate-800 rounded-3xl">
                 {heatmapDays.map((day) => (
                   <div 
                     key={day.day}
@@ -1585,7 +1585,7 @@ export default function AdminDashboard() {
              <div className="flex justify-between items-center text-[8px] font-black text-slate-600 uppercase tracking-widest pt-2">
                 <span>{t.less_active}</span>
                 <div className="flex gap-1.5">
-                   <div className="w-3.5 h-3.5 rounded bg-slate-900 border border-slate-850" />
+                   <div className="w-3.5 h-3.5 rounded bg-slate-900 border border-slate-800" />
                    <div className="w-3.5 h-3.5 rounded bg-emerald-950 border border-emerald-900" />
                    <div className="w-3.5 h-3.5 rounded bg-emerald-800 border border-emerald-700" />
                    <div className="w-3.5 h-3.5 rounded bg-emerald-600 border border-emerald-500" />
@@ -1603,7 +1603,7 @@ export default function AdminDashboard() {
           </h2>
           <div className="p-8 rounded-[40px] bg-slate-900/40 border border-slate-800/50 space-y-4">
              {topStudents.map((student, index) => (
-               <div key={student.id} className="p-4 bg-slate-950/30 border border-slate-850/50 rounded-2xl flex items-center justify-between gap-4">
+               <div key={student.id} className="p-4 bg-slate-950/30 border border-slate-800/50 rounded-2xl flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                      <span className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-[9px] border ${index === 0 ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : index === 1 ? 'bg-slate-300/10 text-slate-350 border-slate-300/20' : 'bg-amber-600/10 text-amber-500 border-amber-600/20'}`}>
                         {index + 1}
@@ -1641,7 +1641,7 @@ export default function AdminDashboard() {
                 <p className="text-4xl font-black text-white mt-4">{pendingEmails.length}</p>
                 <p className="text-xs text-slate-400 mt-2 font-medium">{t.waiting_desc}</p>
               </div>
-              <div className="pt-4 border-t border-slate-850/80 mt-6">
+              <div className="pt-4 border-t border-slate-800/80 mt-6">
                  <span className="text-[8px] font-black uppercase tracking-wider text-slate-500">{t.avg_queuing}</span>
                  <p className="text-xs font-mono font-bold text-emerald-400 mt-1">2.4 {t.days_suffix}</p>
               </div>
@@ -1730,7 +1730,7 @@ export default function AdminDashboard() {
                   return (
                     <>
                       {visible.map((job) => (
-                        <div key={`${job.courseTitle}|${job.targetLang}`} className="p-4 bg-slate-950/40 border border-slate-850/60 rounded-2xl flex items-center justify-between gap-3 text-xs">
+                        <div key={`${job.courseTitle}|${job.targetLang}`} className="p-4 bg-slate-950/40 border border-slate-800/60 rounded-2xl flex items-center justify-between gap-3 text-xs">
                           <div className="min-w-0 flex-1">
                             <p className="font-bold text-slate-200 truncate">{job.courseTitle}</p>
                             <p className="text-[8px] text-slate-550 font-bold mt-1 uppercase tracking-wider">
@@ -1748,7 +1748,7 @@ export default function AdminDashboard() {
                         </div>
                       ))}
                       {overflow > 0 && (
-                        <div className="p-3 rounded-2xl border border-dashed border-slate-850 text-center">
+                        <div className="p-3 rounded-2xl border border-dashed border-slate-800 text-center">
                           <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">
                             + {overflow} {t.overflow_jobs}
                           </p>

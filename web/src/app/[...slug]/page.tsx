@@ -509,8 +509,12 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
               <Link href="/catalog" className="hover:text-blue-500 transition-colors">{getLocalizedSubject(lang, subject)}</Link>
               <ChevronRight className="w-3 h-3 text-slate-800" />
               <span className="text-slate-500">{moduleName}</span>
-              <ChevronRight className="w-3 h-3 text-slate-800" />
-              <span className="text-blue-500">{title}</span>
+              {title && moduleName && title.toLowerCase().trim() !== moduleName.toLowerCase().trim() && (
+                <>
+                  <ChevronRight className="w-3 h-3 text-slate-800" />
+                  <span className="text-blue-500">{title}</span>
+                </>
+              )}
             </div>
             <ExportLessonButton title={title} subject={subject} level={level} content={pageData.content} lang={lang} courseSlug={courseSlug} version={courseVersion} />
           </div>

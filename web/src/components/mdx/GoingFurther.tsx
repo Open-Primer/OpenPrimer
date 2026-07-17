@@ -83,10 +83,10 @@ export const GoingFurtherItem = ({ title, type, url, description, refNum, author
     <CardWrapper 
       id={refNum ? `cite-${refNum}` : undefined}
       {...(extraProps as any)}
-      className={`group flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-850 bg-slate-900/40 hover:bg-slate-900/80 hover:border-slate-800 transition-all duration-300 ${(hasRealUrl || refNum) ? 'cursor-pointer' : ''}`}
+      className={`group flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-800 bg-slate-900/40 hover:bg-slate-900/80 hover:border-slate-800 transition-all duration-300 ${(hasRealUrl || refNum) ? 'cursor-pointer' : ''}`}
     >
       <div className="flex items-start gap-4">
-        <div className="mt-1 flex items-center justify-center w-8 h-8 rounded-xl bg-slate-950 border border-slate-850 shadow-inner group-hover:scale-110 transition-all duration-300">
+        <div className="mt-1 flex items-center justify-center w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 shadow-inner group-hover:scale-110 transition-all duration-300">
           {getIcon()}
         </div>
         <div className="flex-1 space-y-1">
@@ -94,7 +94,7 @@ export const GoingFurtherItem = ({ title, type, url, description, refNum, author
             <h5 className="text-[13px] font-bold text-slate-100 group-hover:text-blue-400 transition-colors duration-200 leading-snug">
               {title}
             </h5>
-            <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-950 border border-slate-850 text-slate-400 select-none">
+            <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-950 border border-slate-800 text-slate-400 select-none">
               {getBadgeText(language)}
             </span>
             {refNum && (
@@ -117,7 +117,7 @@ export const GoingFurtherItem = ({ title, type, url, description, refNum, author
         </div>
       </div>
       {(hasRealUrl || refNum) && (
-        <div className="self-end md:self-auto flex items-center justify-center w-8 h-8 rounded-xl bg-slate-950 border border-slate-850 text-slate-500 group-hover:text-blue-400 group-hover:border-blue-500/30 transition-all duration-300">
+        <div className="self-end md:self-auto flex items-center justify-center w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 text-slate-500 group-hover:text-blue-400 group-hover:border-blue-500/30 transition-all duration-300">
           <ArrowUpRight className="w-4 h-4 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300" />
         </div>
       )}
@@ -149,18 +149,19 @@ export const GoingFurther = ({ title, children }: GoingFurtherProps) => {
   };
 
   return (
-    <div className="my-12 p-8 md:p-10 rounded-[40px] border border-blue-500/20 bg-blue-500/5 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
+    <div className="my-10 p-6 md:p-8 rounded-[32px] border border-blue-500/20 bg-blue-500/5 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
       {/* Decorative gradient glowing orb */}
       <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-blue-500/10 blur-3xl pointer-events-none select-none" />
       
-      <div className="relative z-10 space-y-8">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 shadow-md">
-            <Compass className="w-5 h-5 text-blue-400 animate-pulse" />
+      <div className="relative z-10 space-y-6">
+        {/* Section header — mirrors H2 border-bottom standard */}
+        <div className="flex items-center gap-3 pb-4 border-b border-blue-500/20">
+          <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 shadow-md">
+            <Compass className="w-4 h-4 text-blue-400" />
           </div>
-          <h3 className="text-white text-lg font-black tracking-wide">
+          <span className="text-sm font-black uppercase tracking-wider text-slate-200">
             {title || getDefaultTitle()}
-          </h3>
+          </span>
         </div>
 
         <div className="space-y-4">

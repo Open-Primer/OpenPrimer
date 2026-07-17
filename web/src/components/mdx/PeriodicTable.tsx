@@ -172,11 +172,11 @@ export const PeriodicTable = () => {
   const activePhotonColor = getWavelengthColor(targetWavelength);
 
   return (
-    <div className="my-8 rounded-[40px] border border-slate-850 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
+    <div className="my-8 rounded-[40px] border border-slate-800 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
       <div className="absolute -right-16 -top-16 w-36 h-36 rounded-full bg-purple-500/5 blur-3xl pointer-events-none" />
       
       {/* Header Row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-6 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6 mb-6">
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
@@ -188,7 +188,7 @@ export const PeriodicTable = () => {
         </div>
 
         {/* Temperature Controller */}
-        <div className="flex items-center gap-4 bg-slate-900/50 border border-slate-850 p-3 rounded-2xl min-w-[260px]">
+        <div className="flex items-center gap-4 bg-slate-900/50 border border-slate-800 p-3 rounded-2xl min-w-[260px]">
           <Thermometer className="w-5 h-5 text-indigo-400 shrink-0" />
           <div className="flex-1 space-y-1">
             <div className="flex justify-between text-[11px] font-black tracking-wider text-slate-400">
@@ -255,7 +255,7 @@ export const PeriodicTable = () => {
           </div>
 
           {/* Group Legends */}
-          <div className="flex flex-wrap gap-2.5 mt-8 border-t border-slate-850 pt-5">
+          <div className="flex flex-wrap gap-2.5 mt-8 border-t border-slate-800 pt-5">
             {Object.entries(CATEGORY_COLORS).map(([key, info]) => {
               const isHighlighted = highlightedCategory === key;
               return (
@@ -279,13 +279,13 @@ export const PeriodicTable = () => {
         <div className="lg:col-span-4 flex flex-col gap-6">
           
           {/* Main Selected Element Card */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-6 flex flex-col relative overflow-hidden">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 flex flex-col relative overflow-hidden">
             <div className="absolute -left-12 -bottom-12 w-28 h-28 rounded-full bg-indigo-500/5 blur-2xl pointer-events-none" />
 
             {/* Header info */}
             <div className="flex items-start justify-between">
               <div>
-                <span className="px-2.5 py-1 text-[8.5px] font-black uppercase tracking-widest bg-slate-950 rounded-lg text-slate-500 border border-slate-850">
+                <span className="px-2.5 py-1 text-[8.5px] font-black uppercase tracking-widest bg-slate-950 rounded-lg text-slate-500 border border-slate-800">
                   Z = {activeElement.num}
                 </span>
                 <h4 className="text-xl font-black text-slate-100 mt-2 leading-none">
@@ -302,11 +302,11 @@ export const PeriodicTable = () => {
 
             {/* Physical metrics list */}
             <div className="grid grid-cols-2 gap-3.5 mt-5 text-xs">
-              <div className="bg-slate-950/40 p-3 rounded-2xl border border-slate-850/80">
+              <div className="bg-slate-950/40 p-3 rounded-2xl border border-slate-800/80">
                 <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{t("periodic_atomic_mass")}</span>
                 <div className="font-mono font-bold text-slate-200 mt-0.5">{activeElement.mass.toFixed(4)} u</div>
               </div>
-              <div className="bg-slate-950/40 p-3 rounded-2xl border border-slate-850/80">
+              <div className="bg-slate-950/40 p-3 rounded-2xl border border-slate-800/80">
                 <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{t("periodic_electronegativity")}</span>
                 <div className="font-mono font-bold text-slate-200 mt-0.5">
                   {activeElement.electronegativity !== null ? activeElement.electronegativity.toFixed(2) : '--'}
@@ -316,13 +316,13 @@ export const PeriodicTable = () => {
           </div>
 
           {/* 2D Bohr Atom Animated Shell Visualizer with Active Photon Absorption */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col items-center relative overflow-hidden">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col items-center relative overflow-hidden">
             <h5 className="text-[10px] font-black tracking-widest uppercase text-slate-400 mb-4 self-start flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
               <span>{t("periodic_bohr_lab")}</span>
             </h5>
 
-            <div className="w-48 h-48 relative flex items-center justify-center border border-slate-850/50 bg-[#020617] rounded-3xl overflow-hidden p-2">
+            <div className="w-48 h-48 relative flex items-center justify-center border border-slate-800/50 bg-[#020617] rounded-3xl overflow-hidden p-2">
               
               {/* Animated Incoming Photon particle */}
               {photonState === 'shooting' && (
@@ -370,7 +370,7 @@ export const PeriodicTable = () => {
                     {/* Circular orbit path */}
                     <div 
                       className={`absolute border rounded-full pointer-events-none transition-colors ${
-                        isExcitedShell ? 'border-emerald-400/50 ring-2 ring-emerald-400/20' : 'border-slate-850/80'
+                        isExcitedShell ? 'border-emerald-400/50 ring-2 ring-emerald-400/20' : 'border-slate-800/80'
                       }`}
                       style={{ 
                         width: `${shellRadius * 2}px`, 
@@ -424,7 +424,7 @@ export const PeriodicTable = () => {
                 {activeElement.shells.map((count, idx) => (
                   <span 
                     key={idx} 
-                    className="w-5 h-5 rounded-md bg-slate-950 flex items-center justify-center font-bold text-emerald-400 border border-slate-850"
+                    className="w-5 h-5 rounded-md bg-slate-950 flex items-center justify-center font-bold text-emerald-400 border border-slate-800"
                   >
                     {count}
                   </span>
@@ -434,7 +434,7 @@ export const PeriodicTable = () => {
           </div>
 
           {/* Interactive Photon Gun panel */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-3">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-3">
             <h5 className="text-[10px] font-black tracking-widest uppercase text-slate-400 flex items-center gap-2 mb-1">
               <Radio className="w-4 h-4 text-purple-400" />
               <span>{t("periodic_photon_gun")}</span>
@@ -443,13 +443,13 @@ export const PeriodicTable = () => {
             {/* Presets Row */}
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[8.5px] font-black text-slate-500 uppercase mr-1">{language.toUpperCase() === 'FR' ? "Raies H :" : "H Lines :"}</span>
-              <button onClick={() => setTargetWavelength(121.6)} className="px-2 py-1 bg-slate-950 text-[8.5px] border border-slate-850 font-bold text-purple-400 rounded-lg cursor-pointer">
+              <button onClick={() => setTargetWavelength(121.6)} className="px-2 py-1 bg-slate-950 text-[8.5px] border border-slate-800 font-bold text-purple-400 rounded-lg cursor-pointer">
                 Lyman-α (121.6nm)
               </button>
-              <button onClick={() => setTargetWavelength(486.1)} className="px-2 py-1 bg-slate-950 text-[8.5px] border border-slate-850 font-bold text-cyan-400 rounded-lg cursor-pointer">
+              <button onClick={() => setTargetWavelength(486.1)} className="px-2 py-1 bg-slate-950 text-[8.5px] border border-slate-800 font-bold text-cyan-400 rounded-lg cursor-pointer">
                 H-β (486.1nm)
               </button>
-              <button onClick={() => setTargetWavelength(656.3)} className="px-2 py-1 bg-slate-950 text-[8.5px] border border-slate-850 font-bold text-red-400 rounded-lg cursor-pointer">
+              <button onClick={() => setTargetWavelength(656.3)} className="px-2 py-1 bg-slate-950 text-[8.5px] border border-slate-800 font-bold text-red-400 rounded-lg cursor-pointer">
                 H-α (656.3nm)
               </button>
             </div>
@@ -478,7 +478,7 @@ export const PeriodicTable = () => {
               className={`w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer border ${
                 photonState === 'idle' 
                   ? 'bg-purple-600/15 border-purple-500/50 text-purple-300 hover:bg-purple-600/30' 
-                  : 'bg-slate-900/20 border-slate-850 text-slate-500 cursor-not-allowed'
+                  : 'bg-slate-900/20 border-slate-800 text-slate-500 cursor-not-allowed'
               }`}
             >
               <Zap className="w-3.5 h-3.5" />
@@ -487,7 +487,7 @@ export const PeriodicTable = () => {
           </div>
 
           {/* High-Fidelity Atomic Spectrograph representation */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-2.5">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-2.5">
             <h5 className="text-[10px] font-black tracking-widest uppercase text-slate-400 flex items-center gap-2">
               <Layers className="w-4 h-4 text-purple-400" />
               <span>{t("periodic_emission_spectrogram")}</span>

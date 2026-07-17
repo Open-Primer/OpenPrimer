@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, Maximize2, Minimize2, ZoomIn, ZoomOut, Move, X, RotateCcw } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
+import { useMdxStatus } from './MdxStatusContext';
 
 interface MermaidProps {
   chart?: string;
@@ -459,6 +460,7 @@ const generateDeterministicId = (text: string): string => {
 export const Mermaid = ({ chart, children }: MermaidProps) => {
   const { language } = useLanguage();
   const t = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
+  const { markDegraded } = useMdxStatus();
   
   const chartText = chart || getTextFromChildren(children) || '';
   const isTimeline = chartText.trim().toLowerCase().startsWith('timeline') || 
@@ -472,7 +474,8 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [theme, setTheme] = useState<'paper' | 'focus' | 'dark'>('dark');
-  const containerId = useRef(generateDeterministicId(chartText));
+  const reactId = useId();
+  const containerId = "mermaid-" + reactId.replace(/:/g, '');
   const elementRef = useRef<HTMLDivElement>(null);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -521,6 +524,16 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
     let active = true;
 
     const renderChart = async () => {
+      // Fail-fast guard for empty chartText to prevent infinite loading spinners or crashes
+      if (!chartText || !chartText.trim()) {
+        if (active) {
+          setError("Empty chart content provided.");
+          setLoading(false);
+          markDegraded('widget');
+        }
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -586,31 +599,42 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
         // Sanitize chart structure & quotes
         const cleanedChart = sanitizeMermaidChart(chartText);
 
-        // Render diagram safely using a sandbox temporary div to prevent DOM query race conditions
+        // Render diagram safely using a sandbox temporary div with a timeout safeguard
         const tempDiv = document.createElement('div');
         tempDiv.style.position = 'absolute';
         tempDiv.style.left = '-9999px';
         tempDiv.style.top = '-9999px';
         tempDiv.style.visibility = 'hidden';
         document.body.appendChild(tempDiv);
+        
+        let timeoutId: any;
         try {
-          const { svg: renderedSvg } = await mermaidInstance.render(containerId.current, cleanedChart, tempDiv);
+          const renderPromise = mermaidInstance.render(containerId, cleanedChart, tempDiv);
+          const timeoutPromise = new Promise<{ svg: string }>((_, reject) => {
+            timeoutId = setTimeout(() => reject(new Error("Mermaid render timeout")), 3500);
+          });
+
+          const res = await Promise.race([renderPromise, timeoutPromise]);
+          clearTimeout(timeoutId);
+
           if (active) {
-            setSvg(renderedSvg);
-            loading && setLoading(false);
+            setSvg(res.svg);
+            setLoading(false);
           }
         } finally {
+          if (timeoutId) clearTimeout(timeoutId);
           tempDiv.remove();
         }
       } catch (err: any) {
         console.error("Mermaid compilation error:", err);
         if (active) {
           setError(err.message || "Failed to render flowchart. Check syntax.");
-          loading && setLoading(false);
+          setLoading(false);
+          markDegraded('widget');
         }
         
         // Reset mermaid's internal error state in DOM if possible
-        const badge = document.getElementById(`d${containerId.current}`);
+        const badge = document.getElementById(`d${containerId}`);
         if (badge) badge.remove();
       }
     };
@@ -620,7 +644,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
     return () => {
       active = false;
     };
-  }, [chartText, theme]);
+  }, [chartText, theme, markDegraded]);
 
   const getContainerClassName = () => {
     if (theme === 'paper') {
@@ -629,7 +653,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
     if (theme === 'focus') {
       return "my-6 p-6 border border-[#262626] bg-[#000000] rounded-2xl flex flex-col items-center justify-center overflow-x-auto select-none";
     }
-    return "my-6 p-6 border border-slate-850 bg-slate-950/40 rounded-2xl flex flex-col items-center justify-center overflow-x-auto select-none backdrop-blur-md shadow-inner";
+    return "my-6 p-6 border border-slate-800 bg-slate-950/40 rounded-2xl flex flex-col items-center justify-center overflow-x-auto select-none backdrop-blur-md shadow-inner";
   };
 
   // Move useEffect calls before early returns
@@ -753,7 +777,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
 
   if (loading) {
     return (
-      <div className="my-6 w-full h-[200px] border border-slate-850 bg-slate-950/60 rounded-2xl flex flex-col items-center justify-center gap-3">
+      <div className="my-6 w-full h-[200px] border border-slate-800 bg-slate-950/60 rounded-2xl flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />
         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
           {t.generating_cognitive_map}
@@ -772,7 +796,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
   const edg = theme === 'paper' ? '#64748b' : theme === 'focus' ? '#525252' : '#64748b';
   const eTxt= theme === 'paper' ? '#475569' : theme === 'focus' ? '#a3a3a3' : '#94a3b8';
   const eBg = theme === 'paper' ? '#faf8f0' : theme === 'focus' ? '#000' : '#0f172a';
-  const cssId = containerId.current;
+  const cssId = containerId;
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!isFullscreen) return;

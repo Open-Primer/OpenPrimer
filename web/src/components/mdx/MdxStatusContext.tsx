@@ -18,7 +18,7 @@ interface MdxStatusContextType {
 
 const MdxStatusContext = createContext<MdxStatusContextType | undefined>(undefined);
 
-export function MdxStatusProvider({ children }: { children: React.ReactNode }) {
+export function MdxStatusProvider({ children, courseSlug, lessonSlug }: { children: React.ReactNode; courseSlug?: string; lessonSlug?: string }) {
   const [reasons, setReasons] = useState<Set<DegradedReason>>(new Set());
   const [registeredFigures, setRegisteredFigures] = useState<string[]>([]);
   const [registeredDiagrams, setRegisteredDiagrams] = useState<string[]>([]);
@@ -30,7 +30,36 @@ export function MdxStatusProvider({ children }: { children: React.ReactNode }) {
       next.add(reason);
       return next;
     });
-  }, []);
+
+    // Automatically submit an incident report when degraded mode is marked!
+    let resolvedCourse = courseSlug;
+    let resolvedLesson = lessonSlug;
+    if (typeof window !== 'undefined' && (!resolvedCourse || !resolvedLesson)) {
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      if (parts.length >= 4) {
+        if (!resolvedCourse) resolvedCourse = parts[2];
+        if (!resolvedLesson) resolvedLesson = parts[3];
+      }
+    }
+    const course = resolvedCourse || 'general';
+    const page = resolvedLesson || 'unknown';
+
+    import('@/lib/db').then(({ dbService }) => {
+      dbService.submitReport(
+        course,
+        page,
+        `MDX_RENDERING_FAILURE: Degraded mode triggered for asset type: ${reason}`
+      ).then(({ error }) => {
+        if (error) {
+          console.error("Failed to submit degraded mode report:", error);
+        } else {
+          console.log(`[MDX Status] Auto-submitted incident report for degraded type: ${reason}`);
+        }
+      }).catch(err => {
+        console.error("Exception submitting degraded mode report:", err);
+      });
+    });
+  }, [courseSlug, lessonSlug]);
 
   const registerFigure = useCallback((id: string) => {
     setRegisteredFigures((prev) => {

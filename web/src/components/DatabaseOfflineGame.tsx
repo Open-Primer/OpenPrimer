@@ -803,14 +803,14 @@ export default function DatabaseOfflineGame() {
     ? 'bg-[#f5eedc] border-[#dfd5bf] hover:bg-[#eae0cb] text-[#6c5c4e] hover:text-[#2d241e]'
     : isFocus
       ? 'bg-[#1e1e1e] border-[#2a2a2a] hover:bg-[#2a2a2a] text-[#888888] hover:text-[#ffffff]'
-      : 'bg-slate-950/40 border-slate-850 hover:bg-slate-950 text-slate-400 hover:text-slate-200';
+      : 'bg-slate-950/40 border-slate-800 hover:bg-slate-950 text-slate-400 hover:text-slate-200';
 
   // Board background
   const boardBgClass = isPaper
     ? 'bg-[#fcfaf2]/65 border-[#eae0cb]'
     : isFocus
       ? 'bg-[#161616]/75 border-[#262626]'
-      : 'bg-slate-950/40 border-slate-850/40';
+      : 'bg-slate-950/40 border-slate-800/40';
 
   // Constructed panel styling
   const constructedBgClass = isResolved
@@ -823,7 +823,7 @@ export default function DatabaseOfflineGame() {
       ? 'bg-[#faf6ec]/55 border-[#cfc3a9]/70'
       : isFocus
         ? 'bg-[#080808] border-[#222222]'
-        : 'bg-slate-900/20 border-slate-850/60';
+        : 'bg-slate-900/20 border-slate-800/60';
 
   const emptyTextClass = isPaper 
     ? 'text-[#8a7664] font-serif italic text-xs' 
@@ -862,7 +862,7 @@ export default function DatabaseOfflineGame() {
     ? 'bg-[#fcfaf2] border-[#cfc3a9] hover:bg-[#eae0cb] text-[#2d241e] hover:shadow-sm'
     : isFocus
       ? 'bg-[#121212] border-[#2a2a2a] hover:bg-[#1e1e1e] text-[#e0e0e0]'
-      : 'bg-slate-950/60 border-slate-850 hover:bg-slate-950 text-slate-300 hover:text-white';
+      : 'bg-slate-950/60 border-slate-800 hover:bg-slate-950 text-slate-300 hover:text-white';
 
   const nextBtnStyle = isPaper
     ? 'bg-[#b58d3d] hover:bg-[#9a752e] text-white shadow-md shadow-amber-700/10'
@@ -875,7 +875,7 @@ export default function DatabaseOfflineGame() {
     ? 'bg-[#f5eedc] border-[#dfd5bf]' 
     : isFocus 
       ? 'bg-[#1a1a1a] border-[#222222]' 
-      : 'bg-slate-950 border border-slate-850';
+      : 'bg-slate-950 border border-slate-800';
 
   const metricIconClass = isPaper ? 'text-[#8a7664]' : isFocus ? 'text-[#666666]' : 'text-slate-500';
   const metricTextClass = isPaper ? 'text-[#2d241e]' : isFocus ? 'text-[#ffffff]' : 'text-slate-300';
@@ -997,7 +997,7 @@ export default function DatabaseOfflineGame() {
         </div>
 
         {/* Action Panel */}
-        <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 border-t pt-5 ${isPaper ? 'border-[#eae0cb]' : isFocus ? 'border-[#222222]' : 'border-slate-850'}`}>
+        <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 border-t pt-5 ${isPaper ? 'border-[#eae0cb]' : isFocus ? 'border-[#222222]' : 'border-slate-800'}`}>
           {/* Progress metric */}
           <div className="flex items-center gap-2.5">
             <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border ${metricBgClass}`}>

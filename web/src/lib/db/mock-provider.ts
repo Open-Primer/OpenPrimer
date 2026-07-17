@@ -15,7 +15,8 @@ import {
   TutorPersonality,
   AgentMetric,
   ContactFeedback,
-  UserRole
+  UserRole,
+  ReportCluster
 } from './types';
 import {
   getMockCourses,
@@ -1076,7 +1077,7 @@ summative: true
     return { data: null, error: null };
   },
 
-  submitReport: async (course: string, page: string, comment: string) => {
+  submitReport: async (course: string, page: string, comment: string, userId?: string) => {
     if (comment && comment.trim()) {
       if (isSpam(comment) || detectPromptInjection(comment)) {
         return { data: null, error: new Error('Flagged as spam or unsafe content') };
@@ -1088,9 +1089,22 @@ summative: true
 
     const issueSummary = cleanComment ? `Page: ${cleanPage}. Comment: ${cleanComment}` : `Page: ${cleanPage}. General report.`;
     const reports = [...getReportClusters()];
-    const existing = reports.find(c => c.course === cleanCourse && c.issueSummary === issueSummary);
+    const existing = reports.find(c =>
+      c.course === cleanCourse &&
+      (c.issueSummary === issueSummary || c.issueSummary.startsWith(`Page: ${cleanPage}`))
+    ) as (ReportCluster & { user_ids?: string[] }) | undefined;
+
     if (existing) {
+      const contributorIds: string[] = Array.isArray(existing.user_ids) ? existing.user_ids : [];
+      if (userId && contributorIds.includes(userId)) {
+        // Deduplicate — same user already reported this cluster
+        console.info(`[MOCK REPORT] Deduplicated report from user "${userId}" on "${cleanPage}".`);
+        return { data: { id: existing.id, deduplicated: true }, error: null };
+      }
       existing.count += 1;
+      if (userId) {
+        existing.user_ids = Array.from(new Set([...contributorIds, userId]));
+      }
     } else {
       const id = 'cl_' + (reports.length + 1);
       reports.push({
@@ -1100,8 +1114,9 @@ summative: true
         count: 1,
         status: 'Pending',
         aiProposal: `Address issue reported on page "${cleanPage}" with feedback: "${cleanComment || 'None'}"`,
-        priority: 'Medium'
-      });
+        priority: 'Medium',
+        user_ids: userId ? [userId] : []
+      } as ReportCluster & { user_ids: string[] });
     }
     setReportClusters(reports);
     setLocalStorageItem('openprimer_reports', reports);
@@ -1241,13 +1256,14 @@ summative: true
     return { data: getSearchHistoryList(), error: null };
   },
 
-  addSearchHistoryEntry: async (entry: Partial<SearchHistoryEntry> & { query: string; wasSuccessful: boolean; userId?: string; userLanguage?: string }) => {
+  addSearchHistoryEntry: async (entry: Partial<SearchHistoryEntry> & { query: string; wasSuccessful: boolean; userId?: string; userLanguage?: string; ipAddress?: string }) => {
     const newEntry: SearchHistoryEntry = {
       id: entry.id || `sh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       query: entry.query,
       timestamp: entry.timestamp || new Date().toISOString(),
       wasSuccessful: entry.wasSuccessful,
-      userId: entry.userId || undefined
+      userId: entry.userId || undefined,
+      ipAddress: entry.ipAddress || undefined
     };
     const list = [newEntry, ...getSearchHistoryList()];
     setSearchHistoryList(list);

@@ -286,11 +286,11 @@ export const AcousticPianoSynth = () => {
   };
 
   return (
-    <div className="my-8 rounded-[40px] border border-slate-850 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
+    <div className="my-8 rounded-[40px] border border-slate-800 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative select-none">
       <div className="absolute -right-16 -top-16 w-36 h-36 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
 
       {/* Header and Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-6 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6 mb-6">
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
@@ -304,7 +304,7 @@ export const AcousticPianoSynth = () => {
         {/* Action Toggles */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Visual Mode selector */}
-          <div className="flex items-center gap-1 bg-slate-900/40 border border-slate-850 p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-slate-900/40 border border-slate-800 p-1 rounded-xl">
             <button
               onClick={() => setVisualMode('oscilloscope')}
               className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
@@ -324,13 +324,13 @@ export const AcousticPianoSynth = () => {
           </div>
 
           {/* Wave Types */}
-          <div className="flex items-center gap-1 bg-slate-900/40 border border-slate-850 p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-slate-900/40 border border-slate-800 p-1 rounded-xl">
             {(['sine', 'triangle', 'sawtooth'] as OscillatorType[]).map((type) => (
               <button
                 key={type}
                 onClick={() => setWaveType(type)}
                 className={`px-2.5 py-1.5 rounded-lg text-[9px] font-black capitalize cursor-pointer ${
-                  waveType === type ? 'bg-slate-850 text-indigo-300' : 'text-slate-400'
+                  waveType === type ? 'bg-slate-800 text-indigo-300' : 'text-slate-400'
                 }`}
               >
                 {type}
@@ -347,7 +347,7 @@ export const AcousticPianoSynth = () => {
         <div className="xl:col-span-8 flex flex-col justify-between gap-6">
           
           {/* Interactive Keyboard */}
-          <div className="relative rounded-3xl border border-slate-850 bg-slate-900/10 p-5">
+          <div className="relative rounded-3xl border border-slate-800 bg-slate-900/10 p-5">
             <div className="flex relative select-none" style={{ minHeight: '190px' }}>
               
               {/* White keys */}
@@ -361,7 +361,7 @@ export const AcousticPianoSynth = () => {
                     onMouseLeave={() => stopNote(key.note)}
                     onTouchStart={() => playNote(key)}
                     onTouchEnd={() => stopNote(key.note)}
-                    className={`flex-1 rounded-b-xl border border-slate-850 bg-gradient-to-b from-white to-slate-200 relative transition-all cursor-pointer ${
+                    className={`flex-1 rounded-b-xl border border-slate-800 bg-gradient-to-b from-white to-slate-200 relative transition-all cursor-pointer ${
                       isSelected ? 'translate-y-1 shadow-inner from-indigo-500 to-indigo-600' : 'shadow-md active:translate-y-1'
                     }`}
                     style={{ minHeight: '180px' }}
@@ -407,7 +407,7 @@ export const AcousticPianoSynth = () => {
           </div>
 
           {/* Interactive Spectrogram / Oscilloscope screen rendering */}
-          <div className="rounded-3xl border border-slate-850 bg-[#020617] p-4 flex flex-col items-center">
+          <div className="rounded-3xl border border-slate-800 bg-[#020617] p-4 flex flex-col items-center">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-indigo-400 self-start mb-2.5 flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5 animate-pulse" />
               <span>
@@ -427,7 +427,7 @@ export const AcousticPianoSynth = () => {
         <div className="xl:col-span-4 flex flex-col gap-6">
           
           {/* Fourier Mixer overtones */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-4">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-indigo-400" />
               <span>{t("piano_fourier_mixer")}</span>
@@ -480,7 +480,7 @@ export const AcousticPianoSynth = () => {
           </div>
 
           {/* ADSR Envelope Modulator */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-5 flex flex-col gap-3">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-3">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-indigo-400" />
               <span>{t("piano_fourier_adsr")}</span>
@@ -506,7 +506,7 @@ export const AcousticPianoSynth = () => {
           </div>
 
           {/* Theoretical acoustics insight */}
-          <div className="rounded-3xl border border-slate-850 bg-slate-900/40 p-4 text-center select-text">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-4 text-center select-text">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center justify-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
               <span>{t("piano_fourier_insight_title")}</span>

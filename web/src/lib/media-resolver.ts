@@ -2173,9 +2173,13 @@ export async function resolveAndPersistMedia(
               if (resolved.description) {
                 const figNumMatch = originalCaption.match(/^\*Figure\s*(\d*)\s*:\s*/i);
                 const figNumPrefix = figNumMatch ? `Figure ${figNumMatch[1]}: ` : '';
-                updatedCaption = `*${figNumPrefix}${resolved.description} — Source\u00a0: ${finalLabel}*`;
+                let desc = resolved.description.trim();
+                if (!desc.endsWith('.')) desc += '.';
+                updatedCaption = `*${figNumPrefix}${desc} Source\u00a0: ${finalLabel}*`;
               } else {
-                updatedCaption = originalCaption.replace(/\*$/, ` — Source\u00a0: ${finalLabel}*`);
+                let baseCaption = originalCaption.replace(/\*$/, '').trim();
+                if (!baseCaption.endsWith('.')) baseCaption += '.';
+                updatedCaption = `${baseCaption} Source\u00a0: ${finalLabel}*`;
               }
 
               updatedContent = updatedContent.slice(0, afterImg) +
@@ -2190,7 +2194,21 @@ export async function resolveAndPersistMedia(
       // If no source found and URL is Pollinations/placeholder — strip the image entirely
       if (sourceUrl.includes('pollinations.ai') || sourceUrl === '' || sourceUrl === 'placeholder') {
         console.warn(`[MEDIA-RESOLVER] No source found and URL is placeholder — stripping image: "${altText}"`);
-        updatedContent = updatedContent.replace(fullMatch, '');
+        // Find if a figure caption is immediately following this image to avoid orphaned captions
+        const imgIndex = updatedContent.indexOf(fullMatch);
+        if (imgIndex !== -1) {
+          const afterImgText = updatedContent.slice(imgIndex + fullMatch.length, imgIndex + fullMatch.length + 300);
+          const captionRegex = /^\s*[\r\n]+\s*\*\s*Figure\s*(?:\d*|[\w\-]+)?\s*[:\-\u2013\u2014]?[\s\S]*?\*/i;
+          const captionMatch = afterImgText.match(captionRegex);
+          if (captionMatch) {
+            const fullMatchWithCaption = updatedContent.slice(imgIndex, imgIndex + fullMatch.length + captionMatch[0].length);
+            updatedContent = updatedContent.replace(fullMatchWithCaption, '');
+          } else {
+            updatedContent = updatedContent.replace(fullMatch, '');
+          }
+        } else {
+          updatedContent = updatedContent.replace(fullMatch, '');
+        }
         resolvedSuccess = true;
         continue;
       }
@@ -2400,15 +2418,19 @@ export async function resolveAndPersistMedia(
           if (resolved.description) {
             currentAttrs.alt = resolved.description;
             currentAttrs.description = resolved.description;
-            currentAttrs.caption = `${resolved.description} — Source: ${finalLabel}`;
+            let desc = resolved.description.trim();
+            if (!desc.endsWith('.')) desc += '.';
+            currentAttrs.caption = `${desc} Source: ${finalLabel}`;
           } else {
             // Rebuild/override the caption by stripping any outdated "Source:" part and attaching the new one
             const rawCap = (description || altText || caption || '').trim();
             const cleanCap = rawCap.split(/\s*(?:—|--|-)?\s*Source\s*:/i)[0].trim();
             if (cleanCap) {
-              currentAttrs.caption = `${cleanCap} — Source: ${finalLabel}`;
+              let capText = cleanCap;
+              if (!capText.endsWith('.')) capText += '.';
+              currentAttrs.caption = `${capText} Source: ${finalLabel}`;
             } else {
-              currentAttrs.caption = `— Source: ${finalLabel}`;
+              currentAttrs.caption = `Source: ${finalLabel}`;
             }
           }
           
@@ -2510,12 +2532,12 @@ export async function resolveAndPersistMedia(
       }
 
       if (!resolvedSuccess) {
-        console.log(`[MEDIA-RESOLVER] Setting unresolved={true} on unresolvable Figure: "${altText || caption || description}"`);
-        currentAttrs.unresolved = 'true';
+        console.log(`[MEDIA-RESOLVER] Stripping unresolvable Figure/CustomFigure: "${altText || caption || description || searchQuery}"`);
+        updatedContent = updatedContent.replace(fullTag, '');
+      } else {
+        const newTag = rebuildCustomFigure(currentAttrs, tagName);
+        updatedContent = updatedContent.replace(fullTag, newTag);
       }
-      
-      const newTag = rebuildCustomFigure(currentAttrs, tagName);
-      updatedContent = updatedContent.replace(fullTag, newTag);
     }
   }
 
@@ -3142,52 +3164,59 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
       }
     }
 
-    if (needsResolution && repairCount < MAX_REPAIRS) {
-      repairCount++;
-      console.log(`[RESTITUTION-REPAIR] Repairing CustomFigure: "${searchQuery || altText || caption}"`);
-      const queryName = (searchQuery || altText || caption || '').trim().replace(/_/g, ' ');
-      
-      const resolution = await resolveMediaImage(queryName, targetLangLower);
-      let sourceUrl = resolution.url;
-      const wikidataFallbackUrl = resolution.fallbackUrl;
-
+    if (needsResolution) {
       let success = false;
-      if (sourceUrl) {
-        try {
-          const imageRes = await fetchWithTimeout(sourceUrl, {}, 10000);
-          if (imageRes.ok) {
-            const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
-            if (!contentType.toLowerCase().includes('text/html')) {
-              const buffer = Buffer.from(await imageRes.arrayBuffer());
-              const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
-              const ext = getSafeExtension(contentType, 'jpg');
-              const fileName = `img_${hash}.${ext}`;
-              
-              const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
-              if (publicUrl) {
-                currentAttrs.src = publicUrl;
-                if (wikidataFallbackUrl) {
-                  currentAttrs.fallbackUrl = wikidataFallbackUrl;
+      if (repairCount < MAX_REPAIRS) {
+        repairCount++;
+        console.log(`[RESTITUTION-REPAIR] Repairing CustomFigure: "${searchQuery || altText || caption}"`);
+        const queryName = (searchQuery || altText || caption || '').trim().replace(/_/g, ' ');
+        
+        const resolution = await resolveMediaImage(queryName, targetLangLower);
+        let sourceUrl = resolution.url;
+        const wikidataFallbackUrl = resolution.fallbackUrl;
+
+        if (sourceUrl) {
+          try {
+            const imageRes = await fetchWithTimeout(sourceUrl, {}, 10000);
+            if (imageRes.ok) {
+              const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
+              if (!contentType.toLowerCase().includes('text/html')) {
+                const buffer = Buffer.from(await imageRes.arrayBuffer());
+                const hash = crypto.createHash('md5').update(sourceUrl).digest('hex');
+                const ext = getSafeExtension(contentType, 'jpg');
+                const fileName = `img_${hash}.${ext}`;
+                
+                const publicUrl = await uploadToSupabaseStorage(fileName, buffer, contentType);
+                if (publicUrl) {
+                  currentAttrs.src = publicUrl;
+                  if (wikidataFallbackUrl) {
+                    currentAttrs.fallbackUrl = wikidataFallbackUrl;
+                  }
+                  if (resolution.description) {
+                    currentAttrs.alt = resolution.description;
+                    currentAttrs.description = resolution.description;
+                    const sourceLabel = resolution.sourceLabel || 'Wikimedia Commons';
+                    let desc = resolution.description.trim();
+                    if (!desc.endsWith('.')) desc += '.';
+                    currentAttrs.caption = `${desc} Source: ${sourceLabel}`;
+                  }
+                  console.log(`[RESTITUTION-REPAIR] Successfully repaired CustomFigure to: ${publicUrl}`);
+                  success = true;
                 }
-                if (resolution.description) {
-                  currentAttrs.alt = resolution.description;
-                  currentAttrs.description = resolution.description;
-                  const sourceLabel = resolution.sourceLabel || 'Wikimedia Commons';
-                  currentAttrs.caption = `${resolution.description} — Source: ${sourceLabel}`;
-                }
-                console.log(`[RESTITUTION-REPAIR] Successfully repaired CustomFigure to: ${publicUrl}`);
-                success = true;
               }
             }
+          } catch (err) {
+            console.warn(`[RESTITUTION-REPAIR] Failed to repair CustomFigure image from ${sourceUrl}:`, err);
           }
-        } catch (err) {
-          console.warn(`[RESTITUTION-REPAIR] Failed to repair CustomFigure image from ${sourceUrl}:`, err);
         }
+      } else {
+        console.warn(`[RESTITUTION-REPAIR] Repair limit reached, stripping CustomFigure: "${searchQuery || altText || caption}"`);
       }
 
       if (!success) {
-        console.log(`[RESTITUTION-REPAIR] Setting unresolved={true} on broken/unresolved CustomFigure: "${altText || caption}"`);
-        currentAttrs.unresolved = 'true';
+        console.log(`[RESTITUTION-REPAIR] Stripping broken/unresolved CustomFigure: "${altText || caption || searchQuery}"`);
+        updatedContent = updatedContent.replaceAll(fullTag, '');
+        continue;
       }
     }
 

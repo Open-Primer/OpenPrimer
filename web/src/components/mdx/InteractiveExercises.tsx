@@ -66,7 +66,7 @@ const renderTextWithMathAndMarkdown = (text: string, inParagraph: boolean): Reac
       return <span key={li} className="inline">{rendered}</span>;
     }
     
-    return <p key={li} className="mb-4 text-slate-300">{rendered}</p>;
+    return <p key={li} className="mb-1 text-slate-300 leading-relaxed">{rendered}</p>;
   });
 
   return <>{renderedLines}</>;
@@ -196,6 +196,53 @@ const isInstructionElement = (child: React.ReactElement): boolean => {
   );
 };
 
+const extractChildComponent = (
+  node: React.ReactNode,
+  predicate: (el: React.ReactElement) => boolean
+): { cleanNode: React.ReactNode; extracted: React.ReactNode | null } => {
+  if (!node) return { cleanNode: null, extracted: null };
+
+  if (React.isValidElement(node)) {
+    const element = node as React.ReactElement<any>;
+    if (predicate(element)) {
+      return { cleanNode: null, extracted: element.props.children };
+    }
+
+    if (element.props && element.props.children) {
+      const { cleanNode: cleanChildren, extracted } = extractChildComponent(element.props.children, predicate);
+      if (extracted !== null) {
+        const hasContent = cleanChildren !== null && cleanChildren !== undefined && (
+          !Array.isArray(cleanChildren) || cleanChildren.length > 0
+        );
+        return {
+          cleanNode: hasContent ? React.cloneElement(element, { ...element.props }, cleanChildren) : null,
+          extracted
+        };
+      }
+    }
+  }
+
+  if (Array.isArray(node)) {
+    let extracted: React.ReactNode | null = null;
+    const cleanItems = node
+      .map((child) => {
+        const res = extractChildComponent(child, predicate);
+        if (res.extracted !== null) {
+          extracted = res.extracted;
+        }
+        return res.cleanNode;
+      })
+      .filter((item) => item !== null && item !== undefined);
+    
+    return {
+      cleanNode: cleanItems.length > 0 ? cleanItems : null,
+      extracted
+    };
+  }
+
+  return { cleanNode: node, extracted: null };
+};
+
 export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
@@ -214,39 +261,20 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
   };
   const [isOpen, setIsOpen] = useState(false);
 
-  // Extract Solution child if present
-  let resolvedSolution = solution;
-  let otherChildren: React.ReactNode[] = [];
-  let solutionChild: React.ReactNode = null;
-
-  if (children) {
-    React.Children.toArray(children).forEach((child) => {
-      if (React.isValidElement(child)) {
-        if (isSolutionElement(child)) {
-          solutionChild = (child as React.ReactElement<any>).props.children;
-        } else {
-          otherChildren.push(child);
-        }
-      } else {
-        otherChildren.push(child);
-      }
-    });
-  }
-
-  const finalChildren = otherChildren.length > 0 ? otherChildren : children;
-  const finalSolution = resolvedSolution || solutionChild;
+  // Extract Solution child recursively if present
+  const { cleanNode: finalChildren, extracted: extractedSolution } = extractChildComponent(children, isSolutionElement);
+  const finalSolution = solution || extractedSolution;
 
   // Guard: if the problem statement is missing, skip rendering entirely.
-  // Agent 4 guarantees content is always populated before persistence — this is a last-resort safety net.
   const hasChildren = !isNodeEmpty(finalChildren);
   const hasSolution = !isNodeEmpty(finalSolution);
 
   if (!hasChildren) return null;
 
   return (
-    <div className="my-8 rounded-3xl overflow-hidden border border-emerald-500/20 bg-emerald-500/5 backdrop-blur-xl shadow-xl transition-all duration-300">
+    <div className="my-4 rounded-2xl overflow-hidden border border-emerald-500/20 bg-emerald-500/5 backdrop-blur-xl shadow-xl transition-all duration-300">
       {/* Exercise Header + Problem Statement */}
-      <div className="p-6 sm:p-8 space-y-4">
+      <div className="p-4 sm:p-5 space-y-2">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
             <BookOpen className="w-4 h-4" />
@@ -256,7 +284,7 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
           </span>
         </div>
         {/* Problem formulation */}
-        <div className="text-slate-200 text-sm leading-relaxed space-y-1">
+        <div className="text-slate-200 text-sm leading-snug space-y-0.5">
           {renderNodeWithMath(finalChildren)}
         </div>
       </div>
@@ -264,7 +292,7 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
       {/* Expand/Collapse Solution Trigger */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-4 px-6 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:bg-emerald-500/10 transition-all border-t border-emerald-500/10 cursor-pointer"
+        className="w-full py-2 px-6 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:bg-emerald-500/10 transition-all border-t border-emerald-500/10 cursor-pointer"
       >
         <div className={`w-1.5 h-1.5 rounded-full bg-emerald-500 ${isOpen ? '' : 'animate-pulse'}`} />
         <span>{isOpen ? t.hide_sol : t.show_sol}</span>
@@ -280,7 +308,7 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
             exit={{ height: 0, opacity: 0 }}
             className="bg-slate-950/60 border-t border-emerald-500/10"
           >
-            <div className="p-6 sm:p-8 text-slate-300 text-xs sm:text-sm leading-relaxed border-l-2 border-emerald-500/50 space-y-1">
+            <div className="p-4 sm:p-5 text-slate-300 text-sm leading-relaxed border-l-2 border-emerald-500/50">
               {hasSolution ? (
                 typeof finalSolution === 'string'
                   ? <InlineMd text={finalSolution} />
@@ -341,27 +369,12 @@ export const UnsolvedExercise = ({
     placeholder: dict.ex_placeholder
   };
 
-  // Extract custom children if present
-  let resolvedQuestion: React.ReactNode = question;
-  let resolvedSolution: React.ReactNode = solution;
-  let otherChildren: React.ReactNode[] = [];
-  let solutionChild: React.ReactNode = null;
+  // Extract custom children recursively if present
+  const { cleanNode: childrenAfterInstruction, extracted: extractedInstruction } = extractChildComponent(children, isInstructionElement);
+  const { cleanNode: finalChildren, extracted: extractedSolution } = extractChildComponent(childrenAfterInstruction, isSolutionElement);
 
-  if (children) {
-    React.Children.toArray(children).forEach((child) => {
-      if (React.isValidElement(child)) {
-        if (isInstructionElement(child)) {
-          resolvedQuestion = resolvedQuestion || (child as React.ReactElement<any>).props.children;
-        } else if (isSolutionElement(child)) {
-          solutionChild = (child as React.ReactElement<any>).props.children;
-        } else {
-          otherChildren.push(child);
-        }
-      } else {
-        otherChildren.push(child);
-      }
-    });
-  }
+  const resolvedQuestion = question || extractedInstruction;
+  const resolvedSolution = solution || extractedSolution;
 
   const isReflection = correctAnswer === undefined || correctAnswer === null || String(correctAnswer).trim() === '';
 
@@ -457,8 +470,8 @@ export const UnsolvedExercise = ({
   const finalTitle = title ? `${t.unsolved_title} : ${title}` : t.unsolved_title;
 
   return (
-    <div className="my-8 rounded-3xl overflow-hidden border border-blue-500/20 bg-blue-500/5 backdrop-blur-xl shadow-xl transition-all duration-300">
-      <div className="p-6 sm:p-8 space-y-5">
+    <div className="my-4 rounded-2xl overflow-hidden border border-blue-500/20 bg-blue-500/5 backdrop-blur-xl shadow-xl transition-all duration-300">
+      <div className="p-4 sm:p-5 space-y-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
@@ -482,9 +495,9 @@ export const UnsolvedExercise = ({
           </div>
         )}
 
-        {otherChildren.length > 0 && (
+        {finalChildren && !isNodeEmpty(finalChildren) && (
           <div className="space-y-4">
-            {otherChildren.map((child, index) => <React.Fragment key={index}>{renderNodeWithMath(child)}</React.Fragment>)}
+            {renderNodeWithMath(finalChildren)}
           </div>
         )}
 
@@ -555,7 +568,7 @@ export const UnsolvedExercise = ({
             <button
               onClick={handleCheck}
               disabled={revealed || !inputVal.trim()}
-              className={`${isReflection || (choices && choices.length > 0) ? 'w-full sm:w-auto' : 'flex-1 sm:flex-initial'} px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-850 disabled:text-slate-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2`}
+              className={`${isReflection || (choices && choices.length > 0) ? 'w-full sm:w-auto' : 'flex-1 sm:flex-initial'} px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2`}
             >
               <span>{checkButtonLabel}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -564,7 +577,7 @@ export const UnsolvedExercise = ({
             {hint && !revealed && (
               <button
                 onClick={() => setShowHint(!showHint)}
-                className="p-3 text-slate-400 hover:text-white hover:bg-slate-850/40 rounded-xl transition-all cursor-pointer border border-slate-800/80 flex items-center justify-center"
+                className="p-3 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-xl transition-all cursor-pointer border border-slate-800/80 flex items-center justify-center"
                 title={t.hint_btn}
               >
                 <HelpCircle className="w-4 h-4" />
@@ -580,7 +593,7 @@ export const UnsolvedExercise = ({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="p-4 bg-slate-950/40 border border-slate-850/80 rounded-xl text-xs text-slate-350 flex items-start gap-2.5 leading-relaxed"
+              className="p-4 bg-slate-950/40 border border-slate-800/80 rounded-xl text-xs text-slate-350 flex items-start gap-2.5 leading-relaxed"
             >
               <HelpCircle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
               <span>{renderNodeWithMath(hint)}</span>
@@ -626,17 +639,17 @@ export const UnsolvedExercise = ({
 
       {/* Solution Block revealed when attempts finish or correct answer is submitted */}
       <AnimatePresence>
-        {revealed && (resolvedSolution || solutionChild) && (
+        {revealed && resolvedSolution && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="border-t border-blue-500/20 bg-slate-950/50 p-6 sm:p-8 space-y-3"
+            className="border-t border-blue-500/20 bg-slate-950/50 p-4 sm:p-5 space-y-2"
           >
             <span className="text-[9px] font-black uppercase text-blue-400 tracking-widest block select-none">
               {t.unlocked_sol}
             </span>
             <div className="text-slate-300 text-xs sm:text-sm leading-relaxed italic border-l-2 border-blue-500/50 pl-4">
-              {renderNodeWithMath(resolvedSolution || solutionChild)}
+              {renderNodeWithMath(resolvedSolution)}
             </div>
           </motion.div>
         )}

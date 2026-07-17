@@ -230,7 +230,7 @@ export const InteractiveDiagram = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
         {/* Visual Drawing Area (7 cols on large screen) */}
-        <div className="col-span-1 lg:col-span-7 relative aspect-square bg-slate-950/80 rounded-2xl border border-slate-850 overflow-hidden flex items-center justify-center p-4">
+        <div className="col-span-1 lg:col-span-7 relative aspect-square bg-slate-950/80 rounded-2xl border border-slate-800 overflow-hidden flex items-center justify-center p-4">
           {resolvedType === 'cell' ? (
             <svg 
               viewBox="0 0 400 400" 
@@ -562,7 +562,7 @@ export const InteractiveDiagram = ({
                     <motion.div 
                       initial={{ opacity: 0, x: 5 }}
                       animate={{ opacity: 1, x: 10 }}
-                      className="absolute left-4 bg-slate-950/90 backdrop-blur-md border border-slate-850 px-2.5 py-1 rounded-md text-[9px] font-black text-white whitespace-nowrap shadow-lg select-none"
+                      className="absolute left-4 bg-slate-950/90 backdrop-blur-md border border-slate-800 px-2.5 py-1 rounded-md text-[9px] font-black text-white whitespace-nowrap shadow-lg select-none"
                     >
                       {spot.name}
                     </motion.div>
@@ -597,7 +597,7 @@ export const InteractiveDiagram = ({
                 key="empty"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-slate-950/40 border border-slate-850 rounded-2xl p-6 text-center space-y-4 py-12"
+                className="bg-slate-950/40 border border-slate-800 rounded-2xl p-6 text-center space-y-4 py-12"
               >
                 <div className="w-10 h-10 rounded-full bg-slate-900/60 border border-slate-800 flex items-center justify-center mx-auto text-slate-400">
                   <Info className="w-5 h-5" />

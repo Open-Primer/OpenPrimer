@@ -190,7 +190,7 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
                 </div>
               </div>
               
-              <div className="mt-8 pt-6 border-t border-slate-850 flex flex-col gap-4">
+              <div className="mt-8 pt-6 border-t border-slate-800 flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{tr("Archival Level:")}</span>
                   <ArchivingLevelButtons 
@@ -228,7 +228,7 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
                   <button 
                     type="button"
                     onClick={() => handleSetDefaultPersona(p)}
-                    className="w-full px-4 py-2.5 border border-slate-850 hover:border-yellow-500/30 text-slate-400 hover:text-yellow-500 text-[8px] font-black uppercase tracking-wider rounded-xl transition-all"
+                    className="w-full px-4 py-2.5 border border-slate-800 hover:border-yellow-500/30 text-slate-400 hover:text-yellow-500 text-[8px] font-black uppercase tracking-wider rounded-xl transition-all"
                   >
                     {tr("Set as Default")}
                   </button>
@@ -250,8 +250,8 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
               onClick={() => setShowAddPersonality(false)}
               className="fixed inset-0 bg-slate-950/80 backdrop-blur-md cursor-pointer"
             />
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
-              <div className="p-8 border-b border-slate-850 flex items-center justify-between">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-xl bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
+              <div className="p-8 border-b border-slate-800 flex items-center justify-between">
                 <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                   <Sparkles className="w-6 h-6 text-fuchsia-500" /> {tr("Create Custom Persona")}
                 </h3>
@@ -268,7 +268,7 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
                     placeholder={tr("Stoic Advisor")} 
                     value={newPers.name}
                     onChange={(e) => setNewPers({...newPers, name: e.target.value})}
-                    className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-fuchsia-550/50 text-white" 
+                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-fuchsia-550/50 text-white" 
                   />
                 </div>
                 
@@ -281,7 +281,7 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
                     rows={4}
                     value={newPers.prompt}
                     onChange={(e) => setNewPers({...newPers, prompt: e.target.value})}
-                    className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-fuchsia-550/50 text-white resize-none" 
+                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-fuchsia-550/50 text-white resize-none" 
                   />
                 </div>
 
@@ -321,7 +321,7 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
                 const pStrings = LOCALIZED_POPUPS[lang as keyof typeof LOCALIZED_POPUPS] || LOCALIZED_POPUPS.EN;
                 return (
                   <>
-                    <div className="p-8 border-b border-slate-850 flex items-center gap-3">
+                    <div className="p-8 border-b border-slate-800 flex items-center gap-3">
                       <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
                       <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">{tr("Delete Personality")}</h3>
                     </div>
@@ -330,7 +330,7 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
                         {pStrings.tutor_confirm.replace('{title}', deleteTutorTarget.name)}
                       </p>
                       <div className="flex gap-4 pt-2">
-                        <button type="button" onClick={() => setDeleteTutorTarget(null)} className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer">
+                        <button type="button" onClick={() => setDeleteTutorTarget(null)} className="flex-1 py-4 border border-slate-800 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900 cursor-pointer">
                           {pStrings.purge_badge_cancel_btn}
                         </button>
                         <button type="button" onClick={async () => {

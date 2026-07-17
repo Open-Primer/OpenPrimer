@@ -69,7 +69,7 @@ export const RevisionTab: React.FC<RevisionTabProps> = ({
           <p className="text-sm text-slate-400 leading-relaxed">
             {tr("The Revision Engine dynamically groups feedback reports and triggers proposed fixes at the course-chapter level. Two primary conditions are monitored in real-time by a dedicated AI Agent:")}
           </p>
-          <div className="grid md:grid-cols-2 gap-6 bg-slate-950/50 p-6 rounded-3xl border border-slate-850">
+          <div className="grid md:grid-cols-2 gap-6 bg-slate-950/50 p-6 rounded-3xl border border-slate-800">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-xs font-bold text-yellow-500 uppercase tracking-wider">
                 <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" /> {tr("Trigger 1: Low Global Rating")}
@@ -89,13 +89,13 @@ export const RevisionTab: React.FC<RevisionTabProps> = ({
           </div>
         </div>
 
-        <div className="h-px bg-slate-850/60" />
+        <div className="h-px bg-slate-800/60" />
 
         <div className="space-y-3">
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">{tr("Engine Control Parameters")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
             {/* 0. Auto-Approve Revisions */}
-            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Auto-Approve Revisions")}</span>
                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">
@@ -115,7 +115,7 @@ export const RevisionTab: React.FC<RevisionTabProps> = ({
             </div>
 
             {/* 1. Rating Threshold */}
-            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Rating Threshold")}</span>
                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">
@@ -137,7 +137,7 @@ export const RevisionTab: React.FC<RevisionTabProps> = ({
             </div>
 
             {/* 2. Min Votes */}
-            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Min Votes")}</span>
                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">
@@ -156,7 +156,7 @@ export const RevisionTab: React.FC<RevisionTabProps> = ({
             </div>
 
             {/* 3. Min Reports */}
-            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Min Reports")}</span>
                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">
@@ -175,7 +175,7 @@ export const RevisionTab: React.FC<RevisionTabProps> = ({
             </div>
 
             {/* 4. Auto-Approve Delay */}
-            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Auto-Approve Delay")}</span>
                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">
@@ -194,7 +194,7 @@ export const RevisionTab: React.FC<RevisionTabProps> = ({
             </div>
 
             {/* 5. Re-evaluation Days */}
-            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-850 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Log Retention Cooldown")}</span>
                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">
@@ -237,7 +237,7 @@ export const RevisionTab: React.FC<RevisionTabProps> = ({
 
         <div className="grid md:grid-cols-2 gap-6">
           {filteredActiveRevisionProposals.map((item, idx) => (
-            <div key={idx} className="p-6 bg-slate-900/40 border border-slate-850 hover:border-yellow-500/30 rounded-[32px] flex justify-between items-start gap-4 transition-all relative overflow-hidden group">
+            <div key={idx} className="p-6 bg-slate-900/40 border border-slate-800 hover:border-yellow-500/30 rounded-[32px] flex justify-between items-start gap-4 transition-all relative overflow-hidden group">
               {/* Background Glow */}
               <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 blur-xl rounded-full pointer-events-none" />
               
@@ -268,16 +268,16 @@ export const RevisionTab: React.FC<RevisionTabProps> = ({
                 </p>
 
                 <div className="flex flex-wrap items-center gap-3 pt-1">
-                  <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-850 rounded-xl text-[9px] font-mono font-bold text-slate-400">
+                  <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-800 rounded-xl text-[9px] font-mono font-bold text-slate-400">
                     <span>Rating:</span>
                     <span className="text-yellow-400 font-black">⭐ {item.overallRating.toFixed(1)}/5</span>
                     <span className="text-slate-600">({item.overallVotes} reviews)</span>
                   </div>
-                  <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-850 rounded-xl text-[9px] font-mono font-bold text-slate-400">
+                  <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-800 rounded-xl text-[9px] font-mono font-bold text-slate-400">
                     <span>Active Reports:</span>
                     <span className="text-blue-400 font-black">{item.reportCount}</span>
                   </div>
-                  <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-850 rounded-xl text-[9px] font-mono font-bold text-slate-400">
+                  <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 border border-slate-800 rounded-xl text-[9px] font-mono font-bold text-slate-400">
                     <span>Composite Score:</span>
                     <span className="text-emerald-400 font-extrabold">{item.score}</span>
                   </div>
@@ -345,7 +345,7 @@ export const RevisionTab: React.FC<RevisionTabProps> = ({
               <button 
                 type="button"
                 onClick={() => dbService.deleteRefusedRevision(item.id).then(loadData)} 
-                className="px-3 py-1.5 border border-slate-850 hover:border-slate-700 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase text-center"
+                className="px-3 py-1.5 border border-slate-800 hover:border-slate-700 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase text-center"
               >
                 {tr("Re-Propose")}
               </button>

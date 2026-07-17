@@ -931,27 +931,27 @@ export const GeoMapExplorer = () => {
           </div>
 
           {/* Main Map Box */}
-          <div className="bg-slate-950 border border-slate-850 rounded-2xl p-4 relative overflow-hidden flex flex-col items-center justify-center">
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 relative overflow-hidden flex flex-col items-center justify-center">
             
             {/* Compass / Navigation Floating UI */}
             <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
               <button
                 onClick={() => handleZoom('in')}
-                className="p-1.5 bg-slate-900/90 border border-slate-800 text-slate-300 rounded-lg hover:bg-slate-850 hover:text-white transition-all shadow-sm"
+                className="p-1.5 bg-slate-900/90 border border-slate-800 text-slate-300 rounded-lg hover:bg-slate-800 hover:text-white transition-all shadow-sm"
                 title={t.controls.zoomIn}
               >
                 <ZoomIn className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleZoom('out')}
-                className="p-1.5 bg-slate-900/90 border border-slate-800 text-slate-300 rounded-lg hover:bg-slate-850 hover:text-white transition-all shadow-sm"
+                className="p-1.5 bg-slate-900/90 border border-slate-800 text-slate-300 rounded-lg hover:bg-slate-800 hover:text-white transition-all shadow-sm"
                 title={t.controls.zoomOut}
               >
                 <ZoomOut className="w-4 h-4" />
               </button>
               <button
                 onClick={handleReset}
-                className="p-1.5 bg-slate-900/90 border border-slate-800 text-slate-300 rounded-lg hover:bg-slate-850 hover:text-white transition-all shadow-sm mt-1"
+                className="p-1.5 bg-slate-900/90 border border-slate-800 text-slate-300 rounded-lg hover:bg-slate-800 hover:text-white transition-all shadow-sm mt-1"
                 title={t.controls.reset}
               >
                 <RotateCcw className="w-4 h-4" />
@@ -1321,7 +1321,7 @@ export const GeoMapExplorer = () => {
           
           {/* Mode Explore Panel */}
           {mode === 'explore' ? (
-            <div className="flex flex-col h-full bg-slate-900/30 border border-slate-850/80 rounded-2xl p-4 min-h-[300px]">
+            <div className="flex flex-col h-full bg-slate-900/30 border border-slate-800/80 rounded-2xl p-4 min-h-[300px]">
               
               <div className="flex items-center gap-2 border-b border-slate-800 pb-3 mb-3">
                 <Compass className="w-4 h-4 text-indigo-400" />
@@ -1347,28 +1347,28 @@ export const GeoMapExplorer = () => {
 
                     {/* Metadata items */}
                     <div className="grid grid-cols-2 gap-2 text-[11px]">
-                      <div className="p-2 bg-slate-950/40 border border-slate-850/50 rounded-lg">
+                      <div className="p-2 bg-slate-950/40 border border-slate-800/50 rounded-lg">
                         <span className="text-slate-400 block text-[9px] uppercase font-bold">{t.inspector.coordinates}</span>
                         <span className="text-slate-200 font-mono font-bold block mt-0.5">{inspectedData.lat}, {inspectedData.lng}</span>
                       </div>
-                      <div className="p-2 bg-slate-950/40 border border-slate-850/50 rounded-lg">
+                      <div className="p-2 bg-slate-950/40 border border-slate-800/50 rounded-lg">
                         <span className="text-slate-400 block text-[9px] uppercase font-bold">{t.inspector.elevation}</span>
                         <span className="text-slate-200 font-bold block mt-0.5">{inspectedData.elevation}</span>
                       </div>
                     </div>
 
-                    <div className="p-2 bg-slate-950/40 border border-slate-850/50 rounded-lg text-[11px]">
+                    <div className="p-2 bg-slate-950/40 border border-slate-800/50 rounded-lg text-[11px]">
                       <span className="text-slate-400 block text-[9px] uppercase font-bold">{t.inspector.biome}</span>
                       <span className="text-indigo-300 font-bold block mt-0.5">{inspectedData.biome}</span>
                     </div>
 
                     {inspectedData.country && (
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
-                        <div className="p-2 bg-slate-950/40 border border-slate-850/50 rounded-lg">
+                        <div className="p-2 bg-slate-950/40 border border-slate-800/50 rounded-lg">
                           <span className="text-slate-400 block text-[9px] uppercase font-bold">{t.inspector.country}</span>
                           <span className="text-slate-200 block mt-0.5 font-bold truncate">{inspectedData.country}</span>
                         </div>
-                        <div className="p-2 bg-slate-950/40 border border-slate-850/50 rounded-lg">
+                        <div className="p-2 bg-slate-950/40 border border-slate-800/50 rounded-lg">
                           <span className="text-slate-400 block text-[9px] uppercase font-bold">{t.inspector.capital}</span>
                           <span className="text-slate-200 block mt-0.5 font-bold truncate">{inspectedData.capital}</span>
                         </div>
@@ -1385,7 +1385,7 @@ export const GeoMapExplorer = () => {
                                    demoObj ? (langKey === 'FR' ? demoObj.descFR : demoObj.descEN) : null;
                       if (!desc) return null;
                       return (
-                        <p className="text-xs text-slate-400 leading-normal p-2.5 bg-slate-950/20 border border-slate-850/40 rounded-xl">
+                        <p className="text-xs text-slate-400 leading-normal p-2.5 bg-slate-950/20 border border-slate-800/40 rounded-xl">
                           {desc}
                         </p>
                       );
@@ -1402,7 +1402,7 @@ export const GeoMapExplorer = () => {
           ) : (
             
             // Mode Blank Map Quiz Panel
-            <div className="flex flex-col h-full bg-slate-900/30 border border-slate-850/80 rounded-2xl p-4 min-h-[300px]">
+            <div className="flex flex-col h-full bg-slate-900/30 border border-slate-800/80 rounded-2xl p-4 min-h-[300px]">
               <div className="flex items-center gap-2 border-b border-slate-800 pb-3 mb-4">
                 <Award className="w-4 h-4 text-indigo-400" />
                 <span className="text-sm font-black text-white uppercase tracking-wider">
@@ -1432,7 +1432,7 @@ export const GeoMapExplorer = () => {
                     {t.quiz.successDesc}
                   </p>
                   
-                  <div className="w-full bg-slate-950/40 border border-slate-850/60 p-3 rounded-xl flex justify-between items-center mb-4">
+                  <div className="w-full bg-slate-950/40 border border-slate-800/60 p-3 rounded-xl flex justify-between items-center mb-4">
                     <span className="text-xs text-slate-350">{t.quiz.score} : {quizScore} / {QUIZ_QUESTIONS.length}</span>
                     <span className="text-xs font-black text-emerald-400 font-mono">+{xpEarned} XP</span>
                   </div>
@@ -1465,7 +1465,7 @@ export const GeoMapExplorer = () => {
                     </div>
 
                     {/* Hint Drawer */}
-                    <div className="p-2.5 bg-slate-950/40 border border-slate-850/60 rounded-xl text-[10px] text-slate-450 leading-normal">
+                    <div className="p-2.5 bg-slate-950/40 border border-slate-800/60 rounded-xl text-[10px] text-slate-450 leading-normal">
                       <span className="font-bold text-slate-400 block mb-1">💡 {t.quiz.hint} :</span>
                       {langKey === 'FR' ? currentQuestion.hintFR : currentQuestion.hintEN}
                     </div>

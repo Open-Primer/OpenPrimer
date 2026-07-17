@@ -512,7 +512,7 @@ export const FunctionManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_schoo
 
         <button
           onClick={() => setScaleMode(prev => prev === 'linear' ? 'logarithmic' : 'linear')}
-          className="flex items-center gap-2 self-start md:self-auto px-4 py-2 rounded-xl bg-slate-950 border border-slate-850 hover:border-slate-800 text-[11px] font-bold text-slate-350 hover:text-slate-100 transition-all select-none cursor-pointer"
+          className="flex items-center gap-2 self-start md:self-auto px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-800 text-[11px] font-bold text-slate-350 hover:text-slate-100 transition-all select-none cursor-pointer"
         >
           <LayoutGrid className="w-3.5 h-3.5 text-blue-400" />
           <span>{t.scale}</span>
@@ -535,7 +535,7 @@ export const FunctionManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_schoo
             className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border select-none transition-all duration-300 cursor-pointer ${
               preset === type
                 ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/15'
-                : 'bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200 hover:border-slate-800'
+                : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-800'
             }`}
           >
             {type}
@@ -545,7 +545,7 @@ export const FunctionManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_schoo
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
         <div className="xl:col-span-3 flex flex-col items-center justify-center p-4 rounded-3xl bg-slate-950/60 border border-slate-900 shadow-inner relative overflow-hidden">
-          <div className="absolute top-6 left-6 px-4 py-1.5 rounded-full bg-slate-950 border border-slate-850 text-[12px] font-mono font-black text-blue-400 select-none shadow-md z-10">
+          <div className="absolute top-6 left-6 px-4 py-1.5 rounded-full bg-slate-950 border border-slate-800 text-[12px] font-mono font-black text-blue-400 select-none shadow-md z-10">
             {formulaString}
           </div>
 
@@ -693,7 +693,7 @@ export const FunctionManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_schoo
         </div>
 
         <div className="xl:col-span-2 space-y-6">
-          <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-850 flex items-start gap-3">
+          <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800 flex items-start gap-3">
             <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
             <p className="text-[11px] leading-relaxed text-slate-400 font-medium">
               {t.info}
@@ -720,7 +720,7 @@ export const FunctionManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_schoo
                       <span className="font-bold text-slate-300">
                         {paramName} <span className="text-blue-400 font-mono">({param.symbol})</span>
                       </span>
-                      <span className="font-mono font-black text-blue-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-850 min-w-[50px] text-center">
+                      <span className="font-mono font-black text-blue-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800 min-w-[50px] text-center">
                         {val.toFixed(val % 1 === 0 ? 0 : 1)}
                       </span>
                     </div>
@@ -732,7 +732,7 @@ export const FunctionManipulator = ({ gradeLevel }: { gradeLevel?: 'middle_schoo
                       step={param.step}
                       value={val}
                       onChange={(e) => handleParamChange(param.symbol, parseFloat(e.target.value))}
-                      className="w-full h-1.5 rounded-full bg-slate-950 border border-slate-850 outline-none appearance-none cursor-ew-resize accent-blue-500"
+                      className="w-full h-1.5 rounded-full bg-slate-950 border border-slate-800 outline-none appearance-none cursor-ew-resize accent-blue-500"
                     />
 
                     <p className="text-[10px] leading-relaxed text-slate-500 italic">

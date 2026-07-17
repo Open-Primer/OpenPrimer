@@ -836,7 +836,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                 </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-slate-850 flex flex-col gap-4">
+              <div className="mt-8 pt-6 border-t border-slate-800 flex flex-col gap-4">
                 <div className="flex items-center justify-between text-[8px] font-black text-slate-600 uppercase tracking-widest">
                   <div>
                     <p>{tr("Trigger Parameter")}: <span className="text-violet-400">{tr(ach.threshold)}</span></p>
@@ -848,7 +848,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                   </div>
                 </div>
                 
-                <div className="h-px bg-slate-850" />
+                <div className="h-px bg-slate-800" />
                 
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{tr("Archival Level:")}</span>
@@ -874,7 +874,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                   type="button"
                   title={tr("Edit")}
                   onClick={() => handleOpenEditAchievement(ach)}
-                  className="w-full py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-500 hover:text-white transition-all text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5"
                 >
                   <Edit3 className="w-3.5 h-3.5" /> {tr("Edit Details")}
                 </button>
@@ -895,8 +895,8 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
               onClick={() => { setShowAddAchievement(false); setBadgeError(null); }}
               className="fixed inset-0 bg-slate-950/80 backdrop-blur-md cursor-pointer"
             />
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-4xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
-              <div className="p-8 border-b border-slate-850 flex items-center justify-between">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
+              <div className="p-8 border-b border-slate-800 flex items-center justify-between">
                 <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                   <Award className="w-6 h-6 text-violet-500" /> {tr("Create Achievement Badge")}
                 </h3>
@@ -922,7 +922,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                         placeholder={tr("Fast Learner")} 
                         value={newAch.name} 
                         onChange={(e) => setNewAch({...newAch, name: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-violet-500/50" 
+                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-violet-500/50" 
                       />
                     </div>
 
@@ -935,7 +935,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                         placeholder={tr("record time")} 
                         value={newAch.description} 
                         onChange={(e) => setNewAch({...newAch, description: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
+                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
                       />
                     </div>
 
@@ -948,7 +948,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                         placeholder={tr("3 days")} 
                         value={newAch.threshold} 
                         onChange={(e) => setNewAch({...newAch, threshold: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
+                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
                       />
                     </div>
 
@@ -961,7 +961,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                           type="date"
                           value={badgeStartDate}
                           onChange={(e) => setBadgeStartDate(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
                         />
                       </div>
                       <div className="space-y-2">
@@ -972,7 +972,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                           type="date"
                           value={badgeEndDate}
                           onChange={(e) => setBadgeEndDate(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
                         />
                       </div>
                     </div>
@@ -1006,7 +1006,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                                 key={idx}
                                 type="button"
                                 onClick={() => setBadgeIcon(url)}
-                                className={`p-3 bg-slate-950/60 border rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
+                                className={`p-3 bg-slate-950/60 border rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-800 hover:border-slate-800'}`}
                               >
                                 <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center relative">
                                   <img src={url} alt={`AI Option ${idx + 1}`} className="w-full h-full object-contain p-1" />
@@ -1038,7 +1038,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                               type="button"
                               disabled={creationGalleryPage === 1}
                               onClick={() => setCreationGalleryPage(p => Math.max(1, p - 1))}
-                              className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                               {tr("◀ Prev (gallery)")}
                             </button>
@@ -1049,7 +1049,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                               type="button"
                               disabled={creationGalleryPage === totalPages}
                               onClick={() => setCreationGalleryPage(p => Math.min(totalPages, p + 1))}
-                              className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                               {tr("Next (gallery) →")}
                             </button>
@@ -1109,7 +1109,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                                 key={img.id}
                                 type="button"
                                 onClick={() => setBadgeIcon(img.id)}
-                                className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 library-badge-btn ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
+                                className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 library-badge-btn ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-800 hover:border-slate-800'}`}
                               >
                                 <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
                                   <IconComp className="w-6 h-6" />
@@ -1145,8 +1145,8 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
               onClick={() => { setSelectedAchievement(null); setBadgeError(null); }}
               className="fixed inset-0 bg-slate-950/80 backdrop-blur-md cursor-pointer"
             />
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-4xl bg-slate-900 border border-slate-850 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
-              <div className="p-8 border-b border-slate-850 flex items-center justify-between">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-10 w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-[40px] shadow-2xl overflow-hidden my-8 cursor-default max-h-[90vh] flex flex-col">
+              <div className="p-8 border-b border-slate-800 flex items-center justify-between">
                 <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-3">
                   <Award className="w-6 h-6 text-violet-500" /> {tr("Edit Achievement Badge")}
                 </h3>
@@ -1170,7 +1170,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                         type="text" 
                         value={editName} 
                         onChange={(e) => setEditName(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-violet-500/50" 
+                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:outline-none focus:border-violet-500/50" 
                       />
                     </div>
 
@@ -1182,7 +1182,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                         type="text" 
                         value={editDesc} 
                         onChange={(e) => setEditDesc(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
+                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
                       />
                     </div>
 
@@ -1194,7 +1194,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                         type="text" 
                         value={editThreshold} 
                         onChange={(e) => setEditThreshold(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
+                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm focus:outline-none focus:border-violet-500/50 text-white" 
                       />
                     </div>
 
@@ -1205,7 +1205,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                           type="date"
                           value={editStartDate}
                           onChange={(e) => setEditStartDate(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
                         />
                       </div>
                       <div className="space-y-2">
@@ -1214,7 +1214,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                           type="date"
                           value={editEndDate}
                           onChange={(e) => setEditEndDate(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-850 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs focus:outline-none focus:border-violet-500/50 text-white"
                         />
                       </div>
                     </div>
@@ -1248,7 +1248,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                                 key={idx}
                                 type="button"
                                 onClick={() => setEditIcon(url)}
-                                className={`p-3 bg-slate-950/60 border rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
+                                className={`p-3 bg-slate-950/60 border rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all hover:scale-105 ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-800 hover:border-slate-800'}`}
                               >
                                 <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center relative">
                                   <img src={url} alt={`AI Option ${idx + 1}`} className="w-full h-full object-contain p-1" />
@@ -1282,7 +1282,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                               type="button"
                               disabled={editionGalleryPage === 1}
                               onClick={() => setEditionGalleryPage(p => Math.max(1, p - 1))}
-                              className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                               {tr("◀ Prev (gallery)")}
                             </button>
@@ -1293,7 +1293,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                               type="button"
                               disabled={editionGalleryPage === totalPages}
                               onClick={() => setEditionGalleryPage(p => Math.min(totalPages, p + 1))}
-                              className="px-2.5 py-1 bg-slate-950 border border-slate-850 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                               {tr("Next (gallery) →")}
                             </button>
@@ -1355,7 +1355,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                                 key={img.id}
                                 type="button"
                                 onClick={() => setEditIcon(img.id)}
-                                className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 library-badge-btn ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-850 hover:border-slate-800'}`}
+                                className={`p-4 bg-slate-950/60 border rounded-3xl flex flex-col items-center gap-3 transition-all hover:scale-105 library-badge-btn ${isSelected ? 'border-violet-500 shadow-lg shadow-violet-500/10 bg-slate-900' : 'border-slate-800 hover:border-slate-800'}`}
                               >
                                 <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${img.gradient} text-white flex items-center justify-center shadow-md`}>
                                   <IconComp className="w-6 h-6" />
@@ -1392,7 +1392,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
               className="fixed inset-0 bg-slate-950/90 backdrop-blur-md cursor-pointer"
             />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-10 w-full max-w-md bg-slate-900 border border-red-500/30 rounded-[40px] shadow-2xl overflow-hidden cursor-default">
-              <div className="p-8 border-b border-slate-850 bg-red-955/20 flex items-center gap-3">
+              <div className="p-8 border-b border-slate-800 bg-red-955/20 flex items-center gap-3">
                 <ShieldAlert className="w-6 h-6 text-red-500 animate-pulse" />
                 <h3 className="text-lg font-black text-red-400 uppercase tracking-widest">
                   {pStrings.purge_badge_title}
@@ -1407,7 +1407,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
                   <button 
                     type="button"
                     onClick={() => setPurgeTarget(null)}
-                    className="flex-1 py-4 border border-slate-850 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900"
+                    className="flex-1 py-4 border border-slate-800 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-slate-900"
                   >
                     {pStrings.purge_badge_cancel_btn}
                   </button>

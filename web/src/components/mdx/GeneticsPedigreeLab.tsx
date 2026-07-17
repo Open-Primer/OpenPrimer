@@ -178,7 +178,7 @@ export const GeneticsPedigreeLab = ({
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850/80 pb-5 mb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-5 mb-5">
         <div>
           <h4 className="text-sm font-black text-slate-100 uppercase tracking-widest flex items-center gap-2">
             <Dna className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -198,7 +198,7 @@ export const GeneticsPedigreeLab = ({
               className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider border select-none cursor-pointer transition-all ${
                 view === v
                   ? 'bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-500/20'
-                  : 'bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200'
+                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
             >
               {v === 'punnett' ? t('⬛ Punnett Square') : t('🌳 Pedigree Tree')}
@@ -300,7 +300,7 @@ export const GeneticsPedigreeLab = ({
             )}
 
             {/* Trait Legend */}
-            <div className="p-3 rounded-xl border border-slate-850 bg-slate-900/20 space-y-1.5">
+            <div className="p-3 rounded-xl border border-slate-800 bg-slate-900/20 space-y-1.5">
               <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">{t("Trait Legend")}</span>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-indigo-500" />
@@ -315,7 +315,7 @@ export const GeneticsPedigreeLab = ({
 
           {/* Punnett Square Grid */}
           <div className="lg:col-span-8 space-y-4">
-            <div className="p-4 rounded-2xl border border-slate-850 bg-slate-950/40">
+            <div className="p-4 rounded-2xl border border-slate-800 bg-slate-950/40">
               {/* Column headers */}
               <div className="grid grid-cols-3 mb-1">
                 <div />
@@ -348,7 +348,7 @@ export const GeneticsPedigreeLab = ({
             </div>
 
             {/* Phenotype ratio summary */}
-            <div className="p-4 rounded-2xl border border-slate-850 bg-slate-900/20 space-y-2">
+            <div className="p-4 rounded-2xl border border-slate-800 bg-slate-900/20 space-y-2">
               <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">{t("Phenotype Distribution (offspring probability)")}</span>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(phenotypeCounts).map(([label, count]) => {
@@ -376,7 +376,7 @@ export const GeneticsPedigreeLab = ({
           <p className="text-[11px] text-slate-400 font-semibold">{t("Pedigree chart showing inheritance across three generations based on the selected cross above.")}</p>
 
           {/* SVG Pedigree Tree */}
-          <div className="p-4 bg-slate-950/60 border border-slate-850 rounded-2xl overflow-x-auto">
+          <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-2xl overflow-x-auto">
             <svg viewBox="0 0 600 280" className="w-full max-w-[600px] mx-auto h-auto">
               {/* Generation labels */}
               {['I', 'II', 'III'].map((gen, gi) => (
@@ -444,7 +444,7 @@ export const GeneticsPedigreeLab = ({
             </svg>
           </div>
 
-          <div className="p-4 rounded-2xl border border-slate-850 bg-slate-900/20 text-[11px] text-slate-400 font-semibold leading-relaxed">
+          <div className="p-4 rounded-2xl border border-slate-800 bg-slate-900/20 text-[11px] text-slate-400 font-semibold leading-relaxed">
             <span className="text-slate-200 font-black">{t("Reading pedigrees: ")}</span>
             {t("Squares (□) represent males; circles (○) represent females. Filled shapes indicate the expressed phenotype. Half-filled circles denote heterozygous carriers in sex-linked traits.")}
           </div>
