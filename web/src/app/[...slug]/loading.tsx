@@ -2,98 +2,78 @@ import React from 'react';
 
 export default function Loading() {
   return (
-    <div className="min-h-screen skeleton-bg-page flex flex-col">
-      {/* Skeleton TopNav */}
-      <div className="fixed top-0 left-0 right-0 h-16 border-b skeleton-border skeleton-bg-page px-6 flex items-center justify-between z-50">
-        <div className="flex items-center gap-3">
-          {/* Menu button placeholder */}
-          <div className="w-8 h-8 rounded-lg skeleton-block" />
-          {/* Logo placeholder */}
-          <div className="w-32 h-6 rounded skeleton-block" />
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="w-24 h-8 rounded-lg skeleton-block" />
-          <div className="w-8 h-8 rounded-full skeleton-block" />
-        </div>
+    <div className="min-h-screen skeleton-bg-page flex flex-col items-center justify-center relative select-none">
+      {/* Top glowing loading line */}
+      <div 
+        className="fixed top-0 left-0 right-0 h-[3px] z-50 overflow-hidden"
+        style={{ background: 'var(--skeleton-bg, rgba(0, 0, 0, 0.05))' }}
+      >
+        <div 
+          className="h-full rounded-r"
+          style={{
+            width: '100%',
+            background: 'linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6, #3b82f6)',
+            backgroundSize: '200% 100%',
+            animation: 'top-bar-shimmer 2s infinite linear',
+            transformOrigin: 'left'
+          }}
+        />
       </div>
 
-      <div className="flex pt-16 h-[calc(100vh-64px)] overflow-hidden">
-        {/* Skeleton Sidebar */}
-        <div className="w-64 border-r skeleton-border skeleton-bg-page p-6 hidden md:flex flex-col gap-6 select-none">
-          <div className="flex items-center gap-2 pb-4 border-b skeleton-border">
-            <div className="w-6 h-6 rounded-md skeleton-block" />
-            <div className="w-24 h-4 rounded skeleton-block" />
-          </div>
-          <div className="flex flex-col gap-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex flex-col gap-2">
-                <div className="w-16 h-3 rounded skeleton-block" />
-                <div className="flex items-center gap-2 pl-3">
-                  <div className="w-1 h-6 skeleton-block opacity-60 rounded" />
-                  <div className="w-full h-4 rounded skeleton-block opacity-40" />
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Styled inline keyframes to avoid any external CSS dependency */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes top-bar-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        @keyframes subtle-pulse {
+          0%, 100% { opacity: 0.6; transform: scale(0.98); }
+          50% { opacity: 1; transform: scale(1.02); }
+        }
+        @keyframes spin-loader {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}} />
+
+      {/* Centered Premium Brand Loader */}
+      <div className="flex flex-col items-center gap-6" style={{ animation: 'subtle-pulse 2s infinite ease-in-out' }}>
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          {/* Outer glowing pulsing circle */}
+          <div 
+            className="absolute inset-0 rounded-full border border-blue-500/20"
+            style={{
+              boxShadow: '0 0 20px rgba(59, 130, 246, 0.1)',
+            }}
+          />
+          {/* Animated Spinner Track */}
+          <div 
+            className="absolute inset-0 rounded-full border-[2px] border-transparent"
+            style={{
+              borderTopColor: '#3b82f6',
+              borderRightColor: '#6366f1',
+              animation: 'spin-loader 1s infinite linear'
+            }}
+          />
+          {/* Inner Brand Mark / Dot */}
+          <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
         </div>
-
-        {/* Skeleton Main Pane */}
-        <div className="flex-1 h-full overflow-y-auto p-6 md:p-12 lg:p-16 max-w-4xl mx-auto w-full">
-          <div className="flex flex-col gap-8">
-            {/* Breadcrumbs */}
-            <div className="flex items-center gap-2">
-              <div className="w-16 h-3 rounded skeleton-block" />
-              <div className="w-2 h-2 rounded-full skeleton-block" />
-              <div className="w-24 h-3 rounded skeleton-block" />
-              <div className="w-2 h-2 rounded-full skeleton-block" />
-              <div className="w-32 h-3 rounded skeleton-block opacity-60" />
-            </div>
-
-            {/* Title Section */}
-            <div className="flex flex-col gap-4">
-              <div className="w-16 h-5 rounded skeleton-block" />
-              <div className="w-3/4 h-12 rounded skeleton-gradient" />
-              <div className="w-16 h-1 skeleton-block opacity-50 rounded-full" />
-            </div>
-
-            {/* Prose Content Skeleton */}
-            <div className="flex flex-col gap-6 mt-4">
-              <div className="space-y-3">
-                <div className="w-full h-4 rounded skeleton-block" />
-                <div className="w-11/12 h-4 rounded skeleton-block" />
-                <div className="w-10/12 h-4 rounded skeleton-block" />
-              </div>
-
-              {/* Blockquote Skeleton */}
-              <div className="border-l-4 skeleton-border skeleton-block opacity-25 py-4 px-8 rounded-r-3xl my-6 flex flex-col gap-2">
-                <div className="w-full h-4 rounded skeleton-block" />
-                <div className="w-9/12 h-4 rounded skeleton-block" />
-              </div>
-
-              <div className="space-y-3">
-                <div className="w-full h-4 rounded skeleton-block" />
-                <div className="w-full h-4 rounded skeleton-block" />
-                <div className="w-8/12 h-4 rounded skeleton-block" />
-              </div>
-
-              {/* Interactive block placeholder */}
-              <div className="h-48 rounded-2xl border skeleton-border skeleton-block opacity-50 p-6 flex flex-col justify-between my-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl skeleton-block" />
-                  <div className="flex flex-col gap-2">
-                    <div className="w-32 h-4 rounded skeleton-block" />
-                    <div className="w-24 h-3 rounded skeleton-block opacity-60" />
-                  </div>
-                </div>
-                <div className="w-24 h-8 rounded-lg skeleton-block self-end" />
-              </div>
-
-              <div className="space-y-3">
-                <div className="w-full h-4 rounded skeleton-block" />
-                <div className="w-10/12 h-4 rounded skeleton-block" />
-              </div>
-            </div>
-          </div>
+        
+        {/* Subtle Text */}
+        <div className="flex flex-col items-center gap-1.5">
+          <span 
+            className="text-[10px] font-black uppercase tracking-[0.25em] opacity-80"
+            style={{
+              background: 'linear-gradient(135deg, var(--foreground), #6366f1)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            OpenPrimer
+          </span>
+          <span className="text-[10px] font-medium tracking-wider text-slate-455 dark:text-slate-500">
+            Préparation du cours...
+          </span>
         </div>
       </div>
     </div>
