@@ -413,12 +413,32 @@ select {
 /* Restore crisp white text inside primary/success/danger buttons and user chat bubbles */
 .theme-paper .bg-blue-600,
 .theme-paper .bg-blue-600 *,
+.theme-paper .bg-blue-500,
+.theme-paper .bg-blue-500 *,
+.theme-paper .bg-violet-600,
+.theme-paper .bg-violet-600 *,
+.theme-paper .bg-violet-500,
+.theme-paper .bg-violet-500 *,
 .theme-paper .bg-emerald-600,
 .theme-paper .bg-emerald-600 *,
+.theme-paper .bg-emerald-500,
+.theme-paper .bg-emerald-500 *,
+.theme-paper .bg-amber-600,
+.theme-paper .bg-amber-600 *,
+.theme-paper .bg-amber-500,
+.theme-paper .bg-amber-500 *,
+.theme-paper .bg-rose-650,
+.theme-paper .bg-rose-650 *,
+.theme-paper .bg-rose-600,
+.theme-paper .bg-rose-600 *,
+.theme-paper .bg-rose-500,
+.theme-paper .bg-rose-500 *,
 .theme-paper .bg-red-650,
 .theme-paper .bg-red-650 *,
 .theme-paper .bg-red-600,
-.theme-paper .bg-red-600 * {
+.theme-paper .bg-red-600 *,
+.theme-paper .bg-red-500,
+.theme-paper .bg-red-500 * {
   color: #ffffff !important;
 }
 
@@ -1657,11 +1677,29 @@ body:not(.theme-paper):not(.theme-focus) footer {
 
 /* --- Paper Theme Interactive Widgets Compatibility --- */
 .theme-paper button.bg-violet-600,
+.theme-paper button.bg-violet-500,
 .theme-paper button.bg-emerald-600,
-.theme-paper button.bg-blue-600,
-.theme-paper button.bg-rose-600,
 .theme-paper button.bg-emerald-500,
-.theme-paper button.bg-violet-500 {
+.theme-paper button.bg-blue-600,
+.theme-paper button.bg-blue-500,
+.theme-paper button.bg-amber-600,
+.theme-paper button.bg-amber-500,
+.theme-paper button.bg-rose-600,
+.theme-paper button.bg-rose-500,
+.theme-paper button.bg-red-600,
+.theme-paper button.bg-red-500,
+.theme-paper button.bg-violet-600:hover,
+.theme-paper button.bg-violet-500:hover,
+.theme-paper button.bg-emerald-600:hover,
+.theme-paper button.bg-emerald-500:hover,
+.theme-paper button.bg-blue-600:hover,
+.theme-paper button.bg-blue-500:hover,
+.theme-paper button.bg-amber-600:hover,
+.theme-paper button.bg-amber-500:hover,
+.theme-paper button.bg-rose-600:hover,
+.theme-paper button.bg-rose-500:hover,
+.theme-paper button.bg-red-600:hover,
+.theme-paper button.bg-red-500:hover {
   color: #ffffff !important;
 }
 

@@ -37,12 +37,15 @@ async function run() {
   console.log("ID:", task.id);
   console.log("Name:", task.name);
   console.log("Status:", task.status);
-  console.log("Created At:", task.created_at);
-  console.log("Description:", task.description);
   console.log("Logs count:", task.logs ? task.logs.length : 0);
   if (task.logs) {
-    console.log("Full Logs:");
-    task.logs.forEach((log: string) => console.log(log));
+    console.log("Filtered Logs:");
+    task.logs.forEach((log: string, idx: number) => {
+      const lower = log.toLowerCase();
+      if (lower.includes('finished lesson') || lower.includes('throttling') || lower.includes('429') || lower.includes('timed out') || lower.includes('failed') || lower.includes('attempt')) {
+        console.log(`${idx}: ${log}`);
+      }
+    });
   }
 }
 

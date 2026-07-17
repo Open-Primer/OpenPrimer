@@ -431,9 +431,25 @@ CRITICAL RULES:
     const errStack = error.stack || errMsg;
     console.error(`[TASK RUNNER ERROR] Task ${nextTask.id} failed:`, errMsg);
 
+    const isQuotaError = errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('429') || errMsg.toLowerCase().includes('resource_exhausted');
+    const isNetworkError = errMsg.toLowerCase().includes('fetch') || errMsg.toLowerCase().includes('timeout') || errMsg.toLowerCase().includes('unauthorized') || errMsg.toLowerCase().includes('401') || errMsg.toLowerCase().includes('econnreset') || errMsg.toLowerCase().includes('econnrefused') || errMsg.toLowerCase().includes('socket') || errMsg.toLowerCase().includes('network');
+    const isTruncationError = errMsg.toLowerCase().includes('max_tokens') || errMsg.toLowerCase().includes('truncated') || errMsg.toLowerCase().includes('unterminated string') || errMsg.toLowerCase().includes('output limit');
+    const isParsingValidationError = errMsg.toLowerCase().includes('json parse') || errMsg.toLowerCase().includes('schema validation') || errMsg.toLowerCase().includes('failed to parse') || errMsg.toLowerCase().includes('does not match strict');
+
+    let errorTypeLabel = 'Content Generation Error';
+    if (isQuotaError) {
+      errorTypeLabel = 'Transient Quota Exhaustion';
+    } else if (isNetworkError) {
+      errorTypeLabel = 'Transient Network/Auth Error';
+    } else if (isTruncationError) {
+      errorTypeLabel = 'AI Generation Token Truncation';
+    } else if (isParsingValidationError) {
+      errorTypeLabel = 'Widget Block Parsing/Validation Failure';
+    }
+
     let newLogs = [
       ...(nextTask.logs || []),
-      `[${new Date().toISOString()}] ❌ Attempt ${currentAttempt}/${maxAttempts} FAILED — ${errMsg}`,
+      `[${new Date().toISOString()}] ❌ Attempt ${currentAttempt}/${maxAttempts} FAILED [${errorTypeLabel}] — ${errMsg}`,
       `Stack: ${errStack}`
     ];
 
@@ -446,7 +462,7 @@ CRITICAL RULES:
       if (latestTask?.logs) {
         newLogs = [
           ...latestTask.logs,
-          `[${new Date().toISOString()}] ❌ Attempt ${currentAttempt}/${maxAttempts} FAILED — ${errMsg}`,
+          `[${new Date().toISOString()}] ❌ Attempt ${currentAttempt}/${maxAttempts} FAILED [${errorTypeLabel}] — ${errMsg}`,
           `Stack: ${errStack}`
         ];
       }

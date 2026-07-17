@@ -26,15 +26,19 @@ const REGIONS_POOL = configuredRegionsStr
       'europe-west1',
       'us-east4',
       'us-west1',
-      'europe-west3', // Frankfurt
-      'europe-west4', // Netherlands
-      'us-east1',     // South Carolina
-      'asia-northeast1' // Tokyo
+      'europe-west3',          // Frankfurt
+      'europe-west4',          // Netherlands
+      'us-east1',              // South Carolina
+      'asia-northeast1',       // Tokyo
+      'us-south1',             // Dallas (additional US capacity)
+      'northamerica-northeast1', // Montreal
+      'europe-west2',          // London
+      'europe-southwest1',     // Madrid
     ];
 
 // Plafonds maximums configurables ou valeurs par défaut conservatrices
-const MAX_RPM_CEILING = Number(process.env.VERTEX_MAX_RPM || 60);
-const MAX_TPM_CEILING = Number(process.env.VERTEX_MAX_TPM || 1000000);
+const MAX_RPM_CEILING = Number(process.env.VERTEX_MAX_RPM || 80);
+const MAX_TPM_CEILING = Number(process.env.VERTEX_MAX_TPM || 2000000);
 
 export interface ServiceAccountCredentials {
   type: string;
@@ -50,6 +54,7 @@ export interface VertexAccount {
   credentials: ServiceAccountCredentials;
   cachedToken: string | null;
   tokenExpiry: number;
+  tokenPromise?: Promise<string | null>;
 }
 
 export interface ProjectRegionState {
@@ -621,32 +626,43 @@ export async function getAccessTokenForAccount(account: VertexAccount): Promise<
     return account.cachedToken;
   }
 
-  try {
-    const jwt = await createJWT(account.credentials);
-    const res = await fetch(account.credentials.token_uri || 'https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-        assertion: jwt
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.text();
-      console.error(`[VERTEX-POOL] Token exchange failed for project "${account.projectId}":`, err);
-      return null;
-    }
-
-    const data = await res.json();
-    account.cachedToken = data.access_token;
-    account.tokenExpiry = Date.now() + 50 * 60 * 1000; // Cache for 50 minutes
-    console.log(`[VERTEX-POOL] ✅ OAuth2 token acquired successfully for project "${account.projectId}".`);
-    return account.cachedToken;
-  } catch (e) {
-    console.error(`[VERTEX-POOL] Exception during token acquisition for project "${account.projectId}":`, e);
-    return null;
+  if (account.tokenPromise) {
+    return account.tokenPromise;
   }
+
+  account.tokenPromise = (async () => {
+    try {
+      const jwt = await createJWT(account.credentials);
+      const res = await fetch(account.credentials.token_uri || 'https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+          assertion: jwt
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        console.error(`[VERTEX-POOL] Token exchange failed for project "${account.projectId}":`, err);
+        return null;
+      }
+
+      const data = await res.json();
+      account.cachedToken = data.access_token;
+      const expiresIn = data.expires_in || 3600;
+      account.tokenExpiry = Date.now() + (expiresIn - 60) * 1000;
+      console.log(`[VERTEX-POOL] ✅ OAuth2 token acquired successfully for project "${account.projectId}".`);
+      return account.cachedToken;
+    } catch (e) {
+      console.error(`[VERTEX-POOL] Exception during token acquisition for project "${account.projectId}":`, e);
+      return null;
+    } finally {
+      account.tokenPromise = undefined;
+    }
+  })();
+
+  return account.tokenPromise;
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -928,9 +944,11 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
           lastError = `[VERTEX-POOL] Model "${model}" failed on project "${currentProjectId}" in region "${currentLocation}" (429 RESOURCE_EXHAUSTED). ${errText.slice(0, 300)}`;
           
           if (attempt < maxRetries) {
-            const jitterDelay = Math.floor(Math.random() * 2000);
-            console.warn(`${lastError}. Failing over immediately. Jitter delay: ${jitterDelay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, jitterDelay));
+            // True exponential backoff with jitter
+            // Base delay of 1.5s, scaling up by factor of 2, capped at 30s. Adding up to 1s random jitter.
+            const backoffDelay = Math.min(30000, 1500 * Math.pow(2, attempt - 1)) + Math.floor(Math.random() * 1000);
+            console.warn(`${lastError}. Implementing exponential backoff of ${backoffDelay}ms before retry ${attempt + 1}/${maxRetries}...`);
+            await new Promise(resolve => setTimeout(resolve, backoffDelay));
             continue;
           }
         } else if (response.status === 401) {
@@ -938,6 +956,7 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
           console.warn(`[VERTEX-POOL] ⚠️ Received 401 Unauthorized on project "${currentProjectId}". Invalidating cached token...`);
           account.cachedToken = null;
           account.tokenExpiry = 0;
+          account.tokenPromise = undefined;
           removeRequestFromEndpoint(endpoint);
           
           const errText = await response.text();

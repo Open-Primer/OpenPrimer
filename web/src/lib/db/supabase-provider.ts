@@ -305,7 +305,15 @@ export const supabaseDatabaseProvider: DatabaseService = {
         .eq('lang', lang.toLowerCase())
         .single();
       if (error) throw error;
-      return { data, error: null };
+      const cleanSlug = (data.lesson_slug || '').toLowerCase();
+      const isSummative = cleanSlug === 'evaluation-terminale' || cleanSlug === 'final-evaluation' || cleanSlug === 'evaluation-finale';
+      return {
+        data: {
+          ...data,
+          evaluation_type: isSummative ? 'summative' : 'formative'
+        },
+        error: null
+      };
     } catch (e) {
       handleDatabaseError(e);
       return { data: null, error: e as any };
@@ -332,6 +340,9 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }) => {
     try {
+      if (lesson.title && lesson.title.length > 60) {
+        throw new Error(`Lesson title cannot exceed 60 characters (provided title has ${lesson.title.length} characters).`);
+      }
       let cleanedContent = (lesson.content || '').trim();
       if (cleanedContent.startsWith('```') && cleanedContent.endsWith('```')) {
         cleanedContent = cleanedContent.replace(/^```[a-zA-Z0-9_-]*\r?\n/, '');

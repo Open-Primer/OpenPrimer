@@ -3307,7 +3307,7 @@ export function healFrenchElisions(text: string): string {
   // 1. Pre-cleanup: clean up any legacy/improper quotes or apostrophes surrounding the article or word.
   // For example, "' la' explosion" or "'la' explosion" or "le 'explosion" -> "le explosion" / "la explosion"
   processed = processed.replace(
-    /['"«“]?\s*\b(le|la|de|que|je|ne|se|te|me|ce|jusque|lorsque|puisque|quoique)\b\s*['"»”]?\s+['"«“]?\s*([aeiouyéèêëàâîïôûùœæhAEIOUYÉÈÊËÀÂÎÏÔÛÙŒÆH][a-zA-ZÀ-ÿ]*)\b/gi,
+    /\b(le|la|de|que|je|ne|se|te|me|ce|jusque|lorsque|puisque|quoique)\b\s*['"»”]?\s+['"«“]?\s*([aeiouyéèêëàâîïôûùœæhAEIOUYÉÈÊËÀÂÎÏÔÛÙŒÆH][a-zA-ZÀ-ÿ]*)\b/gi,
     (match, article, word) => {
       return article + ' ' + word;
     }
@@ -3468,25 +3468,86 @@ export function healLinguisticContent(text: string, lang: string): string {
 
 function healFrenchTypography(text: string): string {
   // 1. Extract all JSX tags to protect them from conversion
+  // We use a custom parser to correctly handle '>' characters inside tag attribute values (like HTML inside captions).
   const jsxTags: string[] = [];
-  const tagRegex = /<(\/?)([A-Za-z][A-Za-z0-9._-]*)\b((?:[^'">`«»]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|«(?:[^»\\]|\\.)*»)*?)(\/?)>/g;
   
-  const processed = text.replace(tagRegex, (match, closeSlash, tagName, attributesPart, selfCloseSlash) => {
-    let sanitizedAttributes = attributesPart || '';
-    const attrValueRegex = /(\b[A-Za-z0-9_.-]+\s*=\s*)(?:"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'|«([^»\\]*(?:\\.[^»\\]*)*)»|“([^”\\]*(?:\\.[^”\\]*)*)”)/g;
-    sanitizedAttributes = sanitizedAttributes.replace(attrValueRegex, (attrMatch: string, prefix: string, doubleVal: string | undefined, singleVal: string | undefined, guillemetVal: string | undefined, smartVal: string | undefined) => {
-      const val = doubleVal !== undefined ? doubleVal :
-                  singleVal !== undefined ? singleVal :
-                  guillemetVal !== undefined ? guillemetVal :
-                  smartVal !== undefined ? smartVal : '';
-      const cleanVal = sanitizeSmartQuotesAndSpaces(val);
-      const quote = singleVal !== undefined ? "'" : '"';
-      return `${prefix}${quote}${cleanVal}${quote}`;
-    });
-    const sanitizedTag = `<${closeSlash || ''}${tagName}${sanitizedAttributes}${selfCloseSlash || ''}>`;
-    jsxTags.push(sanitizedTag);
-    return `___JSX_TAG_PLACEHOLDER_${jsxTags.length - 1}___`;
-  });
+  let processed = '';
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] === '<') {
+      const nextChar = text[i + 1] || '';
+      if (nextChar === '/' || /[A-Za-z]/.test(nextChar)) {
+        let tagContent = '<';
+        let j = i + 1;
+        let inDoubleQuotes = false;
+        let inSingleQuotes = false;
+        let braceNesting = 0;
+        let foundClosing = false;
+        
+        while (j < text.length) {
+          const c = text[j];
+          tagContent += c;
+          
+          if (c === '\\') {
+            if (j + 1 < text.length) {
+              tagContent += text[j + 1];
+              j += 2;
+              continue;
+            }
+          }
+          
+          if (inDoubleQuotes) {
+            if (c === '"') inDoubleQuotes = false;
+          } else if (inSingleQuotes) {
+            if (c === "'") inSingleQuotes = false;
+          } else {
+            if (c === '"') {
+              inDoubleQuotes = true;
+            } else if (c === "'") {
+              inSingleQuotes = true;
+            } else if (c === '{') {
+              braceNesting++;
+            } else if (c === '}') {
+              braceNesting = Math.max(0, braceNesting - 1);
+            } else if (c === '>' && braceNesting === 0) {
+              foundClosing = true;
+              j++;
+              break;
+            }
+          }
+          j++;
+        }
+        
+        if (foundClosing) {
+          const tagMatch = tagContent.match(/^<(\/?)([A-Za-z][A-Za-z0-9._-]*)\b([\s\S]*?)(\/?)>$/);
+          if (tagMatch) {
+            const closeSlash = tagMatch[1] || '';
+            const tagName = tagMatch[2];
+            let attributesPart = tagMatch[3] || '';
+            const selfCloseSlash = tagMatch[4] || '';
+            
+            const attrValueRegex = /(\b[A-Za-z0-9_.-]+\s*=\s*)(?:"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'|«([^»\\]*(?:\\.[^»\\]*)*)»|“([^”\\]*(?:\\.[^”\\]*)*)”)/g;
+            attributesPart = attributesPart.replace(attrValueRegex, (attrMatch: string, prefix: string, doubleVal: string | undefined, singleVal: string | undefined, guillemetVal: string | undefined, smartVal: string | undefined) => {
+              const val = doubleVal !== undefined ? doubleVal :
+                          singleVal !== undefined ? singleVal :
+                          guillemetVal !== undefined ? guillemetVal :
+                          smartVal !== undefined ? smartVal : '';
+              const cleanVal = sanitizeSmartQuotesAndSpaces(val);
+              return `${prefix}"${cleanVal}"`;
+            });
+            
+            const sanitizedTag = `<${closeSlash}${tagName}${attributesPart}${selfCloseSlash}>`;
+            jsxTags.push(sanitizedTag);
+            processed += `___JSX_TAG_PLACEHOLDER_${jsxTags.length - 1}___`;
+            i = j;
+            continue;
+          }
+        }
+      }
+    }
+    processed += text[i];
+    i++;
+  }
 
   // 2. Process the remaining content character-by-character for typographical healing
   let result = '';
@@ -3497,15 +3558,15 @@ function healFrenchTypography(text: string): string {
   
   let quoteCount = 0; // To alternate between « and »
   
-  let i = 0;
-  while (i < processed.length) {
-    const char = processed[i];
+  let i2 = 0;
+  while (i2 < processed.length) {
+    const char = processed[i2];
     
     // Handle code blocks
-    if (processed.substring(i, i + 3) === '```') {
+    if (processed.substring(i2, i2 + 3) === '```') {
       inCodeBlock = !inCodeBlock;
       result += '```';
-      i += 3;
+      i2 += 3;
       continue;
     }
     if (inCodeBlock) {
@@ -3528,10 +3589,10 @@ function healFrenchTypography(text: string): string {
     }
     
     // Handle math blocks
-    if (processed.substring(i, i + 2) === '$$') {
+    if (processed.substring(i2, i2 + 2) === '$$') {
       inMathBlock = !inMathBlock;
       result += '$$';
-      i += 2;
+      i2 += 2;
       continue;
     }
     if (inMathBlock) {
@@ -3564,7 +3625,7 @@ function healFrenchTypography(text: string): string {
     }
     
     result += char;
-    i++;
+    i2++;
   }
   
   // 3. Restore JSX tags in their exact original condition

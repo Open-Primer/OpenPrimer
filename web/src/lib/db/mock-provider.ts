@@ -113,14 +113,15 @@ export const mockDatabaseProvider: DatabaseService = {
     return { data: null, error: null };
   },
   getLesson: async (courseSlug: string, lessonSlug: string, lang: string) => {
-    if ((courseSlug.toLowerCase() === 'droit_des_entreprises' || courseSlug.toLowerCase() === 'difficultes-procedures-collectives') && lessonSlug.toLowerCase() === 'difficultes-procedures-collectives') {
-      return {
-        data: {
-          course_slug: courseSlug,
-          lesson_slug: lessonSlug,
-          lang: lang.toLowerCase(),
-          title: "Les Difficultés et Procédures Collectives",
-          content: `---
+    const fetchLesson = async () => {
+      if ((courseSlug.toLowerCase() === 'droit_des_entreprises' || courseSlug.toLowerCase() === 'difficultes-procedures-collectives') && lessonSlug.toLowerCase() === 'difficultes-procedures-collectives') {
+        return {
+          data: {
+            course_slug: courseSlug,
+            lesson_slug: lessonSlug,
+            lang: lang.toLowerCase(),
+            title: "Les Difficultés et Procédures Collectives",
+            content: `---
 title: "Les Difficultés et Procédures Collectives"
 subject: "Droit des Entreprises"
 level: "L1"
@@ -135,18 +136,18 @@ order: 10
   subject="Droit des Entreprises" 
 />
 `
-        },
-        error: null
-      };
-    }
-    if (courseSlug.toLowerCase() === 'classical_mechanics' && lessonSlug.toLowerCase() === 'newtons_laws_of_motion') {
-      return {
-        data: {
-          course_slug: courseSlug,
-          lesson_slug: lessonSlug,
-          lang: lang.toLowerCase(),
-          title: "Newton's Laws of Motion",
-          content: `---
+          },
+          error: null
+        };
+      }
+      if (courseSlug.toLowerCase() === 'classical_mechanics' && lessonSlug.toLowerCase() === 'newtons_laws_of_motion') {
+        return {
+          data: {
+            course_slug: courseSlug,
+            lesson_slug: lessonSlug,
+            lang: lang.toLowerCase(),
+            title: "Newton's Laws of Motion",
+            content: `---
 title: "Newton's Laws of Motion"
 subject: "Physics"
 level: "L1"
@@ -158,18 +159,18 @@ This lesson covers:
 - Second law: F = ma
 - Third law: Action and reaction
 `
-        },
-        error: null
-      };
-    }
-    if (courseSlug.toLowerCase() === 'test_widgets' && lessonSlug.toLowerCase() === 'evaluations_quiz') {
-      return {
-        data: {
-          course_slug: courseSlug,
-          lesson_slug: lessonSlug,
-          lang: lang.toLowerCase(),
-          title: "4. Évaluations, Quiz & Feedback Interactifs",
-          content: `---
+          },
+          error: null
+        };
+      }
+      if (courseSlug.toLowerCase() === 'test_widgets' && lessonSlug.toLowerCase() === 'evaluations_quiz') {
+        return {
+          data: {
+            course_slug: courseSlug,
+            lesson_slug: lessonSlug,
+            lang: lang.toLowerCase(),
+            title: "4. Évaluations, Quiz & Feedback Interactifs",
+            content: `---
 title: "4. Évaluations, Quiz & Feedback Interactifs"
 subject: "Computer_Science"
 level: "L1"
@@ -184,18 +185,18 @@ order: 4
   subject="Réseaux Informatiques" 
 />
 `
-        },
-        error: null
-      };
-    }
-    if (courseSlug.toLowerCase() === 'geographie_physique_et_climatologie' && lessonSlug.toLowerCase() === 'evaluation-terminale') {
-      return {
-        data: {
-          course_slug: courseSlug,
-          lesson_slug: lessonSlug,
-          lang: lang.toLowerCase(),
-          title: "Évaluation Terminale",
-          content: `---
+          },
+          error: null
+        };
+      }
+      if (courseSlug.toLowerCase() === 'geographie_physique_et_climatologie' && lessonSlug.toLowerCase() === 'evaluation-terminale') {
+        return {
+          data: {
+            course_slug: courseSlug,
+            lesson_slug: lessonSlug,
+            lang: lang.toLowerCase(),
+            title: "Évaluation Terminale",
+            content: `---
 title: "Évaluation Terminale"
 subject: "Géographie physique et climatologie"
 level: "L3"
@@ -219,80 +220,92 @@ summative: true
 </Question>
 </Quiz>
 `
-        },
-        error: null
+          },
+          error: null
+        };
+      }
+      if (typeof window === 'undefined') {
+        try {
+          const fs = require('fs');
+          const path = require('path');
+          
+          let contentDir = path.join(process.cwd(), 'content');
+          if (!fs.existsSync(contentDir)) {
+            contentDir = path.join(process.cwd(), 'web/content');
+          }
+          
+          if (fs.existsSync(contentDir)) {
+            const findCourseFolder = (dir: string): string | null => {
+              const items = fs.readdirSync(dir, { withFileTypes: true });
+              for (const item of items) {
+                const fullPath = path.join(dir, item.name);
+                if (item.isDirectory()) {
+                  if (item.name.toLowerCase() === courseSlug.toLowerCase()) {
+                    return fullPath;
+                  }
+                  const sub = findCourseFolder(fullPath);
+                  if (sub) return sub;
+                }
+              }
+              return null;
+            };
+            
+            const courseDir = findCourseFolder(contentDir);
+            if (courseDir) {
+              const fileName = `${lessonSlug}.${lang.toLowerCase()}.mdx`;
+              const filePath = path.join(courseDir, fileName);
+              if (fs.existsSync(filePath)) {
+                const fileContent = fs.readFileSync(filePath, 'utf-8');
+                let title = lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+                const fmMatch = fileContent.match(/title:\s*["']?(.*?)["']?\r?\n/);
+                if (fmMatch && fmMatch[1]) {
+                  title = fmMatch[1];
+                }
+                return {
+                  data: {
+                    course_slug: courseSlug,
+                    lesson_slug: lessonSlug,
+                    lang: lang.toLowerCase(),
+                    title: title,
+                    content: fileContent
+                  },
+                  error: null
+                };
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Error reading lesson file from disk in mock-provider:", err);
+        }
+      } else {
+        const stored = window.localStorage.getItem('openprimer_lessons');
+        if (stored) {
+          try {
+            const lessons = JSON.parse(stored);
+            const found = lessons.find((l: any) => 
+              l.course_slug.toLowerCase() === courseSlug.toLowerCase() && 
+              l.lesson_slug.toLowerCase() === lessonSlug.toLowerCase() && 
+              l.lang.toLowerCase() === lang.toLowerCase()
+            );
+            if (found) {
+              return { data: found, error: null };
+            }
+          } catch (e) {}
+        }
+      }
+      return { data: null, error: new Error("Mock offline mode does not support dynamic lessons database fetching") };
+    };
+
+    const res = await fetchLesson();
+    if (res.data) {
+      const cleanSlug = (res.data.lesson_slug || lessonSlug || '').toLowerCase();
+      const isSummative = cleanSlug === 'evaluation-terminale' || cleanSlug === 'final-evaluation' || cleanSlug === 'evaluation-finale';
+      res.data = {
+        ...res.data,
+        evaluation_type: isSummative ? 'summative' : 'formative'
       };
     }
-    if (typeof window === 'undefined') {
-      try {
-        const fs = require('fs');
-        const path = require('path');
-        
-        let contentDir = path.join(process.cwd(), 'content');
-        if (!fs.existsSync(contentDir)) {
-          contentDir = path.join(process.cwd(), 'web/content');
-        }
-        
-        if (fs.existsSync(contentDir)) {
-          const findCourseFolder = (dir: string): string | null => {
-            const items = fs.readdirSync(dir, { withFileTypes: true });
-            for (const item of items) {
-              const fullPath = path.join(dir, item.name);
-              if (item.isDirectory()) {
-                if (item.name.toLowerCase() === courseSlug.toLowerCase()) {
-                  return fullPath;
-                }
-                const sub = findCourseFolder(fullPath);
-                if (sub) return sub;
-              }
-            }
-            return null;
-          };
-          
-          const courseDir = findCourseFolder(contentDir);
-          if (courseDir) {
-            const fileName = `${lessonSlug}.${lang.toLowerCase()}.mdx`;
-            const filePath = path.join(courseDir, fileName);
-            if (fs.existsSync(filePath)) {
-              const fileContent = fs.readFileSync(filePath, 'utf-8');
-              let title = lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
-              const fmMatch = fileContent.match(/title:\s*["']?(.*?)["']?\r?\n/);
-              if (fmMatch && fmMatch[1]) {
-                title = fmMatch[1];
-              }
-              return {
-                data: {
-                  course_slug: courseSlug,
-                  lesson_slug: lessonSlug,
-                  lang: lang.toLowerCase(),
-                  title: title,
-                  content: fileContent
-                },
-                error: null
-              };
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Error reading lesson file from disk in mock-provider:", err);
-      }
-    } else {
-      const stored = window.localStorage.getItem('openprimer_lessons');
-      if (stored) {
-        try {
-          const lessons = JSON.parse(stored);
-          const found = lessons.find((l: any) => 
-            l.course_slug.toLowerCase() === courseSlug.toLowerCase() && 
-            l.lesson_slug.toLowerCase() === lessonSlug.toLowerCase() && 
-            l.lang.toLowerCase() === lang.toLowerCase()
-          );
-          if (found) {
-            return { data: found, error: null };
-          }
-        } catch (e) {}
-      }
-    }
-    return { data: null, error: new Error("Mock offline mode does not support dynamic lessons database fetching") };
+    return res;
   },
 
   getFirstLessonSlug: async (courseSlug: string, lang: string) => {
@@ -374,6 +387,9 @@ summative: true
   },
 
   saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }) => {
+    if (lesson.title && lesson.title.length > 60) {
+      return { data: null, error: new Error(`Lesson title cannot exceed 60 characters (provided title has ${lesson.title.length} characters).`) };
+    }
     const cleanCourseSlug = cleanPathSegment(lesson.course_slug);
     const cleanLessonSlug = cleanPathSegment(lesson.lesson_slug);
     if (typeof window !== 'undefined') {

@@ -300,6 +300,48 @@ export interface SystemParameter {
   value: string;
 }
 
+export interface FormativeEvaluation {
+  type: 'quiz' | 'essay' | 'oral';
+  props: {
+    durationLimit?: number;
+    limit?: number;
+    questions?: Array<{
+      q: string;
+      explanation: string;
+      options: Array<{ text: string; correct: boolean }>;
+      multiple?: boolean;
+    }>;
+    prompt?: string;
+    subject?: string;
+  };
+}
+
+export interface SummativeEvaluation {
+  type: 'quiz' | 'essay' | 'oral';
+  props: {
+    durationLimit?: number;
+    limit?: number;
+    questions?: Array<{
+      q: string;
+      explanation: string;
+      options: Array<{ text: string; correct: boolean }>;
+      multiple?: boolean;
+    }>;
+    prompt?: string;
+    subject?: string;
+  };
+}
+
+export interface Lesson {
+  course_slug: string;
+  lesson_slug: string;
+  lang: string;
+  title: string;
+  content: string;
+  order?: number;
+  evaluation_type?: 'formative' | 'summative';
+}
+
 export interface DatabaseService {
   getSystemParameters(): Promise<{ data: SystemParameter[] | null; error: any }>;
   saveSystemParameter(param: { key: string; value: string }): Promise<{ data: any; error: any }>;
@@ -311,7 +353,7 @@ export interface DatabaseService {
   cleanupTranslationEmails(retentionDays: number): Promise<{ data: null; error: any }>;
   getLesson(courseSlug: string, lessonSlug: string, lang: string): Promise<{ data: any; error: any }>;
   getFirstLessonSlug(courseSlug: string, lang: string): Promise<{ data: string | null; error: any }>;
-  saveLesson(lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }): Promise<{ data: any; error: any }>;
+  saveLesson(lesson: Lesson): Promise<{ data: any; error: any }>;
   getSyllabus(id: string): Promise<{ data: MockCourse | null; error: any }>;
   getAllCourses(): Promise<{ data: MockCourse[] | null; error: any }>;
   getPipelineQueue(): Promise<{ data: any[]; error: any }>;

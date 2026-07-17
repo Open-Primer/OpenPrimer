@@ -1203,6 +1203,9 @@ interface SummativeTranslation {
   instructions: string;
   final_quiz: string;
   formative_quiz: string;
+  terminal_evaluation: string;
+  lesson_end_evaluation: string;
+  knowledge_validation: string;
 }
 
 const SUMMATIVE_STRINGS: Record<'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR', SummativeTranslation> = {
@@ -1242,7 +1245,10 @@ const SUMMATIVE_STRINGS: Record<'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' |
     format: "Format:",
     instructions: "Instructions:",
     final_quiz: "Final Assessment Quiz",
-    formative_quiz: "Self-Assessment / Formative Quiz"
+    formative_quiz: "Self-Assessment / Formative Quiz",
+    terminal_evaluation: "Terminal Evaluation",
+    lesson_end_evaluation: "Lesson-End Evaluation",
+    knowledge_validation: "Knowledge Validation"
   },
   FR: {
     select_subject: "Choisissez un sujet pour valider le module",
@@ -1280,7 +1286,10 @@ const SUMMATIVE_STRINGS: Record<'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' |
     format: "Format :",
     instructions: "Instructions :",
     final_quiz: "Quiz final d'évaluation",
-    formative_quiz: "Auto-évaluation / Quiz formatif"
+    formative_quiz: "Auto-évaluation / Quiz formatif",
+    terminal_evaluation: "Évaluation terminale",
+    lesson_end_evaluation: "Évaluation de fin de leçon",
+    knowledge_validation: "Validation des acquis"
   },
   ES: {
     select_subject: "Elija un tema para validar el módulo",
@@ -1318,7 +1327,10 @@ const SUMMATIVE_STRINGS: Record<'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' |
     format: "Formato:",
     instructions: "Instrucciones:",
     final_quiz: "Cuestionario de evaluación final",
-    formative_quiz: "Autoevaluación / Cuestionario formativo"
+    formative_quiz: "Autoevaluación / Cuestionario formativo",
+    terminal_evaluation: "Evaluación terminal",
+    lesson_end_evaluation: "Evaluación de fin de lección",
+    knowledge_validation: "Validación de conocimientos"
   },
   DE: {
     select_subject: "Wählen Sie ein Thema zur Validierung",
@@ -1356,7 +1368,10 @@ const SUMMATIVE_STRINGS: Record<'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' |
     format: "Format:",
     instructions: "Anweisungen:",
     final_quiz: "Abschlusstest",
-    formative_quiz: "Selbstbewertung / Formatives Quiz"
+    formative_quiz: "Selbstbewertung / Formatives Quiz",
+    terminal_evaluation: "Terminal-Bewertung",
+    lesson_end_evaluation: "Abschlussbewertung der Lektion",
+    knowledge_validation: "Wissensüberprüfung"
   },
   ZH: {
     select_subject: "选择一个主题进行模块验证",
@@ -1394,7 +1409,10 @@ const SUMMATIVE_STRINGS: Record<'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' |
     format: "格式：",
     instructions: "指示：",
     final_quiz: "期末评估测试",
-    formative_quiz: "自我评估 / 形成性测验"
+    formative_quiz: "自我评估 / 形成性测验",
+    terminal_evaluation: "期末评估",
+    lesson_end_evaluation: "课后评估",
+    knowledge_validation: "知识验证"
   },
   PT: {
     select_subject: "Escolha um tema para validar",
@@ -1432,7 +1450,10 @@ const SUMMATIVE_STRINGS: Record<'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' |
     format: "Formato:",
     instructions: "Instruções:",
     final_quiz: "Questionário de avaliação final",
-    formative_quiz: "Autoavaliação / Questionário formativo"
+    formative_quiz: "Autoavaliação / Questionário formativo",
+    terminal_evaluation: "Avaliação terminal",
+    lesson_end_evaluation: "Avaliação de fim de lição",
+    knowledge_validation: "Validação de conhecimentos"
   },
   AR: {
     select_subject: "اختر موضوعًا للمصادقة",
@@ -1470,7 +1491,10 @@ const SUMMATIVE_STRINGS: Record<'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' |
     instructions: "التعليمات:",
     final_quiz: "الاختبار النهائي للتقييم",
     formative_quiz: "التقييم الذاتي / الاختبار التكويني",
-    retry_confirm: "هل أنت متأكد أنك تريد إعادة تشغيل هذا التقييم؟ ستُحذف درجتك الحالية."
+    retry_confirm: "هل أنت متأكد أنك تريد إعادة تشغيل هذا التقييم؟ ستُحذف درجتك الحالية.",
+    terminal_evaluation: "تقييم نهائي",
+    lesson_end_evaluation: "تقييم نهاية الدرس",
+    knowledge_validation: "التحقق من المعرفة"
   },
   HI: {
     select_subject: "सत्यापित करने के लिए एक विषय चुनें",
@@ -1508,7 +1532,10 @@ const SUMMATIVE_STRINGS: Record<'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' |
     instructions: "निर्देश:",
     final_quiz: "अंतिम मूल्यांकन प्रश्नोत्तरी",
     formative_quiz: "आत्म-मूल्यांकन / रचनात्मक प्रश्नोत्तरी",
-    retry_confirm: "क्या आप वाकई इस मूल्यांकन को पुनः आरंभ करना चाहते हैं? आपका वर्तमान ग्रेड मिट जाएगा।"
+    retry_confirm: "क्या आप वाकई इस मूल्यांकन को पुनः आरंभ करना चाहते हैं? आपका वर्तमान ग्रेड मिट जाएगा।",
+    terminal_evaluation: "अंतिम मूल्यांकन",
+    lesson_end_evaluation: "पाठ-समाप्ति मूल्यांकन",
+    knowledge_validation: "ज्ञान सत्यापन"
   },
   UR: {
     select_subject: "توثیق کے لیے एक موضوع منتخب کریں",
@@ -1546,7 +1573,10 @@ const SUMMATIVE_STRINGS: Record<'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' |
     instructions: "ہدایات:",
     final_quiz: "آخری تشخیصی کوئز",
     formative_quiz: "ذاتی تشخیص / تکوینی کوئز",
-    retry_confirm: "کیا آپ واقعی اس تشخیص کو دوبارہ شروع کرنا چاہتے ہیں؟ آپ کا موجودہ گریڈ ختم ہو جائے گا۔"
+    retry_confirm: "کیا آپ واقعی اس تشخیص کو دوبارہ شروع کرنا چاہتے ہیں؟ آپ کا موجودہ گریڈ ختم ہو جائے گا۔",
+    terminal_evaluation: "ٹرمینل جائزہ",
+    lesson_end_evaluation: "سبق کے اختتام کا جائزہ",
+    knowledge_validation: "معلومات کی توثیق"
   }
 };
 
@@ -2073,7 +2103,7 @@ const SummativeEvaluation = ({ children, durationLimit }: { children: React.Reac
             <Award className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-white leading-tight">{t.summative_eval}</h3>
+            <h3 className="text-lg font-black text-white leading-tight">{t.terminal_evaluation}</h3>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{t.module_validation}</p>
           </div>
         </div>
@@ -2085,6 +2115,46 @@ const SummativeEvaluation = ({ children, durationLimit }: { children: React.Reac
   }
 
   return <SummativeEssayPortal childrenArray={childrenArray} durationLimit={durationLimit} />;
+};
+
+const FormativeEvaluation = ({ children }: { children: React.ReactNode }) => {
+  const { language } = useLanguage();
+  const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
+
+  if (isChildrenEmpty(children)) return null;
+
+  const finalChildren = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+      const type = child.type;
+      const typeName = typeof type === 'string' ? type : (type as any)?.name;
+      if (
+        type === Quiz || typeName === 'Quiz' || 
+        type === EssayEvaluation || typeName === 'EssayEvaluation' ||
+        type === OralEvaluation || typeName === 'OralEvaluation' || typeName === 'EvaluationOrale'
+      ) {
+        return React.cloneElement(child, { isFinal: false } as any);
+      }
+    }
+    return child;
+  });
+
+  return (
+    <div className="my-10 p-6 md:p-8 bg-slate-900/20 border border-emerald-500/10 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-lg">
+      <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-emerald-500/5 rounded-full blur-[40px] pointer-events-none" />
+      <div className="flex items-center gap-3 mb-6 select-none border-b border-slate-800/50 pb-4">
+        <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400">
+          <BookOpen className="w-5 h-5" />
+        </div>
+        <div>
+          <h3 className="text-lg font-black text-white leading-tight">{t.lesson_end_evaluation}</h3>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{t.knowledge_validation}</p>
+        </div>
+      </div>
+      <div className="space-y-6 text-slate-300 text-sm leading-relaxed">
+        {finalChildren}
+      </div>
+    </div>
+  );
 };
 
 const EvaluationSection = ({ children }: { children: React.ReactNode }) => {
@@ -2398,6 +2468,126 @@ const MdxImage = (props: any) => {
   );
 };
 
+const INTERACTIVE_PEDAGOGICAL_KEYS = new Set([
+  'table', 'mermaid', 'functionplotter', 'interactivediagram', 'comparisonslider', 'codesandbox', 
+  'gestaltinteractive', 'gestaltlab', 'datachart', 'structureviewer3d', 'quantumorbitalexplorer', 
+  'explorateurbonlesquantiques', 'explorateurorbitalesquantiques', 'dynamicsimulation', 'functionmanipulator', 
+  'manipulateurfonction', 'explorateurfonctions', 'equationmanipulator', 'manipulateurequation', 
+  'explorateurequations', 'chemicalstoichiometry', 'equilibragechimique', 'stoichiometriechimique', 
+  'basicmathexplorer', 'explorateurmathsbase', 'biophysicssimulator', 'simulateurbiophysique', 
+  'logicgatesimulator', 'simulateurportelogique', 'simulateurporteslogiques', 'geneticspedigreelab', 
+  'labgenetiquepedigree', 'carreepunnett', 'orbitalmechanicssim', 'simulateurorbitemecanique', 
+  'simulateurorbital', 'periodictable', 'tableauperiodique', 'solarsystemorrery', 'systemesolaire', 
+  'financialchart', 'graphiquefinancier', 'waveinterferencesim', 'simulateurondes', 'acousticpianosynth', 
+  'synthetiseurpiano', 'sankeydiagram', 'diagrammesankey', 'climateimpactmap', 'climate_impact_map', 
+  'carteimpactclimatique', 'geomapexplorer', 'geo_map_explorer', 'explorateurgeographique', 
+  'cardsort', 'associationpaires', 'timeline', 'frisechronologique',
+  'biography', 'matchingevaluation', 'associationcorrespondance', 'reorderevaluation', 'reordonneritems', 'socraticinput', 'analysesocratique'
+]);
+
+const getLocalizedComponentLegend = (componentName: string, lang: string): string => {
+  const translations: Record<string, Record<string, string>> = {
+    EN: {
+      default: "Interactive Widget",
+      table: "Interactive Data Table",
+      mermaid: "Conceptual Diagram",
+      diagram: "Conceptual Diagram",
+      simulation: "Interactive Simulation",
+    },
+    FR: {
+      default: "Widget interactif",
+      table: "Tableau de données interactif",
+      mermaid: "Schéma conceptuel",
+      diagram: "Schéma conceptuel",
+      simulation: "Simulation interactive",
+    },
+    ES: {
+      default: "Widget interactivo",
+      table: "Tabla de datos interactiva",
+      mermaid: "Diagrama conceptual",
+      diagram: "Diagrama conceptual",
+      simulation: "Simulación interactiva",
+    },
+    DE: {
+      default: "Interaktives Widget",
+      table: "Interaktive Datentabelle",
+      mermaid: "Konzeptionelles Diagramm",
+      diagram: "Konzeptionelles Diagramm",
+      simulation: "Interaktive Simulation",
+    },
+    ZH: {
+      default: "互动组件",
+      table: "互动数据表",
+      mermaid: "概念图",
+      diagram: "概念图",
+      simulation: "互动模拟",
+    },
+    PT: {
+      default: "Widget interativo",
+      table: "Tabela de datos interativa",
+      mermaid: "Diagrama conceitual",
+      diagram: "Diagrama conceitual",
+      simulation: "Simulação interativa",
+    },
+    AR: {
+      default: "أداة تفاعلية",
+      table: "جدول بيانات تفاعلي",
+      mermaid: "مخطط مفاهيمي",
+      diagram: "مخطط مفاهيمي",
+      simulation: "محاكاة تفاعلية",
+    },
+    HI: {
+      default: "इंटरैक्टिव विजेट",
+      table: "इंटरैक्टिव डेटा तालिका",
+      mermaid: "वैचारिक आरेख",
+      diagram: "वैचारिक आरेख",
+      simulation: "इंटरैक्टिव सिमुलेशन",
+    },
+    UR: {
+      default: "انٹرایکٹو وزٹ",
+      table: "انٹرایکٹو ڈیٹا ٹیبل",
+      mermaid: "تصوراتی خاکہ",
+      diagram: "تصوراتی خاکہ",
+      simulation: "انٹرایکٹو تخروپن",
+    }
+  };
+
+  const l = lang.toUpperCase();
+  const t = translations[l] || translations.EN;
+  const nameLower = componentName.toLowerCase();
+  
+  if (nameLower.includes('table')) return t.table;
+  if (nameLower.includes('mermaid') || nameLower.includes('diagram') || nameLower.includes('timeline') || nameLower.includes('sankey')) return t.mermaid;
+  if (nameLower.includes('sim') || nameLower.includes('explorer') || nameLower.includes('simulation') || nameLower.includes('lab') || nameLower.includes('sandbox')) return t.simulation;
+  
+  return t.default;
+};
+
+const withPedagogicalLegend = (WrappedComponent: React.ComponentType<any>, componentName: string) => {
+  const ComponentWithLegend = (props: any) => {
+    const { language } = useLanguage();
+    const legendText = props.caption || props.description || props.legend || props.alt;
+    const resolvedLegend = legendText ? String(legendText).trim() : '';
+
+    const cleanName = componentName.replace(/([A-Z])/g, ' $1').trim();
+    const finalLegend = resolvedLegend || `${getLocalizedComponentLegend(componentName, language)}: ${cleanName}`;
+
+    return (
+      <div className="flex flex-col items-center my-6 w-full">
+        <WrappedComponent {...props} caption="" description="" alt="" />
+        {finalLegend && (
+          <p className="text-center text-xs md:text-sm text-slate-500 dark:text-slate-400 italic mt-3 max-w-2xl px-4 select-text">
+            {renderCaptionWithLinks(finalLegend, props.fallbackUrl)}
+          </p>
+        )}
+      </div>
+    );
+  };
+  
+  ComponentWithLegend.displayName = `WithPedagogicalLegend(${componentName})`;
+  return ComponentWithLegend;
+};
+
 const components = {
   Alert,
   Biography,
@@ -2636,6 +2826,8 @@ const components = {
 
   // Evaluation & Assignments
   SummativeEvaluation: withDisabledOverlays(SummativeEvaluation),
+  TerminalEvaluation: withDisabledOverlays(SummativeEvaluation),
+  FormativeEvaluation: withDisabledOverlays(FormativeEvaluation),
   EvaluationSection: withDisabledOverlays(EvaluationSection),
   Assignment,
   Deadline,
@@ -3465,11 +3657,17 @@ function MdxContentInner({ source, rawMdx, courseSlug, lessonSlug }: MdxContentP
       });
     };
 
-    const baseComponents = {
+    const baseComponents: Record<string, any> = {
       ...components,
       FillInBlanks: wrapper,
       'FillInBlanks.Input': wrapper.Input,
     };
+
+    for (const key of Object.keys(baseComponents)) {
+      if (INTERACTIVE_PEDAGOGICAL_KEYS.has(key.toLowerCase()) && baseComponents[key]) {
+        baseComponents[key] = withPedagogicalLegend(baseComponents[key], key);
+      }
+    }
 
     return new Proxy(baseComponents, {
       get(target, prop, receiver) {

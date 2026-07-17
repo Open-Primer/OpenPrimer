@@ -75,6 +75,55 @@ export function safeJsonParse(text: string, contextName: string = 'unknown'): an
   }
 }
 
+export function validateSchema(data: any, schema: any, path: string = ''): string[] {
+  const errors: string[] = [];
+  if (!schema) return errors;
+
+  if (schema.type === 'object') {
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      errors.push(`Field "${path}" should be an object.`);
+      return errors;
+    }
+    if (schema.required) {
+      for (const reqKey of schema.required) {
+        if (!(reqKey in data) || data[reqKey] === undefined) {
+          errors.push(`Field "${path ? `${path}.` : ''}${reqKey}" is required but missing.`);
+        }
+      }
+    }
+    if (schema.properties) {
+      for (const key of Object.keys(data)) {
+        if (schema.properties[key]) {
+          errors.push(...validateSchema(data[key], schema.properties[key], `${path ? `${path}.` : ''}${key}`));
+        }
+      }
+    }
+  } else if (schema.type === 'array') {
+    if (!Array.isArray(data)) {
+      errors.push(`Field "${path}" should be an array.`);
+      return errors;
+    }
+    if (schema.items) {
+      data.forEach((item, index) => {
+        errors.push(...validateSchema(item, schema.items, `${path}[${index}]`));
+      });
+    }
+  } else if (schema.type === 'string') {
+    if (typeof data !== 'string') {
+      errors.push(`Field "${path}" should be a string.`);
+    }
+  } else if (schema.type === 'integer' || schema.type === 'number') {
+    if (typeof data !== 'number') {
+      errors.push(`Field "${path}" should be a number.`);
+    }
+  } else if (schema.type === 'boolean') {
+    if (typeof data !== 'boolean') {
+      errors.push(`Field "${path}" should be a boolean.`);
+    }
+  }
+  return errors;
+}
+
 export function saveDraftRevision(filename: string, content: string) {
   try {
     const dir = path.resolve(process.cwd(), 'drafts_revisions');
@@ -741,7 +790,7 @@ const lessonWidgetsSchema = {
                   wikipediaUrl: { type: "string", description: "Direct link to their English Wikipedia page." },
                   searchQuery: { type: "string", description: "Canonical search query to find the biography on Wikipedia." }
                 },
-                required: ["name", "dates", "description", "wikipediaUrl"]
+                required: ["name", "dates", "description"]
               }
             },
             required: ["id", "componentType", "sectionAnchor", "props"]
@@ -1033,7 +1082,7 @@ const lessonWidgetsSchema = {
                   wikipediaUrl: { type: "string", description: "Direct canonical link to their Wikipedia page." },
                   searchQuery: { type: "string", description: "Canonical search query to find the term on Wikipedia." }
                 },
-                required: ["term", "definition", "wikipediaUrl", "searchQuery"]
+                required: ["term", "definition"]
               }
             },
             required: ["id", "componentType", "sectionAnchor", "props"]
@@ -1086,7 +1135,7 @@ const lessonWidgetsSchema = {
                   wikipediaUrl: { type: "string", description: "Direct canonical link to their Wikipedia page." },
                   searchQuery: { type: "string", description: "Canonical search query to find the entity on Wikipedia." }
                 },
-                required: ["name", "description", "wikipediaUrl", "searchQuery"]
+                required: ["name", "description"]
               }
             },
             required: ["id", "componentType", "sectionAnchor", "props"]
@@ -1310,8 +1359,6 @@ const widgetBlock2Schema = {
               name: { type: "string" },
               dates: { type: "string" },
               description: { type: "string" },
-              wikipediaUrl: { type: "string" },
-              wikipediaLink: { type: "string" },
               // Citation / Quote
               quote: { type: "string" },
               author: { type: "string" },
@@ -1327,13 +1374,11 @@ const widgetBlock2Schema = {
               caption: { type: "string" },
               searchQuery: { type: "string" },
               duration: { type: "string" },
-              imageUrl: { type: "string" },
               // Interactive code or Diagram
               code: { type: "string" },
               language: { type: "string" },
               // General links
               text: { type: "string" },
-              url: { type: "string" },
               // Quiz
               limit: { type: "integer" },
               questions: {
@@ -1379,7 +1424,7 @@ const widgetBlock3Schema = {
   required: ["conclusionSummary", "whatsNext", "goingFurther", "glossary"]
 };
 
-const widgetBlock4Schema = {
+const widgetBlock5Schema = {
   type: "object",
   properties: {
     finalEvaluation: lessonWidgetsSchema.properties.finalEvaluation,
@@ -1387,6 +1432,51 @@ const widgetBlock4Schema = {
   },
   required: ["finalEvaluation", "references"]
 };
+
+const widgetBlock5QuizSchema = {
+  type: "object",
+  properties: {
+    finalEvaluation: lessonWidgetsSchema.properties.finalEvaluation
+  },
+  required: ["finalEvaluation"]
+};
+
+const widgetBlock5ReferencesSchema = {
+  type: "object",
+  properties: {
+    references: lessonWidgetsSchema.properties.references
+  },
+  required: ["references"]
+};
+
+function checkForForbiddenPlaceholders(obj: any, path = ''): string[] {
+  const errors: string[] = [];
+  if (obj === null || obj === undefined) return errors;
+
+  if (typeof obj === 'string') {
+    const cleanStr = obj.trim();
+    if (cleanStr === '## Section Name' || cleanStr === 'Section Name' || cleanStr.includes('## Section Name')) {
+      errors.push(`Placeholder section anchor found at "${path}": "${obj}"`);
+    } else if (cleanStr.toUpperCase() === 'N/A' || cleanStr.toLowerCase() === 'n/a') {
+      errors.push(`Forbidden placeholder "N/A" found at "${path}"`);
+    } else if (cleanStr.includes('[Insert ') || cleanStr.includes('[insert ') || (cleanStr.startsWith('[') && cleanStr.endsWith(']'))) {
+      errors.push(`Draft marker/placeholder bracketed text found at "${path}": "${obj}"`);
+    } else if (/lorem\s+ipsum/i.test(cleanStr)) {
+      errors.push(`Lorem ipsum text found at "${path}": "${obj}"`);
+    }
+  } else if (Array.isArray(obj)) {
+    obj.forEach((item, index) => {
+      errors.push(...checkForForbiddenPlaceholders(item, `${path}[${index}]`));
+    });
+  } else if (typeof obj === 'object') {
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        errors.push(...checkForForbiddenPlaceholders(obj[key], path ? `${path}.${key}` : key));
+      }
+    }
+  }
+  return errors;
+}
 
 
 
@@ -1875,6 +1965,28 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       if (!comp.props || typeof comp.props !== 'object') comp.props = {};
       const props = comp.props;
 
+      const compTypeLower = typeof comp.componentType === 'string' ? comp.componentType.toLowerCase() : '';
+      const ENTITY_WIDGET_TYPES = [
+        'realperson', 'historicalperson', 'conceptlink', 'location', 
+        'eventlink', 'historicaleventlink', 'evenementhistorique', 'événementhistorique', 
+        'glossary', 'lexique', 'biography'
+      ];
+      if (ENTITY_WIDGET_TYPES.includes(compTypeLower)) {
+        // Strip forbidden keys to prevent AI hallucinations or legacy contaminants
+        delete props.wikipediaUrl;
+        delete props.wikipediaLink;
+        delete props.url;
+        delete props.imageUrl;
+        delete props.searchQuery;
+        
+        if (compTypeLower !== 'biography') {
+          delete props.dates;
+          delete props.year;
+          delete props.birthYear;
+          delete props.deathYear;
+        }
+      }
+
       // [FIX IC-2] Resolve dates for RealPerson / HistoricalPerson components via Wikidata.
       // The AI MUST NOT invent or hallucinate dates. We fetch them deterministically from
       // Wikidata (SPARQL) → Wikipedia extract. If not found, we leave dates empty (not a
@@ -2021,8 +2133,9 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
           }
         }
         
-        if (name && isPlaceholder) {
-          console.log(`[BIOGRAPHY VALIDATOR] Biography placeholder or empty description for "${name}". Healing via Wikipedia...`);
+        const isPlaceholderWiki = !props.wikipediaUrl || /placeholder|dummy|todo|tbd|tbc|lorem|ipsum/i.test(props.wikipediaUrl);
+        if (name && (isPlaceholder || isPlaceholderWiki)) {
+          console.log(`[BIOGRAPHY VALIDATOR] Biography placeholder description or missing/placeholder Wikipedia URL for "${name}". Resolving...`);
           try {
             const targetLang = (lang || 'fr').toLowerCase().split('-')[0];
             const wikiSearchUrl = `https://${targetLang}.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(name)}&srlimit=1`;
@@ -2032,28 +2145,32 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
               const searchResult = data.query?.search?.[0];
               if (searchResult) {
                 const canonicalTitle = searchResult.title;
-                const wikiExtractUrl = `https://${targetLang}.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(canonicalTitle)}&redirects=1`;
-                const res2 = await fetchWithTimeout(wikiExtractUrl);
-                if (res2.ok) {
-                  const data2 = await res2.json();
-                  const pages = data2.query?.pages;
-                  if (pages) {
-                    const pageId = Object.keys(pages)[0];
-                    if (pageId && pageId !== '-1') {
-                      const extract = pages[pageId].extract || '';
-                      if (extract && extract.length > 30) {
-                        let sentence = extract.split(/[.!?]\s/)[0].trim();
-                        const parts = extract.split(/[.!?]\s/);
-                        if (parts[1]) sentence += '. ' + parts[1].trim();
-                        if (parts[2]) sentence += '. ' + parts[2].trim();
-                        if (!sentence.endsWith('.')) sentence += '.';
-                        sentence = sentence.replace(/\s*\([^)]*\)/g, '').trim();
-                        sentence = sentence.replace(/\s+/g, ' ');
-                        
-                        props.description = sentence;
-                        props.name = canonicalTitle;
-                        props.wikipediaUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(canonicalTitle.replace(/\s+/g, '_'))}`;
-                        console.log(`[BIOGRAPHY VALIDATOR] Healed "${name}" description via Wikipedia.`);
+                if (isPlaceholderWiki) {
+                  props.wikipediaUrl = `https://${targetLang}.wikipedia.org/wiki/${encodeURIComponent(canonicalTitle.replace(/\s+/g, '_'))}`;
+                }
+                if (isPlaceholder) {
+                  const wikiExtractUrl = `https://${targetLang}.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(canonicalTitle)}&redirects=1`;
+                  const res2 = await fetchWithTimeout(wikiExtractUrl);
+                  if (res2.ok) {
+                    const data2 = await res2.json();
+                    const pages = data2.query?.pages;
+                    if (pages) {
+                      const pageId = Object.keys(pages)[0];
+                      if (pageId && pageId !== '-1') {
+                        const extract = pages[pageId].extract || '';
+                        if (extract && extract.length > 30) {
+                          let sentence = extract.split(/[.!?]\s/)[0].trim();
+                          const parts = extract.split(/[.!?]\s/);
+                          if (parts[1]) sentence += '. ' + parts[1].trim();
+                          if (parts[2]) sentence += '. ' + parts[2].trim();
+                          if (!sentence.endsWith('.')) sentence += '.';
+                          sentence = sentence.replace(/\s*\([^)]*\)/g, '').trim();
+                          sentence = sentence.replace(/\s+/g, ' ');
+                          
+                          props.description = sentence;
+                          props.name = canonicalTitle;
+                          console.log(`[BIOGRAPHY VALIDATOR] Healed "${name}" description via Wikipedia.`);
+                        }
                       }
                     }
                   }
@@ -4094,6 +4211,7 @@ Verify that:
 3. The progression is logical and pedagogically sound.
 4. The output matches the syllabusSchema structure.
 5. For university-level courses (L1, L2, L3, M1, M2), the syllabus must contain EXACTLY 12 content/teaching chapters/lessons (representing the curriculum) plus exactly 1 terminal evaluation chapter (slug: 'evaluation-terminale' or 'final-evaluation', title: 'Évaluation Terminale' or 'Final Evaluation'), which makes exactly 13 items in total. Reject any syllabus that does not have exactly 13 items (12 teaching + 1 evaluation) for university courses.
+6. The title of each lesson MUST NOT exceed 130 characters (to prevent UI truncation and layout instability). Reject any syllabus containing a lesson title longer than 130 characters.
 
 ### GENERATED SYLLABUS:
 ${JSON.stringify(currentParsedSyllabus, null, 2)}
@@ -4169,6 +4287,17 @@ If the syllabus is approved, you MUST set approved: true, and critique: "". You 
             critiqueObj = safeJsonParse(critiqueJsonStr.replace(/```json/g, '').replace(/```/g, '').trim(), 'Syllabus Critique Parsing');
           } catch (e) {
             console.warn(`[AI GENERATOR] Failed to parse syllabus critique JSON:`, e);
+          }
+        }
+
+        if (critiqueObj.approved) {
+          const lessonsToCheck = Array.isArray(currentParsedSyllabus)
+            ? currentParsedSyllabus
+            : (currentParsedSyllabus?.lessons || []);
+          const longTitleLesson = lessonsToCheck.find((l: any) => l.title && l.title.length > 130);
+          if (longTitleLesson) {
+            critiqueObj.approved = false;
+            critiqueObj.critique = `The lesson "${longTitleLesson.title}" has a title of length ${longTitleLesson.title.length}, which exceeds the 130-character limit. Please shorten all lesson titles to be at most 130 characters.`;
           }
         }
 
@@ -4782,6 +4911,17 @@ ${currentBlockSections.map((s: any) => `* Heading: "${s.heading}"\n  Instruction
 - References available:
 ${referencesMetadata}
 
+### LEVEL CONSTRAINTS (from database — MANDATORY to enforce):
+- Minimum words per lesson block: ${constraint.minWordCount} — Maximum: ${constraint.maxWordCount}
+- Minimum inline hover-cards per block: **${constraint.minHoverCardsPerBlock}** (ConceptLink, RealPerson, Glossary)
+- Minimum block widgets per block: **${constraint.minBlockWidgetsPerBlock}** (Image, Mermaid, Video, DataChart, etc.)
+- Minimum biographies (RealPerson) in this lesson: ${constraint.minBiographiesCount}
+- Minimum concept links (ConceptLink) in this lesson: ${constraint.minConceptLinksCount}
+- Minimum glossary terms in this lesson: ${constraint.minGlossaryCount}
+- Minimum bibliographic references in this lesson: ${constraint.minReferencesCount}
+- **MANDATED widget types for this level** (must include at least one): ${constraint.mandatedWidgetTypes.length > 0 ? constraint.mandatedWidgetTypes.join(', ') : 'None'}
+- **DISCOURAGED widget types for this level** (avoid unless essential): ${constraint.discouragedWidgetTypes.length > 0 ? constraint.discouragedWidgetTypes.join(', ') : 'None'}
+
 ---
 
 ### PRE-EXISTING WIDGET INVENTORY:
@@ -4790,11 +4930,16 @@ ${formattedCatalogList || 'None pre-existing.'}
 
 ### PEDAGOGICAL WIDGETS MANDATE (CRITICAL):
 To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
+- CRITICAL IMAGE RELEVANCE: Every Image or CustomFigure anchor you generate MUST have a strong, direct connection with the current lesson/concept, and must be highly informative (never generic, decorative, or filler).
+- CRITICAL INTERACTIVE WIDGET CONNECTION: Every interactive widget anchor (such as Quiz, SolvedExercise, UnsolvedExercise, FillInBlanks, Mermaid, DataChart, and other interactive diagrams/simulations) MUST be strongly connected to the lesson. Ensure they are placed in a context where they have specific parameters, equations, or data relevant to the lesson topics, and where a detailed explanation is pedagogically appropriate. You MUST provide a detailed description acting as a legend/caption in the anchor itself (e.g., [[WIDGET:Mermaid:id:Detailed description of the diagram and its variables]).
 You are REQUIRED to include:
-${isAbstractDiscipline ? `- At least 2-3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
+${isAbstractDiscipline ? `- At least ${constraint.minHoverCardsPerBlock} inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
 - DECORATIVE or generic images/photos (like [[WIDGET:Image]] or [[WIDGET:CustomFigure]]) are STRICTLY PROHIBITED for abstract textual disciplines like Law or Philosophy to maintain professional academic quality! If there is no highly specific real-world historical illustration (like a portrait or map), do NOT insert random decorative images. Instead, you are only encouraged to include highly structured block widgets, such as comparative/analytical tables, flowchart diagrams (using [[WIDGET:Mermaid:id:description]]), or quizzes ([[WIDGET:Quiz:id]]).
-- ABSOLUTE PROHIBITION ON HORIZONTAL SEPARATOR LINES (like \`---\` or \`___\`) immediately below or above any widget.` : `- At least 2-3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
-- At least 2-3 block widgets/media (using [[WIDGET:Image:id:description]], [[WIDGET:CustomFigure:id:description]], [[WIDGET:Mermaid:id:description]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], or [[WIDGET:Video:id:description]]) placed on separate blank lines.
+- ABSOLUTE PROHIBITION ON HORIZONTAL SEPARATOR LINES (like \`---\` or \`___\`) immediately below or above any widget.` : `- At least ${constraint.minHoverCardsPerBlock} inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
+- MANDATORY: At least ${constraint.minBlockWidgetsPerBlock} block widgets/media placed on separate blank lines, chosen from: [[WIDGET:Image:id:description]], [[WIDGET:CustomFigure:id:description]], [[WIDGET:Mermaid:id:description]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], [[WIDGET:Video:id:description]].
+- MEDIA COMPOSITION REQUIREMENT: Each narrative block MUST include at minimum (a) at least 1 image or figure ([[WIDGET:Image]] or [[WIDGET:CustomFigure]]) showing a relevant diagram, formula, or scientific illustration AND (b) at least 1 structural/diagrammatic widget ([[WIDGET:Mermaid]] for flowcharts/timelines/graphs, or [[WIDGET:Video]] for a pedagogical video). These are NOT optional — a block with only text and hover-cards will be REJECTED.
+${constraint.mandatedWidgetTypes.length > 0 ? `- MANDATED WIDGET TYPES for this academic level: you MUST include at least one occurrence of each of the following widget types across the lesson: ${constraint.mandatedWidgetTypes.join(', ')}.` : ''}
+${constraint.discouragedWidgetTypes.length > 0 ? `- DISCOURAGED WIDGET TYPES for this academic level: avoid using the following unless strictly necessary: ${constraint.discouragedWidgetTypes.join(', ')}.` : ''}
 - ABSOLUTE PROHIBITION ON HORIZONTAL SEPARATOR LINES (like \`---\` or \`___\`) immediately below or above any widget.`}
 Choose from the following options:
 1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
@@ -4868,7 +5013,15 @@ Check checkpoints:
 3. Strict MDX/JSX safety (absolutely no raw custom component or custom JSX/HTML tags like <ConceptLink>, <RealPerson>, <Glossary>, <sup id="cite-...">(...)</sup>, or <sup>(...)</sup> inline in prose. All interactive elements and special links must strictly use the [[WIDGET:id]] anchor format. For bibliographic citations, they MUST strictly use the [[WIDGET:Reference:num]] anchor format, e.g. [[WIDGET:Reference:1]]. Reject any block containing raw HTML citation tags or raw bracketed citation anchors like [ref1], [1] in text. Reject any block containing raw Mermaid diagram code (e.g. wrapped in \`\`\`mermaid ... \`\`\`). All diagrams must be anchored as [[WIDGET:Mermaid:id:description]] anchors).
 4. No figure prefixes like "Figure 1:" in visual captions.
 5. NO EXTERNAL WIDGET CAPTIONS/DESCRIPTIONS IN NARRATIVE PROSE: REJECT the block if there are any external descriptions, comments, or caption text (such as "*Description: ...*", "Caption: ...", "Légende: ...") placed directly in the narrative prose outside, above, or below a widget anchor (like Image, CustomFigure, Video, Audio, Mermaid, etc.). The description must be strictly inside the anchor itself as the third parameter (e.g. [[WIDGET:Image:id:description]] or [[WIDGET:CustomFigure:id:description]] or [[WIDGET:Video:id:description]] or [[WIDGET:Audio:id:description]] or [[WIDGET:Mermaid:id:description]]).
-${isAbstractDiscipline ? `6. Presence of pedagogical widgets: Check that the block contains at least 2-3 inline hover-cards (ConceptLink, Glossary, RealPerson). Ensure that there are NO decorative, random, or generic images/photos (like [[WIDGET:Image]] or [[WIDGET:CustomFigure]]) generated, and reject the block if any generic/unrelated decorative images are found. Ensure that there are NO horizontal separator lines (like \`---\`) adjacent to widgets.` : `6. Presence of pedagogical widgets: Check that the block contains at least 2-3 inline hover-cards (ConceptLink, Glossary, RealPerson) and at least 2-3 block widgets (Image, CustomFigure, Mermaid, ComparisonSlider, InteractiveDiagram, DataChart, Video) as anchors. If completely missing, reject the block.`}
+- CRITICAL IMAGE RELEVANCE: Reject the block if any image or custom figure anchor does not have a strong, direct connection with the current lesson/concept, or if it is merely decorative/filler. Captions and descriptions must clearly reflect high informative value and topic relevance.
+- CRITICAL INTERACTIVE WIDGET CONNECTION: Reject the block if any interactive widget or diagram anchor is not strongly connected to the lesson content, or if its parameters, formulas, equations, or inputs appear generic or unrelated to the academic concepts being taught.
+${isAbstractDiscipline ? `6. Presence of pedagogical widgets: Check that the block contains at least ${constraint.minHoverCardsPerBlock} inline hover-cards (ConceptLink, Glossary, RealPerson). Ensure that there are NO decorative, random, or generic images/photos (like [[WIDGET:Image]] or [[WIDGET:CustomFigure]]) generated, and reject the block if any generic/unrelated decorative images are found. Ensure that there are NO horizontal separator lines (like \`---\`) adjacent to widgets.` : `6. Presence of pedagogical widgets (MANDATORY — REJECT if not met): The block MUST contain ALL of the following:
+   a) At least ${constraint.minHoverCardsPerBlock} inline hover-cards: [[WIDGET:RealPerson]], [[WIDGET:ConceptLink]], or [[WIDGET:Glossary]] anchors for key figures/concepts.
+   b) At least 1 image or figure anchor: [[WIDGET:Image:id:description]] or [[WIDGET:CustomFigure:id:description]] showing a relevant diagram, illustration, or scientific figure.
+   c) At least 1 structural/diagrammatic widget: [[WIDGET:Mermaid:id:description]] (for graphs, timelines, flowcharts) OR [[WIDGET:Video:id:description]] OR [[WIDGET:DataChart:id]] OR [[WIDGET:InteractiveDiagram:id]].
+   d) The TOTAL block widget count (Image + Mermaid + Video + DataChart + etc.) must be at least ${constraint.minBlockWidgetsPerBlock}.
+${constraint.mandatedWidgetTypes.length > 0 ? `   e) MANDATED TYPES: The lesson must contain at least one occurrence of each mandated type: ${constraint.mandatedWidgetTypes.join(', ')}. Reject if any mandated type is completely absent from the lesson so far (check cumulatively).` : ''}
+   A block with ONLY inline hover-cards and no Image/Mermaid/Video block widgets MUST be REJECTED. Count explicitly: if (b) is missing → reject; if (c) is missing → reject; if total block widgets < ${constraint.minBlockWidgetsPerBlock} → reject.`}
 ${lawCriticMandate}
 ${bIdx === blocks.length - 1 ? `8. Valid ## Conclusion section with at least two paragraphs and the required conclusion widgets.` : ''}
 
@@ -5085,26 +5238,39 @@ INSTRUCTIONS:
         while (!parseSuccess && preflightAttempts <= maxPreflightAttempts) {
           try {
             parsed = safeJsonParse(currentJsonStr, `Widget Block ${blockName} Parsing`);
+            
+            // Validate schema compliance
+            const schemaErrors = validateSchema(parsed, blockSchema);
+            if (schemaErrors.length > 0) {
+              throw new Error(`JSON does not match the required schema. Errors:\n` + schemaErrors.map(e => `- ${e}`).join('\n'));
+            }
+            
+            // Check for forbidden placeholder strings
+            const placeholderErrors = checkForForbiddenPlaceholders(parsed);
+            if (placeholderErrors.length > 0) {
+              throw new Error(`JSON contains forbidden placeholders or draft markers:\n` + placeholderErrors.map(e => `- ${e}`).join('\n'));
+            }
+            
             parseSuccess = true;
           } catch (err: any) {
             preflightAttempts++;
             if (preflightAttempts > maxPreflightAttempts) {
-              await appendTaskLog(`[AI GENERATOR] Pre-flight JSON parsing failed for ${blockName} after ${maxPreflightAttempts} repair attempts. Propagating error.`);
+              await appendTaskLog(`[AI GENERATOR] Pre-flight JSON parsing/validation failed for ${blockName} after ${maxPreflightAttempts} repair attempts. Propagating error.`);
               throw err;
             }
-            await appendTaskLog(`[AI GENERATOR] Pre-flight JSON parsing failed for ${blockName}: ${err.message}. Retrying local syntax repair (Attempt ${preflightAttempts}/${maxPreflightAttempts})...`);
+            await appendTaskLog(`[AI GENERATOR] Pre-flight JSON parsing/validation failed for ${blockName}: ${err.message}. Retrying local syntax/schema repair (Attempt ${preflightAttempts}/${maxPreflightAttempts})...`);
 
-            const preflightRepairPrompt = `You are a precise JSON syntax repair assistant.
-The JSON output below has syntax errors (such as missing brackets, unescaped quotes, trailing commas, or incomplete properties) and cannot be parsed.
-Your task is to fix the syntax errors and return ONLY the completely valid, parseable JSON object matching the required schema.
+            const preflightRepairPrompt = `You are a precise JSON syntax/schema repair assistant.
+The JSON output below has syntax/schema errors and cannot be parsed or validated.
+Your task is to fix these errors and return ONLY the completely valid, parseable JSON object matching the required schema.
 
-### PARSE ERROR:
+### SCHEMA/PARSE ERROR:
 ${err.message}
 
 ### MALFORMED JSON TO REPAIR:
-\\\`\\\`\\\`json
+\`\`\`json
 ${currentJsonStr}
-\\\`\\\`\\\`
+\`\`\`
 
 Return ONLY the corrected and valid JSON response. Do NOT wrap your response in markdown code blocks.`;
 
@@ -5129,6 +5295,25 @@ Return ONLY the corrected and valid JSON response. Do NOT wrap your response in 
               } else if (compTypeLower === 'audio' || compTypeLower === 'video') {
                 for (const forbiddenKey of AUDIO_VIDEO_FORBIDDEN_KEYS) {
                   delete comp.props[forbiddenKey];
+                }
+              }
+              const ENTITY_WIDGET_TYPES = [
+                'realperson', 'historicalperson', 'conceptlink', 'location', 
+                'eventlink', 'historicaleventlink', 'evenementhistorique', 'événementhistorique', 
+                'glossary', 'lexique', 'biography'
+              ];
+              if (ENTITY_WIDGET_TYPES.includes(compTypeLower)) {
+                delete comp.props.wikipediaUrl;
+                delete comp.props.wikipediaLink;
+                delete comp.props.url;
+                delete comp.props.imageUrl;
+                delete comp.props.searchQuery;
+                
+                if (compTypeLower !== 'biography') {
+                  delete comp.props.dates;
+                  delete comp.props.year;
+                  delete comp.props.birthYear;
+                  delete comp.props.deathYear;
                 }
               }
               for (const key of Object.keys(comp.props)) {
@@ -5279,7 +5464,8 @@ Check:
 1. Prerequisites are realistic.
 2. DiagnosticQuiz index is correct.
 3. LearningObjectives use Bloom's Taxonomy verbs (Analyze, Evaluate, Create for L1/L2/L3/Master levels).
-4. ZERO placeholders, draft markers (e.g. bracketed text like "[insert]"), or template values are allowed. Reject the block if any text or option contains placeholder words like "Option", "placeholder", "todo", "tbd", "tbc", "lorem", "ipsum" or empty strings. All text fields must be fully fleshed out and complete.
+4. ZERO placeholders, draft markers (e.g. bracketed text like "[insert]"), or template values are allowed. Reject the block if any text or option contains placeholder words like "Option", "placeholder", "todo", "tbd", "tbc", "lorem", "ipsum", "N/A" (or "n/a"), "## Section Name" or empty strings. All text fields must be fully fleshed out and complete.
+5. CRITICAL WIDGET CONNECTION: The diagnosticQuiz must be strongly connected to the lesson's topics, containing actual high-quality educational content with specific parameters and a clear explanation of how the question relates to the prerequisites.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 \`\`\`json
@@ -5386,36 +5572,29 @@ ${dynamicCatalogList}
    - "name": (string) Full name of the person.
    - "dates": (string) Lifespan dates, e.g. "1723-1790" or "1856-1939".
    - "description": (string) Detailed biographical summary focusing on their contributions (8-12 sentences).
-   - "wikipediaUrl": (string) Direct canonical link to their English or French Wikipedia page. MANDATORY.
-   - "searchQuery": (string) Canonical search query to find the biography on Wikipedia. MANDATORY.
+   ⛔ ABSOLUTELY FORBIDDEN: Do NOT output "url", "wikipediaUrl", "wikipediaLink", "imageUrl", or "searchQuery". These are resolved automatically downstream.
 2. "RealPerson" or "HistoricalPerson":
    - "name": (string) Full name of the person (should match the Anchor Topic if provided).
    - "description": (string) Wikipedia-style hover card tooltip summary of this person (2-4 sentences).
-   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
-   - "searchQuery": (string) Canonical search query to find the person on Wikipedia. MANDATORY.
-   ⚠️ CRITICAL: Do NOT add a "year", "dates", "birthYear", or "deathYear" field for RealPerson/HistoricalPerson. These fields are NOT in the schema and will cause validation failure. Dates are resolved automatically via Wikidata after generation.
+   ⛔ ABSOLUTELY FORBIDDEN: Do NOT output "dates", "year", "url", "wikipediaUrl", "wikipediaLink", "imageUrl", or "searchQuery". These are resolved automatically downstream.
 3. "ConceptLink":
    - "name": (string) Name of the concept (should match the Anchor Topic if provided).
    - "description": (string) Wikipedia-style hover card tooltip summary of this concept (2-4 sentences).
-   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
-   - "searchQuery": (string) Canonical search query to find the concept on Wikipedia. MANDATORY.
+   ⛔ ABSOLUTELY FORBIDDEN: Do NOT output "url", "wikipediaUrl", "wikipediaLink", "imageUrl", or "searchQuery". These are resolved automatically downstream.
 4. "EventLink", "HistoricalEventLink", "EvenementHistorique", or "ÉvénementHistorique":
    - "name": (string) Name of the event (should match the Anchor Topic if provided).
    - "description": (string) Wikipedia-style hover card tooltip summary of this event (2-4 sentences).
-   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
-   - "searchQuery": (string) Canonical search query to find the event on Wikipedia. MANDATORY.
+   ⛔ ABSOLUTELY FORBIDDEN: Do NOT output "dates", "year", "url", "wikipediaUrl", "wikipediaLink", "imageUrl", or "searchQuery". These are resolved automatically downstream.
 5. "Location":
    - "name": (string) Name of the location (should match the Anchor Topic if provided).
    - "description": (string) Wikipedia-style hover card tooltip summary of this location (2-4 sentences).
-   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
-   - "searchQuery": (string) Canonical search query to find the location on Wikipedia. MANDATORY.
+   ⛔ ABSOLUTELY FORBIDDEN: Do NOT output "url", "wikipediaUrl", "wikipediaLink", "imageUrl", or "searchQuery". These are resolved automatically downstream.
 6. "Glossary":
    - "term": (string) Glossary vocabulary term.
    - "definition": (string) Detailed vocabulary definition (2-4 sentences).
-   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
-   - "searchQuery": (string) Canonical search query to find the term on Wikipedia. MANDATORY.
+   ⛔ ABSOLUTELY FORBIDDEN: Do NOT output "url", "wikipediaUrl", "wikipediaLink", "imageUrl", or "searchQuery". These are resolved automatically downstream.
 
-DO NOT output any properties that are not explicitly defined in the props catalog above for a given componentType. For instance, do NOT output "year", "dates", "url", or "wikipediaLink" for ConceptLink, HistoricalEventLink, Location, or Glossary; if you do, the critique agent will reject the block.
+DO NOT output any properties that are not explicitly defined in the props catalog above for a given componentType. For instance, do NOT output "year", "dates", "url", "wikipediaUrl", "wikipediaLink", "imageUrl", or "searchQuery" for Biography, RealPerson, HistoricalPerson, ConceptLink, HistoricalEventLink, Location, or Glossary; if you do, the critique agent will reject the block.
 
 You must define the "interactiveComponents" array containing one object for each anchor listed above.
 For each component:
@@ -5466,8 +5645,9 @@ Ensure:
 1. Every anchor specified in the prompt is mapped.
 2. Captions and descriptions have no sequential figure prefixes like "Figure 1:".
 3. Biography component details (dates, Wikipedia link) are correct.
-4. ZERO placeholders, draft markers, bracketed texts, or template values are present. Biographies, interactive elements, figures, and diagrams must be fully populated with real, high-quality, professional educational content in the target language. Absolutely no fake URLs, lorem ipsum text, or incomplete fields. Reject the block if any placeholder or skeletal text is detected.
+4. ZERO placeholders, draft markers, bracketed texts, or template values are present. Biographies, interactive elements, figures, and diagrams must be fully populated with real, high-quality, professional educational content in the target language. Absolutely no fake URLs, lorem ipsum text, "N/A", "## Section Name", or incomplete fields. Reject the block if any placeholder or skeletal text is detected.
 5. The "year", "dates", "url", or "wikipediaLink" properties can be "null" or omitted for components that do not require them or where the resource is unresolved/needs backend matching (such as ConceptLink, Location, Glossary, Image, Audio, and Video). Do NOT reject the block or treat "null" or omission as a placeholder or incomplete for these properties on non-applicable component types.
+6. CRITICAL WIDGET CONNECTION: Every interactive component or hover card (Biography, RealPerson, HistoricalPerson, ConceptLink, Location, Glossary, EventLink) must be strongly connected to the lesson's topics, informative, and detailed.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 \`\`\`json
@@ -5554,9 +5734,9 @@ ${dynamicCatalogList}
 
 ### REQUIRED PROPS STRUCTURE per componentType:
 1. "Image":
-   - "description": (string) Detailed academic description of what the image depicts (at least 2-3 sentences). Write it as a description of an existing image (e.g., "Carte linguistique de la péninsule italienne montrant la répartition des principaux groupes de dialectes...") rather than drawing instructions for a designer (e.g. do NOT say "Générer une carte..."). Do NOT generate sequential figure prefixes.
+   - "description": (string) Detailed academic description of what the image depicts (at least 2-3 sentences). Must have a strong, direct connection with the current lesson/concept, and must be highly informative (never generic or decorative). Write it as a description of an existing image (e.g., "Carte linguistique de la péninsule italienne montrant la répartition des principaux groupes de dialectes...") rather than drawing instructions for a designer (e.g. do NOT say "Générer une carte..."). Do NOT generate sequential figure prefixes.
    - "alt": (string) Short description for accessibility.
-   - "caption": (string) A detailed, italicized caption explaining academic relevance. Do NOT generate sequential figure numbers.
+   - "caption": (string) A detailed, italicized caption explaining academic relevance and its direct pedagogical connection to the lesson. Do NOT generate sequential figure numbers.
    - "title": (string) Short title of the image.
    - "searchQuery": (string) Highly canonical 1 to 3 search words (e.g. 'Claudio Monteverdi', 'Prise de la Bastille') to search in archives.
    ⛔ ABSOLUTELY FORBIDDEN for Image: Do NOT output "url", "wikipediaUrl", "wikipediaLink", "imageUrl", or "year" for Image components under any circumstances. These fields do not exist for Image. The URL is resolved automatically downstream by the media-resolver pipeline using the searchQuery and description. Including any of these fields — even with a seemingly valid URL — will cause a pipeline error and block validation.
@@ -5604,11 +5784,12 @@ For each component:
 - "sectionAnchor": The markdown heading "## Section Name" where this widget is placed in the narrative.
 - "props": The specific properties required for the widget type as described above.
 
-⚠️ SPECIAL INSTRUCTION ON CONCURRENCY & REUSABLE SIMULATORS:
-- If this lesson requires a generic mathematical, chemical, or physics simulator (such as "FunctionPlotter", "FunctionManipulator", "DynamicSimulation", "BasicMathExplorer", "ChemicalStoichiometry", etc.):
-  - You CAN and are encouraged to use these generic simulation widget types multiple times in the same lesson or across lessons of the course.
-  - Since lessons might be generated in parallel concurrency, ALWAYS configure each instance of these widgets with DIFFERENT, highly topic-relevant parameters, formulas, or expressions (e.g. topic-specific math curves or specific molecular reactions).
-  - Never use generic, default placeholders (like "y = x^2") so that each widget remains uniquely customized and distinct.
+⚠️ CRITICAL INSTRUCTION ON INTERACTIVE WIDGETS & SIMULATORS:
+- ALL interactive widgets (such as quizzes, solved/unsolved exercises, Mermaid charts, DataCharts, and simulations like "FunctionPlotter", "FunctionManipulator", "DynamicSimulation", "BasicMathExplorer", "ChemicalStoichiometry", etc.) MUST be strongly connected to the lesson.
+- Choice of Parameters: You must ensure that the choice of parameters, equations, formulas, variables, inputs, or datasets is highly customized, topic-specific, and not generic. Never use default placeholders (such as "y = x^2" or generic template arrays).
+- Explanation Section: Every interactive widget must include a clear, detailed explanation or solution section explaining how these parameters and inputs relate to the lesson's concepts, showing real academic depth.
+- Concurrency: If the same widget is used multiple times, configure each instance with different, highly topic-relevant parameters.
+- Mandatory Caption/Legend: You MUST specify a detailed, academic caption/description/legend (via the "caption" or "description" prop) for every single interactive widget, simulator, Mermaid chart, and data table. This caption/legend is required for accessibility and academic rigor and must describe the widget and its parameters.
 
 Return ONLY a valid JSON object matching this schema:
 \\\`\\\`\\\`json
@@ -5652,7 +5833,7 @@ Ensure:
 1. Every anchor specified in the prompt is mapped.
 2. Captions and descriptions have no sequential figure prefixes like "Figure 1:".
 3. Biography component details (dates, Wikipedia link) are correct.
-4. ZERO placeholders, draft markers, bracketed texts, or template values are present. Biographies, interactive elements, figures, and diagrams must be fully populated with real, high-quality, professional educational content in the target language. Absolutely no fake URLs, lorem ipsum text, or incomplete fields. Reject the block if any placeholder or skeletal text is detected.
+4. ZERO placeholders, draft markers, bracketed texts, or template values are present. Biographies, interactive elements, figures, and diagrams must be fully populated with real, high-quality, professional educational content in the target language. Absolutely no fake URLs, lorem ipsum text, "N/A", "## Section Name", or incomplete fields. Reject the block if any placeholder or skeletal text is detected.
 5. CRITICAL MEDIA RULES:
    - Image components MUST NOT contain "url", "wikipediaUrl", "wikipediaLink", "imageUrl", or "year" properties.
    - Video components MUST NOT contain "url", "id", "provider", "unresolved", "wikipediaUrl", "wikipediaLink", or "imageUrl" properties.
@@ -5660,6 +5841,8 @@ Ensure:
    These fields are FORBIDDEN in the raw widgets JSON for Image, Video, and Audio. They are resolved automatically downstream by the external-resource-resolver pipeline using the component's title/searchQuery/description. Any media component missing these fields is CORRECT and must NOT be rejected. If a media component DOES contain any of these forbidden fields (even with a seemingly valid URL), that IS an error and should be flagged.
 6. For other components (Quiz, SolvedExercise, UnsolvedExercise, FillInBlanks, Mermaid): "url", "wikipediaLink", "wikipediaUrl" can be null or omitted — this is acceptable. Do NOT reject those component types for missing URL fields.
 7. For UnsolvedExercise components, the props must contain "title", "problem", and "correctAnswer". Do NOT reject them for missing "questions" or "tasks" as those are not part of the UnsolvedExercise props structure.
+8. CRITICAL IMAGE RELEVANCE: Every Image or media component must have a strong, direct connection with the current lesson/concept, and must be highly informative (not merely decorative or filler). The caption/description must clearly explain its relevance. Reject if decorative/generic or lacking clear informative value.
+9. CRITICAL INTERACTIVE WIDGETS CONNECTION: Every interactive widget (Quiz, SolvedExercise, UnsolvedExercise, Mermaid chart, DataChart, and simulations) must be strongly connected to the lesson. You must verify that the choice of parameters, equations, inputs, or datasets is highly specific to the lesson's topic (not generic defaults). Verify that every interactive widget has a clear, detailed explanation or solution section explaining the logic and how the parameters relate to the lesson's concepts. Reject the block if any interactive widget has generic parameters or lacks a proper explanation section.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 \`\`\`json
@@ -5817,7 +6000,8 @@ ${JSON.stringify(block4Parsed, null, 2)}
 Ensure:
 1. Glossary and conclusion summary are scientifically/academically accurate.
 2. The language is strictly in ${targetLang.toUpperCase()}.
-3. Absolutely ZERO placeholders, draft markers, TBDs, lorem ipsum text, or template values (like "your_youtube_id" or "placeholder") in the goingFurther, whatsNext, or glossary items. All fields must contain real, fully translated, complete information. Reject if any empty strings or dummy templates are used. Note that for goingFurther items, omitting the "url" property entirely is perfectly acceptable if a real URL is not known; do not reject items for not having a "url" property, but reject them if they have a dummy/placeholder URL like "example.com" or "placeholder.com".
+3. Absolutely ZERO placeholders, draft markers, TBDs, lorem ipsum text, "N/A", "## Section Name", or template values (like "your_youtube_id" or "placeholder") in the goingFurther, whatsNext, or glossary items. All fields must contain real, fully translated, complete information. Reject if any empty strings or dummy templates are used. Note that for goingFurther items, omitting the "url" property entirely is perfectly acceptable if a real URL is not known; do not reject items for not having a "url" property, but reject them if they have a dummy/placeholder URL like "example.com" or "placeholder.com".
+4. CRITICAL WIDGET CONNECTION: The glossary, transition steps (whatsNext), and goingFurther items must be strongly connected to the lesson's topics and highly informative. Glossary definitions must be detailed and context-specific.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 \`\`\`json
@@ -5882,33 +6066,32 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 
 
       }      // --- Block 5: Evaluation & Bibliography References ---
-      let block5Approved = false;
-      let block5Iteration = 0;
-      const maxBlock5Iterations = 3;
-      let block5Feedback = '';
-      let block5Parsed: any = null;
+      let block5Parsed: any = { finalEvaluation: null, references: [] };
 
-      const widgetBlock5Entry = {
-        blockName: "Block 5: Evaluation & References",
+      // --- Sub-Block 5A: Final Evaluation Quiz ---
+      let block5QuizApproved = false;
+      let block5QuizIteration = 0;
+      const maxBlock5QuizIterations = 3;
+      let block5QuizFeedback = '';
+      let block5QuizParsed: any = null;
+
+      const widgetBlock5QuizEntry = {
+        blockName: "Block 5A: Final Quiz",
         attempts: 0,
         rejections: 0,
         approved: false
       };
-      lessonStats.widgetBlockAttempts.push(widgetBlock5Entry);
+      lessonStats.widgetBlockAttempts.push(widgetBlock5QuizEntry);
 
-      const block5Prompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
-Your task is to design the JSON object for the final evaluation quiz and reference widgets of the lesson:
+      const block5QuizPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+Your task is to design the JSON object for the final evaluation quiz of the lesson:
 Course: "${correctedCourseName}"
 Level: "${getDescriptiveLevelForPrompt(levelInput)}"
 Lesson Title: "${item.title}"
 Language: "${targetLang.toUpperCase()}"
-Citation Style: "${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}"
 
-You must define the following JSON properties:
+You must define the following JSON property:
 1. "finalEvaluation": An object with a "type" property (value "Quiz"), and a "props" object containing a "durationLimit" (integer, e.g. 1800) and a "questions" array. ${isTerminalEvaluation ? 'Provide exactly 15 questions covering the entire course. Do not use any hover card tags like RealPerson, ConceptLink, etc., inside quiz questions or options.' : 'Provide 5-10 questions covering this lesson.'} Each question object in the array must contain "q" (the question string), "explanation" (string), and an "options" array. Each option object in the options array must contain "text" (string) and "correct" (boolean, true if correct, false otherwise).
-2. "references": ${isTerminalEvaluation ? 'An empty array ([]) due to the No-Ref policy.' : (constraintKey === 'university_grad' ? 'An array of 8 to 12 authoritative academic bibliography entries in the requested citation style.' : constraintKey === 'university_undergrad' ? 'An array of 6 to 8 authoritative academic bibliography entries in the requested citation style.' : 'An array of 3-5 authoritative academic bibliography entries in the requested citation style.')}
-
-${isTerminalEvaluation ? 'SPECIAL INSTRUCTION: Prohibit references, citations, glossaries, and hover cards on this page. Media (images/audio/video) or Mermaid diagrams are strictly prohibited unless they are functional to the assessment itself (i.e. used directly inside the quiz questions or options as a building block for the question itself). Do not include any decorative or non-essential media/diagrams.' : ''}
 
 Return ONLY a valid JSON object matching this schema:
 \\\`\\\`\\\`json
@@ -5931,94 +6114,320 @@ Return ONLY a valid JSON object matching this schema:
         }
       ]
     }
-  },
-  "references": ["string"]
+  }
 }
 \\\`\\\`\\\`
 Do NOT wrap your JSON response in markdown code blocks.`;
 
-      while (!block5Approved && block5Iteration < maxBlock5Iterations) {
-        block5Iteration++;
+      while (!block5QuizApproved && block5QuizIteration < maxBlock5QuizIterations) {
+        block5QuizIteration++;
         lessonStats.widgetsAttempts++;
-        widgetBlock5Entry.attempts = block5Iteration;
-        await appendTaskLog(`[AI GENERATOR] Generating Widget Block 5 (Attempt #${block5Iteration})...`);
+        widgetBlock5QuizEntry.attempts = block5QuizIteration;
+        await appendTaskLog(`[AI GENERATOR] Generating Widget Block 5 Quiz (Attempt #${block5QuizIteration})...`);
 
-        let block5PromptWithFeedback = block5Prompt;
-        if (block5Feedback) {
-          block5PromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block5Feedback}"\nPlease fix these issues and regenerate.`;
+        let quizPromptWithFeedback = block5QuizPrompt;
+        if (block5QuizFeedback) {
+          quizPromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block5QuizFeedback}"\nPlease fix these issues and regenerate.`;
         }
 
-        try {
-          block5Parsed = await generateAndParseWidgetBlock(block5PromptWithFeedback, widgetBlock4Schema, 'Block 5 Evaluation & References');
-        } catch (e) {
-          await appendTaskLog(`[AI GENERATOR] Widget Block 5 failed to parse. Retrying...`);
-          continue;
-        }
+        const totalQuestions = isTerminalEvaluation ? 15 : 5;
+        const chunkSize = 5;
+        const questions: any[] = [];
+        let chunkFailed = false;
 
-        // Critique block 5
-        await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 5...`);
-        const block5CriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 5:
-${JSON.stringify(block5Parsed, null, 2)}
+        for (let startIndex = 0; startIndex < totalQuestions; startIndex += chunkSize) {
+          const currentChunkSize = Math.min(chunkSize, totalQuestions - startIndex);
+          await appendTaskLog(`[AI GENERATOR] Generating Quiz Chunk (Questions ${startIndex + 1} to ${startIndex + currentChunkSize} of ${totalQuestions})...`);
+          
+          let chunkPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+Your task is to design a portion of the final evaluation quiz of the lesson:
+Course: "${correctedCourseName}"
+Level: "${getDescriptiveLevelForPrompt(levelInput)}"
+Lesson Title: "${item.title}"
+Language: "${targetLang.toUpperCase()}"
 
-Ensure:
-1. Bibliography entries are valid academic citations.
-2. Quizzes are mathematically/scientifically accurate.
-3. No HTML or custom Hover-Card tags inside quiz strings.
-4. Absolutely ZERO placeholders or generic filler text (like "Option A", "Option B", "Option", etc.) are allowed in the quiz questions or options. All questions and options must contain actual high-quality academic content in the target language. Reject if any question has dummy options.
-5. If this is a terminal evaluation (isTerminalEvaluation is ${isTerminalEvaluation}), the "references" array must be strictly empty ([]).
-6. If this is a terminal evaluation, no media (images, video, audio) or Mermaid diagrams are allowed in the quiz questions/explanations unless they are absolutely functional to the assessment itself (e.g. diagram-based logic puzzles). Decorative images or non-essential diagrams must be rejected.
-7. If this is a terminal evaluation, no hover cards (RealPerson, ConceptLink, Glossary) are allowed in the quiz questions/explanations.
+Generate exactly ${currentChunkSize} high-quality quiz questions (Questions ${startIndex + 1} to ${startIndex + currentChunkSize} out of ${totalQuestions} total questions).
+${isTerminalEvaluation ? 'These questions should cover the entire course and must be highly comprehensive, spanning multiple topics. Do not use any hover card tags like RealPerson, ConceptLink, etc., inside quiz questions or options.' : 'These questions should cover this lesson.'}
+Each question object in the array must contain "q" (the question string), "explanation" (string), and an "options" array. Each option object in the options array must contain "text" (string) and "correct" (boolean, true if correct, false otherwise).
 
-Return ONLY a valid JSON object matching widgetBlockAuditSchema:
+Return ONLY a valid JSON object matching this schema:
 \`\`\`json
 {
-  "approved": boolean,
-  "critique": "detailed feedback explaining what to fix globally, or empty if approved",
-  "fields": [
-    // If approved is false, list ONLY the fields/keys that are rejected. Do NOT include approved fields.
+  "questions": [
     {
-      "field": "name of the field (e.g., 'finalEvaluation' or 'references')",
-      "approved": false,
-      "critique": "detailed feedback explaining what to fix in this specific field"
+      "q": "string",
+      "explanation": "string",
+      "multiple": false,
+      "options": [
+        {
+          "text": "string",
+          "correct": boolean
+        }
+      ]
     }
   ]
 }
 \`\`\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+          if (block5QuizFeedback) {
+            chunkPrompt += `\n\n🚨 PREVIOUS CRITIQUE FOR THE WHOLE QUIZ:\n"${block5QuizFeedback}"\nPlease keep this critique in mind when generating these questions.`;
+          }
+
+          try {
+            const widgetBlock5QuizChunkSchema = {
+              type: "object",
+              properties: {
+                questions: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      q: { type: "string" },
+                      explanation: { type: "string" },
+                      multiple: { type: "boolean" },
+                      options: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            text: { type: "string" },
+                            correct: { type: "boolean" }
+                          },
+                          required: ["text", "correct"]
+                        }
+                      }
+                    },
+                    required: ["q", "explanation", "options"]
+                  }
+                }
+              },
+              required: ["questions"]
+            };
+
+            const chunkParsed = await generateAndParseWidgetBlock(chunkPrompt, widgetBlock5QuizChunkSchema, `Block 5 Quiz Chunk [${startIndex + 1}-${startIndex + currentChunkSize}]`);
+            if (chunkParsed && Array.isArray(chunkParsed.questions)) {
+              questions.push(...chunkParsed.questions);
+            } else {
+              throw new Error("Invalid chunk format: 'questions' array is missing or empty.");
+            }
+          } catch (e: any) {
+            await appendTaskLog(`[AI GENERATOR WARNING] Failed to generate Quiz Chunk starting at ${startIndex + 1}: ${e.message}`);
+            chunkFailed = true;
+            break;
+          }
+        }
+
+        if (chunkFailed || questions.length < totalQuestions) {
+          await appendTaskLog(`[AI GENERATOR] Chunked quiz generation failed. Retrying entire quiz generation attempt...`);
+          continue;
+        }
+
+        block5QuizParsed = {
+          finalEvaluation: {
+            type: "Quiz",
+            props: {
+              durationLimit: 1800,
+              questions: questions
+            }
+          }
+        };
+
+        // Critique Quiz
+        await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 5 Quiz...`);
+        const block5QuizCriticPrompt = `You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 5 Quiz:
+${JSON.stringify(block5QuizParsed, null, 2)}
+
+Ensure:
+1. Quizzes are mathematically/scientifically accurate.
+2. No HTML or custom Hover-Card tags inside quiz strings.
+3. Absolutely ZERO placeholders or generic filler text (like "Option A", "Option B", "Option", etc.) are allowed in the quiz questions or options. All questions and options must contain actual high-quality academic content in the target language. Reject if any question has dummy options.
+4. If this is a terminal evaluation (isTerminalEvaluation is ${isTerminalEvaluation}), no media (images, video, audio) or Mermaid diagrams are allowed in the quiz questions/explanations unless they are absolutely functional to the assessment itself (e.g. diagram-based logic puzzles). Decorative images or non-essential diagrams must be rejected.
+5. If this is a terminal evaluation, no hover cards (RealPerson, ConceptLink, Glossary) are allowed in the quiz questions/explanations.
+6. CRITICAL EVALUATION CONNECTION: Every question in the finalEvaluation quiz must be strongly connected to the lesson's/course's topics, with specific parameters or scenarios and a detailed pedagogical explanation of the correct choice(s). Reject the block if any question is trivial, generic, or lacks explanation.
+
+Return ONLY a valid JSON object matching widgetBlockAuditSchema:
+\\\`\\\`\\\`json
+{
+  "approved": boolean,
+  "critique": "detailed feedback explaining what to fix globally, or empty if approved",
+  "fields": [
+    {
+      "field": "finalEvaluation",
+      "approved": false,
+      "critique": "detailed feedback explaining what to fix in the quiz"
+    }
+  ]
+}
+\\\`\\\`\\\`
 
 [REJECT-ONLY REPORTING MANDATE]
 1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
 2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
 
-        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block5_${item.slug}_iter${block5Iteration}.md`, block5PromptWithFeedback); // [FIX G4/G5]
-        if (block5Parsed) {
-          if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block5_${item.slug}_iter${block5Iteration}.json`, JSON.stringify(block5Parsed, null, 2)); // [FIX G4/G5]
+        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block5_quiz_${item.slug}_iter${block5QuizIteration}.md`, quizPromptWithFeedback);
+        if (block5QuizParsed) {
+          if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block5_quiz_${item.slug}_iter${block5QuizIteration}.json`, JSON.stringify(block5QuizParsed, null, 2));
         }
-        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block5_critique${item.slug}_iter${block5Iteration}.md`, block5CriticPrompt); // [FIX G4/G5]
+        if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block5_quiz_critique${item.slug}_iter${block5QuizIteration}.md`, block5QuizCriticPrompt);
 
-        const criticJsonStr = await callAIEngine(block5CriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
-        if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block5${item.slug}_iter${block5Iteration}.json`, criticJsonStr); // [FIX G4/G5]
+        const criticJsonStr = await callAIEngine(block5QuizCriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
+        if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block5_quiz_${item.slug}_iter${block5QuizIteration}.json`, criticJsonStr);
 
         const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
         let auditResult = { approved: true, critique: '', fields: [] as any[] };
         try {
-          auditResult = safeJsonParse(cleanCritic, 'Widget Block 5 Audit Parsing');
+          auditResult = safeJsonParse(cleanCritic, 'Widget Block 5 Quiz Audit Parsing');
         } catch (e) {
-          console.warn(`[AI GENERATOR] Failed to parse Block 5 critique:`, e);
+          console.warn(`[AI GENERATOR] Failed to parse Block 5 Quiz critique:`, e);
         }
 
         if (auditResult.approved || isTerminalEvaluation) {
-          await appendTaskLog(`[AI GENERATOR] Widget Block 5 approved by Critique Agent!`);
-          block5Approved = true;
-          widgetBlock5Entry.approved = true;
+          await appendTaskLog(`[AI GENERATOR] Widget Block 5 Quiz approved by Critique Agent!`);
+          block5QuizApproved = true;
+          widgetBlock5QuizEntry.approved = true;
         } else {
-          let critiqueMsg = auditResult.critique || 'Widget Block 5 rejected.';
+          let critiqueMsg = auditResult.critique || 'Widget Block 5 Quiz rejected.';
           if (auditResult.fields && auditResult.fields.length > 0) {
             critiqueMsg += '\nDetailed errors:\n' + auditResult.fields.map((f: any) => `- Field "${f.field}": ${f.critique}`).join('\n');
           }
-          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 5 REJECTED. Critique: "${critiqueMsg}".`);
+          await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 5 Quiz REJECTED. Critique: "${critiqueMsg}".`);
           lessonStats.widgetsRejections++;
-          widgetBlock5Entry.rejections++;
-          block5Feedback = critiqueMsg;
+          widgetBlock5QuizEntry.rejections++;
+          block5QuizFeedback = critiqueMsg;
+        }
+      }
+
+      if (block5QuizParsed) {
+        block5Parsed.finalEvaluation = block5QuizParsed.finalEvaluation;
+      }
+
+      // --- Sub-Block 5B: References ---
+      let needReferencesGeneration = false;
+      if (isTerminalEvaluation) {
+        block5Parsed.references = [];
+      } else if (courseReferences && courseReferences.length > 0) {
+        block5Parsed.references = courseReferences;
+      } else {
+        needReferencesGeneration = true;
+      }
+
+      if (needReferencesGeneration) {
+        let block5RefApproved = false;
+        let block5RefIteration = 0;
+        const maxBlock5RefIterations = 3;
+        let block5RefFeedback = '';
+        let block5RefParsed: any = null;
+
+        const widgetBlock5RefEntry = {
+          blockName: "Block 5B: References",
+          attempts: 0,
+          rejections: 0,
+          approved: false
+        };
+        lessonStats.widgetBlockAttempts.push(widgetBlock5RefEntry);
+
+        const block5RefPrompt = `You are a world-class educational curriculum architect and JSON data validator (Agent 3B - References Architect).
+Your task is to design the JSON object for the academic bibliography references of the lesson:
+Course: "${correctedCourseName}"
+Level: "${getDescriptiveLevelForPrompt(levelInput)}"
+Lesson Title: "${item.title}"
+Language: "${targetLang.toUpperCase()}"
+Citation Style: "${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}"
+
+You must define the following JSON property:
+1. "references": ${constraintKey === 'university_grad' ? 'An array of 8 to 12 authoritative academic bibliography entries in the requested citation style.' : constraintKey === 'university_undergrad' ? 'An array of 6 to 8 authoritative academic bibliography entries in the requested citation style.' : 'An array of 3-5 authoritative academic bibliography entries in the requested citation style.'}
+
+Return ONLY a valid JSON object matching this schema:
+\\\`\\\`\\\`json
+{
+  "references": ["string"]
+}
+\\\`\\\`\\\`
+Do NOT wrap your JSON response in markdown code blocks.`;
+
+        while (!block5RefApproved && block5RefIteration < maxBlock5RefIterations) {
+          block5RefIteration++;
+          lessonStats.widgetsAttempts++;
+          widgetBlock5RefEntry.attempts = block5RefIteration;
+          await appendTaskLog(`[AI GENERATOR] Generating Widget Block 5 References (Attempt #${block5RefIteration})...`);
+
+          let refPromptWithFeedback = block5RefPrompt;
+          if (block5RefFeedback) {
+            refPromptWithFeedback += `\n\n🚨 PREVIOUS CRITIQUE:\n"${block5RefFeedback}"\nPlease fix these issues and regenerate.`;
+          }
+
+          try {
+            block5RefParsed = await generateAndParseWidgetBlock(refPromptWithFeedback, widgetBlock5ReferencesSchema, 'Block 5 References');
+          } catch (e) {
+            await appendTaskLog(`[AI GENERATOR] Widget Block 5 References failed to parse. Retrying...`);
+            continue;
+          }
+
+          // Critique References
+          await appendTaskLog(`[AI GENERATOR] Auditing Widget Block 5 References...`);
+          const block5RefCriticPrompt = `You are the References Critic Agent (Agent 4B). Review this Widget Block 5 References:
+${JSON.stringify(block5RefParsed, null, 2)}
+
+Ensure:
+1. Bibliography entries are valid academic citations.
+2. The citations are formatted correctly according to the requested citation style: "${getCitationStyle(courseContext.discipline || correctedCourseName).fullName}".
+3. ZERO placeholders, draft markers, bracketed texts, "N/A" (or "n/a"), "## Section Name", or dummy bibliography entries are allowed. All citations must be real, valid, complete academic publications formatted in the target language. Reject if any placeholders are detected.
+
+Return ONLY a valid JSON object matching widgetBlockAuditSchema:
+\\\`\\\`\\\`json
+{
+  "approved": boolean,
+  "critique": "detailed feedback explaining what to fix globally, or empty if approved",
+  "fields": [
+    {
+      "field": "references",
+      "approved": false,
+      "critique": "detailed feedback explaining what to fix in the bibliography"
+    }
+  ]
+}
+\\\`\\\`\\\`
+
+[REJECT-ONLY REPORTING MANDATE]
+1. If approved is true: approved MUST be true, critique MUST be "", and fields MUST be empty.
+2. If approved is false: fields MUST ONLY contain fields that are rejected (with approved set to false). Any approved field MUST be strictly omitted from the array.`;
+
+          if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block5_ref_${item.slug}_iter${block5RefIteration}.md`, refPromptWithFeedback);
+          if (block5RefParsed) {
+            if (process.env.DEBUG === 'true') saveDraftRevision(`draft_stage2_widgets_block5_ref_${item.slug}_iter${block5RefIteration}.json`, JSON.stringify(block5RefParsed, null, 2));
+          }
+          if (process.env.DEBUG === 'true') saveDraftRevision(`prompt_stage2_widgets_block5_ref_critique${item.slug}_iter${block5RefIteration}.md`, block5RefCriticPrompt);
+
+          const criticJsonStr = await callAIEngine(block5RefCriticPrompt, widgetBlockAuditSchema, 0.1, undefined, undefined, false, 'widget_placement');
+          if (process.env.DEBUG === 'true') saveDraftRevision(`critique_stage2_widgets_block5_ref_${item.slug}_iter${block5RefIteration}.json`, criticJsonStr);
+
+          const cleanCritic = criticJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
+          let auditResult = { approved: true, critique: '', fields: [] as any[] };
+          try {
+            auditResult = safeJsonParse(cleanCritic, 'Widget Block 5 References Audit Parsing');
+          } catch (e) {
+            console.warn(`[AI GENERATOR] Failed to parse Block 5 References critique:`, e);
+          }
+
+          if (auditResult.approved) {
+            await appendTaskLog(`[AI GENERATOR] Widget Block 5 References approved by Critique Agent!`);
+            block5RefApproved = true;
+            widgetBlock5RefEntry.approved = true;
+          } else {
+            let critiqueMsg = auditResult.critique || 'Widget Block 5 References rejected.';
+            if (auditResult.fields && auditResult.fields.length > 0) {
+              critiqueMsg += '\nDetailed errors:\n' + auditResult.fields.map((f: any) => `- Field "${f.field}": ${f.critique}`).join('\n');
+            }
+            await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 5 References REJECTED. Critique: "${critiqueMsg}".`);
+            lessonStats.widgetsRejections++;
+            widgetBlock5RefEntry.rejections++;
+            block5RefFeedback = critiqueMsg;
+          }
+        }
+
+        if (block5RefParsed) {
+          block5Parsed.references = block5RefParsed.references;
         }
       }
 
@@ -6244,7 +6653,7 @@ ${validatedMdx}`;
         course_slug: cleanPathSegment(correctedCourseName),
         lesson_slug: item.slug,
         lang: targetLang.toLowerCase(),
-        title: item.title,
+        title: item.title.length > 130 ? item.title.substring(0, 130).trim() : item.title,
         content: resolvedMdx,
         order: realIndex + 1
       });
@@ -6370,7 +6779,7 @@ async function performSectionBasedTranslation(
   let transModule = frontmatter.module || '';
 
   try {
-    const promptTitle = `Translate the lesson title "${transTitle}" to "${targetLang.toUpperCase()}". Return only the translated string.`;
+    const promptTitle = `Translate the lesson title "${transTitle}" to "${targetLang.toUpperCase()}". The translated title MUST NOT exceed 130 characters to avoid UI layout truncation. Return only the translated string.`;
     let transTitleSuccess = false;
     if (isVertexConfigured()) {
       try {
@@ -6425,6 +6834,10 @@ async function performSectionBasedTranslation(
     }
   } catch (e) {
     console.warn(`[AI GENERATOR] Title translation failed:`, e);
+  }
+
+  if (transTitle.length > 130) {
+    transTitle = transTitle.substring(0, 130).trim();
   }
 
   // 1b. Translate Module name if present
@@ -7055,7 +7468,7 @@ if (process.env.DEBUG === 'true') {
               course_slug: courseSlug,
               lesson_slug: lesson.lesson_slug,
               lang: targetLang.toLowerCase(),
-              title: transTitle,
+              title: transTitle.length > 130 ? transTitle.substring(0, 130).trim() : transTitle,
               content: resolvedMdx,
               order: lesson.order
             });
@@ -8138,7 +8551,7 @@ INSTRUCTIONS:
       course_slug: courseSlug,
       lesson_slug: slug,
       lang: targetLang.toLowerCase(),
-      title: lesson.title,
+      title: lesson.title.length > 130 ? lesson.title.substring(0, 130).trim() : lesson.title,
       content: resolvedMdx,
       order: lesson.order
     });
