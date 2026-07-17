@@ -3712,6 +3712,9 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   if (lessonSlug === 'evaluation-finale' || lessonSlug === 'final-evaluation' || lessonSlug === 'evaluation-terminale') {
     isSummative = true;
   }
+  // Heal any corrupted JSX tag attributes before any regex preprocessing runs!
+  content = healCorruptedAttributes(content);
+
   // Apply systematic healing first so high-fidelity content and components are injected automatically
   let processed = content;
 
@@ -5070,30 +5073,33 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
  */
 function removeOrphanedCloseTags(mdx: string): string {
   const HTML_SELF_CLOSING = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
-  // Quote-aware, backtick-aware, and escape-aware regex to ensure that < and > inside string attributes do not interfere with tag extraction
-  const tagRegex = /<(\/?)([A-Za-z][A-Za-z0-9]*)\b((?:[^'">`«»]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|«(?:[^»\\]|\\.)*»)*?)(\/?)>/g;
   
-  const stack: { name: string; start: number; end: number }[] = [];
-  const toRemove: { start: number; end: number }[] = [];
+  const { processed, jsxTags } = extractJsxTags(mdx);
   
-  let match;
-  while ((match = tagRegex.exec(mdx)) !== null) {
-    const isClose = match[1] === '/';
-    const tagName = match[2];
-    const isSelfClosing = match[4] === '/' || HTML_SELF_CLOSING.has(tagName.toLowerCase());
+  const stack: { name: string; index: number }[] = [];
+  const toRemove = new Set<number>();
+  
+  jsxTags.forEach((tag, idx) => {
+    const isClose = tag.startsWith('</');
+    
+    let nameStart = isClose ? 2 : 1;
+    let nameEnd = nameStart;
+    while (nameEnd < tag.length && /[A-Za-z0-9._-]/.test(tag[nameEnd])) {
+      nameEnd++;
+    }
+    const tagName = tag.substring(nameStart, nameEnd);
+    const isSelfClosing = tag.endsWith('/>') || HTML_SELF_CLOSING.has(tagName.toLowerCase());
     
     if (isSelfClosing) {
-      continue;
+      return;
     }
     
     if (!isClose) {
       stack.push({
         name: tagName,
-        start: match.index,
-        end: match.index + match[0].length
+        index: idx
       });
     } else {
-      // Find matching open tag in stack (scanning from top down)
       let foundIndex = -1;
       for (let i = stack.length - 1; i >= 0; i--) {
         if (stack[i].name.toLowerCase() === tagName.toLowerCase()) {
@@ -5103,34 +5109,27 @@ function removeOrphanedCloseTags(mdx: string): string {
       }
       
       if (foundIndex !== -1) {
-        // Pop matching tag and all unclosed tags nested inside it
         stack.splice(foundIndex);
       } else {
-        // Orphaned close tag! Mark for removal
-        toRemove.push({
-          start: match.index,
-          end: match.index + match[0].length
-        });
+        toRemove.add(idx);
       }
     }
-  }
+  });
   
-  // Apply removals from back to front
-  let result = mdx;
-  for (let i = toRemove.length - 1; i >= 0; i--) {
-    const { start, end } = toRemove[i];
-    result = result.substring(0, start) + result.substring(end);
-  }
+  let result = processed.replace(/___JSX_TAG_PLACEHOLDER_(\d+)___/g, (match, indexStr) => {
+    const idx = parseInt(indexStr, 10);
+    if (toRemove.has(idx)) {
+      return '';
+    }
+    return jsxTags[idx];
+  });
   
-  // If stack has remaining unclosed opening tags, append their closing tags to prevent acorn/mdx compilation crashes
   if (stack.length > 0) {
     let closingTags = '';
-    // Append in reverse order to properly close nested tags
     for (let i = stack.length - 1; i >= 0; i--) {
       closingTags += `</${stack[i].name}>`;
     }
     
-    // Find a good place to insert closing tags: before glossary or references, or at the end
     const insertIndex = result.search(/##{1,2}\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表|Glossário|Glossario|المعجم|قاموس المصطلحات|शब्दावली|فرہنگ|Réf|References|Bibliography|Referencias|Referenzen|参考文献|Referenze|Referências|المصادر|المراجع|संदर्भ|حوالہ جات)/iu);
     if (insertIndex !== -1) {
       result = result.substring(0, insertIndex) + `\n${closingTags}\n\n` + result.substring(insertIndex);
@@ -5150,16 +5149,12 @@ function removeOrphanedCloseTags(mdx: string): string {
  * caused by inline tags that span across list item boundaries.
  */
 function healUnclosedInlineTags(mdx: string): string {
-  const inlineTags = [
+  const inlineTags = new Set([
     'RealPerson', 'HistoricalPerson', 'EventLink', 'HistoricalEventLink', 'EvenementHistorique', 'ÉvénementHistorique', 'Location', 'Artwork', 'FictionalCharacter', 'Glossary', 'WebsiteLink', 'ProjectLink', 'SiteWeb', 'ConceptLink', 'ConceptLien', 'TheoremLink', 'TheoremeLien', 'ThéorèmeLien', 'InstitutionLink', 'InstitutionLien',
     'SpeciesLink', 'SpeciesLien', 'EspeceLien', 'EspèceLien', 'OrganismeLien',
     'ChemicalLink', 'ChemicalLien', 'MoleculesLien', 'MoleculeLien', 'ChimieLien',
     'CelestialLink', 'CelestialLien', 'CorpsCeleste', 'CorpsCéleste', 'AstroLien'
-  ];
-  const tagPattern = new RegExp(
-    `<(/?)(?:${inlineTags.join('|')})\\b(?:[^>'"/]|"[^"]*"|'[^']*')*?(/?)>`,
-    'gi'
-  );
+  ].map(t => t.toLowerCase()));
 
   const lines = mdx.split(/\r?\n/);
   const result: string[] = [];
@@ -5168,19 +5163,25 @@ function healUnclosedInlineTags(mdx: string): string {
     let line = lines[lineIdx];
     const openStack: string[] = [];
 
-    // Count net open/close tags on this line
-    let match;
-    const localPattern = new RegExp(
-      `<(/?)(${inlineTags.join('|')})\\b(?:[^>'"/]|"[^"]*"|'[^']*')*?(/?)>`,
-      'gi'
-    );
-    while ((match = localPattern.exec(line)) !== null) {
-      const isClose = match[1] === '/';
-      const tagName = match[2];
-      const isSelfClose = match[3] === '/';
-      if (isSelfClose) continue;
+    const { jsxTags } = extractJsxTags(line);
+    
+    jsxTags.forEach(tag => {
+      const isClose = tag.startsWith('</');
+      let nameStart = isClose ? 2 : 1;
+      let nameEnd = nameStart;
+      while (nameEnd < tag.length && /[A-Za-z0-9._-]/.test(tag[nameEnd])) {
+        nameEnd++;
+      }
+      const tagName = tag.substring(nameStart, nameEnd);
+      
+      if (!inlineTags.has(tagName.toLowerCase())) {
+        return;
+      }
+      
+      const isSelfClosing = tag.endsWith('/>');
+      if (isSelfClosing) return;
+      
       if (isClose) {
-        // pop from stack if we find a matching open tag
         const lastIdx = openStack.map(t => t.toLowerCase()).lastIndexOf(tagName.toLowerCase());
         if (lastIdx !== -1) {
           openStack.splice(lastIdx, 1);
@@ -5188,9 +5189,8 @@ function healUnclosedInlineTags(mdx: string): string {
       } else {
         openStack.push(tagName);
       }
-    }
+    });
 
-    // Append closing tags for any unclosed open tags on this line (in reverse order)
     if (openStack.length > 0) {
       for (let i = openStack.length - 1; i >= 0; i--) {
         line = line + `</${openStack[i]}>`;
@@ -6392,9 +6392,9 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
   }
 
   const parseAttr = (attrs: string, name: string): string | null => {
-    const regex = new RegExp(`\\b${name}=["']([^"']+)["']`, 'i');
+    const regex = new RegExp(`\\b${name}=\\s*(["'])(.*?)\\1`, 'i');
     const m = attrs.match(regex);
-    return m ? m[1] : null;
+    return m ? m[2] : null;
   };
 
   // ── Pre-fetch all unique entity queries in parallel ──────────────────────
@@ -6491,10 +6491,10 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
           const finalUrl = urlVal || details.url;
           if (finalUrl) {
             if (tagLower === 'glossary') {
-              newAttrs = newAttrs.replace(/\b(wikipediaUrl|wikipedia|url|href)=["'][^"']*["']/gi, '').trim();
+              newAttrs = newAttrs.replace(/\b(wikipediaUrl|wikipedia|url|href)=\s*(["'])(.*?)\2/gi, '').trim();
               newAttrs += ` wikipediaUrl="${finalUrl}"`;
             } else {
-              newAttrs = newAttrs.replace(/\b(url|href|wikipediaUrl|wikipedia)=["'][^"']*["']/gi, '').trim();
+              newAttrs = newAttrs.replace(/\b(url|href|wikipediaUrl|wikipedia)=\s*(["'])(.*?)\2/gi, '').trim();
               newAttrs += ` url="${finalUrl}"`;
             }
           }
@@ -6503,17 +6503,17 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
           if (finalDesc) {
             const escDesc = finalDesc.replace(/"/g, '&quot;').replace(/\n/g, ' ').trim();
             if (tagLower === 'glossary') {
-              newAttrs = newAttrs.replace(/\b(definition|description)=["'][^"']*["']/gi, '').trim();
+              newAttrs = newAttrs.replace(/\b(definition|description)=\s*(["'])(.*?)\2/gi, '').trim();
               newAttrs += ` definition="${escDesc}"`;
             } else {
-              newAttrs = newAttrs.replace(/\bdescription=["'][^"']*["']/gi, '').trim();
+              newAttrs = newAttrs.replace(/\bdescription=\s*(["'])(.*?)\1/gi, '').trim();
               newAttrs += ` description="${escDesc}"`;
             }
           }
 
           const finalDates = datesVal || details.dates;
           if (finalDates) {
-            newAttrs = newAttrs.replace(/\b(dates|lifespan)=["'][^"']*["']/gi, '').trim();
+            newAttrs = newAttrs.replace(/\b(dates|lifespan)=\s*(["'])(.*?)\2/gi, '').trim();
             newAttrs += ` dates="${finalDates}"`;
           }
 
@@ -6549,10 +6549,10 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
 
             if (glossaryMatch.url) {
               if (tagLower === 'glossary') {
-                newAttrs = newAttrs.replace(/\b(wikipediaUrl|wikipedia|url|href)=["'][^"']*["']/gi, '').trim();
+                newAttrs = newAttrs.replace(/\b(wikipediaUrl|wikipedia|url|href)=\s*(["'])(.*?)\2/gi, '').trim();
                 newAttrs += ` wikipediaUrl="${glossaryMatch.url}"`;
               } else {
-                newAttrs = newAttrs.replace(/\b(url|href|wikipediaUrl|wikipedia)=["'][^"']*["']/gi, '').trim();
+                newAttrs = newAttrs.replace(/\b(url|href|wikipediaUrl|wikipedia)=\s*(["'])(.*?)\2/gi, '').trim();
                 newAttrs += ` url="${glossaryMatch.url}"`;
               }
             }
@@ -6560,10 +6560,10 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
             if (!descVal) {
               const escDesc = glossaryMatch.definition.replace(/"/g, '&quot;').replace(/\n/g, ' ').trim();
               if (tagLower === 'glossary') {
-                newAttrs = newAttrs.replace(/\b(definition|description)=["'][^"']*["']/gi, '').trim();
+                newAttrs = newAttrs.replace(/\b(definition|description)=\s*(["'])(.*?)\2/gi, '').trim();
                 newAttrs += ` definition="${escDesc}"`;
               } else {
-                newAttrs = newAttrs.replace(/\bdescription=["'][^"']*["']/gi, '').trim();
+                newAttrs = newAttrs.replace(/\bdescription=\s*(["'])(.*?)\1/gi, '').trim();
                 newAttrs += ` description="${escDesc}"`;
               }
             }
@@ -6849,4 +6849,166 @@ export function rehypeMdxSanitizer(lang: string = 'en') {
   return (tree: RehypeNode) => {
     traverse(tree);
   };
+}
+
+function isSingleQuoteDelimiter(text: string, index: number): boolean {
+  if (text[index] !== "'") return false;
+  const prevChar = index > 0 ? text[index - 1] : '';
+  const nextChar = index + 1 < text.length ? text[index + 1] : '';
+  if (/[a-zA-ZÀ-ÿ]/.test(prevChar) && /[a-zA-ZÀ-ÿ]/.test(nextChar)) {
+    return false;
+  }
+  return true;
+}
+
+function isValidTagName(name: string): boolean {
+  if (!name) return false;
+  if (/^[A-Z]/.test(name)) return true;
+  const standardTags = new Set([
+    'p', 'span', 'div', 'a', 'img', 'br', 'hr', 'ul', 'ol', 'li', 'strong', 'em', 'code', 'pre',
+    'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'iframe', 'sub', 'sup', 'b', 'i', 'u'
+  ]);
+  return standardTags.has(name.toLowerCase());
+}
+
+export function extractJsxTags(text: string): { processed: string, jsxTags: string[] } {
+  let processed = '';
+  const jsxTags: string[] = [];
+  let i = 0;
+  
+  while (i < text.length) {
+    if (text[i] === '<' && i + 1 < text.length) {
+      let isClose = false;
+      let nameStart = i + 1;
+      if (text[nameStart] === '/') {
+        isClose = true;
+        nameStart++;
+      }
+      
+      let nameEnd = nameStart;
+      while (nameEnd < text.length && /[A-Za-z0-9._-]/.test(text[nameEnd])) {
+        nameEnd++;
+      }
+      
+      const tagName = text.substring(nameStart, nameEnd);
+      
+      if (tagName && isValidTagName(tagName)) {
+        let tagContent = text.substring(i, nameEnd);
+        let j = nameEnd;
+        let inDoubleQuote = false;
+        let inSingleQuote = false;
+        let braceDepth = 0;
+        
+        while (j < text.length) {
+          const char = text[j];
+          tagContent += char;
+          
+          if (char === '"' && text[j - 1] !== '\\' && !inSingleQuote) {
+            inDoubleQuote = !inDoubleQuote;
+          } else if (char === "'" && text[j - 1] !== '\\' && !inDoubleQuote) {
+            if (isSingleQuoteDelimiter(text, j)) {
+              inSingleQuote = !inSingleQuote;
+            }
+          } else if (char === '{' && !inDoubleQuote && !inSingleQuote) {
+            braceDepth++;
+          } else if (char === '}' && !inDoubleQuote && !inSingleQuote) {
+            braceDepth = Math.max(0, braceDepth - 1);
+          } else if (char === '>' && !inDoubleQuote && !inSingleQuote && braceDepth === 0) {
+            j++;
+            break;
+          }
+          j++;
+        }
+        
+        jsxTags.push(tagContent);
+        processed += `___JSX_TAG_PLACEHOLDER_${jsxTags.length - 1}___`;
+        i = j;
+        continue;
+      }
+    }
+    
+    processed += text[i];
+    i++;
+  }
+  
+  return { processed, jsxTags };
+}
+
+export function healCorruptedAttributes(mdx: string): string {
+  if (!mdx) return mdx;
+  
+  const { processed, jsxTags } = extractJsxTags(mdx);
+  
+  const healedTags = jsxTags.map(tag => {
+    if (tag.startsWith('</')) return tag;
+    
+    let nameEnd = 1;
+    while (nameEnd < tag.length && /[A-Za-z0-9._-]/.test(tag[nameEnd])) {
+      nameEnd++;
+    }
+    
+    const tagName = tag.substring(1, nameEnd);
+    let attributesPart = tag.substring(nameEnd, tag.length - 1);
+    const isSelfClosing = tag.endsWith('/>');
+    if (isSelfClosing) {
+      attributesPart = tag.substring(nameEnd, tag.length - 2);
+    }
+    
+    // 1. Fix missing opening quote: attribute=Value" -> attribute="Value"
+    const missingOpenQuoteRegex = /(\b[A-Za-z0-9_.-]+\s*=\s*)([^"'{}\s][^"'>]*?)"/g;
+    let attrsCleaned = attributesPart.replace(missingOpenQuoteRegex, (m, prefix, val) => {
+      return `${prefix}"${val}"`;
+    });
+    
+    const missingOpenQuoteSingleRegex = /(\b[A-Za-z0-9_.-]+\s*=\s*)([^"'{}\s][^"'>]*?)'/g;
+    attrsCleaned = attrsCleaned.replace(missingOpenQuoteSingleRegex, (m, prefix, val) => {
+      return `${prefix}'${val}'`;
+    });
+    
+    // 2. Convert any attributes wrapped in guillemets to double quotes
+    const guillemetAttrRegex = /(\b[A-Za-z0-9_.-]+\s*=\s*)«\s*([\s\S]*?)\s*»/g;
+    attrsCleaned = attrsCleaned.replace(guillemetAttrRegex, (m, prefix, val) => {
+      const escapedVal = val.replace(/"/g, '&quot;');
+      return `${prefix}"${escapedVal}"`;
+    });
+    
+    // 3. Convert smart quotes
+    const smartAttrRegex = /(\b[A-Za-z0-9_.-]+\s*=\s*)“\s*([\s\S]*?)\s*”/g;
+    attrsCleaned = attrsCleaned.replace(smartAttrRegex, (m, prefix, val) => {
+      const escapedVal = val.replace(/"/g, '&quot;');
+      return `${prefix}"${escapedVal}"`;
+    });
+    
+    // 4. Remove commas between attributes
+    attrsCleaned = attrsCleaned.replace(/(["'}]\s*),\s*(\b[A-Za-z0-9_.-]+\s*=)/g, '$1 $2');
+    
+    // 5. Clean up duplicate attributes
+    const attrRegex = /(\b[A-Za-z0-9_.-]+)\s*=\s*(?:(["'])(.*?)\2|\{([^}]*)\})/g;
+    const attrMap = new Map<string, string>();
+    let m;
+    while ((m = attrRegex.exec(attrsCleaned)) !== null) {
+      const name = m[1].toLowerCase();
+      attrMap.set(name, m[0]);
+    }
+    
+    const uniqueAttrs: string[] = [];
+    const seen = new Set<string>();
+    attrRegex.lastIndex = 0;
+    while ((m = attrRegex.exec(attrsCleaned)) !== null) {
+      const name = m[1].toLowerCase();
+      if (!seen.has(name)) {
+        seen.add(name);
+        uniqueAttrs.push(attrMap.get(name)!);
+      }
+    }
+    
+    const finalAttrsStr = uniqueAttrs.length > 0 ? ' ' + uniqueAttrs.join(' ') : attrsCleaned;
+    return `<${tagName}${finalAttrsStr}${isSelfClosing ? '/' : ''}>`;
+  });
+  
+  return processed.replace(/___JSX_TAG_PLACEHOLDER_(\d+)___/g, (match, indexStr) => {
+    const idx = parseInt(indexStr, 10);
+    return healedTags[idx] !== undefined ? healedTags[idx] : match;
+  });
 }

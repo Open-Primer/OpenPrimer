@@ -7,6 +7,8 @@
   --foreground: #f8fafc;
   --accent: #3b82f6;
   --accent-foreground: #ffffff;
+  --skeleton-bg: rgba(255, 255, 255, 0.05);
+  --skeleton-pulse: rgba(255, 255, 255, 0.12);
 }
 
 @theme inline {
@@ -130,6 +132,8 @@ select {
 .theme-paper {
   background-color: #fcfaf2 !important;
   color: #0f172a !important; /* Slate-900 */
+  --skeleton-bg: rgba(15, 23, 42, 0.05);
+  --skeleton-pulse: rgba(15, 23, 42, 0.12);
 }
 
 /* Sidebar styling in Paper Theme */
@@ -650,6 +654,8 @@ select {
 .theme-focus {
   background-color: #000000 !important;
   color: #a3a3a3 !important; /* Neutral-400 */
+  --skeleton-bg: rgba(255, 255, 255, 0.03);
+  --skeleton-pulse: rgba(255, 255, 255, 0.08);
 }
 
 /* Eliminate all vibrant background gradients and shadow glows in Focus Theme */
@@ -1617,4 +1623,34 @@ body:not(.theme-paper):not(.theme-focus) footer {
 .theme-paper .custom-illustration a:hover,
 .theme-paper .custom-illustration p a:hover {
   color: #475569 !important; /* darker Slate-gray on hover */
+}
+
+/* --- Skeleton Loader --- */
+.skeleton-bg-page {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+.skeleton-border {
+  border-color: var(--skeleton-bg) !important;
+}
+.skeleton-block {
+  background-color: var(--skeleton-bg) !important;
+}
+.skeleton-gradient {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-bg) 25%,
+    var(--skeleton-pulse) 50%,
+    var(--skeleton-bg) 75%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: loading-shimmer 1.5s infinite linear !important;
+}
+@keyframes loading-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }

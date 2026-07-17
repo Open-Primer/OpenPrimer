@@ -89,10 +89,7 @@ export const ErrorModal = ({ lang, subject, title, nextPagePath }: ErrorModalPro
           </div>
         </div>
 
-        <div className="space-y-4 mb-8 text-left">
-          <p className="text-xs font-black uppercase text-slate-500 tracking-widest border-b border-slate-800 pb-2">
-            {lang.toLowerCase() === 'fr' ? 'Avis technique' : 'Technical Advisory'}
-          </p>
+        <div className="mb-8 text-left">
           <p className="text-sm text-slate-300 leading-relaxed">
             {t.desc}
           </p>
