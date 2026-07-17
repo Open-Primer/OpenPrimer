@@ -1654,3 +1654,39 @@ body:not(.theme-paper):not(.theme-focus) footer {
     background-position: -200% 0;
   }
 }
+
+/* --- Paper Theme Interactive Widgets Compatibility --- */
+.theme-paper button.bg-violet-600,
+.theme-paper button.bg-emerald-600,
+.theme-paper button.bg-blue-600,
+.theme-paper button.bg-rose-600,
+.theme-paper button.bg-emerald-500,
+.theme-paper button.bg-violet-500 {
+  color: #ffffff !important;
+}
+
+.theme-paper button:disabled {
+  color: rgba(15, 23, 42, 0.35) !important;
+  background-color: rgba(15, 23, 42, 0.06) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+/* Ensure selected option button in paper mode is readable and clear */
+.theme-paper button.bg-violet-600\/20 {
+  background-color: rgba(109, 40, 217, 0.12) !important;
+  border-color: #6d28d9 !important;
+  color: #6d28d9 !important;
+}
+
+/* Ensure normal option buttons in paper mode look clean */
+.theme-paper button.bg-slate-950\/60 {
+  background-color: rgba(15, 23, 42, 0.03) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  color: #334155 !important;
+}
+.theme-paper button.bg-slate-950\/60:hover {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+  border-color: rgba(15, 23, 42, 0.15) !important;
+  color: #0f172a !important;
+}
+

@@ -55,7 +55,7 @@ function setCachedMedia(query: string, lang: string, entry: Omit<CacheEntry, 'ti
   savePersistentCache();
 }
 
-function compileFinalLabel(sourceLabel: string, sourceUrl?: string | null): string {
+export function compileFinalLabel(sourceLabel: string, sourceUrl?: string | null): string {
   if (!sourceLabel) return '';
   const isAlreadyFormatted = sourceLabel.includes('[') || sourceLabel.includes('](');
   if (sourceUrl && !isAlreadyFormatted) {
@@ -194,7 +194,7 @@ function getSafeExtension(contentType: string, defaultExt: string = 'jpg'): stri
 }
 
 
-async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 5000): Promise<Response> {
+export async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 5000): Promise<Response> {
   const controller = new AbortController();
   const id = setTimeout(() => {
     try { controller.abort(); } catch {}
@@ -310,7 +310,7 @@ async function ensureBucketExists() {
 }
 
 // Upload a buffer to Supabase Storage and return its public URL
-async function uploadToSupabaseStorage(fileName: string, buffer: Buffer, mimeType: string): Promise<string | null> {
+export async function uploadToSupabaseStorage(fileName: string, buffer: Buffer, mimeType: string): Promise<string | null> {
   try {
     await ensureBucketExists();
 
@@ -2694,16 +2694,28 @@ export async function searchWikidataImage(query: string, lang: string = 'fr'): P
   }
 }
 
-async function validateImageWithGemini(imageUrl: string, description: string): Promise<boolean> {
+export async function validateImageWithGemini(imageUrl: string, description: string): Promise<boolean> {
   try {
     const resImg = await fetchWithTimeout(imageUrl, {}, 8000);
     if (!resImg.ok) {
       console.warn(`[MEDIA-RESOLVER] Failed to download image for validation: ${imageUrl}`);
       return false;
     }
-    const contentType = resImg.headers.get('content-type') || 'image/jpeg';
+    let contentType = resImg.headers.get('content-type') || 'image/jpeg';
     const arrayBuffer = await resImg.arrayBuffer();
-    const base64Data = Buffer.from(arrayBuffer).toString('base64');
+    let buffer = Buffer.from(arrayBuffer);
+
+    if (contentType.toLowerCase().includes('svg') || imageUrl.toLowerCase().endsWith('.svg')) {
+      try {
+        const sharp = require('sharp');
+        buffer = await sharp(buffer).png().toBuffer();
+        contentType = 'image/png';
+        console.log(`[MEDIA-RESOLVER] Successfully rasterized SVG image to PNG via sharp for Gemini validation.`);
+      } catch (e) {
+        console.warn(`[MEDIA-RESOLVER] Failed to convert SVG to PNG via sharp:`, e);
+      }
+    }
+    const base64Data = buffer.toString('base64');
 
     const promptText = `Analyze the attached image and determine if it directly and accurately depicts the following subject: "${description}".
     

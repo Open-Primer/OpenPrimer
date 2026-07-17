@@ -2574,6 +2574,7 @@ const components = {
   OpenQuestion,
   ScientificDebate,
   Citation,
+  Quote: Citation,
   PreviousLessonSummary,
   ResumeLeconPrecedente: PreviousLessonSummary,
   CareerProfile,

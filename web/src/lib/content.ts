@@ -6899,6 +6899,7 @@ export function extractJsxTags(text: string): { processed: string, jsxTags: stri
         let inDoubleQuote = false;
         let inSingleQuote = false;
         let braceDepth = 0;
+        let aborted = false;
         
         while (j < text.length) {
           const char = text[j];
@@ -6918,13 +6919,21 @@ export function extractJsxTags(text: string): { processed: string, jsxTags: stri
             j++;
             break;
           }
+          
+          // Safeguard: a single JSX tag opening/closing definition should not span more than 1500 chars or across paragraphs
+          if (tagContent.length > 1500 || tagContent.includes('\n\n')) {
+            aborted = true;
+            break;
+          }
           j++;
         }
         
-        jsxTags.push(tagContent);
-        processed += `___JSX_TAG_PLACEHOLDER_${jsxTags.length - 1}___`;
-        i = j;
-        continue;
+        if (!aborted && j <= text.length) {
+          jsxTags.push(tagContent);
+          processed += `___JSX_TAG_PLACEHOLDER_${jsxTags.length - 1}___`;
+          i = j;
+          continue;
+        }
       }
     }
     
