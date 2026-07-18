@@ -7,3 +7,4 @@ export { TermsPage } from './static-pages/TermsPage';
 export { PrivacyPage } from './static-pages/PrivacyPage';
 export { LegalPage } from './static-pages/LegalPage';
 export { SyllabusPage } from './static-pages/SyllabusPage';
+export { FaqPage } from './static-pages/FaqPage';

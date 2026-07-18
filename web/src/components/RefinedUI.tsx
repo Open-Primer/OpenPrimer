@@ -2786,6 +2786,7 @@ export const Footer = () => {
             <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${textTitleClass} mb-8`}>{t.foundation}</p>
             <ul className="space-y-4">
               <li><Link href="/philosophy" className={`text-sm ${textLinkClass} transition-colors`}>{t.philosophy}</Link></li>
+              <li><Link href="/faq" className={`text-sm ${textLinkClass} transition-colors`}>{t.faq || 'FAQ'}</Link></li>
               <li><Link href="/contact" className={`text-sm ${textLinkClass} transition-colors`}>{t.contact}</Link></li>
             </ul>
           </div>

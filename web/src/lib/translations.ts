@@ -92,6 +92,7 @@ export const RAW_STATIC_UI_STRINGS = {
   "curriculum": "Curriculum",
   "legal": "Legal",
   "philosophy": "Our Philosophy",
+  "faq": "FAQ",
   "contact": "Contact Support",
   "opensource": "Open Source",
   "languages": "Languages",
