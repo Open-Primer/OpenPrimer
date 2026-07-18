@@ -7013,68 +7013,140 @@ export function healCorruptedAttributes(mdx: string): string {
   const healedTags = jsxTags.map(tag => {
     if (tag.startsWith('</')) return tag;
     
+    const isSelfClosing = tag.endsWith('/>');
     let nameEnd = 1;
     while (nameEnd < tag.length && /[A-Za-z0-9._-]/.test(tag[nameEnd])) {
       nameEnd++;
     }
     
     const tagName = tag.substring(1, nameEnd);
-    let attributesPart = tag.substring(nameEnd, tag.length - 1);
-    const isSelfClosing = tag.endsWith('/>');
-    if (isSelfClosing) {
-      attributesPart = tag.substring(nameEnd, tag.length - 2);
-    }
+    let attributesPart = tag.substring(nameEnd, tag.length - (isSelfClosing ? 2 : 1)).trim();
     
-    // 1. Fix missing opening quote: attribute=Value" -> attribute="Value"
-    const missingOpenQuoteRegex = /(\b[A-Za-z0-9_.-]+\s*=\s*)([^"'{}\s][^"'>]*?)"/g;
-    let attrsCleaned = attributesPart.replace(missingOpenQuoteRegex, (m, prefix, val) => {
-      return `${prefix}"${val}"`;
-    });
-    
-    const missingOpenQuoteSingleRegex = /(\b[A-Za-z0-9_.-]+\s*=\s*)([^"'{}\s][^"'>]*?)'/g;
-    attrsCleaned = attrsCleaned.replace(missingOpenQuoteSingleRegex, (m, prefix, val) => {
-      return `${prefix}'${val}'`;
-    });
-    
-    // 2. Convert any attributes wrapped in guillemets to double quotes
-    const guillemetAttrRegex = /(\b[A-Za-z0-9_.-]+\s*=\s*)«\s*([\s\S]*?)\s*»/g;
-    attrsCleaned = attrsCleaned.replace(guillemetAttrRegex, (m, prefix, val) => {
-      const escapedVal = val.replace(/"/g, '&quot;');
-      return `${prefix}"${escapedVal}"`;
-    });
-    
-    // 3. Convert smart quotes
-    const smartAttrRegex = /(\b[A-Za-z0-9_.-]+\s*=\s*)“\s*([\s\S]*?)\s*”/g;
-    attrsCleaned = attrsCleaned.replace(smartAttrRegex, (m, prefix, val) => {
-      const escapedVal = val.replace(/"/g, '&quot;');
-      return `${prefix}"${escapedVal}"`;
-    });
-    
-    // 4. Remove commas between attributes
-    attrsCleaned = attrsCleaned.replace(/(["'}]\s*),\s*(\b[A-Za-z0-9_.-]+\s*=)/g, '$1 $2');
-    
-    // 5. Clean up duplicate attributes
-    const attrRegex = /(\b[A-Za-z0-9_.-]+)\s*=\s*(?:(["'])(.*?)\2|\{([^}]*)\})/g;
     const attrMap = new Map<string, string>();
-    let m;
-    while ((m = attrRegex.exec(attrsCleaned)) !== null) {
-      const name = m[1].toLowerCase();
-      attrMap.set(name, m[0]);
-    }
-    
-    const uniqueAttrs: string[] = [];
-    const seen = new Set<string>();
-    attrRegex.lastIndex = 0;
-    while ((m = attrRegex.exec(attrsCleaned)) !== null) {
-      const name = m[1].toLowerCase();
-      if (!seen.has(name)) {
-        seen.add(name);
-        uniqueAttrs.push(attrMap.get(name)!);
+    let i = 0;
+    while (i < attributesPart.length) {
+      // Skip whitespace
+      while (i < attributesPart.length && /\s/.test(attributesPart[i])) {
+        i++;
       }
+      if (i >= attributesPart.length) break;
+      
+      // Match attribute name
+      let nameStart = i;
+      while (i < attributesPart.length && /[A-Za-z0-9_.-]/.test(attributesPart[i])) {
+        i++;
+      }
+      const attrName = attributesPart.substring(nameStart, i);
+      if (!attrName) {
+        i++;
+        continue;
+      }
+      
+      // Expect '='
+      while (i < attributesPart.length && /\s/.test(attributesPart[i])) {
+        i++;
+      }
+      if (attributesPart[i] !== '=') {
+        i++;
+        continue;
+      }
+      i++; // consume '='
+      
+      while (i < attributesPart.length && /\s/.test(attributesPart[i])) {
+        i++;
+      }
+      if (i >= attributesPart.length) break;
+      
+      // Now parse the value
+      let attrValue = '';
+      const firstChar = attributesPart[i];
+      if (firstChar === '"') {
+        attrValue += '"';
+        i++;
+        while (i < attributesPart.length) {
+          const c = attributesPart[i];
+          attrValue += c;
+          i++;
+          if (c === '"' && attributesPart[i - 2] !== '\\') {
+            break;
+          }
+        }
+      } else if (firstChar === "'") {
+        attrValue += "'";
+        i++;
+        while (i < attributesPart.length) {
+          const c = attributesPart[i];
+          attrValue += c;
+          i++;
+          if (c === "'" && attributesPart[i - 2] !== '\\') {
+            break;
+          }
+        }
+      } else if (firstChar === '{') {
+        let depth = 1;
+        attrValue += '{';
+        i++;
+        while (i < attributesPart.length && depth > 0) {
+          const c = attributesPart[i];
+          attrValue += c;
+          if (c === '{') depth++;
+          else if (c === '}') depth--;
+          i++;
+        }
+      } else if (firstChar === '«') {
+        attrValue += '«';
+        i++;
+        while (i < attributesPart.length) {
+          const c = attributesPart[i];
+          attrValue += c;
+          i++;
+          if (c === '»') break;
+        }
+      } else if (firstChar === '“') {
+        attrValue += '“';
+        i++;
+        while (i < attributesPart.length) {
+          const c = attributesPart[i];
+          attrValue += c;
+          i++;
+          if (c === '”') break;
+        }
+      } else {
+        while (i < attributesPart.length && !/\s/.test(attributesPart[i])) {
+          attrValue += attributesPart[i];
+          i++;
+        }
+      }
+      
+      let cleanVal = attrValue.trim();
+      if (cleanVal.endsWith(',')) {
+        cleanVal = cleanVal.slice(0, -1).trim();
+      }
+      
+      // Heal the value
+      if (cleanVal.startsWith('{') && cleanVal.endsWith('}')) {
+        // Valid brace expression, keep as-is
+      } else if (cleanVal.startsWith('«') && cleanVal.endsWith('»')) {
+        cleanVal = '"' + cleanVal.substring(1, cleanVal.length - 1).replace(/"/g, '&quot;') + '"';
+      } else if (cleanVal.startsWith('“') && cleanVal.endsWith('”')) {
+        cleanVal = '"' + cleanVal.substring(1, cleanVal.length - 1).replace(/"/g, '&quot;') + '"';
+      } else if (cleanVal.endsWith('"') && !cleanVal.startsWith('"')) {
+        cleanVal = '"' + cleanVal;
+      } else if (cleanVal.startsWith('"') && !cleanVal.endsWith('"')) {
+        cleanVal = cleanVal + '"';
+      } else if (cleanVal.endsWith("'") && !cleanVal.startsWith("'")) {
+        cleanVal = "'" + cleanVal;
+      } else if (cleanVal.startsWith("'") && !cleanVal.endsWith("'")) {
+        cleanVal = cleanVal + "'";
+      } else if (!cleanVal.startsWith('"') && !cleanVal.startsWith("'")) {
+        cleanVal = '"' + cleanVal + '"';
+      }
+      
+      attrMap.set(attrName.toLowerCase(), `${attrName}=${cleanVal}`);
     }
     
-    const finalAttrsStr = uniqueAttrs.length > 0 ? ' ' + uniqueAttrs.join(' ') : attrsCleaned;
-    return `<${tagName}${finalAttrsStr}${isSelfClosing ? '/' : ''}>`;
+    const finalAttrsStr = attrMap.size > 0 ? ' ' + Array.from(attrMap.values()).join(' ') : '';
+    return `<${tagName}${finalAttrsStr}${isSelfClosing ? ' /' : ''}>`;
   });
   
   return processed.replace(/___JSX_TAG_PLACEHOLDER_(\d+)___/g, (match, indexStr) => {

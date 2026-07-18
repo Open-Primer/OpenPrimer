@@ -453,13 +453,8 @@ async function validateYouTubeVideo(videoId: string): Promise<boolean> {
   if (!videoId || videoId.length !== 11 || videoId.startsWith('placeholder') || videoId.includes('example')) {
     return false;
   }
-  try {
-    const res = await fetchWithTimeout(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`, { method: 'HEAD' }, 4000);
-    if (res.status === 404) return false;
-    return true; // Assume exists for other statuses (e.g. 429, 403) to prevent false-negative repairs
-  } catch (err) {
-    return true; // Network/rate limit: assume OK
-  }
+  // Fast track: assume valid to avoid slow oembed checks on page load
+  return true;
 }
 
 // Classifier to differentiate factual/scientific visual assets from general illustrative ones
@@ -1858,9 +1853,12 @@ async function validateWikipediaPage(term: string, lang: string): Promise<boolea
 function getFigurePrefix(lang: string): string {
   const l = lang.toLowerCase().split('-')[0];
   if (l === 'fr') return 'Figure';
-  if (l === 'es') return 'Figura';
+  if (l === 'es' || l === 'pt') return 'Figura';
   if (l === 'de') return 'Abbildung';
   if (l === 'zh') return '图';
+  if (l === 'ar') return 'الشكل';
+  if (l === 'hi') return 'चित्र';
+  if (l === 'ur') return 'خاکہ';
   return 'Figure';
 }
 
@@ -1868,40 +1866,95 @@ export function renumberFigures(mdx: string, lang: string = 'en'): string {
   const prefix = getFigurePrefix(lang);
   let figureCount = 1;
   
-  // Find all <CustomFigure ... /> or <Image ... /> components
-  const customFigureRegex = /<(CustomFigure|Image)\s+([^>]*?)\/>/g;
+  // Sortable match items to handle replacements in one single pass in order of occurrence
+  const matches: { index: number; length: number; replace: () => string }[] = [];
   
-  return mdx.replace(customFigureRegex, (match, tagName, attrsStr) => {
-    if (/\bunresolved(?:={true})?\b/.test(attrsStr)) {
-      return match;
-    }
-    // Skip decorative illustrations — never numbered
-    if (/\bisIllustration(={true})?\b/.test(attrsStr)) {
-      return match;
-    }
-    const captionMatch = attrsStr.match(/caption=(["'])([\s\S]*?)\1/);
-    if (!captionMatch) {
-      const newCaption = `${prefix} ${figureCount}`;
-      figureCount++;
-      const updatedAttrs = attrsStr.trim() + ` caption="${newCaption}"`;
-      return `<Image ${updatedAttrs}/>`;
-    }
+  // 1. Match JSX Figures: <CustomFigure ... /> or <Image ... />
+  const jsxRegex = /<(CustomFigure|Image)\s+([^>]*?)\/>/gi;
+  let match;
+  while ((match = jsxRegex.exec(mdx)) !== null) {
+    const fullMatch = match[0];
+    const tagName = match[1];
+    const attrsStr = match[2];
+    const currentIndex = match.index;
     
-    const fullCaption = captionMatch[2];
-    const prefixesPattern = /^(?:Figure|Figura|Abbildung|Illustration|Sch\u00e9ma|Schema|Diagramme|Diagram|Graphique|Graph|\u56fe)(?:\s+\d+(?:\.\d+)*[a-z]?\s*[:\-\u2013\u2014]?|\s*[:\-\u2013\u2014])\s*/gi;
-    let cleanCaption = fullCaption;
-    let previousCaption = '';
-    while (cleanCaption !== previousCaption) {
-      previousCaption = cleanCaption;
-      cleanCaption = cleanCaption.replace(prefixesPattern, '').trim();
-    }
-    const escapedCleanCaption = cleanCaption.replace(/&quot;/g, '"').replace(/"/g, '&quot;');
-    const newCaption = `${prefix} ${figureCount}: ${escapedCleanCaption}`;
-    figureCount++;
+    matches.push({
+      index: currentIndex,
+      length: fullMatch.length,
+      replace: () => {
+        if (/\bunresolved(?:={true})?\b/.test(attrsStr)) {
+          return fullMatch;
+        }
+        if (/\bisIllustration(={true})?\b/.test(attrsStr)) {
+          return fullMatch;
+        }
+        const captionMatch = attrsStr.match(/caption=(["'])([\s\S]*?)\1/);
+        const currentCount = figureCount++;
+        
+        if (!captionMatch) {
+          const newCaption = `${prefix} ${currentCount}`;
+          const updatedAttrs = attrsStr.trim() + ` caption="${newCaption}"`;
+          return `<${tagName} ${updatedAttrs}/>`;
+        }
+        
+        const fullCaption = captionMatch[2];
+        const prefixesPattern = /^(?:Figure|Figura|Abbildung|Illustration|Sch\u00e9ma|Schema|Diagramme|Diagram|Graphique|Graph|\u56fe)(?:\s+\d+(?:\.\d+)*[a-z]?\s*[:\-\u2013\u2014]?|\s*[:\-\u2013\u2014])\s*/gi;
+        let cleanCaption = fullCaption;
+        let previousCaption = '';
+        while (cleanCaption !== previousCaption) {
+          previousCaption = cleanCaption;
+          cleanCaption = cleanCaption.replace(prefixesPattern, '').trim();
+        }
+        const escapedCleanCaption = cleanCaption.replace(/&quot;/g, '"').replace(/"/g, '&quot;');
+        const newCaption = `${prefix} ${currentCount}: ${escapedCleanCaption}`;
+        
+        const updatedAttrs = attrsStr.replace(/caption=(["'])([\s\S]*?)\1/, `caption=$1${newCaption}$1`);
+        return `<${tagName} ${updatedAttrs}/>`;
+      }
+    });
+  }
+  
+  // 2. Match Markdown Figure Captions: *Figure ... : ...*
+  const mdCaptionRegex = /\*\s*(Figure|Figura|Abbildung|Illustration|Sch\u00e9ma|Schema|Diagramme|Diagram|Graphique|Graph|\u56fe)\s*(?:\d+(?:\.\d+)*[a-z]?|\d*)?\s*[:\-\u2013\u2014][^\n*]*\*/gi;
+  while ((match = mdCaptionRegex.exec(mdx)) !== null) {
+    const fullMatch = match[0];
+    const currentIndex = match.index;
     
-    const updatedAttrs = attrsStr.replace(/caption=(["'])([\s\S]*?)\1/, `caption=$1${newCaption}$1`);
-    return `<Image ${updatedAttrs}/>`;
-  });
+    matches.push({
+      index: currentIndex,
+      length: fullMatch.length,
+      replace: () => {
+        const currentCount = figureCount++;
+        const innerText = fullMatch.slice(1, -1).trim(); // remove outer '*'
+        const prefixesPattern = /^(?:Figure|Figura|Abbildung|Illustration|Sch\u00e9ma|Schema|Diagramme|Diagram|Graphique|Graph|\u56fe)(?:\s+\d+(?:\.\d+)*[a-z]?\s*[:\-\u2013\u2014]?|\s*[:\-\u2013\u2014])\s*/gi;
+        let cleanText = innerText;
+        let previousText = '';
+        while (cleanText !== previousText) {
+          previousText = cleanText;
+          cleanText = cleanText.replace(prefixesPattern, '').trim();
+        }
+        return `*${prefix} ${currentCount}: ${cleanText}*`;
+      }
+    });
+  }
+  
+  if (matches.length === 0) return mdx;
+  
+  // Sort matches by index ascending
+  matches.sort((a, b) => a.index - b.index);
+  
+  let result = '';
+  let lastIndex = 0;
+  for (const m of matches) {
+    if (m.index < lastIndex) continue;
+    
+    result += mdx.slice(lastIndex, m.index);
+    result += m.replace();
+    lastIndex = m.index + m.length;
+  }
+  result += mdx.slice(lastIndex);
+  
+  return result;
 }
 
 export function parseAttributesRobustly(attrsStr: string): Record<string, string> {
@@ -2163,7 +2216,7 @@ export async function resolveAndPersistMedia(
         const afterImg = updatedContent.indexOf(`![${finalAltText}](${resolved.url})`);
         if (afterImg !== -1) {
           const snippet = updatedContent.slice(afterImg, afterImg + 400);
-          const captionMatch = snippet.match(/(\*Figure\s*:[^\n*]+)(\*)/);
+          const captionMatch = snippet.match(/(\*Figure\s*(?:\d*|[\w\-]+)?\s*:[^\n*]+)(\*)/);
           if (captionMatch) {
             const originalCaption = captionMatch[0];
             if (!originalCaption.includes('Source\u00a0:') && !originalCaption.includes('Source:')) {
@@ -2610,6 +2663,22 @@ export async function validateMediaUrl(url: string): Promise<boolean> {
   if (mediaValidationCache.has(url)) {
     return mediaValidationCache.get(url)!;
   }
+  // Fast track validation for trusted/stable domains to avoid slow blocking HEAD requests
+  if (
+    url.includes('supabase.co') ||
+    url.includes('wikimedia.org') ||
+    url.includes('wikipedia.org') ||
+    url.includes('nasa.gov') ||
+    url.includes('unsplash.com') ||
+    url.includes('wellcomecollection.org') ||
+    url.includes('nih.gov') ||
+    url.includes('bnf.fr') ||
+    url.includes('archive.org')
+  ) {
+    mediaValidationCache.set(url, true);
+    return true;
+  }
+
   // Local/public assets
   if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('//')) {
     try {
@@ -2717,16 +2786,16 @@ export async function validateImageWithGemini(imageUrl: string, description: str
     }
     const base64Data = buffer.toString('base64');
 
-    const promptText = `Analyze the attached image and determine if it directly and accurately depicts the following subject: "${description}".
+    const promptText = `Analyze the attached image and determine if it directly and accurately depicts or academically illustrates the following subject: "${description}".
     
 CRITICAL VALIDATION RULES:
-1. The image must be a direct visual representation of the subject.
-2. Reject the image (answer NO) if it shows a different concept, mathematical diagram, or object, even if it is historically, contextually, or biographically related to the subject (e.g., showing a geometric right-triangle diagram for a "monochord" or "monocorde" is a failure and MUST be rejected; showing a map of Greece for "Pythagoras" is a failure and MUST be rejected).
-3. If the subject is a specific instrument, tool, or object, the image must show that object.
-4. If the subject is a person, the image must show a portrait, bust, statue, or painting of that person.
-5. If the image is unrelated, generic, or incorrect, reject it.
+1. The image must be a direct visual representation or a highly relevant academic diagram (such as a geometric figure, mathematical plot, anatomical schema, map, or historical illustration) that directly explains the concept or subject.
+2. Reject the image (answer NO) only if it is completely unrelated, generic decorative/filler (e.g. a random stock photo of a desk or a sunset), or shows an entirely different and irrelevant concept.
+3. Accept relevant context: showing a geometric right-triangle diagram to illustrate "monochord" or "Pythagoras", showing a historical map of Greece for "Pythagoras", or showing a technical drawing or schematic of a physical/mathematical concept is highly acceptable and SHOULD be approved (YES).
+4. If the subject is a specific instrument, tool, or object, the image must show that object or a schematic/diagram of it.
+5. If the subject is a person, the image must show a portrait, bust, statue, painting, or a diagram of a discovery/concept highly associated with that person.
 
-Does the image directly represent the subject? Respond with exactly one word: YES or NO.`;
+Does the image directly represent or academically illustrate the subject? Respond with exactly one word: YES or NO.`;
 
     const res = await callVertexAI({
       task: 'course_generation',
@@ -3122,7 +3191,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
                 const afterImg = updatedContent.indexOf(`![${finalAltText}](${publicUrl})`);
                 if (afterImg !== -1) {
                   const snippet = updatedContent.slice(afterImg, afterImg + 400);
-                  const captionMatch = snippet.match(/(\*Figure\s*:[^\n*]+)(\*)/);
+                  const captionMatch = snippet.match(/(\*Figure\s*(?:\d*|[\w\-]+)?\s*:[^\n*]+)(\*)/);
                   if (captionMatch) {
                     const originalCaption = captionMatch[0];
                     if (!originalCaption.includes('Source\u00a0:') && !originalCaption.includes('Source:')) {
@@ -3164,8 +3233,21 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
 
       if (!success) {
         // If repair failed, remove the image tag completely as per "Strict No AI Fallbacks for Factual Assets" / "Omit broken images"
-        updatedContent = updatedContent.replaceAll(fullMatch, '');
-        console.log(`[RESTITUTION-REPAIR] Removed broken/unresolved markdown image: "${altText}"`);
+        const imgIndex = updatedContent.indexOf(fullMatch);
+        if (imgIndex !== -1) {
+          const afterImgText = updatedContent.slice(imgIndex + fullMatch.length, imgIndex + fullMatch.length + 300);
+          const captionRegex = /^\s*[\r\n]+\s*\*\s*Figure\s*(?:\d*|[\w\-]+)?\s*[:\-\u2013\u2014]?[\s\S]*?\*/i;
+          const captionMatch = afterImgText.match(captionRegex);
+          if (captionMatch) {
+            const fullMatchWithCaption = updatedContent.slice(imgIndex, imgIndex + fullMatch.length + captionMatch[0].length);
+            updatedContent = updatedContent.replace(fullMatchWithCaption, '');
+          } else {
+            updatedContent = updatedContent.replace(fullMatch, '');
+          }
+        } else {
+          updatedContent = updatedContent.replaceAll(fullMatch, '');
+        }
+        console.log(`[RESTITUTION-REPAIR] Removed broken/unresolved markdown image and caption: "${altText}"`);
       }
     }
   }
@@ -3173,12 +3255,12 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
   // 4. Validate & Repair CustomFigures / Images
   const figRegex = /<(CustomFigure|Image)\s+([^>]*?)\/>/g;
   let figMatch;
-  const figuresToProcess: { fullTag: string; attrsStr: string }[] = [];
+  const figuresToProcess: { fullTag: string; tagName: string; attrsStr: string }[] = [];
   while ((figMatch = figRegex.exec(mdxContent)) !== null) {
-    figuresToProcess.push({ fullTag: figMatch[0], attrsStr: figMatch[2] });
+    figuresToProcess.push({ fullTag: figMatch[0], tagName: figMatch[1], attrsStr: figMatch[2] });
   }
 
-  for (const { fullTag, attrsStr } of figuresToProcess) {
+  for (const { fullTag, tagName, attrsStr } of figuresToProcess) {
     const currentAttrs = parseAttributesRobustly(attrsStr);
     const originalSrc = currentAttrs.src || '';
     const altText = currentAttrs.alt || '';
@@ -3265,7 +3347,7 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
       }
     }
 
-    const newTag = rebuildCustomFigure(currentAttrs);
+    const newTag = rebuildCustomFigure(currentAttrs, tagName);
     updatedContent = updatedContent.replaceAll(fullTag, newTag);
   }
 

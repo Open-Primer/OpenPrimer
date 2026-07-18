@@ -821,9 +821,12 @@ export const EntityLink = ({
                 </div>
                 <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest [.theme-paper_&]:text-slate-700">{headerLabel}</span>
               </div>
-              {(domain || rightLabel) && (
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider [.theme-paper_&]:text-slate-500">
-                  {domain && rightLabel ? `${domain} · ${rightLabel}` : domain || rightLabel}
+              {((resolvedType !== 'person' && domain) || rightLabel) && (
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right [.theme-paper_&]:text-slate-500">
+                  {resolvedType === 'person'
+                    ? rightLabel
+                    : (domain && rightLabel ? `${domain} · ${rightLabel}` : domain || rightLabel)
+                  }
                 </span>
               )}
             </div>
