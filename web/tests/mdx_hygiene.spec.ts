@@ -151,8 +151,8 @@ This is a Reference with curly braces <Reference id={2}>2</Reference> and anothe
     // Verify inline Reference components: id/name/term and children should be rewritten to 1
     expect(processed).toContain('<Reference id={1}>1</Reference>');
     expect(processed).toContain('<Reference name="1" />');
-    expect(processed).toContain('<Reference term=\'1\' />');
-    expect(processed).toContain('<Reference id=1 />');
+    expect(processed).toContain('<Reference term="1" />');
+    expect(processed).toContain('<Reference id="1" />');
 
     // Verify Reference items: should NOT be marked as isUnused
     const base64Match = processed.match(/itemsBase64="([^"]+)"/);
@@ -626,6 +626,37 @@ But this one [is perfectly balanced]
       };
 
       expect(areComponentsDuplicate(q1, q2)).toBe(true);
+    });
+  });
+
+  test.describe('Biographical link and figure suppression improvements', () => {
+    test('cleanWikipediaUrl should remove parenthetical dates suffix', () => {
+      const { cleanWikipediaUrl } = require('../src/lib/content');
+      const url = 'https://fr.wikipedia.org/wiki/Pythagore_(vers_580_av._J.-C._-_495_av._J.-C.)';
+      expect(cleanWikipediaUrl(url)).toBe('https://fr.wikipedia.org/wiki/Pythagore');
+    });
+
+    test('clampBiographicalLinkText should split text at closing parenthesis', () => {
+      const { clampBiographicalLinkText } = require('../src/components/mdx/HistoricalPerson');
+      const text = 'Pythagore (vers 580 av. J.-C. - 495 av. J.-C.) était un grand mathématicien.';
+      const result = clampBiographicalLinkText(text);
+      expect(result.linkText).toBe('Pythagore (vers 580 av. J.-C. - 495 av. J.-C.)');
+      expect(result.extraText).toBe(' était un grand mathématicien.');
+    });
+
+    test('renumberFigures should suppress figure numbering and mark unresolved if both src and caption are missing', () => {
+      const { renumberFigures } = require('../src/lib/media-resolver');
+      const mdx = `
+Some text.
+<CustomFigure />
+Other text with valid image:
+<CustomFigure src="valid.jpg" caption="An image" />
+      `.trim();
+      const processed = renumberFigures(mdx, 'fr');
+      
+      // The empty CustomFigure should be marked unresolved and NOT increment figure numbering
+      expect(processed).toContain('<CustomFigure unresolved={true}/>');
+      expect(processed).toContain('caption="Figure 1: An image"');
     });
   });
 });

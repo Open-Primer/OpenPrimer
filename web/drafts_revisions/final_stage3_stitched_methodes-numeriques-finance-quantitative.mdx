@@ -1,0 +1,299 @@
+---
+title: « Méthodes Numériques en Finance Quantitative »
+subject: « Finance quantitative et modélisation stochastique »
+level: « M1 »
+module: « Méthodes Numériques en Finance Quantitative »
+order: 11
+---
+
+
+
+<DiagnosticQuiz question="Quelle méthode numérique est couramment utilisée pour approximer la solution d'une Équation Différentielle Stochastique (EDS) en finance quantitative?" options="Méthode de Newton-Raphson|||Schéma d'Euler-Maruyama|||Méthode des moindres carrés|||Algorithme de Levenberg-Marquardt" correctIndex="1" targetSectionId="introduction-eds-numeriques" />
+
+
+
+## Introduction aux Méthodes Numériques en Finance Quantitative
+
+La finance quantitative moderne, en particulier la valorisation et la gestion des risques des produits dérivés,s'heurte fréquemment aux limites des solutions analytiques. Si des modèles pionniers comme celuide ont révolutionné le domaine en proposant des formules fermées pour des options européennes simples <Reference id="1" name="1" term="1">1</Reference>, la complexité croissante des instruments financiers a rapidement rendu ces approches insuffisantes. Les options dites <ConceptLink id="option_exotique" name="exotiques" term="exotiques" unresolved={true}>exotiques</ConceptLink>, les produits structurés, les modèles de taux d'intérêt sophistiqués ou encore la prise en compte d'imperfections de marché (coûts de transaction, liquidité) nécessitent des outils plus puissants.
+
+C'est dans ce contexte que les méthodes numériques deviennent indispensables. Elles permettent de résoudre des problèmes qui n'admettent pas de solution analytique, notamment la valorisation d'options complexes dont le payoff dépend de la trajectoire du sous-jacent, ou la résolution d'<Glossary id="edp" name="équations aux dérivées partielles (EDP)" term="équations aux dérivées partielles (EDP)">équations aux dérivées partielles (EDP)</Glossary> qui décrivent l'évolution du prix d'un dérivé <Reference id="2" name="2" term="2">2</Reference>, <Reference id="3" name="3" term="3">3</Reference>.
+
+L'objectif de ce cours est de fournir aux étudiants de Master 1 une compréhension approfondie et une maîtrise pratique des principales méthodes numériques utilisées en finance quantitative. Nous explorerons comment ces techniques permettent de traduire des modèles stochastiques continus en algorithmes calculables, offrant ainsi des solutions concrètes aux défis de la valorisation et de la gestion des risques.
+
+Au terme de ce module, vous serez capable de :
+*   Comprendre la nécessité et les fondements théoriques des méthodes numériques en finance.
+*   Appliquer les techniques de simulation de Monte Carlo pour valoriser une large gamme d'options.
+*   Maîtriser les méthodes de différences finies pour résoudre des EDP de valorisation.
+*   Utiliser les arbres binomiaux et trinomiaux pour des options plus simples et comme base conceptuelle.
+*   Évaluer les forces et les faiblesses de chaque méthode, y compris leur convergence, leur stabilité et leur efficacité computationnelle.
+
+Nous aborderons successivement la simulation de Monte Carlo, les méthodes par différences finies et les arbres de valorisation, en illustrant leurs applications à travers des exemples concrets et des implémentations.
+
+<Mermaid caption="Figure 1 : " chart={``}/>
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les principes fondamentaux des méthodes numériques appliquées à la valorisation d'actifs financiers.</li>
+      <li>Évaluer la pertinence de différentes schémas numériques pour la résolution d'équations différentielles stochastiques.</li>
+      <li>Distinguer les avantages et inconvénients des méthodes de Monte Carlo et des méthodes aux différences finies pour les problèmes financiers.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Développer des algorithmes de simulation Monte Carlo pour valoriser des produits dérivés complexes.</li>
+      <li>Implémenter des schémas aux différences finies pour résoudre des équations aux dérivées partielles (EDP) en finance.</li>
+      <li>Calibrer des modèles stochastiques en utilisant des techniques d'optimisation numérique.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Adopter une approche critique face aux résultats numériques et comprendre leurs limites et hypothèses.</li>
+      <li>Valoriser la rigueur mathématique et la précision algorithmique dans la modélisation financière.</li>
+      <li>Développer une curiosité intellectuelle pour les avancées récentes en méthodes numériques appliquées à la finance.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Simulation de Monte Carlo pour la Valorisation d'Options
+
+La simulation de Monte Carlo est une méthode numérique puissante et flexible, largement utilisée en finance pour la valorisation d'instruments dérivés, la gestion des risques et l'optimisation de portefeuilles. Son principe fondamental repose sur la génération d'un grand nombre de trajectoires aléatoires (ou « scénarios ») pour les variables sous-jacentes (par exemple, les prix d'actifs), puis sur le calcul de la valeur moyenne du payoff de l'instrument sur ces trajectoires. Cette moyenne, par la loi des grands nombres, converge vers l'espérance mathématique du payoff actualisé sous la <ConceptLink id="mesure_neutre_au_risque" name="mesure neutre au risque" term="mesure neutre au risque" unresolved={true}>mesure neutre au risque</ConceptLink>, qui représente le prix de l'option <Reference id="4" name="4" term="4">4</Reference>.
+
+Pour une option européenne, dont le payoff ne dépend que du prix du sous-jacent à l'échéance $T$, la procédure est relativement simple :
+1.  Simuler $N$ trajectoires du prix du sous-jacent $S_t$ jusqu'à l'échéance $T$ sous la mesure neutre au risque.
+2.  Pour chaque trajectoire $i$, calculer le payoff $P_i$ de l'option à l'échéance.
+3.  Calculer la moyenne des payoffs actualisés : $V \approx e^{-rT} \frac{1}{N} \sum_{i=1}^{N} P_i$.
+
+<Image description="Le Casino de Monte-Carlo est illuminé la nuit, avec des palmiers, un jardin fleuri et des personnes au premier plan." alt="Le Casino de Monte-Carlo est illuminé la nuit, avec des palmiers, un jardin fleuri et des personnes au premier plan." caption="Figure 1: Le Casino de Monte-Carlo est illuminé la nuit, avec des palmiers, un jardin fleuri et des personnes au premier plan. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Real_Monte_Carlo_Casino.jpg)" src="https://upload.wikimedia.org/wikipedia/commons/3/36/Real_Monte_Carlo_Casino.jpg" fallbackUrl="https://commons.wikimedia.org/wiki/File:Real_Monte_Carlo_Casino.jpg" />
+
+### Application à la Valorisation d'Options
+
+*   **Options Européennes :** Comme décrit ci-dessus, la valorisation est directe. La méthode est particulièrement avantageuse lorsque le payoff est complexe ou lorsque le modèle de sous-jacent est non-standard (par exemple, avec des sauts <Reference id="5" name="5" term="5">5</Reference>).
+*   **Options Américaines :** La valorisation des options américaines est plus complexe car elle implique une décision d'exercice optimale à tout moment avant l'échéance. Des techniques comme la méthode des moindres carrés de Longstaff et Schwartz (LSM) permettent d'estimer la valeur de continuation de l'option à chaque étape de temps, en régressant les payoffs futurs actualisés sur les prix des sous-jacents .
+*   **Options Exotiques :** La simulation de Monte Carlo brille particulièrement pour les options exotiques dont le payoff dépend de la trajectoire complète du sous-jacent (par exemple, options asiatiques, barrières, lookback) ou de plusieurs sous-jacents (options panier, arc-en-ciel). La flexibilité de la méthode permet de modéliser des dépendances complexes et des conditions de déclenchement variées.
+
+### Génération de Nombres Aléatoires
+
+La qualité des simulations de Monte Carlo dépend crucialement de la qualité des nombres aléatoires utilisés. En pratique, on utilise des générateurs de nombres pseudo-aléatoires, qui produisent des séquences déterministes mais qui possèdent des propriétés statistiques similaires à celles de séquences véritablement aléatoires. Il est essentiel d'utiliser des générateurs robustes et bien testés pour éviter des biais dans les résultats. Pour simuler des variables aléatoires suivant des distributions spécifiques (par exemple, normale pour le mouvement brownien), des méthodes comme la transformation inverse ou la méthode de Box-Muller sont employées.
+
+### Réduction de Variance
+
+Bien que la simulation de Monte Carlo soit flexible, sa convergence est relativement lente (en $O(1/\sqrt{N})$, où $N$ est le nombre de simulations). Pour atteindre une précision acceptable, un très grand nombre de trajectoires peut être nécessaire, ce qui entraîn'un coût computationnel élevé. Des techniques de réduction de variance sont donc essentielles pour améliorer l'efficacité de la méthode.
+
+*   **Variables de Contrôle :** Cette technique utilise un instrument dont la valeur analytique est connue et dont le payoff est fortement corrélé à celui de l'option à valoriser. La différence entre le payoff de l'option et celui de la <Glossary id="variable_de_controle" name="variable de contrôle" term="variable de contrôle">variable de contrôle</Glossary> est simulée, réduisant ainsi la variance de l'estimateur . Par exemple, pour une option asiatique, une option européenne standard peut servir de variable de contrôle.
+*   **Échantillonnage d'Importance :** Cette méthode modifie la distribution de probabilité sous laquelle les trajectoires sont simulées pour augmenter la fréquence des événements rares mais importants (par exemple, les trajectoires qui mènent à un payoff élevé). Les résultats sont ensuite pondérés pour corriger ce changement de mesure, garantissant ainsi un estimateur non biaisé avec une variance réduite.
+*   **Variables Antithétiques :** Pour chaque trajectoire simulée à l'aide d'une séquence de nombres aléatoires, on simule une seconde trajectoire en utilisant la séquence « opposée » (par exemple, si $Z$ est un nombre aléatoire normal, on utilise aussi $-Z$). Si les payoffs sont négativement corrélés, la variance de la moyenne des deux payoffs sera réduite.
+
+<SolvedExercise title="Valorisation d'une option call européenne par Monte Carlo" solution="">
+  
+</SolvedExercise>
+
+### Limites de la Méthode
+
+Malgré ses avantages, la simulation de Monte Carlo présente certaines limites :
+*   **Coût Computationnel :** La convergence lente implique un grand nombre de simulations, ce qui peut être très coûteux en temps de calcul, surtout pour des modèles complexes ou des options américaines.
+*   **Options Américaines :** Bien que des méthodes comme LSM existent, elles sont plus complexes à implémenter et peuvent être moins précises que d'autres approches numériques (comme les différences finies) pour certaines configurations.
+*   **Sensibilités (Greeks) :** Le calcul des sensibilités (delta, gamma, vega) par Monte Carlo peut être délicat et nécessite souvent des techniques spécifiques (par exemple, la méthode des différences finies sur l'estimateur de Monte Carlo, ou la méthode des chemins adjoints) pour obtenir des résultats précis et stables.
+
+<RealPerson id="glasserman" name="Paul Glasserman" wikipediaUrl="https://en.wikipedia.org/wiki/Paul_Glasserman" year="1973">Paul Glasserman</RealPerson> est une figure éminente dans le domaine des méthodes de Monte Carlo en finance, son ouvrage  étant une référence incontournable.
+
+## Méthodes aux Différences Finies pour les EDP en Finance
+
+Face aux limites de la simulation de Monte Carlo pour certains types de produits dérivés, notamment les options américaines ou les problèmes de faible dimension, les méthodes aux différences finies (MDF) offrent une alternative puissante pour la résolution numérique des <ConceptLink id="edp_finance" name="Équations aux Dérivées Partielles (EDP)" term="Équations aux Dérivées Partielles (EDP)" unresolved={true}>Équations aux Dérivées Partielles (EDP)</ConceptLink> qui régissent la valorisation de ces instruments financiers . L'équation de Black-Scholes, par exemple, est une EDP parabolique qui peut être résolue efficacement par cette approche .
+
+Le principe fondamental des MDF consiste à transformer une EDP continue en un système d'équations algébriques discrètes. Pour ce faire, le domaine continu de la variable d'état (par exemple, le prix de l'actif sous-jacent $S$) et du temps $t$ est remplacé par une grille de points discrets. Ce processus de <Glossary definition="Processus de conversion d'un modèle ou d'un espace continu en une version discrète, souvent nécessaire pour l'application de méthodes numériques." id="discretisation" name="discrétisation" term="discrétisation">discrétisation</Glossary> permet d'approximer les dérivées partielles de la fonction de valeur (par exemple, le prix de l'option) en chaque point de la grille à l'aide de différences finies.
+
+Considérons l'EDP de Black-Scholes pour une option sans dividende :
+
+$$ \frac{\partial V}{\partial t} + rS \frac{\partial V}{\partial S} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} - rV = 0 $$
+
+où $V$ est le prix de l'option, $t$ le temps, $S$ le prix de l'actif sous-jacent, $r$ le taux sans risque, et $\sigma$ la volatilité. Cette équation est généralement résolue en partant de la maturité $T$ (où la valeur de l'option est connue) et en remontant jusqu'au temps présent $t=0$.
+
+La discrétisation implique de définir des pas de temps $\Delta t$ et des pas de prix d'actif $\Delta S$. Les dérivées sont alors approximées comme suit :
+*   $\frac{\partial V}{\partial t} \approx \frac{V(S, t+\Delta t) - V(S, t)}{\Delta t}$ (différence avant) ou $\frac{V(S, t) - V(S, t-\Delta t)}{\Delta t}$ (différence arrière).
+*   $\frac{\partial V}{\partial S} \approx \frac{V(S+\Delta S, t) - V(S-\Delta S, t)}{2\Delta S}$ (différence centrée).
+*   $\frac{\partial^2 V}{\partial S^2} \approx \frac{V(S+\Delta S, t) - 2V(S, t) + V(S-\Delta S, t)}{(\Delta S)^2}$ (différence centrée).
+
+[[WIDGET:Mermaid:fdm_grid:Grille de discrétisation pour les méthodes aux différences finies, illustrant les points de temps et de prix d'actif.
+graph TD
+    subgraph Domaine Discret
+        A[t=0, S_min] --> B[t=0, S_j]
+        B --> C[t=0, S_max]
+        C --> D[t_i, S_max]
+        D --> E[t_N, S_max]
+        E --> F[t_N, S_j]
+        F --> G[t_N, S_min]
+        G --> H[t_i, S_min]
+        H --> A
+        subgraph Points de Grille
+            P1(V(t_i, S_j))
+            P2(V(t_i+1, S_j))
+            P3(V(t_i, S_j+1))
+            P4(V(t_i, S_j-1))
+        end
+    end
+    style P1 fill:#f9f,stroke:#333,stroke-width:2px
+    style P2 fill:#ccf,stroke:#333,stroke-width:2px
+    style P3 fill:#cfc,stroke:#333,stroke-width:2px
+    style P4 fill:#fcc,stroke:#333,stroke-width:2px
+    P1 --- P2
+    P1 --- P3
+    P1 --- P4
+    linkStyle 0 stroke-width:2px,fill:none,stroke:black;
+    linkStyle 1 stroke-width:2px,fill:none,stroke:black;
+    linkStyle 2 stroke-width:2px,fill:none,stroke:black;
+    linkStyle 3 stroke-width:2px,fill:none,stroke:black;
+    linkStyle 4 stroke-width:2px,fill:none,stroke:black;
+    linkStyle 5 stroke-width:2px,fill:none,stroke:black;
+    linkStyle 6 stroke-width:2px,fill:none,stroke:black;
+    linkStyle 7 stroke-width:2px,fill:none,stroke:black;
+
+### Schémas Numériques
+
+Trois schémas principaux sont couramment utilisés pour la résolution des EDP en finance <Reference id="6" name="6" term="6">6</Reference>:
+
+1.  **Schéma Explicite (Forward Euler) :** Ce schéma utilise les valeurs de l'option au temps $t$ pour calculer les valeurs au temps $t-\Delta t$. Il est simple à implémenter, car chaque valeur $V(S, t-\Delta t)$ peut être calculée directement à partir des valeurs connues au temps $t$. Cependant, sa stabilité est conditionnelle : il nécessite que le pas de temps $\Delta t$ soit suffisamment petit par rapport au pas de prix $\Delta S$ pour éviter des oscillations numériques et une divergence de la solution.
+2.  **Schéma Implicite (Backward Euler) :** Contrairement au schéma explicite, le schéma implicite utilise les valeurs au temps $t-\Delta t$ (les inconnues) pour exprimer les valeurs au temps $t$ (les connues). Cela conduit à un système d'équations linéaires qui doit être résolu à chaque pas de temps. Bien que plus complexe à implémenter (nécessitant la résolution d'un système tridiagonal), ce schéma est inconditionnellement stable, ce qui permet d'utiliser des pas de temps plus grands.
+3.  **Schéma de Crank-Nicolson :** Ce schéma est une moyenne des schémas explicite et implicite. Il offre une meilleure précision (d'ordre 2 en temps et en espace) et est inconditionnellement stable. Il combine les avantages des deux approches, mais sa mise en œuvre est similaire à celle du schéma implicite, nécessitant la résolution d'un système d'équations linéaires à chaque pas de temps. C'est souvent le schéma privilégié pour sa robustesse et sa précision .
+
+### Conditions aux Limites
+
+Pour résoudre une EDP, il est crucial de spécifier des conditions aux limites appropriées sur les bords du domaine de calcul. Pour l'équation de Black-Scholes, ces conditions sont généralement définies pour $S \to 0$, $S \to \infty$ et à la maturité $T$.
+*   **À la maturité ($t=T$) :** La valeur de l'option est son payoff intrinsèque. Par exemple, pour un call européen, $V(S, T) = \max(S-K, 0)$, où $K$ est le prix d d'exercice.
+*   **Pour $S \to 0$ :** Pour une option call, $V(0, t) = 0$. Pour une option put, $V(0, t) = K e^{-r(T-t)}$.
+*   **Pour $S \to \infty$ :** Pour une option call, $V(S, t) \approx S - K e^{-r(T-t)}$. Pour une option put, $V(S, t) \approx 0$.
+Ces conditions sont essentielles pour garantir une solution unique et physiquement réaliste de l'EDP. Les travauxde ont posé les bases théoriques de ces EDPs <Reference id="7" name="7" term="7">7</Reference>.
+
+<SolvedExercise title="Implémentation d'un schéma explicite pour une option call européenne" solution="">
+  
+</SolvedExercise>
+
+## Applications Pratiques et Comparaison des Méthodes
+
+Les méthodes numériques en finance quantitative, qu'il s'agisse des simulations de Monte Carlo ou des méthodes aux différences finies, sont des outils indispensables pour la valorisation et la gestion des risques des produits dérivés. Le choix de la méthode dépend fortement des caractéristiques du produit financier et des exigences de calcul.
+
+### Applications des Méthodes de Monte Carlo
+
+Les simulations de Monte Carlo excellent dans les situations où la complexité du payoff dépend de la trajectoire du sous-jacent ou lorsque le problèm'estde haute dimension . Elles sont particulièrement adaptées pour :
+*   Les <Glossary id="option_asiatique" name="options asiatiques" term="options asiatiques">options asiatiques</Glossary>, dont le payoff dépend de la moyenne du prix de l'actif sur une période.
+*   Les options barrières, dont l'existence ou le payoff dépendent du franchissement d'un certain niveau par le sous-jacent.
+*   Les options exotiques avec des payoffs complexes ou des dépendances multiples.
+*   Les problèmesde haute dimension, comme la valorisation de paniers d'options ou de produits structurés impliquant de nombreux actifs corrélés.
+*   Le calcul de mesures de risque comme la Value-at-Risk (VaR) ou le Conditional VaR (CVaR).
+
+### Applications des Méthodes aux Différences Finies
+
+Les MDF sont particulièrement efficaces pour les problèmes de faible dimension (typiquement un ou deux sous-jacents) et pour la valorisation des <ConceptLink id="option_americaine" name="options américaines" term="options américaines" unresolved={true}>options américaines</ConceptLink> . Leurs applications incluent :
+*   La valorisation d'options européennes et américaines sur un seul sous-jacent.
+*   La valorisation d'options sur deux sous-jacents (nécessitant une grille 3D).
+*   Les problèmes où l'exercice anticipé est possible, car les MDF peuvent intégrer naturellement les conditions d'exercice optimales à chaque pas de temps.
+*   Le calcul des sensibilités (Greeks) de manière directe à partir de la grille de solution.
+
+### Comparaison des Méthodes
+
+Le tableau suivant résume les avantages et inconvénients comparatifs des méthodes de Monte Carlo et des méthodes aux différences finies , .
+
+<ComparisonSlider id="mc_fdm_comparison" name="mc fdm comparison" term="mc fdm comparison">mc fdm comparison</ComparisonSlider>
+
+| Caractéristique             | Méthodes de Monte Carlo                               | Méthodes aux Différences Finies                                 |
+| :-------------------------- | :---------------------------------------------------- | :-------------------------------------------------------------- |
+| **Précision**               | Convergence en $O(1/\sqrt{N})$, lente pour haute précision. | Convergence en $O(\Delta t^p + \Delta S^q)$, plus rapide pour faible dimension. |
+| **Vitesse de Calcul**       | Peut être très lente pour atteindre une haute précision.   | Rapide pour faible dimension, mais exponentiellement plus lente avec la dimension. |
+| **Flexibilité**             | Très flexible pour payoffs complexes et chemins dépendants. | Moins flexible pour chemins dépendants, mais adaptable pour exercice anticipé. |
+| **Complexité d'Implémentation** | Conceptuellement simple pour options européennes, plus complexe pour réduction de variance et options américaines. | Nécessite une gestion rigoureuse de la grille, des conditions aux limites et de la stabilité des schémas. |
+| **Gestion des Dimensions**  | Excellente pour les problèmesde haute dimension.        | Difficile au-delà de 2 ou 3 dimensions (problème de la « malédiction de la dimensionnalité »). |
+| **Options Américaines**     | Nécessite des algorithmes spécifiques (ex: Longstaff-Schwartz). | Très bien adaptées, l'exercice anticipé est intégré naturellement. |
+| **Calcul des Greeks**       | Nécessite des techniques spécifiques (différences finies sur MC, chemins adjoints). | Peut être calculé directement à partir des valeurs de la grille. |
+
+En conclusion, les méthodes de Monte Carlo sont le choix privilégié pour les options exotiques complexes et les problèmesde haute dimension, tandis que les méthodes aux différences finies sont souvent plus efficaces pour les options américaines et les problèmes de faible dimension. Il n'est pas rare que les praticiens utilisent une combinaison des deux approches, ou des méthodes hybrides, pour tirer parti des forces de chacune. Les travaux de <RealPerson id="hull" name="John Hull" wikipediaUrl="https://en.wikipedia.org/wiki/John_Hull_(academic)" year="1973">John Hull</RealPerson> sont une référence essentielle pour comprendre ces applications pratiques .
+
+<Quiz durationLimit={300} limit={3}>
+    <Question q="Sur quel principe repose principalement la méthode de Monte Carlo pour la valorisation d'options?" explanation="La méthode de Monte Carlo simule un grand nombre de trajectoires de prix pour estimer le payoff moyen.">
+  <Option text="Résolution d'équations aux dérivées partielles." correct={false} />
+  <Option text="Simulation de trajectoires aléatoires du prix de l'actif." correct={true} />
+  <Option text="Calcul de la moyenne des payoffs futurs sans actualisation." correct={false} />
+  <Option text="Utilisation de formules analytiques fermées." correct={false} />
+</Question>
+    <Question q="Quelle méthode est généralement plus adaptée pour valoriser une option américaine en raison de sa capacité à gérer l'exercice anticipé?" explanation="Les différences finies, comme les arbres binomiaux, permettent une rétro-propagation qui gère naturellement l'exercice anticipé.">
+  <Option text="Monte Carlo." correct={false} />
+  <Option text="Différences Finies." correct={true} />
+  <Option text="Formule de Black-Scholes." correct={false} />
+  <Option text="Méthode des arbres binomiaux." correct={false} />
+</Question>
+    <Question q="Quel est un inconvénient majeur de la méthode de Monte Carlo par rapport aux méthodes déterministes pour les options européennes simples?" explanation="La convergence de Monte Carlo est proportionnelle à 1/√N, ce qui la rend plus lente que les méthodes déterministes pour atteindre une précision donnée.">
+  <Option text="Sa complexité d'implémentation." correct={false} />
+  <Option text="Sa convergence lente (en √N)." correct={true} />
+  <Option text="Son incapacité à gérer la volatilité." correct={false} />
+  <Option text="Elle ne peut pas être parallélisée." correct={false} />
+</Question>
+</Quiz>
+
+## Conclusion
+Ce cours a mis en lumière l'importance capitale des <ConceptLink id="methodes_numeriques" name="méthodes numériques" term="méthodes numériques">méthodes numériques</ConceptLink> dans la finance quantitative moderne. Nous avons exploré deux piliers fondamentaux : les méthodes de Monte Carlo et les méthodes aux différences finies. Les premières, avec leur flexibilité intrinsèque, se sont avérées indispensables pour la valorisation d'instruments financiers complexes et la gestion de problèmesde haute dimension, notamment ceux impliquant des trajectoires stochastiques dépendantes . Les secondes, quant à elles, excellent dans la résolution d'équations aux dérivées partielles (EDP) qui modélisent l'évolution des prix d'actifs, offrant une approche robuste pour les options américaines et les problèmes de faible dimension , . La capacité à choisir et à appliquer la méthode appropriée est une compétence essentielle pour tout quant, car elle détermine l'efficacité et la précision des modèles de valorisation et de gestion des risques. L'interaction entre la théorie stochastique, les modèles mathématiques et l'implémentation numérique est au cœur de l'ingénierie financière contemporaine, permettant de transformer des concepts abstraits en outils opérationnels pour les marchés.
+
+<Mermaid caption="Figure 3 : " chart={``}/>
+
+L'avenir de la finance quantitative est intrinsèquement lié à l'évolution des capacités de calcul et à l'intégration de nouvelles approches. Au-delà des méthodes fondamentales étudiées, des perspectives passionnantes s'ouvrent. Les méthodes d'éléments finis (FEM), par exemple, offrent une alternative puissante aux différences finies pour des domaines de calcul complexes ou des conditions aux limites non triviales. L'essor de l'intelligence artificielle et du <ConceptLink id="machine_learning" name="Machine Learning" term="Machine Learning">Machine Learning</ConceptLink> révolutionne également le domaine, avec l'application des <ConceptLink id="neural_networks" name="réseaux de neurones" term="réseaux de neurones">réseaux de neurones</ConceptLink> pour des tâches allant de la calibration de modèles à la couverture dynamique, en passant par la résolution d'EDP stochastiquesde haute dimension. Parallèlement, l'<Glossary id="numerical_optimization" name="optimisation numérique" term="optimisation numérique">optimisation numérique</Glossary> reste un domaine crucial, non seulement pour la calibration des paramètrès de modèles, mais aussi pour la construction de portefeuilles optimaux et la gestion des contraintes de marché. Ces avancées promettent d'élargir encore le champ des possibles pour les professionnels de la finance quantitative, les dotant d'outils toujours plus sophistiqués pour naviguer dans la complexité des marchés financiers.
+
+<Quote id="wilmott_future_quant" name="Citation de Paul Wilmott sur l'avenir de la finance quantitative" term="Citation de Paul Wilmott sur l'avenir de la finance quantitative">Citation de Paul Wilmott sur l'avenir de la finance quantitative</Quote>
+
+<Summary itemsString="Les méthodes numériques sont indispensables en finance quantitative pour évaluer des instruments financiers complexes et gérer les risques, en particulier lorsque les solutions analytiques sont introuvables.|||La simulation de Monte Carlo est une technique puissante pour modéliser des processus stochastiques et estimer des prix d'options, notamment pour les options de type chemin-dépendant.|||Les méthodes aux différences finies permettent de résoudre numériquement les équations aux dérivées partielles (EDP) qui régissent l'évolution des prix des options, offrant une approche déterministe.|||Les arbres binomiaux et trinomiaux fournissent une approche discrèt'et intuitive pour la valorisation des options, particulièrement utile pour les options américaines grâce à leur flexibilité.|||Le choix de la méthode numérique dépend de la complexité du modèle financier, du type d'instrument à évaluer, des exigences de précision et des contraintes de temps de calcul.|||Une compréhension approfondie des avantages, des limites et des hypothèses sous-jacentes à chaque méthode est cruciale pour leur application correcte et l'interprétation des résultats en finance."/>
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+    <Question q="Quel est l'un des principaux avantages de la méthode de Monte Carlo pour l'évaluation des options exotiques ?" explanation="La méthode de Monte Carlo est particulièrement adaptée aux options exotiques car elle permet de simuler un grand nombre de trajectoires du sous-jacent, capturant ainsi des dépendances complexes et des caractéristiques de paiement non linéaires. Sa convergence est en O(1/√N), ce qui est relativement lent.">
+  <Option text="Sa rapidité de convergence quadratique." correct={false} />
+  <Option text="Sa capacité à gérer des chemins de dépendance complexes." correct={true} />
+  <Option text="Sa précision garantie mêm'avec un petit nombre de simulations." correct={false} />
+</Question>
+    <Question q="Quelles méthodes aux différences finies sont inconditionnellement stables pour l'équation de Black-Scholes ?" explanation="La méthode implicite et la méthode de Crank-Nicolson sont inconditionnellement stables pour l'équation de Black-Scholes, contrairement à la méthode explicite qui a des conditions de stabilité restrictives. Monte Carlo n'est pas une méthode aux différences finies.">
+  <Option text="La méthode explicite." correct={false} />
+  <Option text="La méthode implicite." correct={true} />
+  <Option text="La méthode de Crank-Nicolson." correct={false} />
+  <Option text="La méthode de Monte Carlo." correct={false} />
+</Question>
+    <Question q="Pour l'évaluation d'une option américaine, pourquoi les arbres binomiaux sont-ils souvent préférés aux méthodes de Monte Carlo standard ?" explanation="Les arbres binomiaux permettent de modéliser l'exercice anticipé d'une option américaine en comparant la valeur de l'option si elle est exercée immédiatement à sa valeur si elle est maintenue à chaque nœud de l'arbre. Les méthodes de Monte Carlo standard ont des difficultés avec l'exercice anticipé.">
+  <Option text="Les arbres binomiaux sont toujours plus rapides." correct={false} />
+  <Option text="Les arbres binomiaux gèrent naturellement l'exercice anticipé." correct={true} />
+  <Option text="Les arbres binomiaux sont plus précis pour un grand nombre de pas de temps." correct={false} />
+  <Option text="Les arbres binomiaux ne nécessitent pas de discrétisation du temps." correct={false} />
+</Question>
+    <Question q="Lors de la simulation d'une équation différentielle stochastique (EDS) par la méthode d'Euler-Maruyama, quel est l'impact principal d'une taille de pas de temps (Δt) trop grande ?" explanation="Une taille de pas de temps trop grande dans la méthode d'Euler-Maruyama peut entraîner une accumulation d'erreurs de discrétisation, une perte de précision et, dans certains cas, une instabilité numérique conduisant à une divergence de la simulation par rapport à la vraie trajectoire du processus stochastique.">
+  <Option text="Une convergence plus rapide vers la solution exacte." correct={false} />
+  <Option text="Une augmentation de la stabilité numérique." correct={false} />
+  <Option text="Une erreur de discrétisation plus importante et potentiellement une divergence." correct={true} />
+  <Option text="Une réduction de la variance des estimateurs." correct={false} />
+</Question>
+    <Question q="Parmi les techniques suivantes, laquelle est une méthode de réduction de variance couramment utilisée en simulation de Monte Carlo pour l'évaluation d'options ?" explanation="La méthode des variables de contrôl'est une technique efficace pour réduire la variance des estimateurs de Monte Carlo en utilisant une variable corrélée dont l'espérance est connue analytiquement. Les autres options sont des méthodes numériques pour d'autres problèmes.">
+  <Option text="La méthode des différences finies." correct={false} />
+  <Option text="La méthode des variables de contrôle." correct={true} />
+  <Option text="La méthode de Newton-Raphson." correct={false} />
+  <Option text="La méthode des moindres carrés." correct={false} />
+</Question>
+    <Question q="Qu'est-ce que la calibration d'un modèl'en finance quantitative ?" explanation="La calibration consiste à trouver les valeurs des paramètrès d'un modèle (par exemple, volatilité, taux d'intérêt, paramètrès de saut) qui minimisent l'écart entre les prix des instruments financiers dérivés calculés par le modèl'et leurs prix observés sur le marché.">
+  <Option text="Le processus de validation d'un modèle par rapport à des données historiques." correct={false} />
+  <Option text="L'ajustement des paramètrès d'un modèle pour qu'il corresponde aux prix observés sur le marché." correct={true} />
+  <Option text="La simplification d'un modèle complexe pour le rendre plus rapide à calculer." correct={false} />
+  <Option text="La détermination de la meilleure méthode numérique pour résoudre un modèle donné." correct={false} />
+</Question>
+    <Question q="Pour l'évaluation d'une option européenne simple (sans exercice anticipé) dont le sous-jacent suit un processus de Black-Scholes, quelle méthode est généralement la plus efficace en termes de vitesse et de précision ?" explanation="Pour les options européennes simples, la résolution de l'équation aux dérivées partielles (EDP) de Black-Scholes via des méthodes aux différences finies (ou mêm'une solution analytique si disponible) est généralement plus rapide et plus précise que Monte Carlo, qui nécessite un grand nombre de simulations pour converger. Les arbres binomiaux sont aussi efficaces mais FDM est souvent plus rapide pour les EDP.">
+  <Option text="La simulation de Monte Carlo." correct={false} />
+  <Option text="Les méthodes aux différences finies (FDM) pour résoudre l'EDP de Black-Scholes." correct={true} />
+  <Option text="Les arbres binomiaux avec un grand nombre de pas." correct={false} />
+  <Option text="La méthode des éléments finis." correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFyYnJlIEJpbm9taWFsIiwiZGVmaW5pdGlvbiI6Ik1vZMOobGUgZGUgdmFsb3Jpc2F0aW9uIGQnb3B0aW9ucyBxdWkgcmVwcsOpc2VudGUgbCfDqXZvbHV0aW9uIGR1IHByaXggZGUgbCdhY3RpZiBzb3VzLWphY2VudCBzdXIgdW5lIHDDqXJpb2RlIGRpc2Nyw6h0ZSwgb8O5IGxlIHByaXggcGV1dCBzb2l0IGF1Z21lbnRlciwgc29pdCBkaW1pbnVlciDDoCBjaGFxdWUgw6l0YXBlLiJ9LHsidGVybSI6IkNhbGlicmFnZSIsImRlZmluaXRpb24iOiJQcm9jZXNzdXMgZCdhanVzdGVtZW50IGRlcyBwYXJhbcOodHJlcyBkJ3VuIG1vZMOobGUgZmluYW5jaWVyIHBvdXIgcXUnaWwgY29ycmVzcG9uZGUgYXUgbWlldXggYXV4IHByaXggb2JzZXJ2w6lzIHN1ciBsZSBtYXJjaMOpIGRlcyBpbnN0cnVtZW50cyBmaW5hbmNpZXJzLiJ9LHsidGVybSI6IkNvbnZlcmdlbmNlIiwiZGVmaW5pdGlvbiI6IlByb3ByacOpdMOpIGQndW5lIG3DqXRob2RlIG51bcOpcmlxdWUgb8O5IGxhIHNvbHV0aW9uIGFwcHJveGltw6llIHNlIHJhcHByb2NoZSBkZSBsYSBzb2x1dGlvbiBleGFjdGUgw6AgbWVzdXJlIHF1ZSBsZXMgcGFyYW3DqHRyZXMgZGUgZGlzY3LDqXRpc2F0aW9uIChwYXIgZXhlbXBsZSwgbGUgbm9tYnJlIGQnw6l0YXBlcyBvdSBsYSB0YWlsbGUgZHUgcGFzKSBzb250IHJhZmZpbsOpcy4ifSx7InRlcm0iOiJEaXNjcsOpdGlzYXRpb24iLCJkZWZpbml0aW9uIjoiUHJvY2Vzc3VzIGRlIGNvbnZlcnNpb24gZCd1biBtb2TDqGxlIG91IGQndW4gZXNwYWNlIGNvbnRpbnUgZW4gdW5lIHZlcnNpb24gZGlzY3LDqHRlLCBzb3V2ZW50IG7DqWNlc3NhaXJlIHBvdXIgbCdhcHBsaWNhdGlvbiBkZSBtw6l0aG9kZXMgbnVtw6lyaXF1ZXMuIn0seyJ0ZXJtIjoiw4lxdWF0aW9uIGF1eCBEw6lyaXbDqWVzIFBhcnRpZWxsZXMgKEVEUCkiLCJkZWZpbml0aW9uIjoiw4lxdWF0aW9uIG1hdGjDqW1hdGlxdWUgaW1wbGlxdWFudCBwbHVzaWV1cnMgdmFyaWFibGVzIGluZMOpcGVuZGFudGVzIGV0IGxldXJzIGTDqXJpdsOpZXMgcGFydGllbGxlcywgc291dmVudCB1dGlsaXPDqWUgZW4gZmluYW5jZSBwb3VyIG1vZMOpbGlzZXIgbCfDqXZvbHV0aW9uIGRlcyBwcml4IGRlcyBvcHRpb25zIChleDogw6lxdWF0aW9uIGRlIEJsYWNrLVNjaG9sZXMpLiJ9LHsidGVybSI6Ik3DqXRob2RlcyBhdXggRGlmZsOpcmVuY2VzIEZpbmllcyIsImRlZmluaXRpb24iOiJBcHByb2NoZSBudW3DqXJpcXVlIHBvdXIgcsOpc291ZHJlIGRlcyDDqXF1YXRpb25zIGRpZmbDqXJlbnRpZWxsZXMgKG9yZGluYWlyZXMgb3UgcGFydGllbGxlcykgZW4gYXBwcm94aW1hbnQgbGVzIGTDqXJpdsOpZXMgcGFyIGRlcyBkaWZmw6lyZW5jZXMgZmluaWVzLCB0cmFuc2Zvcm1hbnQgbCfDqXF1YXRpb24gY29udGludWUgZW4gdW4gc3lzdMOobWUgZCfDqXF1YXRpb25zIGFsZ8OpYnJpcXVlcyBkaXNjcsOodGVzLiJ9LHsidGVybSI6Ik9wdGlvbiBBbcOpcmljYWluZSIsImRlZmluaXRpb24iOiJUeXBlIGQnb3B0aW9uIHF1aSBwZXV0IMOqdHJlIGV4ZXJjw6llIMOgIHRvdXQgbW9tZW50IGp1c3F1J8OgIHNhIGRhdGUgZCdleHBpcmF0aW9uLCBjb250cmFpcmVtZW50IMOgIHVuZSBvcHRpb24gZXVyb3DDqWVubmUgcXVpIG5lIHBldXQgw6p0cmUgZXhlcmPDqWUgcXUnw6AgbCfDqWNow6lhbmNlLiJ9LHsidGVybSI6IlByb2Nlc3N1cyBTdG9jaGFzdGlxdWUiLCJkZWZpbml0aW9uIjoiTW9kw6hsZSBtYXRow6ltYXRpcXVlIGTDqWNyaXZhbnQgbCfDqXZvbHV0aW9uIGQndW5lIHZhcmlhYmxlIGFsw6lhdG9pcmUgYXUgY291cnMgZHUgdGVtcHMsIGNvbW1lIGxlIHByaXggZCd1biBhY3RpZiBmaW5hbmNpZXIsIGNhcmFjdMOpcmlzw6kgcGFyIHVuZSBjb21wb3NhbnRlIGFsw6lhdG9pcmUuIn0seyJ0ZXJtIjoiU2Now6ltYSBFeHBsaWNpdGUiLCJkZWZpbml0aW9uIjoiVHlwZSBkZSBzY2jDqW1hIGF1eCBkaWZmw6lyZW5jZXMgZmluaWVzIG/DuSBsYSB2YWxldXIgZGUgbGEgc29sdXRpb24gYXUgcGFzIGRlIHRlbXBzIHN1aXZhbnQgcGV1dCDDqnRyZSBjYWxjdWzDqWUgZGlyZWN0ZW1lbnQgw6AgcGFydGlyIGRlcyB2YWxldXJzIGF1IHBhcyBkZSB0ZW1wcyBhY3R1ZWwuIn0seyJ0ZXJtIjoiU2Now6ltYSBJbXBsaWNpdGUiLCJkZWZpbml0aW9uIjoiVHlwZSBkZSBzY2jDqW1hIGF1eCBkaWZmw6lyZW5jZXMgZmluaWVzIG/DuSBsYSB2YWxldXIgZGUgbGEgc29sdXRpb24gYXUgcGFzIGRlIHRlbXBzIHN1aXZhbnQgZXN0IGTDqXRlcm1pbsOpZSBwYXIgbGEgcsOpc29sdXRpb24gZCd1biBzeXN0w6htZSBkJ8OpcXVhdGlvbnMgaW1wbGlxdWFudCBsZXMgdmFsZXVycyBhdSBwYXMgZGUgdGVtcHMgYWN0dWVsIGV0IHN1aXZhbnQuIn0seyJ0ZXJtIjoiU2Vuc2liaWxpdMOpcyAoR3JlY3MpIiwiZGVmaW5pdGlvbiI6Ik1lc3VyZXMgZGUgbGEgc2Vuc2liaWxpdMOpIGR1IHByaXggZCd1bmUgb3B0aW9uIGF1eCBjaGFuZ2VtZW50cyBkZSBkaWZmw6lyZW50cyBmYWN0ZXVycyBzb3VzLWphY2VudHMgKHByaXggZGUgbCdhY3RpZiwgdm9sYXRpbGl0w6ksIHRlbXBzLCB0YXV4IGQnaW50w6lyw6p0KSwgdGVsbGVzIHF1ZSBsZSBEZWx0YSwgR2FtbWEsIFZlZ2EsIFRoZXRhLCBSaG8uIn0seyJ0ZXJtIjoiU2ltdWxhdGlvbiBkZSBNb250ZSBDYXJsbyIsImRlZmluaXRpb24iOiJUZWNobmlxdWUgbnVtw6lyaXF1ZSBxdWkgdXRpbGlzZSBsJ8OpY2hhbnRpbGxvbm5hZ2UgYWzDqWF0b2lyZSBwb3VyIG9idGVuaXIgZGVzIHLDqXN1bHRhdHMgbnVtw6lyaXF1ZXMsIHNvdXZlbnQgZW1wbG95w6llIHBvdXIgZXN0aW1lciBsYSB2YWxldXIgZCdpbnN0cnVtZW50cyBmaW5hbmNpZXJzIGNvbXBsZXhlcyBvdSBtb2TDqWxpc2VyIGRlcyBwcm9jZXNzdXMgc3RvY2hhc3RpcXVlcy4ifSx7InRlcm0iOiJTdGFiaWxpdMOpIE51bcOpcmlxdWUiLCJkZWZpbml0aW9uIjoiQ2FyYWN0w6lyaXN0aXF1ZSBkJ3VuZSBtw6l0aG9kZSBudW3DqXJpcXVlIHF1aSBnYXJhbnRpdCBxdWUgbGVzIGVycmV1cnMgZGUgY2FsY3VsIG5lIHMnYW1wbGlmaWVudCBwYXMgZGUgbWFuacOocmUgaW5jb250csO0bGFibGUgYXUgY291cnMgZGVzIGl0w6lyYXRpb25zLCBwZXJtZXR0YW50IGQnb2J0ZW5pciBkZXMgcsOpc3VsdGF0cyBmaWFibGVzLiJ9LHsidGVybSI6IlZvbGF0aWxpdMOpIEltcGxpY2l0ZSIsImRlZmluaXRpb24iOiJNZXN1cmUgZGUgbGEgdm9sYXRpbGl0w6kgZnV0dXJlIGQndW4gYWN0aWYgc291cy1qYWNlbnQsIGTDqWR1aXRlIGR1IHByaXggZGUgbWFyY2jDqSBkJ3VuZSBvcHRpb24gZW4gdXRpbGlzYW50IHVuIG1vZMOobGUgZGUgdmFsb3Jpc2F0aW9uIChjb21tZSBCbGFjay1TY2hvbGVzKS4ifV0=" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiVG9tYXMgQmrDtnJrICgyMDA1KS4gwqsgQXJiaXRyYWdlIFByaWNpbmcgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Ub21hcyUyMEJqJUMzJUI2cmslMjAlMjJBcmJpdHJhZ2UlMjBQcmljaW5nJTIyJTIwMjAwNSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MiwidGV4dCI6IkFuZHJlYSBQYXNjdWNjaSAoMjAxMSkuIMKrIFBERSBhbmQgTWFydGluZ2FsZSBNZXRob2RzIGluIE9wdGlvbiBQcmljaW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTg4LTQ3MC0xNzgxLTgiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MywidGV4dCI6IkpvaG4gQy4gSHVsbC4gMjAyMS4gwqsgT3B0aW9ucywgQ29udHJhdHMgw6AgdGVybWUgZXQgQXV0cmVzIFByb2R1aXRzIETDqXJpdsOpcyDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Sm9obiUyMEh1bGwlMjAlMjJPcHRpb25zJTIyJTIwMjAyMSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NCwidGV4dCI6IkpvbmF0aGFuIEUuIEluZ2Vyc29sbCwgRGFycmVsbCBEdWZmaWUgKDIwMDYpLiDCqyBEeW5hbWljIEFzc2V0IFByaWNpbmcgVGhlb3J5LiDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUpvbmF0aGFuJTIwSW5nZXJzb2xsJTIwJTIyRHluYW1pYyUyMEFzc2V0JTIwUHJpY2luZyUyMFRoZW9yeS4lMjIlMjAyMDA2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo1LCJ0ZXh0IjoiSW9hbm5pcyBLYXJhdHphcywgU3RldmVuIEUuIFNocmV2ZSAoMjAxMikuIMKrIEJyb3duaWFuIE1vdGlvbiDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0xLTQ2ODQtMDMwMi0yXzIiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NiwidGV4dCI6IkRhbWlhbm8gQnJpZ28sIEZhYmlvIE1lcmN1cmlvICgyMDEzKS4gwqsgT3RoZXIgSW50ZXJlc3QtUmF0ZSBNb2RlbHMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy02NjItMDQ1NTMtNF85Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjcsInRleHQiOiJHZXJhbGQgRC4gR2F5LCBKb2huIEh1bGwgKDIwMDYpLiDCqyBPcHRpb25zLCBGdXR1cmVzLCBhbmQgT3RoZXIgRGVyaXZhdGl2ZSBTZWN1cml0aWVzLiDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUdlcmFsZCUyMEdheSUyMCUyMk9wdGlvbnMlMjIlMjAyMDA2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo4LCJ0ZXh0IjoiU3RldmVuIEUuIFNocmV2ZSAoMjAxMikuIMKrIFN0b2NoYXN0aWMgQ2FsY3VsdXMgZm9yIEZpbmFuY2UgSSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0wLTM4Ny0yMjUyNy0yIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6OSwidGV4dCI6Ik1vbmlxdWUgSmVhbmJsYW5jICgyMDE5KS4gwqsgQ3JpdGlxdWUgZGUgbCdvdXZyYWdlIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9TW9uaXF1ZSUyMEplYW5ibGFuYyUyMCUyMkNyaXRpcXVlJTIwZGUlMjBsJ291dnJhZ2UlMjIlMjAyMDE5Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjEwLCJ0ZXh0IjoiTWFyZWsgTXVzaWVsYSwgTWFyZWsgUnV0a293c2tpICgyMDA2KS4gwqsgTWFydGluZ2FsZSBNZXRob2RzIGluIEZpbmFuY2lhbCBNb2RlbGxpbmcgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy02NjItMjIxMzItNyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjExLCJ0ZXh0IjoiTWFydGluIEJheHRlciwgQW5kcmV3IFJlbm5pZSAoMjAxNCkuIMKrIEZpbmFuY2lhbCBDYWxjdWx1cyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDE3L2Nibzk3ODA1MTE4MDY2MzYiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxMiwidGV4dCI6IlBhdWwgR2xhc3Nlcm1hbiAoMjAxMykuIMKrIFF1YXNpLU1vbnRlIENhcmxvIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTAtMzg3LTIxNjE3LTFfNSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjEzLCJ0ZXh0IjoiRGFtaWVuIExhbWJlcnRvbiwgQmVybmFyZCBMYXBleXJlICgyMDE4KS4gwqsgSW50cm9kdWN0aW9uIHRvIFN0b2NoYXN0aWMgQ2FsY3VsdXMgQXBwbGllZCB0byBGaW5hbmNlIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEyMDEvOTc4MTQyMDAwOTk0MSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE0LCJ0ZXh0IjoiU2FsaWggTi4gTmVmdGNpICgyMDEyKS4gwqsgSW50cm9kdWN0aW9uIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMTYvYjk3OC0wLTEyLTM3MzU3NC00LjUwMDA0LTQiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNSwidGV4dCI6IlJlbsOpIEwuIFNjaGlsbGluZyAoMjAxNikuIMKrIFN0b2NoYXN0aWMgZGlmZmVyZW50aWFsIGVxdWF0aW9uczogQW4gaW50cm9kdWN0aW9uIHdpdGggYXBwbGljYXRpb25zIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9UmVuJUMzJUE5JTIwU2NoaWxsaW5nJTIwJTIyU3RvY2hhc3RpYyUyMGRpZmZlcmVudGlhbCUyMGVxdWF0aW9ucyUyMiUyMDIwMTYiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTYsInRleHQiOiJBdXRldXIgaW5jb25udSAoMjAwNykuIMKrIFBoeXNpY3Mgb2YgZmluYW5jZS4gS2lyaWxsIElsaW5za2kuIEpvaG4gV2lsZXkgYW5kIFNvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1BdXRldXIlMjBpbmNvbm51JTIwJTIyUGh5c2ljcyUyMG9mJTIwZmluYW5jZS4lMjBLaXJpbGwlMjBJbGluc2tpLiUyMEpvaG4lMjBXaWxleSUyMGFuZCUyMFNvbnMlMjIlMjAyMDA3Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE3LCJ0ZXh0IjoiQXV0ZXVyIGluY29ubnUgKDIwMTUpLiDCqyBUaGUgVm9sYXRpbGl0eSBTdXJmYWNlIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjY0MDY1L2NvbmdvLWFmcmlxdWUuMjAyNS42MC41NTAuNjAxIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTgsInRleHQiOiJNb25pcXVlIEplYW5ibGFuYywgTWFyYyBZb3IsIE1hcmMgQ2hlc25leSAoMjAwOSkuIMKrIE1hdGhlbWF0aWNhbCBNZXRob2RzIGZvciBGaW5hbmNpYWwgTWFya2V0cyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0xLTg0NjI4LTczNy00Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTksInRleHQiOiJQaGlsaXAgUHJvdHRlciAoMjAxMykuIMKrIFN0b2NoYXN0aWMgRGlmZmVyZW50aWFsIEVxdWF0aW9ucyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0zLTY2Mi0wMjYxOS05XzYiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMCwidGV4dCI6IkF1dGV1ciBpbmNvbm51ICgyMDA4KS4gwqsgTWF0aGVtYXRpY2FsIE1vZGVscyBvZiBGaW5hbmNpYWwgRGVyaXZhdGl2ZXMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy01NDAtNjg2ODgtMCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjIxLCJ0ZXh0IjoiV2lsbW90dCwgwqsgU2VydmluZyB0aGUgcXVhbnRpdGF0aXZlIGZpbmFuY2UgY29tbXVuaXR5IMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1XaWxtb3R0JTIwJTIyU2VydmluZyUyMHRoZSUyMHF1YW50aXRhdGl2ZSUyMGZpbmFuY2UlMjBjb21tdW5pdHklMjIiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjIsInRleHQiOiJVbmUgSW50cm9kdWN0aW9uIEF1eCBNw6l0aG9kZXMgTnVtw6lyaXF1ZXMgZW4gw4ljb25vbcOpdHJpZSBGaW5hbmNpw6hyZS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9VW5lJTIwSW50cm9kdWN0aW9uJTIwQXV4JTIwTSVDMyVBOXRob2RlcyUyME51bSVDMyVBOXJpcXVlcyUyMGVuJTIwJUMzJTg5Y29ub20lQzMlQTl0cmllJTIwRmluYW5jaSVDMyVBOHJlJTIwJTIyVW5lJTIwSW50cm9kdWN0aW9uJTIwQXV4JTIwTSVDMyVBOXRob2RlcyUyME51bSVDMyVBOXJpcXVlcyUyMGVuJTIwJUMzJTg5Y29ub20lQzMlQTl0cmllJTIwRmluYSUyMiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMywidGV4dCI6IlBpZXJyZSBTUElURVJJLiAyMDIxLiDCqyBNw6l0aG9kZSBkZXMgZGlmZsOpcmVuY2VzIGZpbmllcyBwb3VyIGxlcyBFRFAgc3RhdGlvbm5haXJlcyDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjUxMjU3L2EtdjEtYWY1MDAiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyNCwidGV4dCI6IiwgWmFrYXJpYSBTbGltYW5pLiAyMDI2LiDCqyBMYSBtaXNlIGVuIHBsYWNlIGQndW4gbW9kw6hsZSBkJ8OpdmFsdWF0aW9uIGRlcyBhY3RpZnMgZmluYW5jaWVycyBkYW5zIGxlIHBhcmFkaWdtZSBkZSBmaW5hbmNlIGlzbGFtaXF1ZSDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjcwNjc1L2NlMDZhNDk0ejAzNTF6NDk3OXo4NDAzejlhOWJmOTJmZTY5YyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX1d" />
+

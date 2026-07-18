@@ -1,0 +1,221 @@
+---
+title: « Mouvement Brownien et Intégrale d'Itô »
+subject: « Finance quantitative et modélisation stochastique »
+level: « M1 »
+module: « Mouvement Brownien et Intégrale d'Itô »
+order: 4
+---
+
+
+
+<DiagnosticQuiz question="Quelle propriété fondamentale caractérise les accroissements d'un Mouvement Brownien standard sur des intervalles de temps disjoints ?" options="Ils sont indépendants et suivent une loi normale centrée.|||Ils sont corrélés et suivent une loi de Poisson.|||Ils sont dépendants et ont une variance constante.|||Ils sont indépendants et suivent une loi exponentielle." correctIndex="0" targetSectionId="introduction-mouvement-brownien" sectionTitle="Introduction au Mouvement Brownien" />
+
+
+
+## Introduction au Mouvement Brownien et à l'Intégrale d'Itô
+
+Dans le domaine de la finance quantitative moderne, la modélisation des phénomènes aléatoires est une pierre angulaire. Les prix des actifs financiers, les taux d'intérêt, et d'autres variables économiques clés évoluent de manière stochastique, rendant les outils de la théorie des probabilités indispensables. Au cœur de cette modélisation se trouvent le <ConceptLink id="mouvement_brownien" name="Mouvement Brownien" term="Mouvement Brownien">Mouvement Brownien</ConceptLink> et l'intégrale d'Itô, des concepts fondamentaux qui ont révolutionné notre compréhension et notre capacité à analyser les marchés financiers.
+
+Historiquement, l'introduction du mouvement brownien comme modèle pour les prix d'actifs remonte aux travaux pionniers de <RealPerson id="bachelier" name="Louis Bachelier" term="Louis Bachelier">Louis Bachelier</RealPerson> au début du XXe siècle, bien avant son adoption généralisée en physique par <RealPerson id="einstein" name="Albert Einstein" term="Albert Einstein">Albert Einstein</RealPerson>. Cependant, c'est avec le développement du calcul stochastique, et en particulier de l'intégrale d'Itô par <RealPerson id="ito" name="Kiyosi Itô" term="Kiyosi Itô">Kiyosi Itô</RealPerson>, que ces outils ont trouvé leur pleine application en finance. Ils permettent de construire des modèles continus pour les prix d'actifs, comme le célèbre modèle de Black-Scholes pour l'évaluation des options, qui repose sur l'hypothèse que le prix de l'actif sous-jacent suit un processus de diffusion géométrique brownien <Reference id="1" name="1" term="1">1</Reference>, <Reference id="2" name="2" term="2">2</Reference>.
+
+Ce cours de Master 1 vise à fournir une compréhension approfondie du mouvement brownien, de ses propriétés fondamentales, et de l'intégrale d'Itô. Nous explorerons comment ces concepts mathématiques abstraits peuvent être appliqués concrètement à la modélisation des marchés financiers, à la tarification des produits dérivés et à la gestion des risques. Le positionnement de ce module dans votre programme de Master 1 en finance quantitative est crucial : il constitue la base théorique indispensable pour aborder des sujets plus avancés tels que les équations différentielles stochastiques (EDS), la théorie de l'arbitrage en temps continu, et les méthodes numériques en finance <Reference id="3" name="3" term="3">3</Reference>, <Reference id="4" name="4" term="4">4</Reference>, <Reference id="5" name="5" term="5">5</Reference>.
+
+<Mermaid caption="Figure 1 : " chart={``}/>
+
+En maîtrisant ces outils, vous serez équipés pour comprendre et développer des modèles sophistiqués, essentiels pour toute carrière dans la finance quantitative.
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les propriétés fondamentales du Mouvement Brownien standard et généralisé.</li>
+      <li>Évaluer la pertinence des concepts de martingale et de semi-martingale pour l'intégrale stochastique.</li>
+      <li>Distinguer les différentes interprétations de l'intégrale d'Itô et de Stratonovich.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Appliquer le lemme d'Itô pour transformer des fonctions de processus stochastiques.</li>
+      <li>Construire des intégrales stochastiques par rapport au Mouvement Brownien.</li>
+      <li>Évaluer la valeur d'espérances conditionnelles dans le cadre des processus stochastiques.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Développer une appréciation pour la rigueur mathématique nécessaire à la modélisation stochastique en finance.</li>
+      <li>Adopter une perspective critique sur les limites et les hypothèses des modèles basés sur le Mouvement Brownien.</li>
+      <li>Manifester de la curiosité pour les avancées récentes en calcul stochastique et leurs applications financières.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Le Mouvement Brownien: Construction et Propriétés Fondamentales
+
+Le mouvement brownien, souvent noté $W_t$ ou $B_t$, est un processus stochastique en temps continu qui modélise le mouvement aléatoire de particules dans un fluide. Sa formalisation mathématique est rigoureuse et repose sur un ensemble de propriétés clés.
+
+Un processus stochastique $(W_t)_{t \ge 0}$ est appelé mouvement brownien standard (ou processus de Wiener) s'il satisfait les conditions suivantes <Reference id="6" name="6" term="6">6</Reference>, :
+
+1.  **Condition initiale:** $W_0 = 0$ presque sûrement.
+2.  **Accroissements indépendants:** Pour tout $0 \le s < t \l'u < v$, les accroissements $(W_t - W_s)$ et $(W_v - W_u)$ sont indépendants. Plus généralement, pour toute suite de temps $0 \le t_0 < t_1 < \dots < t_n$, les accroissements $(W_{t_1} - W_{t_0}), (W_{t_2} - W_{t_1}), \dots, (W_{t_n} - W_{t_{n-1}})$ sont mutuellement indépendants.
+3.  **Accroissements stationnaires et gaussiens:** Pour tout $0 \le s < t$, l'accroissement $(W_t - W_s)$ suit une loi normale centrée de variance $(t-s)$, c'est-à-dire $W_t - W_s \sim \mathcal{N}(0, t-s)$. Cette propriété implique que la moyenne de l'accroissement est nulle et sa variance est proportionnelle à la durée de l'intervalle.
+4.  **Continuité des trajectoires:** Les trajectoires (ou chemins) du mouvement brownien sont continues presque sûrement. Cela signifie que pour chaque réalisation du processus, la fonction $t \mapsto W_t(\omega)$ est continue.
+
+Ces propriétés définissent un processus unique et aux caractéristiques remarquables. Examinons plus en détail ses propriétés fondamentales:
+
+*   **Accroissements Gaussiens:** Comme mentionné, les changements du mouvement brownien sur tout intervalle de temps sont distribués selon une loi normale. Cela signifie que les petits changements sont plus probables que les grands, et que les mouvements positifs et négatifs sont également probables.
+*   **Trajectoires continues mais nulle part différentiables:** Bien que les chemins du mouvement brownien soient continus, ils sont extrêmement irréguliers. Une propriété contre-intuitive mais fondamentale est qu'ils ne sont différentiables en aucun point, presque sûrement <Reference id="7" name="7" term="7">7</Reference>. Cela implique que la « vitesse » d'une particule brownienne n'est jamais bien définie, ce qui rend le calcul classique inadapté pour l'analyser et justifie le développement du calcul d'Itô.
+*   **Variance proportionnelle au temps:** La variance de $W_t$ est égale à $t$. Plus généralement, la variance de l'accroissement $W_t - W_s$ est $t-s$. Cette propriété est cruciale pour la modélisation de la volatilité en finance, où la dispersion des prix d'actifs augmente avec le temps.
+*   **Variation quadratique:** Une autre propriété essentielle, liée à l'irrégularité des trajectoires, est que le mouvement brownien a une <Glossary id="quadratic_variation" name="variation quadratique" term="variation quadratique">variation quadratique</Glossary> non nulle. Pour une partition $0 = t_0 < t_1 < \dots < t_n = T$ de l'intervalle $[0, T]$, la somme $\sum_{i=0}^{n-1} (W_{t_{i+1}} - W_{t_i})^2$ converge vers $T$ lorsque le pas de la partition tend vers zéro. Cette propriété est fondamentale pour l'intégrale d'Itô et distingue le mouvement brownien des fonctions différentiables classiques.
+
+<Image description="Un fond gris est parsemé de nombreuses formes sombres irrégulières, avec quelques cercles jaunes et de petites flèches bleues." alt="Un fond gris est parsemé de nombreuses formes sombres irrégulières, avec quelques cercles jaunes et de petites flèches bleues." caption="Figure 1: Un fond gris est parsemé de nombreuses formes sombres irrégulières, avec quelques cercles jaunes et de petites flèches bleues. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Brownianmotion5particles150frame.gif)" title="Trajectoire d'un Mouvement Brownien" src="https://commons.wikimedia.org/wiki/Special:FilePath/Brownianmotion5particles150frame.gif" fallbackUrl="https://commons.wikimedia.org/wiki/File:Brownianmotion5particles150frame.gif" />
+
+Ces propriétés confèrent au mouvement brownien un rôle central dans la modélisation des incertitudes et des dynamiques aléatoires en finance, en physique et dans de nombreux autres domaines scientifiques.
+
+## L'Intégrale d'Itô: Définition et Propriétés Clés
+
+Le mouvement brownien, comme nous l'avons vu, possède des trajectoires continues mais nulle part différentiables. Cette propriété fondamentale rend le calcul intégral classique, tel que l'intégrale de Riemann ou de Riemann-Stieltjes, inadapté pour intégrer des fonctions par rapport à ce processus. En effet, la variation quadratique non nulle du mouvement brownien empêche la convergence des sommes de Riemann-Stieltjes vers une valeur unique et bien définie pour des intégrands non trivialement lisses. C'est dans ce contexte que Kiyosi Itô a développé une nouvelle théorie de l'intégration stochastique dans les années 1940, spécifiquement conçue pour les processus non différentiables comme le mouvement brownien .
+
+L'intégrale d'Itô est essentielle pour définir et résoudre les <ConceptLink id="stochastic_differential_equation" name="Équations Différentielles Stochastiques (EDS)" term="Équations Différentielles Stochastiques (EDS)" unresolved={true}>Équations Différentielles Stochastiques (EDS)</ConceptLink>, qui sont au cœur de la modélisation des dynamiques aléatoires en finance quantitative.
+
+### Définition de l'Intégrale d'Itô
+
+Pour comprendre l'intégrale d'Itô, commençons par des processus simples, appelés processus étagés (ou processus prévisibles simples). Un processus $X_t$ est étagé s'il peut s'écrire sous la forme:
+$$ X_t = \sum_{i=0}^{n-1} \xi_i \mathbf{1}_{[t_i, t_{i+1})}(t) $$
+où $0 = t_0 < t_1 < \dots < t_n = T$ est une partition de l'intervalle $[0, T]$, et $\xi_i$ sont des variables aléatoires mesurables par rapport à la filtration $\mathcal{F}_{t_i}$ (c'est-à-dire que $\xi_i$ est connue au temps $t_i$). Pour un tel processus, l'intégrale d'Itô par rapport au mouvement brownien $W_t$ est définie comme:
+$$ \int_0^T X_t \, dW_t = \sum_{i=0}^{n-1} \xi_i (W_{t_{i+1}} - W_{t_i}) $$
+Cette définition est intuitive: on multiplie la valeur du processus $X_t$ au début de chaque intervalle par l'accroissement du mouvement brownien sur cet intervalle. Le choix de prendre la valeur de $X_t$ au début de l'intervalle ($t_i$) est crucial et distingue l'intégrale d'Itô de l'intégrale de Stratonovich, qui prendrait une valeur intermédiaire. Ce choix assure que l'intégrale d'Itô est une <Glossary definition="Un processus stochastique dont l'espérance conditionnelle de sa valeur future, étant donné l'information présente, est égale à sa valeur présente. Les martingales sont cruciales en finance pour la valorisation sans arbitrage." id="martingale" name="martingale" term="martingale">martingale</Glossary>, une propriété fondamentale en finance.
+
+<Image description="Illustration schématique de la différence entre les sommes d'Itô et de Riemann-Stieltjes pour un processus stochastique" caption="Figure 2: Illustration schématique de la différence entre les sommes d'Itô et de Riemann-Stieltjes pour un processus stochastique. Source: [Wikimedia Commons](https://fr.wikipedia.org/wiki/Int%C3%A9grale_d'It%C5%8D)" src="https://upload.wikimedia.org/wikipedia/commons/2/2e/Ito_Integral_BdB.png" fallbackUrl="https://fr.wikipedia.org/wiki/Int%C3%A9grale_d'It%C5%8D" />
+
+L'extension de cette définition à des processus plus généraux (non étagés) se fait par un processus de limite. Pour un processus $X_t$ plus général, on construit une suite de processus étagés $X_t^{(n)}$ qui convergent vers $X_t$ dans un certain sens (par exemple, en moyenne quadratique). L'intégrale d'Itô de $X_t$ est alors définie comme la limite des intégrales d'Itô des processus étagés:
+$$ \int_0^T X_t \, dW_t = \lim_{n \to \infty} \int_0^T X_t^{(n)} \, dW_t $$
+Cette extension est rigoureuse et permet d'intégrer une large classe de processus stochastiques, à condition qu'ils satisfassent certaines conditions de mesurabilité et d'intégrabilité (par exemple, $E[\int_0^T X_t^2 dt] < \infty$) .
+
+### Propriétés Clés de l'Intégrale d'Itô
+
+L'intégrale d'Itô possède des propriétés distinctes de celles de l'intégrale de Riemann-Stieltjes:
+
+1.  **Linéarité:** Pour des constantes $a, b$ et des processus $X_t, Y_t$ intégrables:
+    $$ \int_0^T (a X_t + b Y_t) \, dW_t = a \int_0^T X_t \, dW_t + b \int_0^T Y_t \, dW_t $$
+2.  **Propriété de Martingale:** Si $X_t$ est un processus prévisible et borné, alors l'intégrale d'Itô $M_t = \int_0^t X_s \, dW_s$ est une martingale par rapport à la filtration naturelle du mouvement brownien. Cette propriété est d'une importance capitale en finance pour la valorisation des actifs et la gestion des risques .
+3.  **Isométrie d'Itô:** C'est l'une des propriétés les plus fondamentales et les plus utilisées. Pour un processus $X_t$ tel que $E[\int_0^T X_t^2 dt] < \infty$:
+    $$ E \left[ \left( \int_0^T X_t \, dW_t \right)^2 \right] = E \left[ \int_0^T X_t^2 \, dt \right] $$
+    Cette formule est l'analogue stochastique du théorème de Pythagore et est cruciale pour calculer les variances des intégrales stochastiques. Elle met en évidence que l'intégrale d'Itô est une transformation isométrique de l'espace des processus $L^2$ vers l'espace des variables aléatoires $L^2$.
+4.  **Non-commutativité:** Contrairement au calcul classique où $f(x) dx = d(F(x))$, l'intégrale d'Itô ne suit pas les mêmes règles. Par exemple, $\int_0^T W_t \, dW_t \neq \frac{1}{2} W_T^2$. En fait, l'intégrale d'Itô de $W_t$ par rapport à $dW_t$ est donnée par:
+    $$ \int_0^T W_t \, dW_t = \frac{1}{2} W_T^2 - \frac{1}{2} T $$
+    Le terme $-\frac{1}{2} T$ est le « terme d'Itô » ou « correction d'Itô », et il provient directement de la variation quadratique non nulle du mouvement brownien. C'est cette correction qui rend le calcul d'Itô unique et indispensable pour les processus stochastiques.
+
+<Mermaid caption="Figure 4 : " chart={``}/>
+
+## Le Lemme d'Itô et Premières Applications
+
+Le Lemme d'Itô est l'outil le plus puissant du calcul stochastique, agissant comme une généralisation de la règle de la chaîne pour les fonctions de processus d'Itô. Il permet de calculer la différentielle d'une fonction d'un processus stochastique, en tenant compte de la variation quadratique non nulle. Sans le Lemme d'Itô, il serait impossible de dériver les équations régissant l'évolution de nombreuses quantités financières.
+
+### Formulation du Lemme d'Itô
+
+Soit $X_t$ un processus d'Itô défini par l'équation différentielle stochastique (EDS):
+$$ dX_t = \mu(t, X_t) \, dt + \sigma(t, X_t) \, dW_t $$
+où $\mu(t, X_t)$ est le terme de dérive (drift) et $\sigma(t, X_t)$ est le terme de diffusion (volatility), et $W_t$ est un mouvement brownien.
+Soit $f(t, x)$ une fonction de classe $C^2$ en $x$ et $C^1$ en $t$. Alors le processus $Y_t = f(t, X_t)$ est aussi un processus d'Itô, et sa différentielle stochastique est donnée par le Lemme d'Itô:
+$$ dY_t = df(t, X_t) = \left( \frac{\partial f}{\partial t} + \mu(t, X_t) \frac{\partial f}{\partial x} + \frac{1}{2} \sigma(t, X_t)^2 \frac{\partial^2 f}{\partial x^2} \right) \, dt + \sigma(t, X_t) \frac{\partial f}{\partial x} \, dW_t $$
+Le terme $\frac{1}{2} \sigma(t, X_t)^2 \frac{\partial^2 f}{\partial x^2} \, dt$ est la « correction d'Itô ». Il est crucial et n'a pas d'équivalent dans la règle de la chaîne du calcul déterministe. Il apparaît en raison de la variation quadratique du mouvement brownien, où $(dW_t)^2 = dt$. Plus formellement, les règles de multiplication d'Itô sont:
+*   $dt \cdot dt = 0$
+*   $dt \cdot dW_t = 0$
+*   $dW_t \cdot dW_t = dt$
+
+Ces règles sont appliquées lors du développement de Taylor de $f(t, X_t)$ jusqu'au second ordre, et c'est le terme $(dX_t)^2$ qui génère la correction d'Itô.
+
+### Application à la Dérivation du Modèle de Black-Scholes
+
+Le Lemme d'Itô est indispensable pour la modélisation des prix d'actifs en finance. Un exemple emblématique est la dérivation de l'équation différentielle stochastique (EDS) pour le prix d'une option dans le modèle de Black-Scholes , <Reference id="8" name="8" term="8">8</Reference>.
+
+Considérons le prix d'une action $S_t$ qui suit un mouvement brownien géométrique (GBM), une EDS couramment utilisée en finance:
+$$ dS_t = \mu S_t \, dt + \sigma S_t \, dW_t $$
+où $\mu$ est le taux de rendement espéré et $\sigma$ est la volatilité.
+Supposons que le prix d'une option $V$ dépende du temps $t$ et du prix de l'action $S_t$, c'est-à-dire $V = V(t, S_t)$. Nous voulons trouver l'EDS pour $dV$. En appliquant le Lemme d'Itô à $V(t, S_t)$ avec $X_t = S_t$, $\mu(t, S_t) = \mu S_t$ et $\sigma(t, S_t) = \sigma S_t$:
+$$ dV = \left( \frac{\partial V}{\partial t} + \mu S_t \frac{\partial V}{\partial S} + \frac{1}{2} (\sigma S_t)^2 \frac{\partial^2 V}{\partial S^2} \right) \, dt + \sigma S_t \frac{\partial V}{\partial S} \, dW_t $$
+Cette équation est la base de l'équation aux dérivées partielles de Black-Scholes. En construisant un portefeuille auto-financé sans risque (en combinant l'option et l'action sous-jacente), et en appliquant le principe d'absence d'opportunité d'arbitrage, on peut montrer que le terme de dérive de $dV$ doit être égal à $rV \, dt$, où $r$ est le taux d'intérêt sans risque. Cela conduit à l'équation de Black-Scholes:
+$$ \frac{\partial V}{\partial t} + r S \frac{\partial V}{\partial S} + \frac{1}{2} \sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} - rV = 0 $$
+Le Lemme d'Itô est donc un pont essentiel entre les dynamiques stochastiques des prix d'actifs et les équations aux dérivées partielles utilisées pour la valorisation des dérivés.
+
+<SolvedExercise title="Application du Lemme d'Itô au Mouvement Brownien Géométrique" solution="">
+  
+</SolvedExercise>
+
+## Conclusion
+Ce module a jeté les bases du calcul stochastique, un outil indispensable en finance quantitative. Nous avons d'abord exploré le Mouvement Brownien, processus fondamental qui modélise l'incertitude et la nature aléatoire des marchés financiers. Sa non-différentiabilité et sa variation quadratique non nulle ont mis en évidence la nécessité d'une nouvelle approche intégrale. C'est ainsi que l'<ConceptLink id="integrale_ito" name="Intégrale d'Itô" term="Intégrale d'Itô">Intégrale d'Itô</ConceptLink> a été introduite, permettant d'intégrer des fonctions par rapport au Mouvement Brownien, une opération impossible avec l'intégrale de Riemann classique. Enfin, le <ConceptLink id="lemme_ito" name="Lemme d'Itô" term="Lemme d'Itô">Lemme d'Itô</ConceptLink>, attribué à Kiyosi Itô, s'est révélé être la pierre angulaire de ce calcul, agissant comme une règle de la chaîne pour les processus stochastiques et introduisant un terme de correction crucial qui distingue le calcul stochastique du calcul déterministe. L'application de ce lemme à la dérivation de l'équation de Black-Scholes a clairement démontré sa puissance et son importance pratique dans la valorisation des dérivés.
+
+Ces concepts fondamentaux ouvrent la voie à une compréhension approfondie des <Glossary id="eds" name="Équations Différentielles Stochastiques" term="Équations Différentielles Stochastiques">Équations Différentielles Stochastiques</Glossary> (EDS), qui sont au cœur de la modélisation des dynamiques d'actifs financiers et de nombreux autres phénomènes économiques , . Les EDS permettent de décrire l'évolution des prix d'actions, des taux d'intérêt, des devises ou des matières premières de manière réaliste, en intégrant leur nature stochastique.
+
+<Mermaid caption="Figure 5 : " chart={``}/>
+
+Parmi les applications et extensions futures de ces concepts, on peut citer:
+*   **Modèles de taux d'intérêt**: L'application des EDS pour modéliser l'évolution des taux d'intérêt (par exemple, les modèles de Vasicek ou CIR) est essentielle pour la valorisation des obligations et des dérivés de taux <Reference id="9" name="9" term="9">9</Reference>.
+*   **Modèles de volatilité stochastique**: Des modèles plus avancés, comme le modèlede Heston, permettent à la volatilité elle-même de suivre un processus stochastique, reflétant mieux la complexité des marchés <Reference id="10" name="10" term="10">10</Reference>.
+*   **Gestion des risques**: Les simulations de Monte Carlo, basées sur la résolution numérique d'EDS, sont des outils incontournables pour l'estimation de mesures de risque telles que la Value-at-Risk (VaR) ou l'Expected Shortfall (ES) <Reference id="11" name="11" term="11">11</Reference>.
+*   **Dérivés exotiques**: La valorisation et la couverture de produits financiers complexes, dont les payoffs dépendent de chemins de prix spécifiques ou de multiples sous-jacents, reposent entièrement sur la maîtrise de l'intégrale et du Lemme d'Itô.
+
+<Image description="Exemple de simulation de trajectoires d'une Équation Différentielle Stochastique" caption="Figure 3: Exemple de simulation de trajectoires d'une Équation Différentielle Stochastique. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Numerical_solution_of_a_Stochastic_Differential_Equation.jpg)" src="https://upload.wikimedia.org/wikipedia/commons/b/b8/Numerical_solution_of_a_Stochastic_Differential_Equation.jpg" fallbackUrl="https://commons.wikimedia.org/wiki/File:Numerical_solution_of_a_Stochastic_Differential_Equation.jpg" />
+
+La maîtrise du Mouvement Brownien, de l'Intégrale d'Itô et du Lemme d'Itô est donc une compétence fondamentale pour quiconque souhaite s'engager dans la modélisation financière, la gestion de portefeuille ou la recherche en finance quantitative. C'est une passerelle vers des domaines plus complexes et des défis passionnants dans le monde de la finance moderne.
+
+<Summary itemsString="Le mouvement brownien est un processus stochastique fondamental caractérisé par la continuité de ses trajectoires, des accroissements indépendants et stationnaires, et une distribution normale de ses variations.|||L'intégrale d'Itô est une construction mathématique essentielle qui permet d'intégrer des fonctions par rapport au mouvement brownien, ouvrant la voie à l'étude des équations différentielles stochastiques.|||Contrairement à l'intégrale de Riemann-Stieltjes, l'intégrale d'Itô prend en compte la nature non-différentiable du mouvement brownien, ce qui conduit à des propriétés uniques.|||La formule d'Itô est un outil puissant du calcul stochastique, permettant de différencier des fonctions de processus d'Itô et de transformer des EDS en d'autres formes plus maniables.|||Ces concepts sont les piliers de la modélisation des prix d'actifs financiers, de la valorisation des options et de la gestion des risques en finance quantitative.|||La compréhension du mouvement brownien et de l'intégrale d'Itô est indispensable pour aborder des sujets avancés tels que les équations différentielles stochastiques et le modèle de Black-Scholes."/>
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+    <Question q="Quelle est une propriété fondamentale du mouvement brownien standard (W_t) ?" explanation="Le mouvement brownien est caractérisé par des accroissements indépendants et stationnaires, des trajectoires continues mais nulle part différentiables, et une variation quadratique non nulle. Les accroissements sur des intervalles disjoints sont indépendants.">
+  <Option text="Les trajectoires sont différentiables partout." correct={false} />
+  <Option text="Les accroissements (W_t - W_s) sont indépendants pour des intervalles disjoints." correct={true} />
+  <Option text="La variance de W_t est toujours 1." correct={false} />
+  <Option text="W_t est un processus à variation bornée." correct={false} />
+</Question>
+    <Question q="Quelle est la variation quadratique du mouvement brownien standard W_t sur l'intervalle [0, T] ?" explanation="La variation quadratique d'un mouvement brownien standard sur l'intervalle [0, T] est égale à T. C'est une propriété clé qui le distingue des processus à variation bornée.">
+  <Option text="0" correct={false} />
+  <Option text="T" correct={true} />
+  <Option text="T^2" correct={false} />
+  <Option text="L'infini" correct={false} />
+</Question>
+    <Question q="Soit f(t, W_t) une fonction de classe C^2 en W_t et C^1 en t. Quelle est la formule du Lemme d'Itô pour df(t, W_t) ?" explanation="Le Lemme d'Itô est une généralisation de la règle de la chaîne pour les processus stochastiques. Il inclut un terme additionnel (1/2)(∂^2f/∂W^2)dt dû à la variation quadratique non nulle du mouvement brownien.">
+  <Option text="df = " correct={false} />
+  <Option text="df = " correct={true} />
+  <Option text="df = " correct={false} />
+  <Option text="df = " correct={false} />
+</Question>
+    <Question q="Parmi les affirmations suivantes concernant l'intégrale d'Itô (∫ H_s dW_s), laquelle est correcte ?" explanation="L'intégrale d'Itô d'un processus prévisible et carrément intégrable par rapport à un mouvement brownien est une martingale. C'est une propriété fondamentale en finance stochastique.">
+  <Option text="Elle est toujours un processus à variation bornée." correct={false} />
+  <Option text="Elle est un processus de Markov." correct={false} />
+  <Option text="Elle est une martingale (sous certaines conditions d'intégrabilité)." correct={true} />
+  <Option text="Elle est toujours positive." correct={false} />
+</Question>
+    <Question q="Le mouvement brownien géométrique (MBG) est souvent utilisé pour modéliser le prix des actifs financiers. Quelle est la raison principale de ce choix ?" explanation="Le MBG est privilégié car il assure que les prix des actifs restent positifs (contrairement à un mouvement brownien arithmétique) et que les rendements log-normaux sont distribués normalement, ce qui est souvent observé empiriquement.">
+  <Option text="Il garantit que le prix de l'actif peut devenir négatif." correct={false} />
+  <Option text="Il permet de modéliser des rendements gaussiens et des prix positifs." correct={true} />
+  <Option text="Il a des trajectoires différentiables." correct={false} />
+  <Option text="Il est plus simple à calculer que d'autres modèles." correct={false} />
+</Question>
+    <Question q="Quelle est la principale différence entre l'intégrale de Riemann et l'intégrale d'Itô ?" explanation="La différence fondamentale réside dans la manière dont les sommes de Riemann sont construites. L'intégrale d'Itô utilise des points d'évaluation au début de chaque intervalle et intègre par rapport à un processus à variation non bornée (comme le MB), ce qui introduit le terme de correction d'Itô.">
+  <Option text="L'intégrale de Riemann est définie pour des fonctions aléatoires, tandis que l'intégrale d'Itô est pour des fonctions déterministes." correct={false} />
+  <Option text="L'intégrale d'Itô prend en compte la variation quadratique du processus intégrateur." correct={true} />
+  <Option text="L'intégrale de Riemann est toujours plus grande que l'intégrale d'Itô." correct={false} />
+  <Option text="L'intégrale d'Itô ne peut être calculée que numériquement." correct={false} />
+</Question>
+    <Question q="Qu'est-ce qu'une Équation Différentielle Stochastique (EDS) ?" explanation="Une EDS est une équation différentielle où au moins un terme est un processus stochastique, généralement un mouvement brownien, modélisant des fluctuations aléatoires.">
+  <Option text="Une équation différentielle dont les coefficients sont des variables aléatoires." correct={false} />
+  <Option text="Une équation différentielle qui inclut un terme de bruit blanc ou un mouvement brownien." correct={true} />
+  <Option text="Une équation différentielle qui n'a pas de solution analytique." correct={false} />
+  <Option text="Une équation différentielle ordinaire avec des conditions initiales aléatoires." correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFjY3JvaXNzZW1lbnRzIEluZMOpcGVuZGFudHMgZXQgU3RhdGlvbm5haXJlcyIsImRlZmluaXRpb24iOiJQcm9wcmnDqXTDqXMgZCd1biBwcm9jZXNzdXMgc3RvY2hhc3RpcXVlIG/DuSBsZXMgY2hhbmdlbWVudHMgZHUgcHJvY2Vzc3VzIHN1ciBkZXMgaW50ZXJ2YWxsZXMgZGUgdGVtcHMgZGlzam9pbnRzIHNvbnQgaW5kw6lwZW5kYW50cywgZXQgbGEgZGlzdHJpYnV0aW9uIGRlIGNlcyBjaGFuZ2VtZW50cyBuZSBkw6lwZW5kIHF1ZSBkZSBsYSBsb25ndWV1ciBkZSBsJ2ludGVydmFsbGUsIHBhcyBkZSBzb24gcG9pbnQgZGUgZMOpcGFydC4ifSx7InRlcm0iOiJEaWZmdXNpb24iLCJkZWZpbml0aW9uIjoiTGUgdGVybWUgc3RvY2hhc3RpcXVlIGRhbnMgdW5lIEVEUywgbXVsdGlwbGlhbnQgbGUgbW91dmVtZW50IGJyb3duaWVuLCBldCByZXByw6lzZW50YW50IGxhIHZvbGF0aWxpdMOpIG91IGwnYW1wbGl0dWRlIGRlcyBmbHVjdHVhdGlvbnMgYWzDqWF0b2lyZXMuIn0seyJ0ZXJtIjoiRHJpZnQgKETDqXJpdmUpIiwiZGVmaW5pdGlvbiI6IkxlIHRlcm1lIGTDqXRlcm1pbmlzdGUgZGFucyB1bmUgRURTLCByZXByw6lzZW50YW50IGxhIHRlbmRhbmNlIG1veWVubmUgZHUgcHJvY2Vzc3VzLiJ9LHsidGVybSI6IsOJcXVhdGlvbiBEaWZmw6lyZW50aWVsbGUgU3RvY2hhc3RpcXVlIChFRFMpIiwiZGVmaW5pdGlvbiI6IlVuZSDDqXF1YXRpb24gZGlmZsOpcmVudGllbGxlIG/DuSBhdSBtb2lucyB1biB0ZXJtZSBlc3QgdW4gcHJvY2Vzc3VzIHN0b2NoYXN0aXF1ZSwgZ8OpbsOpcmFsZW1lbnQgdW4gbW91dmVtZW50IGJyb3duaWVuLiBFbGxlcyBzb250IHV0aWxpc8OpZXMgcG91ciBtb2TDqWxpc2VyIGRlcyBzeXN0w6htZXMgZHluYW1pcXVlcyBzb3VzIGwnaW5mbHVlbmNlIGR1IGJydWl0IGFsw6lhdG9pcmUuIn0seyJ0ZXJtIjoiRXNww6lyYW5jZSBDb25kaXRpb25uZWxsZSIsImRlZmluaXRpb24iOiJMJ2VzcMOpcmFuY2UgZCd1bmUgdmFyaWFibGUgYWzDqWF0b2lyZSDDqXRhbnQgZG9ubsOpIHF1J3VuZSBjZXJ0YWluZSBpbmZvcm1hdGlvbiBlc3QgY29ubnVlLiBDJ2VzdCB1biBjb25jZXB0IGZvbmRhbWVudGFsIHBvdXIgbGVzIG1hcnRpbmdhbGVzIGV0IGxhIHZhbG9yaXNhdGlvbi4ifSx7InRlcm0iOiJGaWx0cmF0aW9uIiwiZGVmaW5pdGlvbiI6IlVuZSBzdWl0ZSBjcm9pc3NhbnRlIGRlIHNpZ21hLWFsZ8OoYnJlcyByZXByw6lzZW50YW50IGwnaW5mb3JtYXRpb24gZGlzcG9uaWJsZSBhdSBjb3VycyBkdSB0ZW1wcy4gRWxsZSBtb2TDqWxpc2UgbCfDqXZvbHV0aW9uIGRlIGxhIGNvbm5haXNzYW5jZSBkJ3VuIG9ic2VydmF0ZXVyLiJ9LHsidGVybSI6IkZvcm11bGUgZCdJdMO0IiwiZGVmaW5pdGlvbiI6IlVuZSByw6hnbGUgZGUgY2FsY3VsIHN0b2NoYXN0aXF1ZSBxdWkgcGVybWV0IGRlIGRpZmbDqXJlbmNpZXIgZGVzIGZvbmN0aW9ucyBkZSBwcm9jZXNzdXMgZCdJdMO0LCBzaW1pbGFpcmUgw6AgbGEgcsOoZ2xlIGRlIGxhIGNoYcOubmUgZW4gY2FsY3VsIGNsYXNzaXF1ZSBtYWlzIGF2ZWMgdW4gdGVybWUgYWRkaXRpb25uZWwgbGnDqSDDoCBsYSB2YXJpYW5jZSBxdWFkcmF0aXF1ZS4ifSx7InRlcm0iOiJJbnTDqWdyYWxlIGQnSXTDtCIsImRlZmluaXRpb24iOiJVbmUgbcOpdGhvZGUgZCdpbnTDqWdyYXRpb24gcG91ciBsZXMgZm9uY3Rpb25zIHBhciByYXBwb3J0IMOgIHVuIG1vdXZlbWVudCBicm93bmllbiwgZm9uZGFtZW50YWxlIGVuIGNhbGN1bCBzdG9jaGFzdGlxdWUuIEVsbGUgZGlmZsOocmUgZGUgbCdpbnTDqWdyYWxlIGRlIFJpZW1hbm4tU3RpZWx0amVzIGVuIHJhaXNvbiBkZSBsYSBub24tZGlmZsOpcmVudGlhYmlsaXTDqSBkdSBtb3V2ZW1lbnQgYnJvd25pZW4uIn0seyJ0ZXJtIjoiTGVtbWUgZCdJdMO0IiwiZGVmaW5pdGlvbiI6IlNvdXZlbnQgdXRpbGlzw6kgZGUgbWFuacOocmUgaW50ZXJjaGFuZ2VhYmxlIGF2ZWMgbGEgRm9ybXVsZSBkJ0l0w7QsIGMnZXN0IGxlIHLDqXN1bHRhdCBjbMOpIHF1aSBwZXJtZXQgZGUgY2FsY3VsZXIgbGEgZGlmZsOpcmVudGllbGxlIGQndW5lIGZvbmN0aW9uIGQndW4gcHJvY2Vzc3VzIGQnSXTDtC4ifSx7InRlcm0iOiJNYXJ0aW5nYWxlIiwiZGVmaW5pdGlvbiI6IlVuIHByb2Nlc3N1cyBzdG9jaGFzdGlxdWUgZG9udCBsJ2VzcMOpcmFuY2UgY29uZGl0aW9ubmVsbGUgZGUgc2EgdmFsZXVyIGZ1dHVyZSwgw6l0YW50IGRvbm7DqSBsJ2luZm9ybWF0aW9uIHByw6lzZW50ZSwgZXN0IMOpZ2FsZSDDoCBzYSB2YWxldXIgcHLDqXNlbnRlLiBMZXMgbWFydGluZ2FsZXMgc29udCBjcnVjaWFsZXMgZW4gZmluYW5jZSBwb3VyIGxhIHZhbG9yaXNhdGlvbiBzYW5zIGFyYml0cmFnZS4ifSx7InRlcm0iOiJNZXN1cmUgZGUgUHJvYmFiaWxpdMOpIiwiZGVmaW5pdGlvbiI6IlVuZSBmb25jdGlvbiBxdWkgYXNzaWduZSB1bmUgcHJvYmFiaWxpdMOpIMOgIGNoYXF1ZSDDqXbDqW5lbWVudCBkJ3VuIGVzcGFjZSBtZXN1cmFibGUuIEVuIGZpbmFuY2UsIG9uIGRpc3Rpbmd1ZSBzb3V2ZW50IGxhIG1lc3VyZSBoaXN0b3JpcXVlIChyw6llbGxlKSBldCBsYSBtZXN1cmUgcmlzcXVlLW5ldXRyZS4ifSx7InRlcm0iOiJNb3V2ZW1lbnQgQnJvd25pZW4iLCJkZWZpbml0aW9uIjoiVW4gcHJvY2Vzc3VzIHN0b2NoYXN0aXF1ZSBjb250aW51IGVuIHRlbXBzLCBkb250IGxlcyBhY2Nyb2lzc2VtZW50cyBzb250IGluZMOpcGVuZGFudHMsIHN0YXRpb25uYWlyZXMgZXQgc3VpdmVudCB1bmUgZGlzdHJpYnV0aW9uIG5vcm1hbGUuIElsIGVzdCBzb3V2ZW50IHV0aWxpc8OpIHBvdXIgbW9kw6lsaXNlciBkZXMgcGjDqW5vbcOobmVzIGFsw6lhdG9pcmVzIGNvbW1lIGxlcyBwcml4IGQnYWN0aWZzIGZpbmFuY2llcnMuIn0seyJ0ZXJtIjoiUHJvY2Vzc3VzIGRlIFdpZW5lciIsImRlZmluaXRpb24iOiJVbiBhdXRyZSBub20gcG91ciBsZSBtb3V2ZW1lbnQgYnJvd25pZW4gc3RhbmRhcmQsIGNhcmFjdMOpcmlzw6kgcGFyIHVuIHBvaW50IGRlIGTDqXBhcnQgw6AgesOpcm8sIGRlcyBhY2Nyb2lzc2VtZW50cyBnYXVzc2llbnMgaW5kw6lwZW5kYW50cyBldCBzdGF0aW9ubmFpcmVzLCBldCBkZXMgdHJhamVjdG9pcmVzIGNvbnRpbnVlcy4ifSx7InRlcm0iOiJQcm9jZXNzdXMgU3RvY2hhc3RpcXVlIiwiZGVmaW5pdGlvbiI6IlVuZSBjb2xsZWN0aW9uIGRlIHZhcmlhYmxlcyBhbMOpYXRvaXJlcyBpbmRleMOpZXMgcGFyIGxlIHRlbXBzLCBkw6ljcml2YW50IGwnw6l2b2x1dGlvbiBkJ3VuIHN5c3TDqG1lIGRvbnQgbCfDqXRhdCBjaGFuZ2UgZGUgbWFuacOocmUgYWzDqWF0b2lyZS4ifSx7InRlcm0iOiJWYXJpYW5jZSBRdWFkcmF0aXF1ZSIsImRlZmluaXRpb24iOiJVbmUgbWVzdXJlIGRlIGxhIHZhcmlhYmlsaXTDqSBkJ3VuIHByb2Nlc3N1cyBzdG9jaGFzdGlxdWUsIGVuIHBhcnRpY3VsaWVyIHBvdXIgbGVzIG1hcnRpbmdhbGVzIGNvbnRpbnVlcy4gUG91ciBsZSBtb3V2ZW1lbnQgYnJvd25pZW4sIHNhIHZhcmlhbmNlIHF1YWRyYXRpcXVlIGVzdCDDqWdhbGUgYXUgdGVtcHMgw6ljb3Vsw6kuIn1d" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiVG9tYXMgQmrDtnJrICgyMDA1KS4gwqsgQXJiaXRyYWdlIFByaWNpbmcgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Ub21hcyUyMEJqJUMzJUI2cmslMjAlMjJBcmJpdHJhZ2UlMjBQcmljaW5nJTIyJTIwMjAwNSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MiwidGV4dCI6IkRhbWlhbm8gQnJpZ28sIEZhYmlvIE1lcmN1cmlvICgyMDEzKS4gwqsgT3RoZXIgSW50ZXJlc3QtUmF0ZSBNb2RlbHMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy02NjItMDQ1NTMtNF85Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjMsInRleHQiOiJHZXJhbGQgRC4gR2F5LCBKb2huIEh1bGwgKDIwMDYpLiDCqyBPcHRpb25zLCBGdXR1cmVzLCBhbmQgT3RoZXIgRGVyaXZhdGl2ZSBTZWN1cml0aWVzLiDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUdlcmFsZCUyMEdheSUyMCUyMk9wdGlvbnMlMjIlMjAyMDA2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo0LCJ0ZXh0IjoiTW9uaXF1ZSBKZWFuYmxhbmMgKDIwMTkpLiDCqyBDcml0aXF1ZSBkZSBsJ291dnJhZ2UgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Nb25pcXVlJTIwSmVhbmJsYW5jJTIwJTIyQ3JpdGlxdWUlMjBkZSUyMGwnb3V2cmFnZSUyMiUyMDIwMTkiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjUsInRleHQiOiJBdXRldXIgaW5jb25udSAoMjAwNykuIMKrIFBoeXNpY3Mgb2YgZmluYW5jZS4gS2lyaWxsIElsaW5za2kuIEpvaG4gV2lsZXkgYW5kIFNvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1BdXRldXIlMjBpbmNvbm51JTIwJTIyUGh5c2ljcyUyMG9mJTIwZmluYW5jZS4lMjBLaXJpbGwlMjBJbGluc2tpLiUyMEpvaG4lMjBXaWxleSUyMGFuZCUyMFNvbnMlMjIlMjAyMDA3Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo2LCJ0ZXh0IjoiU2FsaWggTi4gTmVmdGNpICgyMDEyKS4gwqsgSW50cm9kdWN0aW9uIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMTYvYjk3OC0wLTEyLTM3MzU3NC00LjUwMDA0LTQiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NywidGV4dCI6Ik1hcmVrIE11c2llbGEsIE1hcmVrIFJ1dGtvd3NraSAoMjAwNikuIMKrIE1hcnRpbmdhbGUgTWV0aG9kcyBpbiBGaW5hbmNpYWwgTW9kZWxsaW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNjYyLTIyMTMyLTciLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6OCwidGV4dCI6IlBhdWwgR2xhc3Nlcm1hbiAoMjAxMykuIMKrIFF1YXNpLU1vbnRlIENhcmxvIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTAtMzg3LTIxNjE3LTFfNSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo5LCJ0ZXh0IjoiQXV0ZXVyIGluY29ubnUgKDIwMTUpLiDCqyBUaGUgVm9sYXRpbGl0eSBTdXJmYWNlIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjY0MDY1L2NvbmdvLWFmcmlxdWUuMjAyNS42MC41NTAuNjAxIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjEwLCJ0ZXh0IjoiTW9uaXF1ZSBKZWFuYmxhbmMsIE1hcmMgWW9yLCBNYXJjIENoZXNuZXkgKDIwMDkpLiDCqyBNYXRoZW1hdGljYWwgTWV0aG9kcyBmb3IgRmluYW5jaWFsIE1hcmtldHMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMS04NDYyOC03MzctNCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxMSwidGV4dCI6IkpvbmF0aGFuIEUuIEluZ2Vyc29sbCwgRGFycmVsbCBEdWZmaWUgKDIwMDYpLiDCqyBEeW5hbWljIEFzc2V0IFByaWNpbmcgVGhlb3J5LiDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUpvbmF0aGFuJTIwSW5nZXJzb2xsJTIwJTIyRHluYW1pYyUyMEFzc2V0JTIwUHJpY2luZyUyMFRoZW9yeS4lMjIlMjAyMDA2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxMiwidGV4dCI6IlN0ZXZlbiBFLiBTaHJldmUgKDIwMTIpLiDCqyBTdG9jaGFzdGljIENhbGN1bHVzIGZvciBGaW5hbmNlIEkgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMC0zODctMjI1MjctMiIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjEzLCJ0ZXh0IjoiSW9hbm5pcyBLYXJhdHphcywgU3RldmVuIEUuIFNocmV2ZSAoMjAxMikuIMKrIEJyb3duaWFuIE1vdGlvbiDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0xLTQ2ODQtMDMwMi0yXzIiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNCwidGV4dCI6Ik1hcnRpbiBCYXh0ZXIsIEFuZHJldyBSZW5uaWUgKDIwMTQpLiDCqyBGaW5hbmNpYWwgQ2FsY3VsdXMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAxNy9jYm85NzgwNTExODA2NjM2Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTUsInRleHQiOiJEYW1pZW4gTGFtYmVydG9uLCBCZXJuYXJkIExhcGV5cmUgKDIwMTgpLiDCqyBJbnRyb2R1Y3Rpb24gdG8gU3RvY2hhc3RpYyBDYWxjdWx1cyBBcHBsaWVkIHRvIEZpbmFuY2UgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTIwMS85NzgxNDIwMDA5OTQxIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTYsInRleHQiOiJSZW7DqSBMLiBTY2hpbGxpbmcgKDIwMTYpLiDCqyBTdG9jaGFzdGljIGRpZmZlcmVudGlhbCBlcXVhdGlvbnM6IEFuIGludHJvZHVjdGlvbiB3aXRoIGFwcGxpY2F0aW9ucyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVJlbiVDMyVBOSUyMFNjaGlsbGluZyUyMCUyMlN0b2NoYXN0aWMlMjBkaWZmZXJlbnRpYWwlMjBlcXVhdGlvbnMlMjIlMjAyMDE2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE3LCJ0ZXh0IjoiUGhpbGlwIFByb3R0ZXIgKDIwMTMpLiDCqyBTdG9jaGFzdGljIERpZmZlcmVudGlhbCBFcXVhdGlvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy02NjItMDI2MTktOV82Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTgsInRleHQiOiJBdXRldXIgaW5jb25udSAoMjAwOCkuIMKrIE1hdGhlbWF0aWNhbCBNb2RlbHMgb2YgRmluYW5jaWFsIERlcml2YXRpdmVzIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNTQwLTY4Njg4LTAiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxOSwidGV4dCI6IkFuZHJlYSBQYXNjdWNjaSAoMjAxMSkuIMKrIFBERSBhbmQgTWFydGluZ2FsZSBNZXRob2RzIGluIE9wdGlvbiBQcmljaW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTg4LTQ3MC0xNzgxLTgiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMCwidGV4dCI6IlN0ZXZlbiBFLiBTaHJldmUuIDIwMDQuIMKrIENhbGN1bCBTdG9jaGFzdGlxdWUgcG91ciBsYSBGaW5hbmNlIEk6IExlIE1vZMOobGUgQmlub21pYWwgZGUgVmFsb3Jpc2F0aW9uIGQnQWN0aWZzIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMC0zODctMjI1MjctMiIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjIxLCJ0ZXh0IjoiQmVybnQgw5hrc2VuZGFsLiAyMDAzLiDCqyDDiXF1YXRpb25zIGRpZmbDqXJlbnRpZWxsZXMgc3RvY2hhc3RpcXVlcyA6IFVuZSBpbnRyb2R1Y3Rpb24gYXZlYyBhcHBsaWNhdGlvbnMgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC41MTI1Ny9hLXYxLWFmMTA1Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjIsInRleHQiOiJVbmUgYXBwcm9jaGUgc3RvY2hhc3RpcXVlIMOgIGJhc2UgZOKAmWFyYnJlcyBhbMOpYXRvaXJlcyBwb3VyIGxlIGNhbGN1bCBkZSBkaXNzaW1pbGFyaXTDqXMgOiBhcHBsaWNhdGlvbiBhdSBjbHVzdGVyaW5nIHBvdXIgZGl2ZXJzZXMgc3RydWN0dXJlcyBkZSBkb25uw6llcy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjcwNjc1LzIxY2E1MDU5emI5YTh6NDc2ZXo5NGZhejIzNjM4ZTA1N2NhNiIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjIzLCJ0ZXh0IjoiSW9hbm5pcyBLYXJhdHphcywgU3RldmVuIEUuIFNocmV2ZS4gMTk5MS4gwqsgTW91dmVtZW50IGJyb3duaWVuIGV0IGNhbGN1bCBzdG9jaGFzdGlxdWUgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC41MTI1Ny9hLXYxLWFmNTY2Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjQsInRleHQiOiJNb25pcXVlIEplYW5ibGFuYywgTWFyYyBZb3IsIE1hcmMgQ2hlc25leS4gMjAwOS4gwqsgVGjDqW9yaWUgZGVzIE1hcnRpbmdhbGVzIGV0IEFwcGxpY2F0aW9ucyBlbiBGaW5hbmNlIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Nb25pcXVlJTIwSmVhbmJsYW5jJTIwJTIyVGglQzMlQTlvcmllJTIwZGVzJTIwTWFydGluZ2FsZXMlMjBldCUyMEFwcGxpY2F0aW9ucyUyMGVuJTIwRmluYW5jZSUyMiUyMDIwMDkiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfV0=" />
+

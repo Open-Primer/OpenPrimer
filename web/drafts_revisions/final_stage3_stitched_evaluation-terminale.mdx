@@ -1,0 +1,91 @@
+---
+title: « Évaluation Terminale »
+subject: « Finance quantitative et modélisation stochastique »
+level: « M1 »
+module: « Évaluation Terminale »
+order: 13
+summative: true
+---
+
+<SummativeEvaluation>
+<Quiz isFinal={true} durationLimit={1800}>
+    <Question q="Quelle est la principale caractéristique du Mouvement Brownien Géométrique (MBG) utilisé pour modéliser le prix des actifs financiers?" explanation="Le MBG est souvent utilisé car il garantit que le prix de l'actif reste positif, ce qui est une propriété essentielle pour les actifs financiers. Les rendements sont log-normalement distribués, pas normalement.">
+  <Option text="Il a des rendements normalement distribués." correct={false} />
+  <Option text="Son espérance est constante." correct={false} />
+  <Option text="Il ne peut pas prendre de valeurs négatives." correct={true} />
+  <Option text="Sa variance est déterministe." correct={false} />
+</Question>
+    <Question q="À quoi sert principalement le Lemme d'Itô en finance quantitative?" explanation="Le Lemme d'Itô est un outil fondamental du calcul stochastique qui permet de trouver la différentielle d'une fonction d'un processus stochastique, comme le prix d'une option qui dépend du prix de l'actif sous-jacent.">
+  <Option text="À calculer la valeur actuelle nette d'un projet." correct={false} />
+  <Option text="À dériver la dynamique d'une fonction d'un processus stochastique." correct={true} />
+  <Option text="À modéliser les taux d'intérêt sans risque." correct={false} />
+</Question>
+    <Question q="Quelle hypothèse n'est PAS une hypothèse fondamentale du modèle de Black-Scholes pour l'évaluation des options européennes?" explanation="Le modèle de Black-Scholes est spécifiquement conçu pour les options européennes, qui ne peuvent être exercées qu'à l'échéance. Les options américaines peuvent être exercées à tout moment.">
+  <Option text="Le prix de l'actif sous-jacent suit un Mouvement Brownien Géométrique." correct={true} />
+  <Option text="Il n'y a pas de coûts de transaction ni de taxes." correct={false} />
+  <Option text="La volatilité de l'actif sous-jacent est constante." correct={false} />
+</Question>
+    <Question q="Dans le cadre de la valorisation neutre au risque, quel est le taux d'actualisation utilisé pour les flux de trésorerie futurs?" explanation="La valorisation neutre au risque implique que tous les actifs, y compris les dérivés, sont actualisés au taux sans risque, car le risque est déjà pris en compte dans la probabilité neutre au risque.">
+  <Option text="Le taux de rendement espéré de l'actif risqué." correct={false} />
+  <Option text="Le taux sans risque." correct={true} />
+  <Option text="Le coût moyen pondéré du capital." correct={false} />
+  <Option text="Le taux de rendement requis par les investisseurs." correct={false} />
+</Question>
+    <Question q="La parité Put-Call relie le prix d'une option d'achat européenne, d'une option de vente européenne, du prix de l'actif sous-jacent et du prix d'exercice. Quelle est la formule correcte (sans dividendes)?" explanation="La parité Put-Call est C - P = 'S - K * e^(-rT), où C est le prix du call, P le prix du put, S le prix de l'actif, K le prix d'exercice, r le taux sans risque et T l'échéance.">
+  <Option text="C + K * e^(-rT) = P + S" correct={false} />
+  <Option text="C + S = " correct={false} />
+  <Option text="C - P = " correct={true} />
+  <Option text="C + P = " correct={false} />
+</Question>
+    <Question q="Quel est l'avantage principal des méthodes de Monte Carlo pour l'évaluation des options complexes?" explanation="Les méthodes de Monte Carlo sont particulièrement utiles pour les options dont la valeur dépend de la trajectoire du sous-jacent ou pour les options multi-actifs, où les solutions analytiques sont rares ou inexistantes.">
+  <Option text="Elles sont toujours plus rapides que les méthodes analytiques." correct={true} />
+  <Option text="Elles fournissent une solution exacte sans erreur d'échantillonnage." correct={false} />
+</Question>
+    <Question q="Dans un modèle binomial à une période, si le prix de l'actif peut monter à S_u ou descendre à S_d, et le taux sans risque est r, quelle est la probabilité neutre au risque de monter (p*)?" explanation="La probabilité neutre au risque p* est calculée de manière à ce que l'espérance du prix futur actualisé de l'actif sous-jacent soit égale à son prix actuel, sous la mesure neutre au risque.">
+  <Option text="p astérisque est égal à (e puissance rT moins d) sur (u moins d)" correct={true} />
+  <Option text="p étoile = " correct={false} />
+  <Option text="p* = (e^(rT) - u) / (d - u)" correct={false} />
+  <Option text="p* = (d - e^(rT)) / (u - d)" correct={false} />
+</Question>
+    <Question q="Qu'est-ce que la volatilité implicite d'une option?" explanation="La volatilité implicite est la valeur de la volatilité qui rend le prix théorique du modèle de Black-Scholes égal au prix observé sur le marché.">
+  <Option text="La volatilité historique de l'actif sous-jacent." correct={true} />
+  <Option text="La volatilité future attendue de l'actif sous-jacent." correct={false} />
+  <Option text="La volatilité calculée à partir des rendements quotidiens de l'actif." correct={false} />
+</Question>
+    <Question q="Lequel des énoncés suivants décrit le mieux la Value at Risk (VaR)?" explanation="La VaR est une mesure de risque qui estime la perte maximale qu'un portefeuille pourrait subir sur une période donnée avec une probabilité spécifiée (niveau de confiance).">
+  <Option text="La perte maximale potentielle d'un portefeuille sur une période donnée avec un certain niveau de confiance." correct={true} />
+  <Option text="La perte moyenne attendue au-delà d'un certain seuil de confiance." correct={false} />
+  <Option text="La perte minimale potentielle d'un portefeuille sur une période donnée." correct={false} />
+  <Option text="La volatilité quotidienne d'un portefeuille." correct={false} />
+</Question>
+    <Question q="Le modèle de Vasicek est un modèle de taux d'intérêt. Quelle est sa principale caractéristique concernant le comportement des taux?" explanation="Le modèle de Vasicek est un modèle de retour à la moyenne, mais il a l'inconvénient de permettre aux taux d'intérêt de devenir négatifs, ce qui n'est pas toujours réaliste.">
+  <Option text="Il permet aux taux d'intérêt de devenir négatifs." correct={true} />
+  <Option text="Il garantit que les taux d'intérêt restent positifs." correct={false} />
+  <Option text="Il modélise les taux d'intérêt comme un processus de Poisson." correct={false} />
+  <Option text="Il suppose que la volatilité des taux d'intérêt est proportionnelle au niveau des taux." correct={false} />
+</Question>
+    <Question q="Dans le contexte de la finance quantitative, qu'est-ce qu'une martingale?" explanation="Une martingale est un processus stochastique où, étant donné l'information présente, la meilleure prédiction de la valeur future du processus est sa valeur actuelle. C'est un concept clé en valorisation neutre au risque.">
+  <Option text="Un processus stochastique dont l'espérance conditionnelle future est égale à sa valeur actuelle." correct={true} />
+  <Option text="Un processus stochastique dont la variance est constante." correct={false} />
+  <Option text="Un processus stochastique qui ne peut pas prendre de valeurs négatives." correct={false} />
+  <Option text="Un processus stochastique qui suit une distribution normale." correct={false} />
+</Question>
+    <Question q="Quelle est la principale caractéristique du modèl'HJM (Heath-Jarrow-Morton) par rapport aux modèles de taux courts comme Vasicek ou CIR?" explanation="Contrairement aux modèles de taux courts qui modélisent un seul taux (le taux instantané), le modèl'HJM modélise l'évolution de l'ensemble de la courbe des taux à terme, ce qui est un avantage majeur.">
+  <Option text="Il modélise directement le taux court." correct={false} />
+  <Option text="Il modélise la dynamique de l'ensemble de la courbe des taux à terme." correct={true} />
+  <Option text="Il ne permet pas l'arbitrage." correct={false} />
+  <Option text="Il suppose une volatilité constante pour tous les taux." correct={false} />
+</Question>
+    <Question q="Qu'est-ce que la couverture Delta (Delta Hedging) pour une option?" explanation="La couverture Delta est une technique de gestion des risques qui consiste à ajuster la position dans l'actif sous-jacent pour compenser les variations de la valeur de l'option dues aux changements du prix de l'actif sous-jacent.">
+  <Option text="Une stratégie visant à éliminer tout risque de marché." correct={false} />
+  <Option text="Une stratégie visant à maintenir le portefeuille neutre au risque par rapport aux petites variations du prix de l'actif sous-jacent." correct={true} />
+  <Option text="Une stratégie visant à profiter des mouvements de volatilité." correct={false} />
+</Question>
+    <Question q="Dans quel contexte les processus de Poisson sont-ils souvent utilisés en finance quantitative?" explanation="Les processus de Poisson sont utilisés pour modéliser des événements discrets et aléatoires qui se produisent à des intervalles de temps aléatoires, tels que les sauts de prix dans les modèles de diffusion-saut ou les défauts de crédit.">
+  <Option text="Pour modéliser les mouvements continus des prix des actions." correct={false} />
+  <Option text="Pour modéliser les arrivées d'événements discrets et imprévisibles, comme les sauts de prix ou les défauts de crédit." correct={true} />
+  <Option text="Pour modéliser la volatilité stochastique." correct={false} />
+  <Option text="Pour modéliser les taux d'intérêt sans risque." correct={false} />
+</Question>
+</Quiz>
+</SummativeEvaluation>

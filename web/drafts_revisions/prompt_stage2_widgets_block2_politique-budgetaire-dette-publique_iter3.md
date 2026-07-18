@@ -1,0 +1,93 @@
+You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
+Your task is to design the JSON object for the Enrichment Hover Cards / Entity Links of the lesson (biographies, persons, concepts, events, locations, and glossary terms).
+
+The narrative text contains the following custom widget anchors that you MUST define:
+- Anchor: [[WIDGET:ConceptLink:politique_budgetaire:politique budgétaire]] (Type: "ConceptLink", ID: "politique_budgetaire", Topic: "politique budgétaire")
+- Anchor: [[WIDGET:RealPerson:blanchard:Olivier Blanchard]] (Type: "RealPerson", ID: "blanchard", Topic: "Olivier Blanchard")
+- Anchor: [[WIDGET:ConceptLink:dette_publique:dette publique]] (Type: "ConceptLink", ID: "dette_publique", Topic: "dette publique")
+- Anchor: [[WIDGET:Glossary:seigniorage:seigneuriage]] (Type: "Glossary", ID: "seigniorage", Topic: "seigneuriage")
+- Anchor: [[WIDGET:Glossary:deficit_budgetaire:déficit budgétaire]] (Type: "Glossary", ID: "deficit_budgetaire", Topic: "déficit budgétaire")
+- Anchor: [[WIDGET:Glossary:distorsion_fiscale:distorsions fiscales]] (Type: "Glossary", ID: "distorsion_fiscale", Topic: "distorsions fiscales")
+- Anchor: [[WIDGET:ConceptLink:effet_eviction:effet d'éviction]] (Type: "ConceptLink", ID: "effet_eviction", Topic: "effet d'éviction")
+- Anchor: [[WIDGET:RealPerson:ricardo_david:David Ricardo]] (Type: "RealPerson", ID: "ricardo_david", Topic: "David Ricardo")
+- Anchor: [[WIDGET:RealPerson:barro_robert:Robert Barro]] (Type: "RealPerson", ID: "barro_robert", Topic: "Robert Barro")
+- Anchor: [[WIDGET:Glossary:soutenabilite_budgetaire:soutenabilité budgétaire]] (Type: "Glossary", ID: "soutenabilite_budgetaire", Topic: "soutenabilité budgétaire")
+- Anchor: [[WIDGET:Glossary:solde_primaire:solde primaire]] (Type: "Glossary", ID: "solde_primaire", Topic: "solde primaire")
+- Anchor: [[WIDGET:ConceptLink:consolidation_budgetaire:consolidation budgétaire]] (Type: "ConceptLink", ID: "consolidation_budgetaire", Topic: "consolidation budgétaire")
+- Anchor: [[WIDGET:ConceptLink:soutenabilite_dette:soutenabilité de la dette]] (Type: "ConceptLink", ID: "soutenabilite_dette", Topic: "soutenabilité de la dette")
+- Anchor: [[WIDGET:Glossary:dominance_fiscale:dominance fiscale]] (Type: "Glossary", ID: "dominance_fiscale", Topic: "dominance fiscale")
+- Anchor: [[WIDGET:RealPerson:blanchard_olivier:Olivier Blanchard]] (Type: "RealPerson", ID: "blanchard_olivier", Topic: "Olivier Blanchard")
+- Anchor: [[WIDGET:Glossary:mmt:Théorie Monétaire Moderne]] (Type: "Glossary", ID: "mmt", Topic: "Théorie Monétaire Moderne")
+
+---
+
+### CATALOG AND GUIDELINES:
+- ID: "Mermaid"
+  Name: "Mermaid Diagram Engine" (Moteur de diagrammes Mermaid)
+  Description: "Render rich flowcharts, timelines, and concept maps from descriptive text markup."
+  Disciplines: [All Disciplines]
+  Educational Level: "All levels"
+
+### REQUIRED PROPS STRUCTURE per componentType:
+1. "Biography":
+   - "name": (string) Full name of the person.
+   - "dates": (string) Lifespan dates, e.g. "1723-1790" or "1856-1939".
+   - "description": (string) Detailed biographical summary focusing on their contributions (8-12 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their English or French Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the biography on Wikipedia. MANDATORY.
+2. "RealPerson" or "HistoricalPerson":
+   - "name": (string) Full name of the person (should match the Anchor Topic if provided).
+   - "description": (string) Wikipedia-style hover card tooltip summary of this person (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the person on Wikipedia. MANDATORY.
+   ⚠️ CRITICAL: Do NOT add a "year", "dates", "birthYear", or "deathYear" field for RealPerson/HistoricalPerson. These fields are NOT in the schema and will cause validation failure. Dates are resolved automatically via Wikidata after generation.
+3. "ConceptLink":
+   - "name": (string) Name of the concept (should match the Anchor Topic if provided).
+   - "description": (string) Wikipedia-style hover card tooltip summary of this concept (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the concept on Wikipedia. MANDATORY.
+4. "EventLink", "HistoricalEventLink", "EvenementHistorique", or "ÉvénementHistorique":
+   - "name": (string) Name of the event (should match the Anchor Topic if provided).
+   - "description": (string) Wikipedia-style hover card tooltip summary of this event (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the event on Wikipedia. MANDATORY.
+5. "Location":
+   - "name": (string) Name of the location (should match the Anchor Topic if provided).
+   - "description": (string) Wikipedia-style hover card tooltip summary of this location (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the location on Wikipedia. MANDATORY.
+6. "Glossary":
+   - "term": (string) Glossary vocabulary term.
+   - "definition": (string) Detailed vocabulary definition (2-4 sentences).
+   - "wikipediaUrl": (string) Direct canonical link to their Wikipedia page. MANDATORY.
+   - "searchQuery": (string) Canonical search query to find the term on Wikipedia. MANDATORY.
+
+DO NOT output any properties that are not explicitly defined in the props catalog above for a given componentType. For instance, do NOT output "year", "dates", "url", or "wikipediaLink" for ConceptLink, HistoricalEventLink, Location, or Glossary; if you do, the critique agent will reject the block.
+
+You must define the "interactiveComponents" array containing one object for each anchor listed above.
+For each component:
+- "id": Must match the ID from the anchor.
+- "componentType": Must match the Type from the anchor.
+- "sectionAnchor": The markdown heading "## Section Name" where this widget is placed in the narrative.
+- "props": The specific properties required for the widget type as described above.
+
+Return ONLY a valid JSON object matching this schema:
+\`\`\`json
+{
+  "interactiveComponents": [
+    {
+      "id": "string",
+      "componentType": "string",
+      "sectionAnchor": "string",
+      "props": {}
+    }
+  ]
+}
+\`\`\`
+Do NOT wrap your JSON response in markdown code blocks.
+
+🚨 PREVIOUS CRITIQUE:
+"The interactiveComponents array contains a duplicate entry for Olivier Blanchard and all RealPerson components are missing the 'dates' property, which is essential for a complete biography.
+Detailed errors:
+- Field "interactiveComponents": The array includes two identical entries for Olivier Blanchard (IDs 'blanchard' and 'blanchard_olivier'). Additionally, all RealPerson components (Olivier Blanchard, David Ricardo, Robert Barro) are missing the 'dates' property, which is required for a fully populated biography component."
+Please fix these issues and regenerate.

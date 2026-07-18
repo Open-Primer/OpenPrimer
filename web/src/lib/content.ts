@@ -3462,6 +3462,17 @@ export function healLinguisticContent(text: string, lang: string): string {
   } else if (normalizedLang === 'ar' || normalizedLang === 'ur') {
     processed = healRtlBiDiAndZwnj(processed);
   }
+
+  // Collapses spacing anomalies & double punctuation caused by removed tags/citations
+  if (['fr', 'en', 'es', 'it', 'de', 'pt'].includes(normalizedLang)) {
+    processed = processed
+      .replace(/\s*,\s*\./g, '.')
+      .replace(/\s*;\s*\./g, '.')
+      .replace(/\s*,\s*,+/g, ',')
+      .replace(/\s*,\s*;/g, ';')
+      .replace(/[ \t]+([,\.])/g, '$1')
+      .replace(/ {2,}(?!\n)/g, ' ');
+  }
   
   return processed;
 }
@@ -3571,7 +3582,7 @@ function healFrenchTypography(text: string): string {
     }
     if (inCodeBlock) {
       result += char;
-      i++;
+      i2++;
       continue;
     }
     
@@ -3579,12 +3590,12 @@ function healFrenchTypography(text: string): string {
     if (char === '`') {
       inInlineCode = !inInlineCode;
       result += '`';
-      i++;
+      i2++;
       continue;
     }
     if (inInlineCode) {
       result += char;
-      i++;
+      i2++;
       continue;
     }
     
@@ -3597,18 +3608,18 @@ function healFrenchTypography(text: string): string {
     }
     if (inMathBlock) {
       result += char;
-      i++;
+      i2++;
       continue;
     }
     if (char === '$') {
       inInlineMath = !inInlineMath;
       result += '$';
-      i++;
+      i2++;
       continue;
     }
     if (inInlineMath) {
       result += char;
-      i++;
+      i2++;
       continue;
     }
     
@@ -3620,7 +3631,7 @@ function healFrenchTypography(text: string): string {
         result += ' »'; // closing guillemet with non-breaking space
       }
       quoteCount++;
-      i++;
+      i2++;
       continue;
     }
     
@@ -6225,6 +6236,23 @@ async function fetchSearchFirstMatchTitle(name: string, lang: string, type: stri
   return null;
 }
 
+export function cleanWikipediaUrl(url: string): string {
+  if (!url) return url;
+  
+  // If it's a Google Translate URL, extract the actual Wikipedia URL first, clean it, and re-wrap it
+  const translateMatch = url.match(/https?:\/\/translate\.google\.com\/translate\?.*&u=([^&]+)/i);
+  if (translateMatch) {
+    const decodedUrl = decodeURIComponent(translateMatch[1]);
+    const cleanedDecoded = cleanWikipediaUrl(decodedUrl);
+    return url.replace(/(&u=)[^&]+/, `$1${encodeURIComponent(cleanedDecoded)}`);
+  }
+
+  // Remove parenthetical dates suffix in the Wikipedia URL path
+  const dateSuffixRegex = /_(?:\(|%28)[^)?#]*(?:\d{3,4}|siècle|century|BC|av\.|J\.-C\.|mort|né|born|died)[^)?#]*(?:\)|%29)/i;
+  
+  return url.replace(dateSuffixRegex, '');
+}
+
 export async function resolveWikiDetails(
   name: string,
   type: string,
@@ -6254,6 +6282,18 @@ export async function resolveWikiDetails(
 
   // Helper to commit and cache at both levels
   const commit = async (result: WikiDetails) => {
+    if (result.url) {
+      result.url = cleanWikipediaUrl(result.url);
+    }
+    // If the REST summary is too short, try to get a longer one from the Action API
+    if (result.summary && result.summary.length < 250) {
+      try {
+        const actionRes = await fetchWikiDetailsFromActionApi(resolvedTitle || formattedName, langCode);
+        if (actionRes && actionRes.summary && actionRes.summary.length > result.summary.length) {
+          result.summary = actionRes.summary;
+        }
+      } catch (_) {}
+    }
     if (type === 'person' || type === 'character') {
       if (!result.dates) {
         result.dates = extractDatesOrCentury(result.description, result.summary);

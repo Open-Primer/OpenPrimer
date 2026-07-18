@@ -509,12 +509,6 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
               <Link href="/catalog" className="hover:text-blue-500 transition-colors">{getLocalizedSubject(lang, subject)}</Link>
               <ChevronRight className="w-3 h-3 text-slate-800" />
               <span className="text-slate-500">{moduleName}</span>
-              {title && moduleName && title.toLowerCase().trim() !== moduleName.toLowerCase().trim() && (
-                <>
-                  <ChevronRight className="w-3 h-3 text-slate-800" />
-                  <span className="text-blue-500">{title}</span>
-                </>
-              )}
             </div>
             <ExportLessonButton title={title} subject={subject} level={level} content={pageData.content} lang={lang} courseSlug={courseSlug} version={courseVersion} />
           </div>
@@ -525,7 +519,7 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
                 {formatCourseLevel(level, lang)}
               </span>
             </div>
-            <h1 className="text-3xl md:text-5xl font-black mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 leading-tight">
+            <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 leading-tight">
               {title}
             </h1>
             <div className="w-16 h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500 rounded-full mx-auto md:mx-0 distraction-free-hide" />

@@ -1,0 +1,244 @@
+---
+title: « Modélisation des Taux d'Intérêt »
+subject: « Finance quantitative et modélisation stochastique »
+level: « M1 »
+module: « Modélisation des Taux d'Intérêt »
+order: 10
+---
+
+
+
+<DiagnosticQuiz question="Quelle propriété fondamentale caractérise un processus de Wiener (mouvement brownien) utilisé en modélisation stochastique des taux d'intérêt?" options="Il a des accroissements indépendants et stationnaires.|||Sa variance est constante dans le temps.|||Il est toujours positif.|||Il est déterministe." correctIndex="0" targetSectionId="introduction-modeles-stochastiques" sectionTitle="Introduction aux Modèles Stochastiques de Taux" />
+
+
+
+## Introduction à la Modélisation des Taux d'Intérêt
+
+La modélisation des taux d'intérêt est un pilier fondamental de la <ConceptLink id="finance_quantitative" name="finance quantitative" term="finance quantitative" unresolved={true}>finance quantitative</ConceptLink>, essentielle pour l'évaluation des instruments financiers, la gestion des risques et la prise de décisions stratégiques. Les taux d'intérêt sont le coût de l'argent et influencent directement la valeur des obligations, des produits dérivés de taux, et même les décisions d'investissement des entreprises. Leur dynamique complexe, souvent imprévisible, pose des défis significatifs aux modélisateurs.
+
+L'un des principaux défis réside dans la nature stochastique des taux d'intérêt, leur capacité à évoluer de manière non linéaire et leur dépendance à de multiples facteurs économiques. De plus, les taux d'intérêt ne peuvent pas être négatifs dans un environnement économique « normal » (bien que des taux négatifs aient été observés dans certaines économies récemment), et ils présentent souvent une tendance à revenir vers une moyenne de long terme, un phénomène connu sous le nom de <Glossary id="retour_moyenne" name="retour à la moyenne" term="retour à la moyenne">retour à la moyenne</Glossary>.
+
+Ce cours a pour objectif de vous fournir une compréhension approfondie des principaux modèles de taux d'intérêt utilisés en finance. Nous explorerons leurs fondements théoriques, leurs propriétés mathématiques, leurs avantages et leurs limites, ainsi que les méthodes de calibration et d'application pour la valorisation et la couverture. Nous commencerons par introduire les concepts clés de <Glossary id="taux_court" name="taux court" term="taux court">taux court</Glossary> (le taux d'intérêt instantané) et de la <ConceptLink id="courbe_taux" name="courbe des taux" term="courbe des taux">courbe des taux</ConceptLink> (la relation entre les taux d'intérêt et leurs maturités respectives), qui sont au cœur de toute modélisation des taux.
+
+<Mermaid caption="Figure 1 : " chart={``}/>
+
+La compréhension de la structure par terme des taux d'intérêt, représentée par la courbe des taux, est cruciale. Cette courbe reflète les anticipations du marché concernant les futurs taux courts et la prime de risque associée à l'horizon temporel. Des ouvrages de référence tels que ceux de <RealPerson id="john_hull" name="John C. Hull" searchQuery="John C. Hull" wikipediaUrl="https://en.wikipedia.org/wiki/John_C._Hull">John C. Hull</RealPerson> <Reference id="1" name="1" term="1">1</Reference>, <RealPerson id="darrell_duffie" name="Darrell Duffie" searchQuery="Darrell Duffie" wikipediaUrl="https://en.wikipedia.org/wiki/Darrell_Duffie">Darrell Duffie</RealPerson> <Reference id="2" name="2" term="2">2</Reference> et Brigo &amp; Mercurio <Reference id="3" name="3" term="3">3</Reference> fournissent des bases solides pour cette exploration.
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les hypothèses sous-jacentes aux principaux modèles stochastiques de taux d'intérêt (ex: Vasicek, CIR).</li>
+      <li>Évaluer la pertinence des différents modèles de taux d'intérêt pour des contextes de marché spécifiques.</li>
+      <li>Formuler les équations différentielles stochastiques (EDS) décrivant l'évolution des taux d'intérêt dans les modèles classiques.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Appliquer les techniques de calcul stochastique pour dériver les propriétés des modèles de taux d'intérêt.</li>
+      <li>Évaluer les méthodes de calibration des modèles de taux d'intérêt à partir de données de marché.</li>
+      <li>Développer des simulations numériques pour projeter l'évolution future des taux d'intérêt sous différents modèles.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Adopter une approche critique dans l'analyse des limites et des avantages des modèles de taux d'intérêt existants.</li>
+      <li>Évaluer l'importance de la rigueur mathématique et de la validation empirique dans la modélisation financière.</li>
+      <li>Développer une curiosité intellectuelle pour les avancées récentes en modélisation stochastique des taux d'intérêt.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Modèles de Taux Courts à un Facteur (Vasicek et CIR)
+
+Les modèles de taux courts à un facteur sont parmi les plus fondamentaux pour décrire l'évolution stochastique du taux d'intérêt instantané, $r_t$. Ils supposent que le mouvement de l'ensemble de la courbe des taux est déterminé par un seul facteur, le taux court lui-même.
+
+### Le Modèle de Vasicek
+
+Proposé par <RealPerson id="oldrich_vasicek" name="Oldřich Vašíček" searchQuery="Oldřich Vašíček" wikipediaUrl="https://en.wikipedia.org/wiki/Old%C5%99ich_Va%C5%A1%C3%AD%C4%8Dek">Oldřich Vašíček</RealPerson> en 1977, le modèle de Vasicek est un modèle de taux court qui incorpore la propriété de retour à la moyenne. Son équation différentielle stochastique (EDS) est donnée par :
+
+$$dr_t = a(b - r_t)dt + \sigma dW_t$$
+
+où :
+*   $r_t$ est le taux court au temps $t$.
+*   $a$ est la vitesse de retour à la moyenne (plus $a$ est grand, plus le retour est rapide).
+*   $b$ est le niveau de retour à la moyenne (le taux d'intérêt de long terme vers lequel $r_t$ tend).
+*   $\sigma$ est la volatilité du taux court.
+*   $dW_t$ est un processus de Wiener standard (mouvement brownien) sous la mesure de probabilité risque-neutre.
+
+**Propriétés et Caractéristiques :**
+*   **Retour à la moyenne :** Le terme $a(b - r_t)dt$ indique que le taux $r_t$ est attiré vers le niveau $b$. Si $r_t > b$, la dérive est négative, tirant $r_t$ vers le bas ; si $r_t < b$, la dérive est positive, le tirant versle haut.
+*   **Volatilité constante :** La volatilité $\sigma$ est constante, ce qui signifie que les fluctuations du taux sont indépendantes de son niveau.
+*   **Tractabilité analytique :** Le modèle de Vasicek est très apprécié pour sa grande tractabilité. Il permet d'obtenir des solutions analytiques pour les prix des obligations zéro-coupon et d'autres dérivés de taux.
+*   **Inconvénient majeur :** Le modèle de Vasicek permet aux taux d'intérêt de devenir négatifs, ce qui était considéré comme irréaliste avant les années 2010 mais est devenu une réalité dans certains marchés.
+
+Le prix d'une obligation zéro-coupon $P(t, T)$ à l'instant $t$ qui paie 1 unité monétaire à l'échéance $T$ sous le modèle de Vasicek est donné par $P(t, T) = A(t, T)e^{-B(t, T)r_t}$, où $A(t, T)$ et $B(t, T)$ sont des fonctions déterministes de $t$ et $T$. Pour une dérivation détaillée, on peut se référer à Shreve <Reference id="4" name="4" term="4">4</Reference> ou Brigo &amp; Mercurio .
+
+### Le Modèle de Cox-Ingersoll-Ross (CIR)
+
+Développé par <RealPerson id="john_cox" name="John C. Cox" searchQuery="John C. Cox" wikipediaUrl="https://en.wikipedia.org/wiki/John_C._Cox">John C. Cox</RealPerson>, Stephen A. Ross et Mark Rubinstein en 1985, le modèle CIR est une alternative au modèle de Vasicek qui résout le problème des taux négatifs. Son EDS est :
+
+$$dr_t = a(b - r_t)dt + \sigma\sqrt{r_t} dW_t$$
+
+**Propriétés et Caractéristiques :**
+*   **Retour à la moyenne :** Comme Vasicek, le modèle CIR présente un retour à la moyenne vers $b$ avec une vitesse $a$.
+*   **Volatilité dépendante du niveau :** La volatilité est proportionnelle à $\sqrt{r_t}$. Cela signifie que la volatilité diminue lorsque le taux court diminue, et vice-versa.
+*   **Positivité des taux :** Une propriété cruciale du modèle CIR est qu'il garantit que les taux d'intérêt restent positifs ($r_t \ge 0$), à condition que la condition $2ab \ge \sigma^2$ soit satisfaite. C'est un avantage significatif par rapport au modèle de Vasicek, le rendant plus réaliste pour la modélisation des taux d'intérêt.
+*   **Tractabilité :** Bien que plus complexe que Vasicek, le modèle CIR reste analytiquement tractable, permettant également des solutions fermées pour les prix des obligations zéro-coupon.
+
+Le prix d'une obligation zéro-coupon $P(t, T)$ sous le modèle CIR a également une forme exponentielle-affine $P(t, T) = A(t, T)e^{-B(t, T)r_t}$, avec des fonctions $A(t, T)$ et $B(t, T)$ plus complexes que celles du modèle de Vasicek.
+
+**Avantages et Inconvénients Comparés :**
+
+| Caractéristique       | Modèle de Vasicek                               | Modèle de CIR                                     |
+| :-------------------- | :---------------------------------------------- | :------------------------------------------------ |
+| **EDS**               | $dr_t = a(b - r_t)dt + \sigma dW_t$             | $dr_t = a(b - r_t)dt + \sigma\sqrt{r_t} dW_t$     |
+| **Retour à la moyenne** | Oui                                             | Oui                                               |
+| **Positivité des taux** | Non garanti (peut devenir négatif)              | Garanti si $2ab \ge \sigma^2$                     |
+| **Volatilité**        | Constante ($\sigma$)                            | Dépendante du niveau ($\sigma\sqrt{r_t}$)         |
+| **Tractabilité**      | Très élevée (solutions analytiques simples)     | Élevée (solutions analytiques, mais plus complexes) |
+| **Réalisme**          | Moins réaliste pour les taux bas/négatifs       | Plus réaliste pour les taux positifs               |
+
+Ces modèles à un facteur sont des points de départ essentiels pour comprendre la dynamique des taux d'intérêt. Cependant, leur simplicité limite leur capacité à capturer toutes les nuances de la courbe des taux, notamment les mouvements non parallèles. Les blocs suivants aborderont des modèles plus sophistiqués pour pallier ces limitations.
+
+<SolvedExercise title="Calcul du Prix d'une Obligation Zéro-Coupon sous le Modèle de Vasicek" solution="">
+  
+</SolvedExercise>
+
+## Le Modèlede Hull-White et la Calibration
+
+Les modèles de Vasicek et de CIR, bien que fondamentaux, présentent des limitations significatives, notamment leur incapacité à reproduire fidèlement la courbe des taux observée sur le marché à un instant donné. Pour pallier cette lacune, le modèle de John C. Hull et <RealPerson id="alan_white" name="Alan White" searchQuery="Alan White academic" wikipediaUrl="https://en.wikipedia.org/wiki/Alan_White_(academic)">Alan White</RealPerson>, introduit en 1990, propose une extension du modèle de Vasicek. Ce modèl'est un <ConceptLink id="no_arbitrage_model" name="modèle sans arbitrage" term="modèle sans arbitrage" unresolved={true}>modèle sans arbitrage</ConceptLink> car il permet d'ajuster parfaitement la structure par terme des taux d'intérêt initiale, une propriété essentielle pour la valorisation des produits dérivés.
+
+L'équation différentielle stochastique (EDS) du taux court $r_t$ sous la mesure neutre au risque pour le modèlede Hull-White est donnée par :
+
+$$dr_t = (\theta(t) - a r_t)dt + \sigma dW_t$$
+
+où :
+*   $r_t$ est le taux court instantané au temps $t$.
+*   $\theta(t)$ est une fonction déterministe du temps, qui est précisément ajustée pour que le modèle reproduise la courbe des taux zéro-coupon initiale.
+*   $a$ est le paramètre de retour à la moyenne, indiquant la vitesse à laquelle le taux court revient vers sa cible.
+*   $\sigma$ est la volatilité du taux court, supposée constante dans la version la plus simple du modèle.
+*   $dW_t$ est un processus de Wiener standard sous la mesure neutre au risque.
+
+**Propriétés et Caractéristiques :**
+*   **Retour à la moyenne :** Comme Vasicek, le modèlede Hull-White intègre un mécanisme de retour à la moyenne. Cependant, la cible de ce retour n'est pas une constante fixe, mais une fonction du temps $\theta(t)/a$, ce qui lui confère une flexibilité accrue.
+*   **Ajustement de la courbe des taux initiale :** La fonction $\theta(t)$ est déterminée de manière unique pour que le modèle valorise correctement les obligations zéro-coupon de marché. Ceci est une propriété cruciale qui fait du Hull-White un modèle « sans arbitrage » par construction par rapport à la courbe des taux initiale .
+*   **Tractabilité analytique :** Le modèlede Hull-White conserve une grande partie de la tractabilité analytique du modèle de Vasicek. Il existe des formules fermées pour le prix des obligations zéro-coupon et pour certains produits dérivés, ce qui facilite son implémentation.
+*   **Taux négatifs :** Comme le modèle de Vasicek,l'Hull-White est un processus gaussien et peut, théoriquement, générer des taux d'intérêt négatifs. Cependant, en pratique, lorsque le modèl'est calibré aux données de marché, la probabilité de taux fortement négatifs est souvent faible, surtout pour des horizons de temps courts à moyens.
+
+<Mermaid caption="Figure 2 : " chart={``}/>
+
+### Calibration du Modèlede Hull-White
+
+La calibration est le processus d'estimation des paramètrès du modèle ($a$, $\sigma$, et la fonction $\theta(t)$) à partir des données de marché observées.
+
+1.  **Calibration de $\theta(t)$ :** La fonction $\theta(t)$ est directement dérivée de la courbe des taux zéro-coupon observée sur le marché. En effet, pour que le modèle soit sans arbitrage, le prix d'une obligation zéro-coupon $P(t, T)$ doit correspondre aux prix de marché. En utilisant la formule de pricing des obligations zéro-coupon sous Hull-White, on peut résoudre pour $\theta(t)$ en fonction des taux forward de marché.
+2.  **Calibration de $a$ et $\sigma$ :** Ces deux paramètrès, qui régissent la dynamique stochastique et la volatilité du taux court, sont généralement calibrés à partir des prix des produits dérivés de taux d'intérêt.
+    *   **Caps et Floors :** Les <Glossary id="caps_floors" name="Caps et Floors" term="Caps et Floors">Caps et Floors</Glossary> sont des options sur les taux flottants. Leurs prix de marché contiennent des informations précieuses sur la volatilité future des taux d'intérêt. En minimisant la somme des carrés des différences entre les prix des caps/floors calculés par le modèl'et leurs prix de marché observés, on peut estimer $a$ et $\sigma$.
+    *   **Swaptions :** Les swaptions (options sur swaps de taux d'intérêt) sont également des instruments clés pour la calibration. Leurs prix dépendent de la volatilité de la courbe des taux sur différentes maturités.
+    *   **Volatilités de taux :** Parfois, la calibration se fait directement sur les volatilités implicites extraites des prix des caps/floors ou swaptions, plutôt que sur les prix eux-mêmes.
+
+La calibration est souvent un problème d'optimisation numérique, où l'on cherche les valeurs de $a$ et $\sigma$ qui minimisent une fonction objectif (par exemple, la somme des erreurs quadratiques) entre les prix modélisés et les prix de marché. Des techniques comme les moindres carrés non linéaires ou les algorithmes génétiques peuvent être utilisées.
+
+<Image description="Deux hommes effectuent des tests dans une chambre d'essai, l'un manipulant une sonde et l'autre surveillant des données sur un ordinateur portable." alt="Deux hommes effectuent des tests dans une chambre d'essai, l'un manipulant une sonde et l'autre surveillant des données sur un ordinateur portable." caption="Figure 1: Deux hommes effectuent des tests dans une chambre d'essai, l'un manipulant une sonde et l'autre surveillant des données sur un ordinateur portable. Source: NASA Images (Public Domain)" title="Processus de Calibration du Modèlede Hull-White" src="https://images-assets.nasa.gov/image/GRC-2007-C-02471/GRC-2007-C-02471~thumb.jpg" />
+
+## Applications et Limites des Modèles de Taux Courts
+
+Les modèles de taux courts, en particulier le modèlede Hull-White, sont des outils indispensables en finance quantitative, mais ils présentent également des limites importantes.
+
+### Applications Pratiques
+
+1.  **Valorisation d'options sur taux :**
+    *   **Caps et Floors :** Ces modèles permettent de valoriser les caps (plafonds de taux) et les floors (planchers de taux), qui sont des instruments de couverture contre la fluctuation des taux d'intérêt.
+    *   **Swaptions :** La valorisation des swaptions, qui sont des options d'entrer dans un swap de taux d'intérêt, est une application majeure.
+    *   **Obligations avec options intégrées :** Les obligations remboursables par anticipation (callable bonds) ou vendables (puttable bonds) peuvent être valorisées en utilisant des modèles de taux courts pour simuler les trajectoires futures des taux.
+2.  **Gestion de Portefeuille et de Risque :**
+    *   **Mesure du risque de taux :** Les modèles permettent d'estimer la sensibilité d'un portefeuille aux variations des taux d'intérêt (duration, convexité) et de calculer des mesures de risque comme la Value at Risk (VaR) pour des portefeuilles exposés aux taux.
+    *   **Couverture (Hedging) :** Ils aident à concevoir des stratégies de couverture pour réduire l'exposition au risque de taux.
+    *   **Gestion Actif-Passif (ALM) :** Les institutions financières utilisent ces modèles pour gérer l'adéquation entre leurs actifs et leurs passifs sensibles aux taux d'intérêt.
+3.  **Pricing de Produits Structurés :** Les modèles de taux courts sont utilisés pour valoriser des produits financiers complexes dont les payoffs dépendent de l'évolution future des taux d'intérêt.
+4.  **Simulation de Scénarios :** Ils permettent de générer des milliers de trajectoires de taux d'intérêt futures pour des analyses de stress, des tests de capital ou des projections financières.
+
+### Limites des Modèles de Taux Courts
+
+Malgré leur utilité, les modèles de taux courts à un facteur présentent plusieurs limitations :
+
+1.  **Modélisation de la Volatilité Stochastique :** Les modèles comme Vasicek, CIR ou Hull-White (dans sa version standard) supposent une volatilité constante ou déterministe. Or, la volatilité des taux d'intérêt est en réalité <ConceptLink id="stochastic_volatility" name="stochastique" term="stochastique">stochastique</ConceptLink>, c'est-à-dire qu'elle évolue de manière aléatoire au fil du temps. Cette limitation empêche ces modèles de reproduire des phénomènes observés sur le marché, comme le « sourire de volatilité » (volatility smile) des options de taux. Des modèles plus avancés intègrent une volatilité stochastique, souvent au prix d'une complexité accrue.
+2.  **Modèles Multi-Facteurs :** Les modèles à un facteur supposent que toute la courbe des taux est mue par une seule source de risque (le taux court). Cela implique que les mouvements de la courbe des taux sont toujours parallèles. Cependant, en réalité, la courbe des taux peut subir des mouvements non parallèles : elle peut se tordre (twist), s'aplatir (flatten) ou se raidir (steepen). Pour capturer ces dynamiques plus complexes, des modèles multi-facteurs sont nécessaires. Ces modèles introduisent plusieurs sources de risque (par exemple, le taux court, la pente et la courbure de la courbe des taux) et sont souvent basés sur des travaux comme ceux de <RealPerson id="francis_longstaff" name="Longstaff" term="Longstaff">Longstaff</RealPerson> et <RealPerson id="eduardo_schwartz" name="Schwartz" term="Schwartz">Schwartz</RealPerson> .
+3.  **Non-Arbitrage et Cohérence :** Bien que le modèlede Hull-White soit un modèle sans arbitrage par rapport à la courbe des taux initiale, il peut ne pas être parfaitement cohérent avec les prix de tous les instruments dérivés de taux sur le marché, en particulier ceux qui sont sensibles à la forme de la volatilité.
+4.  **Taux Négatifs :** Comme mentionné, les modèles gaussiens comme Vasicek et Hull-White peuvent générer des taux négatifs, ce qui est devenu une préoccupation majeure dans un environnement de taux bas ou négatifs observé dans certaines économies. Des extensions ou des modèles alternatifs (comme le CIR ou des modèles de marché) sont nécessaires pour garantir la positivité des taux.
+5.  **Hypothèses Simplificatrices :** Tous ces modèles reposent sur des hypothèses simplificatrices (marchés parfaits, absence de coûts de transaction, liquidité infinie, etc.) qui ne sont pas toujours vérifiées dans le monde réel.
+
+<Image description="Couverture du document &quot;Archives & Documents n°53 : Modélisation macroéconomique des structures financières&quot; par P. Villa, publié par l'INSEE en juillet 1982." alt="Couverture du document &quot;Archives & Documents n°53 : Modélisation macroéconomique des structures financières&quot; par P. Villa, publié par l'INSEE en juillet 1982." caption="Figure 2: Couverture du document &quot;Archives & Documents n°53 : Modélisation macroéconomique des structures financières&quot; par P. Villa, publié par l'INSEE en juillet 1982. Source: [Gallica / Bibliothèque nationale de France (Domaine Public)](https://gallica.bnf.fr/ark:/12148/bc6p06zk68s/f1.highres)" src="https://gallica.bnf.fr/ark:/12148/bc6p06zk68s/f1.highres" fallbackUrl="https://gallica.bnf.fr/ark:/12148/bc6p06zk68s/f1.highres" />
+
+Ces limitations soulignent la nécessité de modèles plus sophistiqués pour une modélisation complèt'et précise des marchés de taux d'intérêt, notamment les modèles de marché (comme le modèlede Heath-Jarrow-Morton ou le modèle LIBOR Market Model) qui seront abordés ultérieurement.
+
+## Conclusion
+Au terme de cette exploration des modèles de taux courts, nous avons parcouru les fondements théoriques et les applications pratiques de plusieurs approches essentielles à la modélisation des taux d'intérêt. Nous avons débuté avec des modèles fondamentaux comme celui d'Oldřich Vašíček, caractérisé par son retour à la moyenne et sa tractabilité analytique, bien qu'il puisse générer des taux négatifs. Le modèle de John C. Cox, <RealPerson id="stephen_ingersoll" name="Ingersoll" term="Ingersoll">Ingersoll</RealPerson> et <RealPerson id="stephen_ross" name="Ross" term="Ross">Ross</RealPerson> (CIR) a ensuite été introduit, offrant une garantie de positivité des taux grâce à sa dynamique de racine carrée. Enfin, le modèle de John C. Hull et Alan White (Hull-White) a été présenté comme une extension du modèle de Vasicek, permettant un calibrage à la courbe des taux initiale observée sur le marché, le rendant ainsi sans arbitrage par rapport à cette courbe , . Ces modèles, bien que simplifiés par leur nature à un seul facteur, sont cruciaux pour la valorisation d'instruments financiers simples tels que les obligations et les options sur obligations, et pour la gestion du risque de taux. Leurs limitations, notamment l'incapacité à capturer la <ConceptLink id="stochastic_volatility" name="volatilité stochastique" term="volatilité stochastique">volatilité stochastique</ConceptLink> ou les mouvements non parallèles de la courbe des taux, ont cependant souligné la nécessité de modèles plus sophistiqués.
+
+L'évolution de la modélisation des taux d'intérêt ne s'arrête pas aux modèles de taux courts. Les défis posés par la complexité croissante des marchés financiers, l'émergence de taux négatifs et la nécessité de modéliser des produits dérivés exotiques ont conduit au développement de modèles de marché plus élaborés. Parmi ceux-ci, le modèle d'<RealPerson id="heath_jarrow_morton" name="Heath, Jarrow et Morton" term="Heath, Jarrow et Morton" unresolved={true}>Heath, Jarrow et Morton</RealPerson> (HJM)  se distingue en modélisant directement l'ensemble de la courbe des taux à terme, garantissant l'absence d'arbitrage par construction. Plus appliqué en pratique, le <ConceptLink id="libor_market_model" name="LIBOR Market Model" term="LIBOR Market Model">LIBOR Market Model</ConceptLink> (LMM), également connu sous le nom de modèle BGM (Brace-Gatarek-Musiela) , modélise les taux forward ou swap sous les mesures de risque appropriées, permettant ainsi une valorisation cohérente des caps, floors et swaptions. Ces modèles, souvent mis en œuvre via des méthodes numériques intensives comme les simulations de Monte Carlo <Reference id="5" name="5" term="5">5</Reference>, sont devenus des outils indispensables pour les praticiens. L'avenir de la modélisation des taux continuera d'être façonné par l'innovation théorique, l'intégration de nouvelles réalités de marché (comme la transition du LIBOR vers les taux de référence sans risque - RFRs) et l'exploitation de la puissance de calcul pour des modèles toujours plus réalistes et complexes, tout en cherchant un équilibre entre précision, robustesse et efficacité de calcul.
+
+<Mermaid caption="Figure 5 : " chart={``}/>
+
+<Image description="Représentation des défis futurs en modélisation des taux, incluant les taux négatifs et la transition des indices" caption="Figure 3: Représentation des défis futurs en modélisation des taux, incluant les taux négatifs et la transition des indices. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Crowdfunding_(14297)_-_The_Noun_Project.svg)" src="https://commons.wikimedia.org/wiki/Special:FilePath/Crowdfunding_(14297)_-_The_Noun_Project.svg" fallbackUrl="https://commons.wikimedia.org/wiki/File:Crowdfunding_(14297)_-_The_Noun_Project.svg" />
+
+<Summary itemsString="Les modèles de taux d'intérêt sont des outils fondamentaux pour la valorisation des produits dérivés et la gestion des risques sur les marchés financiers.|||Il existe plusieurs catégories de modèles, allant des modèles à un facteur comme Vasicek et CIR, aux modèles de marché sans arbitrage comme HJM et BGM.|||Le modèle de Vasicek est apprécié pour sa simplicité et sa réversion à la moyenne, bien qu'il puisse générer des taux négatifs.|||Le modèle de Cox-Ingersoll-Ross (CIR) garantit des taux d'intérêt positifs et intègre une volatilité dépendante du niveau du taux.|||Les modèlesde Heath-Jarrow-Morton (HJM) et de Brace-Gatarek-Musiela (BGM), ou Libor Market Model (LMM), sont des cadres plus sophistiqués qui modélisent directement la dynamique de la courbe des taux forward, assurant l'absence d'arbitrage.|||La calibration des modèles aux données de marché est une étape cruciale pour leur application pratique, permettant d'ajuster les paramètrès pour refléter les conditions actuelles du marché.|||Le choix du modèl'approprié dépend fortement de l'objectif de l'analyse, des instruments à valoriser et des propriétés statistiques souhaitées pour les taux d'intérêt."/>
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+    <Question q="Quel est l'un des principaux inconvénients du modèle de Vasicek pour la modélisation des taux d'intérêt?" explanation="Le modèle de Vasicek, bien que simple et analytiquement traitable, permet aux taux d'intérêt de devenir négatifs, ce qui n'est pas toujours réaliste dans certains contextes de marché.">
+  <Option text="Il ne permet pas la réversion à la moyenne." correct={false} />
+  <Option text="Il ne peut pas être calibré aux données de marché." correct={false} />
+  <Option text="Il permet aux taux d'intérêt de devenir négatifs." correct={true} />
+  <Option text="Il est trop complexe à implémenter." correct={false} />
+</Question>
+    <Question q="Quelle caractéristique clé le modèle de Cox-Ingersoll-Ross (CIR) possède-t-il par rapport au modèle de Vasicek concernant les taux d'intérêt?" explanation="Le modèle CIR garantit que les taux d'intérêt restent non-négatifs, ce qui est une amélioration significative par rapport au modèle de Vasicek qui peut générer des taux négatifs.">
+  <Option text="Il est plus simple à calibrer." correct={false} />
+  <Option text="Il ne permet pas la réversion à la moyenne." correct={false} />
+  <Option text="Il garantit des taux d'intérêt non-négatifs." correct={true} />
+  <Option text="Il est un modèle à plusieurs facteurs." correct={false} />
+</Question>
+    <Question q="Quelle est la principale différence entre les modèles de taux courts (comme Vasicek ou CIR) et le cadre Heath-Jarrow-Morton (HJM)?" explanation="Les modèles de taux courts modélisent l'évolution du taux d'intérêt instantané, tandis que le cadre HJM modélise directement l'évolution de l'ensemble de la courbe des taux forward, assurant l'absence d'arbitrage par construction.">
+  <Option text="Les modèles de taux courts sont toujours plus précis." correct={false} />
+  <Option text="Le cadre HJM modélise directement la courbe des taux forward, tandis que les modèles de taux courts modélisent le taux instantané." correct={true} />
+  <Option text="Les modèles de taux courts sont des modèles à plusieurs facteurs, contrairement à HJM." correct={false} />
+  <Option text="Le cadre HJM ne permet pas la réversion à la moyenne." correct={false} />
+</Question>
+    <Question q="Quel est l'objectif principal de la calibration d'un modèle de taux d'intérêt?" explanation="La calibration consiste à ajuster les paramètrès du modèle pour qu'il corresponde le mieux possible aux prix observés sur le marché des instruments financiers, tels que les obligations ou les swaps.">
+  <Option text="Déterminer la valeur future des taux d'intérêt avec certitude." correct={false} />
+  <Option text="Ajuster les paramètrès du modèle pour qu'il corresponde aux prix de marché actuels." correct={true} />
+  <Option text="Simplifier la complexité mathématique du modèle." correct={false} />
+  <Option text="Éliminer toute incertitude stochastique du modèle." correct={false} />
+</Question>
+    <Question q="Que signifie le concept de 'réversion à la moyenne' dans le contexte des modèles de taux d'intérêt?" explanation="La réversion à la moyenne implique que les taux d'intérêt ont tendance à revenir vers une valeur moyenne à long terme, plutôt que de dériver indéfiniment dans une direction.">
+  <Option text="Les taux d'intérêt sont toujours constants." correct={false} />
+  <Option text="Les taux d'intérêt ont tendance à revenir vers une valeur moyenne à long terme." correct={true} />
+  <Option text="Les taux d'intérêt augmentent ou diminuent de manière aléatoire sans tendance." correct={false} />
+  <Option text="Les taux d'intérêt sont toujours négatifs." correct={false} />
+</Question>
+    <Question q="Qu'est-ce que le principe de 'non-arbitrage' implique pour la modélisation des taux d'intérêt?" explanation="Le principe de non-arbitrage stipule qu'il ne doit pas être possible de réaliser un profit sans risque en exploitant des différences de prix sur le marché. Les modèles de taux d'intérêt doivent être construits pour respecter ce principe.">
+  <Option text="Il est toujours possible de faire un profit sans risque." correct={false} />
+  <Option text="Les modèles doivent être construits de manière à ne pas permettre de profits sans risque." correct={true} />
+  <Option text="Les taux d'intérêt sont toujours nuls." correct={false} />
+  <Option text="Seuls les modèles stochastiques peuvent respecter ce principe." correct={false} />
+</Question>
+    <Question q="Qu'est-ce qu'une courbe de rendement (yield curve) dans le contexte des taux d'intérêt?" explanation="La courbe de rendement est une représentation graphique de la relation entre le rendement des obligations (ou d'autres instruments de taux) et leur échéance, à un moment donné.">
+  <Option text="Un graphique montrant l'évolution historique d'un seul taux d'intérêt." correct={false} />
+  <Option text="La relation entre le rendement et l'échéance des instruments de taux d'intérêt à un moment donné." correct={true} />
+  <Option text="Le taux d'inflation attendu sur différentes périodes." correct={false} />
+  <Option text="La volatilité des taux d'intérêt au fil du temps." correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFyYml0cmFnZSIsImRlZmluaXRpb24iOiJMYSBwb3NzaWJpbGl0w6kgZGUgcsOpYWxpc2VyIHVuIHByb2ZpdCBzYW5zIHJpc3F1ZSBldCBzYW5zIGludmVzdGlzc2VtZW50IGluaXRpYWwgZW4gZXhwbG9pdGFudCBkZXMgaW5lZmZpY2FjaXTDqXMgZGUgcHJpeCBzdXIgbGVzIG1hcmNow6lzIGZpbmFuY2llcnMuIn0seyJ0ZXJtIjoiQ2FsaWJyYXRpb24iLCJkZWZpbml0aW9uIjoiTGUgcHJvY2Vzc3VzIGQnYWp1c3RlbWVudCBkZXMgcGFyYW3DqHRyZXMgZCd1biBtb2TDqGxlIG1hdGjDqW1hdGlxdWUgcG91ciBxdSdpbCBjb3JyZXNwb25kZSBsZSBtaWV1eCBwb3NzaWJsZSBhdXggcHJpeCBvYnNlcnbDqXMgc3VyIGxlIG1hcmNow6kgZGVzIGluc3RydW1lbnRzIGZpbmFuY2llcnMuIn0seyJ0ZXJtIjoiQ2FwIGRlIHRhdXgiLCJkZWZpbml0aW9uIjoiVW5lIG9wdGlvbiBxdWkgcHJvdMOoZ2UgbCdhY2hldGV1ciBjb250cmUgdW5lIGhhdXNzZSBkZXMgdGF1eCBkJ2ludMOpcsOqdCBhdS1kZWzDoCBkJ3VuIG5pdmVhdSBwcsOpZMOpZmluaSAobGUgdGF1eCBkJ2V4ZXJjaWNlKSwgZW4gbHVpIHZlcnNhbnQgbGEgZGlmZsOpcmVuY2Ugc2kgbGUgdGF1eCBkw6lwYXNzZSBjZSBuaXZlYXUuIn0seyJ0ZXJtIjoiQ291cmJlIGRlcyB0YXV4IiwiZGVmaW5pdGlvbiI6IlJlcHLDqXNlbnRhdGlvbiBncmFwaGlxdWUgZGUgbGEgcmVsYXRpb24gZW50cmUgbGVzIHRhdXggZCdpbnTDqXLDqnQgKHJlbmRlbWVudHMpIGV0IGxldXJzIMOpY2jDqWFuY2VzIHJlc3BlY3RpdmVzIHBvdXIgZGVzIGluc3RydW1lbnRzIGRlIG3Dqm1lIHF1YWxpdMOpIGRlIGNyw6lkaXQuIn0seyJ0ZXJtIjoiRMOpcml2w6kgZGUgdGF1eCIsImRlZmluaXRpb24iOiJVbiBpbnN0cnVtZW50IGZpbmFuY2llciBkb250IGxhIHZhbGV1ciBkw6lwZW5kIGRlcyBmbHVjdHVhdGlvbnMgZGVzIHRhdXggZCdpbnTDqXLDqnQgc291cy1qYWNlbnRzLCBjb21tZSBsZXMgc3dhcHMgZGUgdGF1eCwgbGVzIGNhcHMsIGxlcyBmbG9vcnMgb3UgbGVzIG9wdGlvbnMgc3VyIG9ibGlnYXRpb25zLiJ9LHsidGVybSI6IkZsb29yIGRlIHRhdXgiLCJkZWZpbml0aW9uIjoiVW5lIG9wdGlvbiBxdWkgcHJvdMOoZ2UgbCdhY2hldGV1ciBjb250cmUgdW5lIGJhaXNzZSBkZXMgdGF1eCBkJ2ludMOpcsOqdCBlbiBkZXNzb3VzIGQndW4gbml2ZWF1IHByw6lkw6lmaW5pIChsZSB0YXV4IGQnZXhlcmNpY2UpLCBlbiBsdWkgdmVyc2FudCBsYSBkaWZmw6lyZW5jZSBzaSBsZSB0YXV4IHRvbWJlIGVuIGRlc3NvdXMgZGUgY2Ugbml2ZWF1LiJ9LHsidGVybSI6Ik1vZMOobGUgZGUgQkdNIChCcmFjZS1HYXRhcmVrLU11c2llbGEpIC8gTE1NIChMaWJvciBNYXJrZXQgTW9kZWwpIiwiZGVmaW5pdGlvbiI6IlVuIG1vZMOobGUgZGUgbWFyY2jDqSBzYW5zIGFyYml0cmFnZSBxdWkgbW9kw6lsaXNlIGRpcmVjdGVtZW50IGxlcyB0YXV4IExpYm9yIChvdSBPSVMpIGZvcndhcmQsIGNvaMOpcmVudCBhdmVjIGxhIHZhbG9yaXNhdGlvbiBkZXMgY2FwcyBldCBmbG9vcnMsIGV0IGxhcmdlbWVudCB1dGlsaXPDqSBwb3VyIGxlcyBwcm9kdWl0cyBkw6lyaXbDqXMgZGUgdGF1eC4ifSx7InRlcm0iOiJNb2TDqGxlIGRlIENJUiAoQ294LUluZ2Vyc29sbC1Sb3NzKSIsImRlZmluaXRpb24iOiJVbiBtb2TDqGxlIGRlIHRhdXggZCdpbnTDqXLDqnQgw6AgdW4gZmFjdGV1ciBxdWkgYXNzdXJlIHF1ZSBsZXMgdGF1eCByZXN0ZW50IHBvc2l0aWZzIGV0IGRvbnQgbGEgdm9sYXRpbGl0w6kgZXN0IHByb3BvcnRpb25uZWxsZSDDoCBsYSByYWNpbmUgY2FycsOpZSBkdSB0YXV4LCBwcsOpc2VudGFudCDDqWdhbGVtZW50IHVuZSByw6l2ZXJzaW9uIMOgIGxhIG1veWVubmUuIn0seyJ0ZXJtIjoiTW9kw6hsZSBkZSBISk0gKEhlYXRoLUphcnJvdy1Nb3J0b24pIiwiZGVmaW5pdGlvbiI6IlVuIGNhZHJlIGfDqW7DqXJhbCBkZSBtb2TDqWxpc2F0aW9uIGRlIGxhIGNvdXJiZSBkZXMgdGF1eCBzYW5zIGFyYml0cmFnZSwgcXVpIHNww6ljaWZpZSBsYSBkeW5hbWlxdWUgZGVzIHRhdXggZm9yd2FyZCBldCBwZXJtZXQgZGUgdmFsb3Jpc2VyIGRlcyBwcm9kdWl0cyBkw6lyaXbDqXMgZGUgdGF1eCBjb21wbGV4ZXMuIn0seyJ0ZXJtIjoiTW9kw6hsZSBkZSBWYXNpY2VrIiwiZGVmaW5pdGlvbiI6IlVuIG1vZMOobGUgZGUgdGF1eCBkJ2ludMOpcsOqdCDDoCB1biBmYWN0ZXVyIHF1aSBkw6ljcml0IGwnw6l2b2x1dGlvbiBkdSB0YXV4IGNvdXJ0IGNvbW1lIHVuIHByb2Nlc3N1cyBkZSByw6l2ZXJzaW9uIMOgIGxhIG1veWVubmUgYXZlYyB1bmUgdm9sYXRpbGl0w6kgY29uc3RhbnRlLCBwb3V2YW50IGfDqW7DqXJlciBkZXMgdGF1eCBuw6lnYXRpZnMuIn0seyJ0ZXJtIjoiU3dhcCBkZSB0YXV4IGQnaW50w6lyw6p0IiwiZGVmaW5pdGlvbiI6IlVuIGNvbnRyYXQgcGFyIGxlcXVlbCBkZXV4IHBhcnRpZXMgcydlbmdhZ2VudCDDoCDDqWNoYW5nZXIgZGVzIGZsdXggZCdpbnTDqXLDqnRzIChnw6luw6lyYWxlbWVudCB1biB0YXV4IGZpeGUgY29udHJlIHVuIHRhdXggdmFyaWFibGUpIHN1ciB1biBtb250YW50IG5vdGlvbm5lbCBzYW5zIMOpY2hhbmdlIGRlIHByaW5jaXBhbC4ifSx7InRlcm0iOiJUYXV4IGZvcndhcmQiLCJkZWZpbml0aW9uIjoiVW4gdGF1eCBkJ2ludMOpcsOqdCBjb252ZW51IGF1am91cmQnaHVpIHBvdXIgdW4gcHLDqnQgb3UgdW4gZW1wcnVudCBxdWkgZMOpYnV0ZXJhIMOgIHVuZSBkYXRlIGZ1dHVyZSBzcMOpY2lmacOpZSBldCBzZSB0ZXJtaW5lcmEgw6AgdW5lIGF1dHJlIGRhdGUgZnV0dXJlLiJ9LHsidGVybSI6IlRhdXggc2FucyByaXNxdWUiLCJkZWZpbml0aW9uIjoiVGF1eCBkJ2ludMOpcsOqdCB0aMOpb3JpcXVlIGQndW4gaW52ZXN0aXNzZW1lbnQgcXVpIG5lIHByw6lzZW50ZSBhdWN1biByaXNxdWUgZGUgZMOpZmF1dCBvdSBkZSBwZXJ0ZSBkZSBjYXBpdGFsLCBzb3V2ZW50IHJlcHLDqXNlbnTDqSBwYXIgbGVzIHRhdXggZGVzIG9ibGlnYXRpb25zIGQnw4l0YXQgbGVzIHBsdXMgc8O7cmVzLiJ9LHsidGVybSI6IlRhdXggc3BvdCIsImRlZmluaXRpb24iOiJMZSB0YXV4IGQnaW50w6lyw6p0IHBvdXIgdW4gcHLDqnQgb3UgdW4gZW1wcnVudCBxdWkgY29tbWVuY2UgaW1tw6lkaWF0ZW1lbnQgZXQgc2UgdGVybWluZSDDoCB1bmUgZGF0ZSBmdXR1cmUgc3DDqWNpZmnDqWUuIn0seyJ0ZXJtIjoiVm9sYXRpbGl0w6kgc3RvY2hhc3RpcXVlIiwiZGVmaW5pdGlvbiI6IlVuZSBjYXJhY3TDqXJpc3RpcXVlIGRlcyBtb2TDqGxlcyBmaW5hbmNpZXJzIG/DuSBsYSB2b2xhdGlsaXTDqSBkJ3VuIGFjdGlmIHNvdXMtamFjZW50IG4nZXN0IHBhcyBjb25zdGFudGUgbWFpcyDDqXZvbHVlIGRlIG1hbmnDqHJlIGFsw6lhdG9pcmUgYXUgZmlsIGR1IHRlbXBzLCBzdWl2YW50IHNvbiBwcm9wcmUgcHJvY2Vzc3VzIHN0b2NoYXN0aXF1ZS4ifV0=" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiVG9tYXMgQmrDtnJrICgyMDA1KS4gwqsgQXJiaXRyYWdlIFByaWNpbmcgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Ub21hcyUyMEJqJUMzJUI2cmslMjAlMjJBcmJpdHJhZ2UlMjBQcmljaW5nJTIyJTIwMjAwNSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MiwidGV4dCI6IkRhbWllbiBMYW1iZXJ0b24sIEJlcm5hcmQgTGFwZXlyZSAoMjAxOCkuIMKrIEludHJvZHVjdGlvbiB0byBTdG9jaGFzdGljIENhbGN1bHVzIEFwcGxpZWQgdG8gRmluYW5jZSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMjAxLzk3ODE0MjAwMDk5NDEiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MywidGV4dCI6IkF1dGV1ciBpbmNvbm51ICgyMDE1KS4gwqsgVGhlIFZvbGF0aWxpdHkgU3VyZmFjZSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC42NDA2NS9jb25nby1hZnJpcXVlLjIwMjUuNjAuNTUwLjYwMSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo0LCJ0ZXh0IjoiR2VyYWxkIEQuIEdheSwgSm9obiBIdWxsICgyMDA2KS4gwqsgT3B0aW9ucywgRnV0dXJlcywgYW5kIE90aGVyIERlcml2YXRpdmUgU2VjdXJpdGllcy4gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1HZXJhbGQlMjBHYXklMjAlMjJPcHRpb25zJTIyJTIwMjAwNiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NSwidGV4dCI6IkpvbmF0aGFuIEUuIEluZ2Vyc29sbCwgRGFycmVsbCBEdWZmaWUgKDIwMDYpLiDCqyBEeW5hbWljIEFzc2V0IFByaWNpbmcgVGhlb3J5LiDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUpvbmF0aGFuJTIwSW5nZXJzb2xsJTIwJTIyRHluYW1pYyUyMEFzc2V0JTIwUHJpY2luZyUyMFRoZW9yeS4lMjIlMjAyMDA2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo2LCJ0ZXh0IjoiU3RldmVuIEUuIFNocmV2ZSAoMjAxMikuIMKrIFN0b2NoYXN0aWMgQ2FsY3VsdXMgZm9yIEZpbmFuY2UgSSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0wLTM4Ny0yMjUyNy0yIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6NywidGV4dCI6Ik1vbmlxdWUgSmVhbmJsYW5jICgyMDE5KS4gwqsgQ3JpdGlxdWUgZGUgbCdvdXZyYWdlIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9TW9uaXF1ZSUyMEplYW5ibGFuYyUyMCUyMkNyaXRpcXVlJTIwZGUlMjBsJ291dnJhZ2UlMjIlMjAyMDE5Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjgsInRleHQiOiJJb2FubmlzIEthcmF0emFzLCBTdGV2ZW4gRS4gU2hyZXZlICgyMDEyKS4gwqsgQnJvd25pYW4gTW90aW9uIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTEtNDY4NC0wMzAyLTJfMiIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjksInRleHQiOiJNYXJlayBNdXNpZWxhLCBNYXJlayBSdXRrb3dza2kgKDIwMDYpLiDCqyBNYXJ0aW5nYWxlIE1ldGhvZHMgaW4gRmluYW5jaWFsIE1vZGVsbGluZyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0zLTY2Mi0yMjEzMi03Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTAsInRleHQiOiJNYXJ0aW4gQmF4dGVyLCBBbmRyZXcgUmVubmllICgyMDE0KS4gwqsgRmluYW5jaWFsIENhbGN1bHVzIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMTcvY2JvOTc4MDUxMTgwNjYzNiIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjExLCJ0ZXh0IjoiUGF1bCBHbGFzc2VybWFuICgyMDEzKS4gwqsgUXVhc2ktTW9udGUgQ2FybG8gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMC0zODctMjE2MTctMV81Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTIsInRleHQiOiJTYWxpaCBOLiBOZWZ0Y2kgKDIwMTIpLiDCqyBJbnRyb2R1Y3Rpb24gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAxNi9iOTc4LTAtMTItMzczNTc0LTQuNTAwMDQtNCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjEzLCJ0ZXh0IjoiUmVuw6kgTC4gU2NoaWxsaW5nICgyMDE2KS4gwqsgU3RvY2hhc3RpYyBkaWZmZXJlbnRpYWwgZXF1YXRpb25zOiBBbiBpbnRyb2R1Y3Rpb24gd2l0aCBhcHBsaWNhdGlvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1SZW4lQzMlQTklMjBTY2hpbGxpbmclMjAlMjJTdG9jaGFzdGljJTIwZGlmZmVyZW50aWFsJTIwZXF1YXRpb25zJTIyJTIwMjAxNiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNCwidGV4dCI6IkF1dGV1ciBpbmNvbm51ICgyMDA3KS4gwqsgUGh5c2ljcyBvZiBmaW5hbmNlLiBLaXJpbGwgSWxpbnNraS4gSm9obiBXaWxleSBhbmQgU29ucyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUF1dGV1ciUyMGluY29ubnUlMjAlMjJQaHlzaWNzJTIwb2YlMjBmaW5hbmNlLiUyMEtpcmlsbCUyMElsaW5za2kuJTIwSm9obiUyMFdpbGV5JTIwYW5kJTIwU29ucyUyMiUyMDIwMDciLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTUsInRleHQiOiJEYW1pYW5vIEJyaWdvLCBGYWJpbyBNZXJjdXJpbyAoMjAxMykuIMKrIE90aGVyIEludGVyZXN0LVJhdGUgTW9kZWxzIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNjYyLTA0NTUzLTRfOSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE2LCJ0ZXh0IjoiTW9uaXF1ZSBKZWFuYmxhbmMsIE1hcmMgWW9yLCBNYXJjIENoZXNuZXkgKDIwMDkpLiDCqyBNYXRoZW1hdGljYWwgTWV0aG9kcyBmb3IgRmluYW5jaWFsIE1hcmtldHMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMS04NDYyOC03MzctNCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE3LCJ0ZXh0IjoiUGhpbGlwIFByb3R0ZXIgKDIwMTMpLiDCqyBTdG9jaGFzdGljIERpZmZlcmVudGlhbCBFcXVhdGlvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy02NjItMDI2MTktOV82Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTgsInRleHQiOiJBdXRldXIgaW5jb25udSAoMjAwOCkuIMKrIE1hdGhlbWF0aWNhbCBNb2RlbHMgb2YgRmluYW5jaWFsIERlcml2YXRpdmVzIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNTQwLTY4Njg4LTAiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxOSwidGV4dCI6IkFuZHJlYSBQYXNjdWNjaSAoMjAxMSkuIMKrIFBERSBhbmQgTWFydGluZ2FsZSBNZXRob2RzIGluIE9wdGlvbiBQcmljaW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTg4LTQ3MC0xNzgxLTgiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMCwidGV4dCI6IkdyYXBoaXF1ZSAxLjE5LiBUYXV4IGQnaW50w6lyw6p0IGJhcyBldCBsZSBib3VtIGRlIGwnaW52ZXN0aXNzZW1lbnQgZW4gbG9nZW1lbnQsIDIwMDEtMjAwNi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjE3ODcvMzcxNDA2NDcxMjEzIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjEsInRleHQiOiJUb21hcyBCasO2cmsuIDIwMDkuIMKrIFRow6lvcmllIGRlIGwnYXJiaXRyYWdlIGVuIHRlbXBzIGNvbnRpbnUgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVRvbWFzJTIwQmolQzMlQjZyayUyMCUyMlRoJUMzJUE5b3JpZSUyMGRlJTIwbCdhcmJpdHJhZ2UlMjBlbiUyMHRlbXBzJTIwY29udGludSUyMiUyMDIwMDkiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjIsInRleHQiOiJEYXZpZCBIZWF0aCwgUm9iZXJ0IEphcnJvdyBldCBBbmRyZXcgTW9ydG9uLiAyMDE0LiDCqyBUYXV4IGQnaW50w6lyw6p0IMOgIGxvbmcgdGVybWUgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xNzg3LzY3MTQwODI3NDAzNCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjIzLCJ0ZXh0IjoiU3VyZXNoIFN1bmRhcmVzYW4uIDIwMDkuIMKrIE1hcmNow6lzIGRlcyB0aXRyZXMgw6AgcmV2ZW51IGZpeGUgZXQgbGV1cnMgcHJvZHVpdHMgZMOpcml2w6lzIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1TdXJlc2glMjBTdW5kYXJlc2FuJTIwJTIyTWFyY2glQzMlQTlzJTIwZGVzJTIwdGl0cmVzJTIwJUMzJUEwJTIwcmV2ZW51JTIwZml4ZSUyMGV0JTIwbGV1cnMlMjBwcm9kdWl0cyUyMGQlQzMlQTlyaXYlQzMlQTlzJTIyJTIwMjAwOSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9XQ==" />
+

@@ -1888,7 +1888,22 @@ export function renumberFigures(mdx: string, lang: string = 'en'): string {
         if (/\bisIllustration(={true})?\b/.test(attrsStr)) {
           return fullMatch;
         }
-        const captionMatch = attrsStr.match(/caption=(["'])([\s\S]*?)\1/);
+        
+        const srcMatch = attrsStr.match(/\bsrc=(["'])(.*?)\1/);
+        const hasSrc = srcMatch && srcMatch[2].trim().length > 0;
+        
+        const captionMatch = attrsStr.match(/\bcaption=(["'])([\s\S]*?)\1/);
+        const hasCaption = captionMatch && captionMatch[2].trim().length > 0;
+
+        if (!hasSrc && !hasCaption) {
+          if (attrsStr.includes('unresolved')) {
+            return fullMatch;
+          }
+          const trimmedAttrs = attrsStr.trim();
+          const separator = trimmedAttrs ? ' ' : '';
+          return `<${tagName} ${trimmedAttrs}${separator}unresolved={true}/>`;
+        }
+
         const currentCount = figureCount++;
         
         if (!captionMatch) {

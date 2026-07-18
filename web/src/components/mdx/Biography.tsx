@@ -3,6 +3,7 @@
 import React from 'react';
 import { BookOpen, ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { cleanWikipediaUrl } from './HistoricalPerson';
 
 interface BiographyProps {
   name: string;
@@ -35,6 +36,7 @@ export const Biography = ({ name, dates, description, wikipediaUrl }: BiographyP
   const wikiLabel = wikiLabels[langKey] || wikiLabels.EN;
 
   const finalBio = description || '';
+  const cleanedWikiUrl = wikipediaUrl ? cleanWikipediaUrl(wikipediaUrl) : undefined;
 
   return (
     <div className="not-prose my-6 p-5 rounded-2xl border-l-4 border-l-violet-500 bg-violet-500/5 dark:bg-violet-500/[0.04] border border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-300">
@@ -53,10 +55,10 @@ export const Biography = ({ name, dates, description, wikipediaUrl }: BiographyP
         {dates ? ' : ' : ' '}
         {finalBio}
       </div>
-      {wikipediaUrl && (
+      {cleanedWikiUrl && (
         <div className="mt-3 flex items-center">
           <a
-            href={wikipediaUrl}
+            href={cleanedWikiUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-[13px] font-bold text-violet-500 hover:text-violet-600 dark:text-violet-400 dark:hover:text-violet-300 no-underline transition-colors cursor-pointer select-none"

@@ -1,0 +1,236 @@
+---
+title: « Comportement des ménages et consommation intertemporelle »
+subject: « Macroéconomie avancée et politique économique »
+level: « M1 »
+module: « Comportement des ménages et consommation intertemporelle »
+order: 3
+---
+
+
+
+<DiagnosticQuiz question="Quelle est l'hypothèse fondamentale concernant le comportement des ménages dans le modèle de consommation intertemporelle?" options="Les ménages maximisent leur utilité présente uniquement.|||Les ménages maximisent leur utilité sur toute leur durée de vie.|||Les ménages épargnent uniquement pour des motifs de précaution.|||Les ménages consomment tout leur revenu à chaque période." correctIndex="1" targetSectionId="introduction-modeles-intertemporels" sectionTitle="Introduction aux modèles de choix intertemporels" />
+
+
+
+## Introduction au Comportement des Ménages et Consommation Intertemporelle
+
+En macroéconomie, la compréhension des décisions des ménages est fondamentale pour analyser des phénomènes agrégés tels que la croissance économique, les cycles conjoncturels, l'inflation et l'efficacité des politiques publiques. Au cœur de cette analyse se trouve le concept de <ConceptLink id="consommation_intertemporelle" name="consommation intertemporelle" term="consommation intertemporelle" unresolved={true}>consommation intertemporelle</ConceptLink>, qui reconnaît que les agents économiques ne prennent pas leurs décisions d'allocation de ressources de manière isolée pour une seule période, mais plutôt en considérant l'ensemble de leur horizon de vie.
+
+La consommation intertemporelle est le processus par lequel les ménages répartissent leur consommation et leur épargne sur différentes périodes de temps, en tenant compte de leurs revenus présents et futurs, des taux d'intérêt et de leurs préférences. Cette perspective dynamique est cruciale car elle explique pourquoi les ménages épargnent (pour financer une consommation future plus élevée ou pour lisser leur consommation face à des chocs de revenus), pourquoi ils empruntent (pour financer une consommation présente supérieure à leur revenu actuel) et comment leurs décisions sont influencées par les anticipations. Des économistes pionniers comme <RealPerson id="irving_fisher" name="Irving Fisher" term="Irving Fisher">Irving Fisher</RealPerson> ont jeté les bases de cette théorie, soulignant l'importance du taux d'intérêt comme prix de la consommation présente par rapport à la consommation future <Reference id="1" name="1" term="1">1</Reference>. Plus tard, des travaux comme ceux de <RealPerson id="franco_modigliani" name="Franco Modigliani" term="Franco Modigliani">Franco Modigliani</RealPerson> avec l'hypothèse du cycle de vie et de <RealPerson id="milton_friedman" name="Milton Friedman" term="Milton Friedman">Milton Friedman</RealPerson> avec l'hypothèse du revenu permanent ont approfondi notre compréhension de ces mécanismes <Reference id="2" name="2" term="2">2</Reference>.
+
+Ce cours vise à doter les étudiants de Master 1 des outils analytiques nécessaires pour modéliser et comprendre le comportement des ménages dans un cadre intertemporel. Nous explorerons les objectifs d'optimisation des ménages, la formulation de leur contrainte budgétaire sur plusieurs périodes, et la dérivation de l'<Glossary id="equation_euler" name="équation d'Euler" term="équation d'Euler">équation d'Euler</Glossary>, qui est la condition d'optimalité clé pour la consommation intertemporelle. Nous analyserons également les effets de richesse et de substitution, qui décrivent comment les variations des taux d'intérêt ou des revenus affectent les décisions de consommation et d'épargne des ménages.
+
+<Mermaid caption="Figure 1 : " chart={``}/>
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les fondements théoriques du modèle de consommation intertemporelle.</li>
+      <li>Distinguer les différents motifs d'épargne des ménages.</li>
+      <li>Expliquer l'impact des variations de taux d'intérêt sur les décisions de consommation et d'épargne.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Évaluer l'efficacité des politiques économiques visant à influencer la consommation intertemporelle.</li>
+      <li>Construire des modèles simples de choix intertemporel sous contrainte budgétaire.</li>
+      <li>Interpréter les résultats des modèles de consommation intertemporelle pour prédire le comportement des ménages.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Développer une approche critique face aux hypothèses des modèles de consommation intertemporelle.</li>
+      <li>Apprécier la complexité des décisions économiques des ménages sur le long terme.</li>
+      <li>Adopter une perspective rigoureuse dans l'analyse des implications des politiques macroéconomiques sur le bien-être intergénérationnel.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Le Modèle d'Optimisation Intertemporelle des Ménages
+
+Le cadre théorique de l'optimisation intertemporelle des ménages repose sur l'hypothèse que les ménages cherchent à maximiser leur utilité totale sur leur horizon de vie, sous une contrainte budgétaire intertemporelle.
+
+### La Fonction d'Utilité Intertemporelle
+
+La fonction d'utilité intertemporelle agrège l'utilité dérivée de la consommation à chaque période. Un ménage typique cherche à maximiser la somme actualisée de ses utilités instantanées. Si $C_t$ représente la consommation à la période $t$, la fonction d'utilité intertemporelle peut s'écrire comme suit:
+
+$$U = \sum_{t=0}^{T} \beta^t u(C_t)$$
+
+où:
+*   $u(C_t)$ est la fonction d'utilité instantanée à la période $t$, supposée croissante et concave ($u'(C_t) > 0$, $u''(C_t) < 0$), reflétant la préférence pour plus de consommation et la désutilité marginale décroissante.
+*   $\beta \in (0, 1)$ est le <Glossary id="facteur_actualisation" name="facteur d'actualisation" term="facteur d'actualisation">facteur d'actualisation</Glossary> (ou facteur de préférence temporelle), qui représente le degré d'impatience du ménage. Un $\beta$ plus petit indique une plus grande préférence pour la consommation présente par rapport à la consommation future. Ce facteur est crucial pour pondérer l'importance de l'utilité future par rapport à l'utilité présente <Reference id="3" name="3" term="3">3</Reference>.
+*   $T$ est l'horizon de vie du ménage, qui peut être fini ou infini dans les modèles de croissance.
+
+### La Contrainte Budgétaire Intertemporelle
+
+La contrainte budgétaire intertemporelle relie les décisions de consommation et d'épargne du ménage à ses revenus et aux taux d'intérêt. Elle exprime que la valeur actualisée des consommations futures ne peut excéder la valeur actualisée des revenus futurs plus la richesse initiale.
+
+Considérons un modèle simple à deux périodes (présent $t=0$ et futur $t=1$). Soit $Y_0$ et $Y_1$ les revenus du ménage aux périodes 0 et 1, $A_0$ la richesse initiale (épargne ou dette), et $r$ le taux d'intérêt réel.
+La contrainte budgétaire à la période 0 est:
+$C_0 + A_1 = Y_0 + A_0$
+où $A_1$ est l'épargne (ou la dette) reportée à la période 1.
+
+La contrainte budgétaire à la période 1 est:
+$C_1 = Y_1 + (1+r)A_1$
+
+En substituant $A_1$ de la première équation dans la seconde, on obtient la contrainte budgétaire intertemporelle sous forme de valeur présente:
+
+$$C_0 + \frac{C_1}{1+r} = Y_0 + A_0 + \frac{Y_1}{1+r}$$
+
+Cette équation stipule que la valeur présente totale de la consommation du ménage sur les deux périodes doit être égale à la valeur présente totale de ses ressources (richesse initiale plus revenus présents et futurs actualisés).
+
+### Le Problème de Maximisation
+
+Le ménage résout le problème d'optimisation suivant:
+
+$$\max_{C_0, C_1} \left[ u(C_0) + \beta u(C_1) \right]$$
+sous la contrainte:
+$$C_0 + \frac{C_1}{1+r} = Y_0 + A_0 + \frac{Y_1}{1+r}$$
+
+Pour résoudre ce problème, nous utilisons la méthode du Lagrangien:
+
+$$\mathcal{L}(C_0, C_1, \lambda) = u(C_0) + \beta u(C_1) - \lambda \left( C_0 + \frac{C_1}{1+r} - (Y_0 + A_0 + \frac{Y_1}{1+r}) \right)$$
+
+Les conditions de premier ordre (CPO) par rapport à $C_0$ et $C_1$ sont:
+1.  $\frac{\partial \mathcal{L}}{\partial C_0} = u'(C_0) - \lambda = 0 \implies u'(C_0) = \lambda$
+2.  $\frac{\partial \mathcal{L}}{\partial C_1} = \beta u'(C_1) - \frac{\lambda}{1+r} = 0 \implies \beta u'(C_1) = \frac{\lambda}{1+r}$
+
+En substituant $\lambda$ de la première CPO dans la seconde, nous obtenons l'équation d'Euler:
+
+$$u'(C_0) = \frac{1}{1+r} \beta u'(C_1)$$
+
+ou, de manière équivalente:
+
+$$u'(C_0) = \beta (1+r) u'(C_1)$$
+
+L'équation d'Euler est la pierre angulaire de la théorie de la consommation intertemporelle. Elle indique que, à l'optimum, le taux marginal de substitution intertemporel (TMSI) entre la consommation présente et future doit être égal au prix relatif de la consommation présente en termes de consommation future, qui est $(1+r)$. En d'autres termes, l'utilité marginale de consommer une unité supplémentaire aujourd'hui doit être égale à l'utilité marginale actualisée de consommer cette mêm'unité (plus les intérêts qu'elle aurait générés) demain <Reference id="4" name="4" term="4">4</Reference>.
+
+## L'Équation d'Euler et ses Implications
+L'équation d'Euler, dérivée des conditions de premier ordre du problème de maximisation de l'utilité intertemporelle, est la pierre angulaire de la théorie de la consommation. Elle s'écrit comme suit :
+
+$$u'(C_t) = \beta (1+r) u'(C_{t+1})$$
+
+Cette équation fondamentale exprime la condition d'optimalité pour un ménage qui cherche à maximiser son utilité sur plusieurs périodes. Elle stipule que, à l'équilibre, l'utilité marginale de consommer une unité supplémentaire aujourd'hui ($u'(C_t)$) doit être égale à l'utilité marginale actualisée de reporter cette consommation à la période suivante. Le terme $\beta (1+r)$ représente le facteur par lequel l'utilité marginale future est pondérée. $\beta$ est le facteur d'escompte subjectif, reflétant la préférence pour le présent du ménage, tandis que $(1+r)$ est le facteur d'actualisation objectif lié au taux d'intérêt réel.
+
+L'intuition économique est la suivante : si un ménage renonce à consommer une unité aujourd'hui, il perd $u'(C_t)$ d'utilité. En revanche, s'il épargne cette unité, elle lui rapportera $(1+r)$ unités à la période suivante, générant une utilité marginale de $(1+r)u'(C_{t+1})$. Cependant, cette utilité future est perçue avec un facteur d'escompte $\beta$. À l'optimum, le ménage ajuste sa consommation de sorte que le gain d'utilité marginale à consommer aujourd'hui soit exactement égal au gain d'utilité marginale actualisée à consommer demain. C'est la condition d'égalisation des utilités marginales actualisées de la consommation entre deux périodes .
+
+<ConceptLink id="utilite_marginale" name="L'utilité marginale" term="L'utilité marginale" unresolved={true}>L'utilité marginale</ConceptLink> est la satisfaction supplémentaire qu'un individu retire de la consommation d'une unité supplémentaire d'un bien ou d'un service. Dans le contexte intertemporel, l'équation d'Euler assure que le ménage ne peut pas augmenter son utilité totale en transférant une unité de consommation d'une période à l'autre.
+
+<Mermaid caption="Figure 2 : " chart={``}/>
+
+Une implication majeure de l'équation d'Euler est le <ConceptLink id="lissage_consommation" name="lissage de la consommation" term="lissage de la consommation" unresolved={true}>lissage de la consommation</ConceptLink>. Sous des hypothèses standard d'utilité concave (utilité marginale décroissante), les ménages préfèrent une consommation relativement stable au fil du temps plutôt que des fluctuations importantes. L'équation d'Euler implique que les ménages vont chercher à maintenir leurs utilités marginales de consommation relativement constantes, ce qui se traduit par une consommation stable, même face à des chocs de revenu temporaires. Ce principe est au cœur des théories du revenu permanent de Milton Friedman et du cycle de vie de Franco Modigliani .
+
+En réponse aux chocs, l'équation d'Euler guide le comportement du ménage :
+*   **Choc de revenu temporaire :** Un ménage recevant un revenu temporaire inattendu n'augmentera pas sa consommation de manière significative dans la période actuelle. Il épargnera une grande partie de ce revenu pour le répartir sur toutes les périodes futures, lissant ainsi l'impact du choc sur sa consommation.
+*   **Choc de revenu permanent :** Un choc de revenu permanent aura un impact plus important sur la consommation actuelle et future, car la richesse totale du ménage est durablement modifiée.
+*   **Choc de taux d'intérêt :** Une variation du taux d'intérêt réel modifie le « prix » de la consommation présente par rapport à la consommation future, ainsi que la valeur actualisée de la richesse du ménage. L'analyse de ces effets est cruciale et sera détaillée dans la section suivante.
+
+<Image description="Ce graphique illustre les implications de l'équation d'Euler sur le lissage de la consommation. Il montre comment un ménage, en présence d'un taux d'intérêt positif et de préférences pour le lissage, va ajuster sa consommation entre deux périodes pour égaliser le rapport des utilités marginales au taux d'intérêt. Les courbes d'indifférence intertemporelles sont tangentes à la contrainte budgétaire, indiquant le point optimal de consommation qui maximise l'utilité." alt="Une femme aux yeux fermés tient une fourchette avec des pâtes colorées, assise à une table avec des plantes, du pain et une tasse jaune." caption="Figure 3 : Document INSEE de février 2011 analysant l'impact du vieillissement des salariés sur l'économie sociale en Pays de la Loire. Source: Photo by [Pablo Merchán Montes](https://unsplash.com/@pablomerchanm?utm_source=OpenPrimer&utm_medium=referral) on [Unsplash](https://unsplash.com/?utm_source=OpenPrimer&utm_medium=referral)" title="Lissage de la Consommation et Équation d'Euler" src="https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5ODcyMjJ8MHwxfHNlYXJjaHwxfHxDb25zdW1wdGlvbnxlbnwwfHx8fDE3ODQzMDEzMzJ8MA&ixlib=rb-4.1.0&q=80&w=1080" fallbackUrl="https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5ODcyMjJ8MHwxfHNlYXJjaHwxfHxDb25zdW1wdGlvbnxlbnwwfHx8fDE3ODQzMDEzMzJ8MA&ixlib=rb-4.1.0&q=80&w=1080" isIllustration={true} />
+
+## Analyse des Effets de Richesse et de Substitution
+
+Une variation du taux d'intérêt réel ($r$) a des conséquences complexes sur les décisions de consommation intertemporelle des ménages, car elle modifie à la fois le coût relatif de la consommation et la valeur de la richesse. Pour comprendre ces mécanismes, il est essentiel de distinguer l'<Glossary definition="Changement dans la consommation dû à une modification du prix relatif des biens (ici, consommation présente versus future) suite à une variation du taux d'intérêt, rendant une période plus ou moins attractive pour consommer." id="effet_substitution" name="effet de substitution" term="effet de substitution">effet de substitution</Glossary> et l'<Glossary id="effet_richesse" name="effet de richesse" term="effet de richesse">effet de richesse</Glossary>.
+
+### L'Effet de Substitution
+
+L'effet de substitution capture le changement dans la consommation dû à une modification du prix relatif de la consommation présente par rapport à la consommation future, toutes choses égales par ailleurs (c'est-à-dire en maintenant le niveau d'utilité constant).
+Lorsque le taux d'intérêt réel ($r$) augmente, la consommation présente ($C_t$) devient relativement plus chère par rapport à la consommation future ($C_{t+1}$). En effet, renoncer à consommer une unité aujourd'hui permet d'obtenir $(1+r)$ unités de consommation supplémentaires demain. Un $r$ plus élevé rend l'épargne plus attractive.
+*   **Mécanisme :** Une augmentation de $r$ incite le ménage à substituer de la consommation présente par de la consommation future. Il réduit sa consommation actuelle pour épargner davantage et profiter d'un rendement plus élevé, ce qui lui permettra de consommer plus à l'avenir.
+*   **Direction :** L'effet de substitution est toujours négatif pour la consommation présente. Une augmentation de $r$ conduit à une diminution de $C_t$ et une augmentation de $C_{t+1}$ (si l'utilité marginale de la consommation future est positive).
+
+### L'Effet de Richesse
+
+L'effet de richesse, également appelé effet de revenu, reflète le changement dans la consommation résultant d'une modification de la valeur actualisée des ressources totales du ménage (sa richesse totale sur l'horizon de vie).
+Une variation du taux d'intérêt réel affecte la valeur présente des revenus futurs et de la richesse initiale du ménage.
+*   **Pour un ménage prêteur (épargnant net) :** Une augmentation de $r$ rend ses revenus futurs (ou son épargne existante) plus précieux en termes de valeur présente. Le ménage devient effectivement plus riche. Cette augmentation de richesse l'incite à consommer davantage dans toutes les périodes, y compris la période présente.
+*   **Pour un un ménage emprunteur (débiteur net) :** Une augmentation de $r$ rend le coût de ses dettes plus élevé et réduit la valeur présente nette de ses ressources. Le ménage devient effectivement plus pauvre. Cette diminution de richesse l'incite à réduire sa consommation dans toutes les périodes.
+*   **Direction :** L'effet de richesse est ambigu pour la consommation présente. Il est positif pour les prêteurs et négatif pour les emprunteurs.
+
+### Synthès'et Illustration
+
+L'effet total d'une variation du taux d'intérêt réel sur la consommation présente est la somme de l'effet de substitution et de l'effet de richesse.
+*   **Pour un prêteur :** L'effet de substitution pousse à réduire $C_t$, tandis que l'effet de richesse pousse à augmenter $C_t$. L'effet net sur $C_t$ est donc ambigu et dépend de l'ampleur relative des deux effets.
+*   **Pour un emprunteur :** L'effet de substitution pousse à réduire $C_t$, et l'effet de richesse pousse également à réduire $C_t$. Dans ce cas, l'effet total sur $C_t$ est clairement négatif.
+
+<Image description="Ce diagramme représente les effets de substitution et de richesse d'une augmentation du taux d'intérêt sur les décisions de consommation intertemporelle. Une augmentation du taux d'intérêt fait pivoter la contrainte budgétaire, rendant la consommation présente relativement plus chère. L'effet de substitution incite à réduire la consommation présente et à augmenter l'épargne. L'effet de richesse, quant à lui, dépend du statut du ménage (prêteur ou emprunteur) et peut soit augmenter, soit diminuer la consommation présente." alt="Un pot en verre rempli de pièces de monnaie d'où émerge une jeune pousse verte sur un fond flou." caption="Figure 4 : Ce diagramme représente les effets de substitution et de richesse d'une augmentation du taux d'intérêt sur les décisions de consommation intertemporelle. Une augmentation du taux d'intérêt fait pivoter la contrainte budgétaire, rendant la consommation présente relativement plus chère. L'effet de substitution incite à réduire la consommation présente et à augmenter l'épargne. L'effet de richesse, quant à lui, dépend du statut du ménage (prêteur ou emprunteur) et peut soit augmenter, soit diminuer la consommation présente. Source: Photo by [micheile henderson](https://unsplash.com/@micheile?utm_source=OpenPrimer&utm_medium=referral) on [Unsplash](https://unsplash.com/?utm_source=OpenPrimer&utm_medium=referral)" title="Effets de Substitution et de Richesse du Taux d'Intérêt" src="https://images.unsplash.com/photo-1579621970795-87facc2f976d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5ODcyMjJ8MHwxfHNlYXJjaHwxfHxFY29ub215fGVufDB8fHx8MTc4NDMwMTYwM3ww&ixlib=rb-4.1.0&q=80&w=1080" fallbackUrl="https://images.unsplash.com/photo-1579621970795-87facc2f976d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5ODcyMjJ8MHwxfHNlYXJjaHwxfHxFY29ub215fGVufDB8fHx8MTc4NDMwMTYwM3ww&ixlib=rb-4.1.0&q=80&w=1080" isIllustration={true} />
+
+Ce diagramme illustre comment une augmentation du taux d'intérêt fait pivoter la contrainte budgétaire intertemporelle. L'effet de substitution est représenté par le mouvement le long d'une courbe d'indifférence vers un point où la consommation future est relativement plus élevée. L'effet de richesse est ensuite représenté par un déplacement parallèle de la contrainte budgétaire (virtuelle) vers une courbe d'indifférence plus élevée ou plus basse, selon que le ménage est prêteur ou emprunteur.
+
+<Video title="Explication des effets de richesse et de substitution sur la consommation intertemporelle" id="kr9P1ceprCk" url="https://www.youtube.com/watch?v=" />
+
+La compréhension de ces deux effets est cruciale pour analyser l'impact des politiques monétaires (qui influencent les taux d'intérêt) sur les décisions de consommation et d'épargne des ménages, et par extension, sur l'activité économique globale <Reference id="5" name="5" term="5">5</Reference>.
+
+## Conclusion
+Cette leçon a exploré en profondeur le <ConceptLink id="intertemporal_optimization" name="modèle d'optimisation intertemporelle" term="modèle d'optimisation intertemporelle" unresolved={true}>modèle d'optimisation intertemporelle</ConceptLink> du consommateur, un pilier fondamental de la macroéconomie moderne. Nous avons d'abord établi le cadre dans lequel les ménages prennent des décisions de consommation et d'épargne non pas pour une seule période, mais sur l'ensemble de leur horizon de vie, en tenant compte de leurs préférences et de leurs contraintes budgétaires.
+
+Au cœur de ce modèle se trouve l'équation d'Euler, que nous avons dérivée comme la condition de premier ordre de maximisation de l'utilité intertemporelle. Cette équation cruciale révèle comment les ménages égalisent l'utilité marginale actualisée de la consommation entre les périodes, en tenant compte du taux d'intérêt réel. Elle constitue un lien direct entre les préférences des agents et les variables macroéconomiques telles que l'épargne et l'investissement .
+
+<Image description="Cette image présente la formule mathématique de l'équation d'Euler pour la consommation intertemporelle. Elle exprime l'égalité entre l'utilité marginale de la consommation présente et l'utilité marginale actualisée de la consommation future, pondérée par le taux d'intérêt et le facteur d'actualisation des préférences. La formule est généralement représentée comme U'(C1) = β(1+r)U'(C2), où U' est l'utilité marginale, C1 et C2 sont les consommations en périodes 1 et 2, β est le facteur d'actualisation et r est le taux d'intérêt." alt="Gravure du 18e siècle illustrant l'éclipse solaire de 1748 avec des projections orthographiques de la Terre." caption="Figure 1: Cette image présente la formule mathématique de l'équation d'Euler pour la consommation intertemporelle. Elle exprime l'égalité entre l'utilité marginale de la consommation présente et l'utilité marginale actualisée de la consommation future, pondérée par le taux d'intérêt et le facteur d'actualisation des préférences. La formule est généralement représentée comme U'(C1) = β(1+r)U'(C2), où U' est l'utilité marginale, C1 et C2 sont les consommations en périodes 1 et 2, β est le facteur d'actualisation et r est le taux d'intérêt. Source: [Internet Archive: &quot;Die versinsterte Erdkugel d.i. geographische Vorstellung der Sonnen od. Erd-Finsternis den 25ten Iulii A° 1748 / verzeichnet von Georg Moriz Lowiz Lowitz, George Moriz (1722-1774). Cartographe&quot; (CC License)](https://archive.org/download/die-versinsterte-erdkugel-d-i-...-lowitz-george-btv-1b-8592540n-1/Die_versinsterte_Erdkugel_d_i_%5B...%5DLowitz_George_btv1b8592540n_1.jpeg)" title="Formule de l'Équation d'Euler" src="https://archive.org/download/die-versinsterte-erdkugel-d-i-...-lowitz-george-btv-1b-8592540n-1/Die_versinsterte_Erdkugel_d_i_%5B...%5DLowitz_George_btv1b8592540n_1.jpeg" fallbackUrl="https://archive.org/download/die-versinsterte-erdkugel-d-i-...-lowitz-george-btv-1b-8592540n-1/Die_versinsterte_Erdkugel_d_i_%5B...%5DLowitz_George_btv1b8592540n_1.jpeg" />
+
+Nous avons ensuite analysé les mécanismes complexes par lesquels une variation du taux d'intérêt réel affecte les décisions de consommation, en distinguant l'<ConceptLink id="substitution_effect" name="effet de substitution" term="effet de substitution">effet de substitution</ConceptLink> et l'<ConceptLink id="wealth_effect" name="effet de richesse" term="effet de richesse">effet de richesse</ConceptLink>. L'effet de substitution incite à reporter la consommation vers la période où elle est relativement moins chère (ou plus rémunératrice pour l'épargne), tandis que l'effet de richesse modifie la valeur actualisée des ressources du ménage, influençant sa capacité globale à consommer. La compréhension de l'interaction de ces deux effets est essentielle pour prédire la réponse des ménages aux chocs économiques et aux politiques .
+
+<Mermaid caption="Figure 6 : " chart={``}/>
+
+La maîtrise de ces concepts est indispensable pour l'analyse des politiques économiques, notamment celles qui influencent les taux d'intérêt (politique monétaire) ou les revenus des ménages (politique fiscale). En effet, les décisions individuelles d'épargne et de consommation agrégées déterminent des variables macroéconomiques clés telles que l'investissement et le niveau général de l'activité économique , <Reference id="6" name="6" term="6">6</Reference>. Ce modèle fournit les micro-fondations nécessaires pour comprendre les dynamiques macroéconomiques et pour évaluer l'impact des interventions gouvernementales sur le bien-être des agents et la stabilité économique <Reference id="7" name="7" term="7">7</Reference>.
+
+<Summary itemsString="Le modèle de consommation intertemporelle est un cadre fondamental pour analyser les décisions d'épargne et de consommation des ménages sur plusieurs périodes.|||La contrainte budgétaire intertemporelle agrège les ressources et les dépenses présentes et futures, actualisées par le taux d'intérêt, reflétant les arbitrages possibles entre consommation aujourd'hui et demain.|||Le taux d'intérêt réel joue un rôle central en déterminant le coût d'opportunité de la consommation présente et en influençant les décisions d'épargne et d'emprunt des agents économiques.|||Les effets de substitution et de revenu expliquent comment les ménages réagissent aux variations du taux d'intérêt, modifiant leur profil de consommation et d'épargne.|||Les préférences des ménages, notamment leur degré d'impatience ou leur taux de préférence pour le présent, sont cruciales pour comprendre la répartition de leur consommation au fil du temps.|||Les hypothèses du revenu permanent et du cycle de vie sont des extensions importantes du modèle, expliquant le lissage de la consommation face aux chocs de revenu transitoires ou permanents.|||La capacité des ménages à lisser leur consommation est limitée par les imperfections des marchés financiers, telles que les contraintes de liquidité ou les asymétries d'information."/>
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+    <Question q="Quel est l'objectif principal d'un ménage dans le modèl'intertemporel de Fisher à deux périodes?" explanation="Dans le modèle de Fisher, les ménages cherchent à maximiser leur utilité totale sur l'ensemble de leur vie, en répartissant leur consommation entre les périodes présente et future de manière optimale, compte tenu de leurs revenus et du taux d'intérêt.">
+  <Option text="Maximiser la consommation présente" correct={false} />
+  <Option text="Maximiser la consommation future" correct={false} />
+  <Option text="Maximiser l'utilité totale sur la durée de vie" correct={true} />
+  <Option text="Minimiser l'emprunt" correct={false} />
+</Question>
+    <Question q="Selon l'hypothèse du revenu permanent (Friedman), comment les ménages réagissent-ils principalement à une augmentation temporaire de leur revenu?" explanation="L'hypothèse du revenu permanent stipule que les ménages basent leur consommation sur leur revenu permanent (revenu moyen attendu sur le long terme). Une augmentation temporaire du revenu est principalement épargnée pour lisser la consommation sur le temps.">
+  <Option text="Ils augmentent significativement leur consommation courante" correct={false} />
+  <Option text="Ils épargnent la majeure partie de ce revenu temporaire" correct={true} />
+  <Option text="Ils réduisent leur consommation future" correct={false} />
+  <Option text="Ils l'investissent entièrement dans des actifs risqués" correct={false} />
+</Question>
+    <Question q="Dans le modèle de Fisher à deux périodes, si un ménage est un épargnant net et que le taux d'intérêt augmente, quel est l'effet probable sur sa consommation courante?" explanation="Pour un épargnant net, une augmentation du taux d'intérêt a deux effets: un effet de substitution (la consommation future devient relativement moins chère, incitant à épargner plus et consommer moins aujourd'hui) et un effet de revenu (l'épargne passée rapporte plus, augmentant le revenu total et incitant à consommer plus aujourd'hui). Ces deux effets agissent en sens opposé, rendant l'effet net ambigu.">
+  <Option text="Elle augmente" correct={false} />
+  <Option text="Elle diminue" correct={false} />
+  <Option text="Elle reste inchangée" correct={false} />
+  <Option text="L'effet est ambigu" correct={true} />
+</Question>
+    <Question q="Quelle est une prédiction clé de l'hypothèse du cycle de vie (Modigliani) concernant les schémas de consommation au cours de la vie d'un individu?" explanation="L'hypothèse du cycle de vie suggère que les individus planifient leur consommation et leur épargne sur l'ensemble de leur vie pour lisser leur consommation, épargnant pendant les années de travail pour financer la consommation pendant la retraite.">
+  <Option text="La consommation est constante tout au long de la vie" correct={false} />
+  <Option text="La consommation est la plus élevée pendant la jeunesse" correct={false} />
+  <Option text="La consommation est lissée sur la durée de vie" correct={true} />
+  <Option text="La consommation est la plus élevée pendant la retraite" correct={false} />
+</Question>
+    <Question q="Dans quelles conditions l'équivalence ricardienne est-elle censée tenir?" explanation="L'équivalence ricardienne stipule que le financement du déficit public par l'emprunt ou par l'impôt est équivalent si les agents sont rationnels, ont des horizons de planification infinis (ou laissent des legs), et s'il n'y a pas de contraintes de crédit ou de distorsions fiscales. Les marchés des capitaux parfaits sont une condition essentielle.">
+  <Option text="Marchés des capitaux parfaits" correct={true} />
+  <Option text="Horizons de planification finis" correct={false} />
+  <Option text="Consommateurs myopes" correct={false} />
+  <Option text="Taux d'actualisation élevés" correct={false} />
+</Question>
+    <Question q="Comment les contraintes d'emprunt affectent-elles la trajectoire de consommation d'un ménage dans un modèl'intertemporel?" explanation="Les contraintes d'emprunt empêchent les ménages d'emprunter autant qu'ils le souhaiteraient au taux d'intérêt du marché, les forçant à consommer moins que leur niveau optimal désiré dans la période courante, surtout s'ils anticipent des revenus futurs plus élevés.">
+  <Option text="Elles augmentent toujours la consommation courante" correct={false} />
+  <Option text="Elles forcent la consommation courante à être inférieure au niveau désiré pour certains emprunteurs" correct={true} />
+  <Option text="Elles n'affectent que les épargnants" correct={false} />
+  <Option text="Elles n'ont aucun impact sur les décisions de consommation" correct={false} />
+</Question>
+    <Question q="Quelle est la principale motivation de l'épargne de précaution?" explanation="L'épargne de précaution est motivée par l'incertitude concernant les revenus futurs ou les dépenses imprévues. Les ménages épargnent pour se prémunir contre des chocs négatifs et maintenir un niveau de consommation stable.">
+  <Option text="Financer de gros achats futurs" correct={false} />
+  <Option text="Exploiter des taux d'intérêt élevés" correct={false} />
+  <Option text="Lisser la consommation face à un revenu futur incertain" correct={true} />
+  <Option text="Laisser un héritage" correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFjdHVhbGlzYXRpb24iLCJkZWZpbml0aW9uIjoiUHJvY2Vzc3VzIGRlIGNhbGN1bCBkZSBsYSB2YWxldXIgcHLDqXNlbnRlIGQndW5lIHNvbW1lIGQnYXJnZW50IGZ1dHVyZSwgZW4gdXRpbGlzYW50IHVuIHRhdXggZCdpbnTDqXLDqnQgcG91ciByZWZsw6l0ZXIgbGEgcHLDqWbDqXJlbmNlIHBvdXIgbGUgdGVtcHMgZXQgbGUgY2/Du3QgZCdvcHBvcnR1bml0w6kgZHUgY2FwaXRhbC4ifSx7InRlcm0iOiJDaG9jIGRlIHJldmVudSB0cmFuc2l0b2lyZSIsImRlZmluaXRpb24iOiJWYXJpYXRpb24gdGVtcG9yYWlyZSBldCBub24gcsOpY3VycmVudGUgZHUgcmV2ZW51IGQndW4gbcOpbmFnZSwgcXVpIG4nYWZmZWN0ZSBwYXMgc2lnbmlmaWNhdGl2ZW1lbnQgc29uIHJldmVudSBwZXJtYW5lbnQgYXR0ZW5kdS4ifSx7InRlcm0iOiJDb25zb21tYXRpb24gaW50ZXJ0ZW1wb3JlbGxlIiwiZGVmaW5pdGlvbiI6IkTDqWNpc2lvbiBkZSByw6lwYXJ0aXRpb24gZGUgbGEgY29uc29tbWF0aW9uIGQndW4gaW5kaXZpZHUgb3UgZCd1biBtw6luYWdlIGVudHJlIGRpZmbDqXJlbnRlcyBww6lyaW9kZXMgZGUgdGVtcHMsIGVuIHRlbmFudCBjb21wdGUgZGUgc2VzIHJldmVudXMgcHLDqXNlbnRzIGV0IGZ1dHVycyBldCBkdSB0YXV4IGQnaW50w6lyw6p0LiJ9LHsidGVybSI6IkNvbnRyYWludGUgYnVkZ8OpdGFpcmUgaW50ZXJ0ZW1wb3JlbGxlIiwiZGVmaW5pdGlvbiI6IlJlbGF0aW9uIHF1aSBleHByaW1lIGxhIHZhbGV1ciBwcsOpc2VudGUgdG90YWxlIGRlcyByZXNzb3VyY2VzIChyZXZlbnVzKSBkJ3VuIG3DqW5hZ2Ugc3VyIGwnZW5zZW1ibGUgZGUgc2EgdmllIMOpZ2FsZSDDoCBsYSB2YWxldXIgcHLDqXNlbnRlIHRvdGFsZSBkZSBzZXMgZMOpcGVuc2VzIChjb25zb21tYXRpb24pIHN1ciBsYSBtw6ptZSBww6lyaW9kZS4ifSx7InRlcm0iOiJEw6lzw6lwYXJnbmUiLCJkZWZpbml0aW9uIjoiVXRpbGlzYXRpb24gZGUgbCfDqXBhcmduZSBhY2N1bXVsw6llIG91IGVtcHJ1bnQgcG91ciBmaW5hbmNlciBsYSBjb25zb21tYXRpb24gY291cmFudGUsIHNvdXZlbnQgb2JzZXJ2w6llIHBlbmRhbnQgbGVzIHDDqXJpb2RlcyBkZSBmYWlibGVzIHJldmVudXMgb3Ugw6AgbGEgcmV0cmFpdGUuIn0seyJ0ZXJtIjoiRWZmZXQgZGUgcmV2ZW51IiwiZGVmaW5pdGlvbiI6IkNoYW5nZW1lbnQgZGFucyBsYSBjb25zb21tYXRpb24gZMO7IMOgIHVuZSBtb2RpZmljYXRpb24gZHUgcG91dm9pciBkJ2FjaGF0IHLDqWVsIGR1IG3DqW5hZ2Ugc3VpdGUgw6AgdW5lIHZhcmlhdGlvbiBkdSB0YXV4IGQnaW50w6lyw6p0LCBhZmZlY3RhbnQgbGEgcmljaGVzc2UgdG90YWxlIGRpc3BvbmlibGUgc3VyIGwnaG9yaXpvbiB0ZW1wb3JlbC4ifSx7InRlcm0iOiJFZmZldCBkZSBzdWJzdGl0dXRpb24iLCJkZWZpbml0aW9uIjoiQ2hhbmdlbWVudCBkYW5zIGxhIGNvbnNvbW1hdGlvbiBkw7sgw6AgdW5lIG1vZGlmaWNhdGlvbiBkdSBwcml4IHJlbGF0aWYgZGVzIGJpZW5zIChpY2ksIGNvbnNvbW1hdGlvbiBwcsOpc2VudGUgdmVyc3VzIGZ1dHVyZSkgc3VpdGUgw6AgdW5lIHZhcmlhdGlvbiBkdSB0YXV4IGQnaW50w6lyw6p0LCByZW5kYW50IHVuZSBww6lyaW9kZSBwbHVzIG91IG1vaW5zIGF0dHJhY3RpdmUgcG91ciBjb25zb21tZXIuIn0seyJ0ZXJtIjoiw4lwYXJnbmUiLCJkZWZpbml0aW9uIjoiUGFydGllIGR1IHJldmVudSBub24gY29uc29tbcOpZSwgcXVpIHBldXQgw6p0cmUgdXRpbGlzw6llIHBvdXIgZmluYW5jZXIgbGEgY29uc29tbWF0aW9uIGZ1dHVyZSBvdSBsJ2ludmVzdGlzc2VtZW50LiJ9LHsidGVybSI6IkZvbmN0aW9uIGQndXRpbGl0w6kgaW50ZXJ0ZW1wb3JlbGxlIiwiZGVmaW5pdGlvbiI6IlJlcHLDqXNlbnRhdGlvbiBtYXRow6ltYXRpcXVlIGRlcyBwcsOpZsOpcmVuY2VzIGQndW4gbcOpbmFnZSBjb25jZXJuYW50IGxhIGNvbnNvbW1hdGlvbiDDoCBkaWZmw6lyZW50ZXMgcMOpcmlvZGVzLCBwZXJtZXR0YW50IGRlIG1lc3VyZXIgbGEgc2F0aXNmYWN0aW9uIHRvdGFsZSB0aXLDqWUgZGUgbGEgY29uc29tbWF0aW9uIHByw6lzZW50ZSBldCBmdXR1cmUuIn0seyJ0ZXJtIjoiSHlwb3Row6hzZSBkdSBjeWNsZSBkZSB2aWUgKEhDVikiLCJkZWZpbml0aW9uIjoiVGjDqW9yaWUgc2Vsb24gbGFxdWVsbGUgbGVzIGluZGl2aWR1cyBwbGFuaWZpZW50IGxldXIgY29uc29tbWF0aW9uIGV0IGxldXIgw6lwYXJnbmUgc3VyIGwnZW5zZW1ibGUgZGUgbGV1ciB2aWUgcG91ciBsaXNzZXIgbGV1ciBjb25zb21tYXRpb24sIGFjY3VtdWxhbnQgZGUgbCfDqXBhcmduZSBwZW5kYW50IGxldXIgdmllIGFjdGl2ZSBldCBsYSBkw6lzw6lwYXJnbmFudCDDoCBsYSByZXRyYWl0ZS4ifSx7InRlcm0iOiJIeXBvdGjDqHNlIGR1IHJldmVudSBwZXJtYW5lbnQgKEhSUCkiLCJkZWZpbml0aW9uIjoiVGjDqW9yaWUgc2Vsb24gbGFxdWVsbGUgbGEgY29uc29tbWF0aW9uIGQndW4gbcOpbmFnZSBkw6lwZW5kIHByaW5jaXBhbGVtZW50IGRlIHNvbiByZXZlbnUgcGVybWFuZW50IChyZXZlbnUgbW95ZW4gYXR0ZW5kdSBzdXIgbGUgbG9uZyB0ZXJtZSkgcGx1dMO0dCBxdWUgZGUgc29uIHJldmVudSBjb3VyYW50IHRyYW5zaXRvaXJlLiJ9LHsidGVybSI6Ikxpc3NhZ2UgZGUgbGEgY29uc29tbWF0aW9uIiwiZGVmaW5pdGlvbiI6IlN0cmF0w6lnaWUgZGVzIG3DqW5hZ2VzIHZpc2FudCDDoCBtYWludGVuaXIgdW4gbml2ZWF1IGRlIGNvbnNvbW1hdGlvbiByZWxhdGl2ZW1lbnQgc3RhYmxlIGF1IGZpbCBkdSB0ZW1wcywgZW4gw6lwYXJnbmFudCBsb3JzIGRlcyBww6lyaW9kZXMgZGUgcmV2ZW51cyDDqWxldsOpcyBldCBlbiBkw6lzw6lwYXJnbmFudCBvdSBlbXBydW50YW50IGxvcnMgZGVzIHDDqXJpb2RlcyBkZSByZXZlbnVzIGZhaWJsZXMuIn0seyJ0ZXJtIjoiVGF1eCBkJ2ludMOpcsOqdCByw6llbCIsImRlZmluaXRpb24iOiJUYXV4IGQnaW50w6lyw6p0IG5vbWluYWwgY29ycmlnw6kgZGUgbCdpbmZsYXRpb24sIHJlcHLDqXNlbnRhbnQgbGUgY2/Du3QgcsOpZWwgZGUgbCdlbXBydW50IG91IGxlIHJlbmRlbWVudCByw6llbCBkZSBsJ8OpcGFyZ25lIGVuIHRlcm1lcyBkZSBiaWVucyBldCBzZXJ2aWNlcy4ifSx7InRlcm0iOiJUYXV4IGRlIHByw6lmw6lyZW5jZSBwb3VyIGxlIHByw6lzZW50IiwiZGVmaW5pdGlvbiI6IlBhcmFtw6h0cmUgcXVpIHJlZmzDqHRlIGxlIGRlZ3LDqSBkJ2ltcGF0aWVuY2UgZCd1biBpbmRpdmlkdSwgYydlc3Qtw6AtZGlyZSBzYSBwcsOpZsOpcmVuY2UgcG91ciBsYSBjb25zb21tYXRpb24gcHLDqXNlbnRlIHBhciByYXBwb3J0IMOgIGxhIGNvbnNvbW1hdGlvbiBmdXR1cmUsIHRvdXRlcyBjaG9zZXMgw6lnYWxlcyBwYXIgYWlsbGV1cnMuIn0seyJ0ZXJtIjoiVmFsZXVyIHByw6lzZW50ZSIsImRlZmluaXRpb24iOiJNb250YW50IGFjdHVlbCBkJ3VuZSBzb21tZSBkJ2FyZ2VudCBmdXR1cmUgb3UgZCd1bmUgc8OpcmllIGRlIGZsdXggZGUgdHLDqXNvcmVyaWUgZnV0dXJzLCBhcHLDqHMgYXZvaXIgw6l0w6kgYWN0dWFsaXPDqSBhdSB0YXV4IGQnaW50w6lyw6p0IGFwcHJvcHJpw6kuIn1d" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiT2xpdmllciBKZWFuIEJsYW5jaGFyZCwgU3RhbmxleSBGaXNjaGVyICgyMDE2KS4gwqsgRWRpdG9yaWFsLCBOQkVSIE1hY3JvZWNvbm9taWNzIEFubnVhbCAxOTg5IMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjMzODYvdzMxNjgiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MiwidGV4dCI6IlZsYWRpbWlyIE1paGFqbG92aWMgKDIwMTMpLiDCqyBTw7hyZW5zZW4sIFAuQi4sIFdoaXR0YS1KYWNvYnNlbiwgSC5KLjogSW50cm9kdWNpbmcgYWR2YW5jZWQgbWFjcm9lY29ub21pY3M6IEdyb3d0aCBhbmQgYnVzaW5lc3MgY3ljbGVzLCAodGhlIDJuZCBlZGl0aW9uKSBNY0dyYXctSGlsbCBlZHVjYXRpb24sIEVkaW5idXJnaCwgQmVya3NoaXJlLCAyMDEwIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjU5MzcvZWtvbmhvcjEzMDEwOTdtIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjMsInRleHQiOiJLZXJyeSBQYXR0ZXJzb24sIFRob21hcyBKLiBTYXJnZW50LCBSb2RvbGZvIEUuIE1hbnVlbGxpLCBUaG9tYXMgSi4gU2FyZ2VudCAoMjAwNikuIMKrIER5bmFtaWMgTWFjcm9lY29ub21pYyBUaGVvcnkuIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9S2VycnklMjBQYXR0ZXJzb24lMjAlMjJEeW5hbWljJTIwTWFjcm9lY29ub21pYyUyMFRoZW9yeS4lMjIlMjAyMDA2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo0LCJ0ZXh0IjoiV291dGVyIEogRGVuIEhhYW4gKDIwMDIpLiDCqyBSZWN1cnNpdmUgbWFjcm9lY29ub21pYyB0aGVvcnksIExhcnMgTGp1bmdxdmlzdCBhbmQgVGhvbWFzIEouIFNhcmdlbnQ7IFRoZSBNSVQgUHJlc3MsIENhbWJyaWRnZSwgTUEsIDIwMDAsIHBwLiA3MzcsICQ2MC4gwrsuIFVSTCA6ICkwMDAxOS03MDAwMTktNykuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVdvdXRlciUyMERlbiUyMEhhYW4lMjAlMjJSZWN1cnNpdmUlMjBtYWNyb2Vjb25vbWljJTIwdGhlb3J5JTIyJTIwMjAwMiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NSwidGV4dCI6Ik1JQ0hBRUwgV09PREZPUkQgKDIwMjIpLiDCqyBJbnRlcmVzdCBhbmQgUHJpY2VzIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjIzMDcvai5jdHYzMHBudm1mIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjYsInRleHQiOiJNaWx1dGluIEplxaFpxIcgKDIwMTcpLiAqQk9PSyBSRVZJRVc6IOKAnk1vbmV0YXJ5IFBvbGljeSwgSW5mbGF0aW9uLCBhbmQgdGhlIEJ1c2luZXNzIEN5Y2xlOiBBbiBJbnRyb2R1Y3Rpb24gdG8gdGhlIE5ldyBLZXluZXNpYW4gRnJhbWV3b3JrIGFuZCBpdHMgQXBwbGljYXRpb25z4oCcLCBQcmluY2V0b24gVW5pdmVyc2l0eSBQcmVzcywgU2Vjb25kIEVkaXRpb24sIDIwMTUuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xNTE1L2pjYnRwLTIwMTctMDAwOSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo3LCJ0ZXh0IjoiQ8Opc2FyIENhcnJlcmEgKDIwMjMpLiDCqyBXYWxzaCwgQ2FybC4gTW9uZXRhcnkgVGhlb3J5IGFuZCBQb2xpY3kuIFRlcmNlcmEgZWRpY2nDs24uIENhbWJyaWRnZTogVGhlIE1JVCBQcmVzcy4gNjQwIHBwLiDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xODgwMC9lY29ub21pYS4yMDExMDIuMDEyIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjgsInRleHQiOiJQaGlsaXBwZSBBZ2hpb24sIFBldGVyIEhvd2l0dCAoMjAwNykuIMKrIEEgTW9kZWwgb2YgR3Jvd3RoIFRocm91Z2ggQ3JlYXRpdmUgRGVzdHJ1Y3Rpb24gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMzM4Ni93MzIyMyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjksInRleHQiOiJSb2JlcnQgQmFycm8sIFhhdmllciBTYWxhLWktTWFydGluICgyMDA3KS4gwqsgUHVibGljIEZpbmFuY2UgaW4gTW9kZWxzIG9mIEVjb25vbWljIEdyb3d0aCDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVJvYmVydCUyMEJhcnJvJTIwJTIyUHVibGljJTIwRmluYW5jZSUyMGluJTIwTW9kZWxzJTIwb2YlMjBFY29ub21pYyUyMEdyb3d0aCUyMiUyMDIwMDciLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTAsInRleHQiOiJSaWNoYXJkIFQuIEZyb3llbiwgTWF1cmljZSBPYnN0ZmVsZCwgS2VubmV0aCBSb2dvZmYgKDIwMDYpLiDCqyBGb3VuZGF0aW9ucyBvZiBJbnRlcm5hdGlvbmFsIE1hY3JvZWNvbm9taWNzIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9UmljaGFyZCUyMEZyb3llbiUyMCUyMkZvdW5kYXRpb25zJTIwb2YlMjBJbnRlcm5hdGlvbmFsJTIwTWFjcm9lY29ub21pY3MlMjIlMjAyMDA2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjExLCJ0ZXh0IjoiTmlnZWwgVy4gRHVjaywgUm9iZXJ0IEUuIEx1Y2FzICgyMDA2KS4gwqsgWXJqbyBKYWhuc3NvbiBMZWN0dXJlczogTW9kZWxzIG9mIEJ1c2luZXNzIEN5Y2xlcy4gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1OaWdlbCUyMER1Y2slMjAlMjJZcmpvJTIwSmFobnNzb24lMjBMZWN0dXJlcyUyMiUyMDIwMDYiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTIsInRleHQiOiJGcmFuayBTbWV0cywgUmFmIFdvdXRlcnMgKDIwMDMpLiDCqyBBbiBFc3RpbWF0ZWQgRHluYW1pYyBTdG9jaGFzdGljIGfDqW7DqXJhbCBFcXVpbGlicml1bSBNb2RlbCBvZiB0aGUgRXVybyBBcmVhIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9RnJhbmslMjBTbWV0cyUyMCUyMkFuJTIwRXN0aW1hdGVkJTIwRHluYW1pYyUyMFN0b2NoYXN0aWMlMjBnJUMzJUE5biVDMyVBOXJhbCUyMEVxdWlsaWJyaXVtJTIwTW9kZWwlMjBvZiUyMiUyMDIwMDMiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTMsInRleHQiOiJMYXdyZW5jZSBDaHJpc3RpYW5vLCBNYXJ0aW4gRWljaGVuYmF1bSwgQ2hhcmxlcyBFdmFucyAoMjAwNykuIMKrIE5vbWluYWwgUmlnaWRpdGllcyBhbmQgdGhlIER5bmFtaWMgRWZmZWN0cyBvZiBhIFNob2NrIHRvIE1vbmV0YXJ5IFBvbGljeSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4zMzg2L3c4NDAzIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTQsInRleHQiOiJGaW5uIEUuIEt5ZGxhbmQsIEVkd2FyZCBDLiBQcmVzY290dCAoMjAwNikuIMKrIFRpbWUgdG8gQnVpbGQgYW5kIEFnZ3JlZ2F0ZSBGbHVjdHVhdGlvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1GaW5uJTIwS3lkbGFuZCUyMCUyMlRpbWUlMjB0byUyMEJ1aWxkJTIwYW5kJTIwQWdncmVnYXRlJTIwRmx1Y3R1YXRpb25zJTIyJTIwMjAwNiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNSwidGV4dCI6IlNlcmdpbyBSZWJlbG8gKDIwMDIpLiDCqyBMb25nLVJ1biBQb2xpY3kgQW5hbHlzaXMgYW5kIExvbmctUnVuIEdyb3d0aCDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4zMzg2L3czMzI1Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTYsInRleHQiOiJHYXV0aSBCLiBFZ2dlcnRzc29uLCBQYXVsIEtydWdtYW4gKDIwMTIpLiDCqyBEZWJ0LCBEZWxldmVyYWdpbmcsIGFuZCB0aGUgTGlxdWlkaXR5IFRyYXA6IEEgRmlzaGVyLU1pbnNreS1Lb28gQXBwcm9hY2ggwrsqLiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjMzODYvdzIwNTU2Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTcsInRleHQiOiJTdGVwaGFuIEdydWJlciBOYXJ2w6FleiAoMjAyMykuIMKrIFBpa2V0dHksIFRob21hcy4gQ2FwaXRhbCBpbiB0aGUgVHdlbnR5LUZpcnN0IENlbnR1cnkuIENhbWJyaWRnZTogQmVsa25hcCBQcmVzcyBvZiBIYXJ2YXJkIFVuaXZlcnNpdHkgUHJlc3MsIDIwMTQsIDY5NiBwcC4gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTg4MDAvZWNvbm9taWEuMjAxNDAxLjAxMCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE4LCJ0ZXh0IjoiUGllcm8gTWFydMOtbiBMZcOzbiBDYW1wb3MgKDIwMjUpLiDCqyBEYXJvbiBBY2Vtb2dsdSAmYW1wOyBKYW1lcyBSb2JpbnNvbiwgMjAxMi4gV2h5IG5hdGlvbnMgZmFpbDogVGhlIG9yaWdpbnMgb2YgcG93ZXIsIHByb3NwZXJpdHkgYW5kIHBvdmVydHkgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTUzODEvcGMudjMwaTEuMzEwMTgiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxOSwidGV4dCI6IkRhdmlkIFJlaWZzY2huZWlkZXIsIEpvaG4gQy4gV2lsbGlhbXMgKDIwMDYpLiDCqyBUaHJlZSBMZXNzb25zIGZvciBNb25ldGFyeSBQb2xpY3kgaW4gYSBMb3ctSW5mbGF0aW9uIEVyYSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPURhdmlkJTIwUmVpZnNjaG5laWRlciUyMCUyMlRocmVlJTIwTGVzc29ucyUyMGZvciUyME1vbmV0YXJ5JTIwUG9saWN5JTIwaW4lMjBhJTIwTG93JTIyJTIwMjAwNiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMCwidGV4dCI6IlBpZXJyZS1PbGl2aWVyIEdvdXJpbmNoYXMsIEjDqWzDqG5lIFJleSAoMjAwNykuIMKrIEZyb20gV29ybGQgQmFua2VyIHRvIFdvcmxkIFZlbnR1cmUgQ2FwaXRhbGlzdDogVVMgRXh0ZXJuYWwgQWRqdXN0bWVudCBhbmQgdGhlIEV4b3JiaXRhbnQgUHJpdmlsZWdlIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9UGllcnJlLU9saXZpZXIlMjBHb3VyaW5jaGFzJTIwJTIyRnJvbSUyMFdvcmxkJTIwQmFua2VyJTIwdG8lMjBXb3JsZCUyMFZlbnR1cmUlMjBDYXBpdGFsaXN0JTIyJTIwMjAwNyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMSwidGV4dCI6IkJsYW5jaGFyZCwgwqsgRGlzdG9ydGlvbnMgaW4gTWFjcm9lY29ub21pY3MgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUJsYW5jaGFyZCUyMCUyMkRpc3RvcnRpb25zJTIwaW4lMjBNYWNyb2Vjb25vbWljcyUyMiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMiwidGV4dCI6IkZsYW1hbnQsIMKrIENvbnNvbW1hdGlvbiBldCDDqXBhcmduZS4gVGjDqW9yaWUgZGUgbGEgZm9uY3Rpb24gZGUgY29uc29tbWF0aW9uIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1GbGFtYW50JTIwJTIyQ29uc29tbWF0aW9uJTIwZXQlMjAlQzMlQTlwYXJnbmUuJTIwVGglQzMlQTlvcmllJTIwZGUlMjBsYSUyMGZvbmN0aW9uJTIwZGUlMjBjb25zb21tYXQlMjIiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjMsInRleHQiOiJGcmFuY28gTW9kaWdsaWFuaS4gMjAwOC4gwqsgQ3ljbGUgZGUgdmllLCDDqXBhcmduZSBpbmRpdmlkdWVsbGUgZXQgcmljaGVzc2UgZGVzIG5hdGlvbnMgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4zNDA2L3JmZWNvLjE5ODYuMTExNiIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjI0LCJ0ZXh0IjoiRGUgbGEgcHJvZHVjdGlvbiDDoCBsYSBjb25zb21tYXRpb246IGxlIHLDtGxlIGRlIGwnw6ljb25vbWllIHLDqXNpZGVudGllbGxlIGRhbnMgbGUgZMOpdmVsb3BwZW1lbnQgcsOpZ2lvbmFsLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMzU2NjIvdW5pbmUtdGhlc2lzLTI1MTciLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyNSwidGV4dCI6IiwgSWJyYWhpbWEgQm9jb3VtLiAyMDI2LiDCqyBTw6ljdXJpdMOpIGFsaW1lbnRhaXJlIGV0IHBhdXZyZXTDqSA6IEFuYWx5c2Ugw6ljb25vbWlxdWUgZGVzIGTDqXRlcm1pbmFudHMgZGUgbGEgY29uc29tbWF0aW9uIGRlcyBtw6luYWdlcyA6IEFwcGxpY2F0aW9uIGF1IE1hbGkgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC43MDY3NS8xOGMwOTNhMnpiNTA1ejRlNjF6YTYyMHo1NTI5MzM4MzUzMTciLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9XQ==" />
+

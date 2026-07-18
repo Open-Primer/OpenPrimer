@@ -577,7 +577,7 @@ const formatSummaryText = (text: string | null | undefined): string | null => {
     cleaned += '.';
   }
 
-  if (cleaned.length <= 500) {
+  if (cleaned.length <= 800) {
     return cleaned;
   }
 
@@ -585,17 +585,50 @@ const formatSummaryText = (text: string | null | undefined): string | null => {
   const sentences = cleaned.split(/(?<=[.!?])\s+/);
   let accumulated = '';
   for (const sentence of sentences) {
-    if (accumulated.length + sentence.length + 1 <= 510) {
+    if (accumulated.length + sentence.length + 1 <= 810) {
       accumulated += (accumulated ? ' ' : '') + sentence;
     } else {
       if (!accumulated) {
-        accumulated = sentence.slice(0, 497).replace(/[,;:\-–—\s]+$/, '') + '...';
+        accumulated = sentence.slice(0, 797).replace(/[,;:\-–—\s]+$/, '') + '...';
       }
       break;
     }
   }
   return accumulated.trim();
 };
+
+export function cleanWikipediaUrl(url: string): string {
+  if (!url) return url;
+  
+  // If it's a Google Translate URL, extract the actual Wikipedia URL first, clean it, and re-wrap it
+  const translateMatch = url.match(/https?:\/\/translate\.google\.com\/translate\?.*&u=([^&]+)/i);
+  if (translateMatch) {
+    const decodedUrl = decodeURIComponent(translateMatch[1]);
+    const cleanedDecoded = cleanWikipediaUrl(decodedUrl);
+    return url.replace(/(&u=)[^&]+/, `$1${encodeURIComponent(cleanedDecoded)}`);
+  }
+
+  // Remove parenthetical dates suffix in the Wikipedia URL path
+  const dateSuffixRegex = /_(?:\(|%28)[^)?#]*(?:\d{3,4}|siècle|century|BC|av\.|J\.-C\.|mort|né|born|died)[^)?#]*(?:\)|%29)/i;
+  
+  return url.replace(dateSuffixRegex, '');
+}
+
+export function clampBiographicalLinkText(text: string): { linkText: string; extraText: string } {
+  if (!text) return { linkText: text, extraText: '' };
+  
+  const dateRegex = /\([^)]*(?:\d{3,4}|siècle|century|BC|av\.|J\.-C\.|mort|né|born|died)[^)]*\)/i;
+  const match = text.match(dateRegex);
+  if (match && match.index !== undefined) {
+    const endIdx = match.index + match[0].length;
+    return {
+      linkText: text.slice(0, endIdx),
+      extraText: text.slice(endIdx)
+    };
+  }
+  
+  return { linkText: text, extraText: '' };
+}
 
 const parseWikipediaUrl = (url: string): { lang: string; title: string } | null => {
   if (!url) return null;
@@ -644,7 +677,7 @@ export const EntityLink = ({
   const cleanName = (localizedName || '').trim();
   const langCode = activeLang;
 
-  const targetUrl = propUrl || propHref || '';
+  const targetUrl = cleanWikipediaUrl(propUrl || propHref || '');
   const parsedWiki = parseWikipediaUrl(targetUrl);
 
   let queryName = cleanName;
@@ -692,7 +725,14 @@ export const EntityLink = ({
   if (resolvedType === 'person') {
     rightLabel = getPersonCentury({ name, children, type, description, century, lifespan, dates, creation, era, unresolved }, description || null, isFr);
     if (!rightLabel) {
-      rightLabel = dates || lifespan || null;
+      const candidate = dates || lifespan || '';
+      // Ensure candidate doesn't contain a course name or long placeholder
+      const isValid = candidate.length > 0 && 
+                      candidate.length < 30 && 
+                      !/[a-zA-Z\u00C0-\u017F]{4,}/.test(candidate.replace(/siècle|century|present|living|active|died|born|mort|né|av\.|J\.-C\.|BC|AD/gi, ''));
+      if (isValid) {
+        rightLabel = candidate;
+      }
     }
   } else {
     rightLabel = metaInfo.label;
@@ -791,91 +831,102 @@ export const EntityLink = ({
       : `We couldn't load the Wikipedia summary for "${name}". You can still search by clicking below.`
   };
 
+  let displayChildren = children;
+  let extraTextAfter: React.ReactNode = null;
+  if (typeof children === 'string' && resolvedType === 'person') {
+    const clamped = clampBiographicalLinkText(children);
+    displayChildren = clamped.linkText;
+    extraTextAfter = clamped.extraText;
+  }
+
   return (
-    <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
-      <Popover.Trigger asChild>
-        <span 
-          className={`cursor-help border-b border-dotted transition-colors ${borderClass}`}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
-          {children}
-        </span>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content 
-          sideOffset={5} 
-          className="z-50 outline-none"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 5 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-80 p-5 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl backdrop-blur-2xl glass [.theme-paper_&]:bg-[#faf8f0] [.theme-paper_&]:border-[#dbd5be] [.theme-paper_&]:shadow-lg"
+    <>
+      <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
+        <Popover.Trigger asChild>
+          <span 
+            className={`cursor-help border-b border-dotted transition-colors ${borderClass}`}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
           >
-            <div className="flex items-center justify-between mb-3 border-b border-slate-800 pb-2.5 [.theme-paper_&]:border-slate-200">
-              <div className="flex items-center gap-2">
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${iconBoxClass}`}>
-                  <Icon className="w-3.5 h-3.5" />
+            {displayChildren}
+          </span>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content 
+            sideOffset={5} 
+            className="z-50 outline-none"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 5 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="w-96 p-5 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl backdrop-blur-2xl glass [.theme-paper_&]:bg-[#faf8f0] [.theme-paper_&]:border-[#dbd5be] [.theme-paper_&]:shadow-lg"
+            >
+              <div className="flex items-center justify-between mb-3 border-b border-slate-800 pb-2.5 [.theme-paper_&]:border-slate-200">
+                <div className="flex items-center gap-2">
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${iconBoxClass}`}>
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest [.theme-paper_&]:text-slate-700">{headerLabel}</span>
                 </div>
-                <span className="font-bold text-slate-100 uppercase text-[10px] tracking-widest [.theme-paper_&]:text-slate-700">{headerLabel}</span>
+                {((resolvedType !== 'person' && domain) || rightLabel) && (
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right [.theme-paper_&]:text-slate-500">
+                    {resolvedType === 'person'
+                      ? rightLabel
+                      : (domain && rightLabel ? `${domain} · ${rightLabel}` : domain || rightLabel)
+                    }
+                  </span>
+                )}
               </div>
-              {((resolvedType !== 'person' && domain) || rightLabel) && (
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right [.theme-paper_&]:text-slate-500">
-                  {resolvedType === 'person'
-                    ? rightLabel
-                    : (domain && rightLabel ? `${domain} · ${rightLabel}` : domain || rightLabel)
-                  }
-                </span>
+              {formattedSummary ? (
+                <p className="text-sm text-slate-300 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-800">
+                  &ldquo;{formattedSummary}&rdquo;
+                </p>
+              ) : !description ? (
+                <p className="text-sm text-slate-400 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-650">
+                  {t.error}
+                </p>
+              ) : (
+                <p className="text-sm text-slate-400 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-600">
+                  {t.loading}
+                </p>
               )}
-            </div>
-            {formattedSummary ? (
-              <p className="text-sm text-slate-300 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-800">
-                &ldquo;{formattedSummary}&rdquo;
-              </p>
-            ) : !description ? (
-              <p className="text-sm text-slate-400 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-650">
-                {t.error}
-              </p>
-            ) : (
-              <p className="text-sm text-slate-400 leading-relaxed italic mb-4 [.theme-paper_&]:text-slate-600">
-                {t.loading}
-              </p>
-            )}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 pt-3 border-t border-slate-800/80 [.theme-paper_&]:border-slate-200">
-              {resolvedWikiUrl && (
-                <a 
-                  href={resolvedWikiUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-1 text-[11px] font-bold transition-colors uppercase tracking-wider ${linkClass}`}
-                >
-                  {t.readWiki}
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
-              {resolvedExternalUrl && resolvedType !== 'person' && (
-                <a 
-                  href={resolvedExternalUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] font-bold transition-colors uppercase tracking-wider text-teal-400 hover:text-teal-300 [.theme-paper_&]:text-teal-700 [.theme-paper_&]:hover:text-teal-800"
-                >
-                  {
-                    (resolvedType === 'website' || resolvedType === 'project')
-                      ? (isFr ? 'Site officiel' : 'Official website')
-                      : (isFr ? 'En savoir plus' : 'Learn more')
-                  }
-                  <Globe className="w-3.5 h-3.5" />
-                </a>
-              )}
-            </div>
-            <Popover.Arrow className="fill-slate-700 [.theme-paper_&]:fill-[#dbd5be]" />
-          </motion.div>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 pt-3 border-t border-slate-800/80 [.theme-paper_&]:border-slate-200">
+                {resolvedWikiUrl && (
+                  <a 
+                    href={resolvedWikiUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-1 text-[11px] font-bold transition-colors uppercase tracking-wider ${linkClass}`}
+                  >
+                    {t.readWiki}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+                {resolvedExternalUrl && resolvedType !== 'person' && (
+                  <a 
+                    href={resolvedExternalUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold transition-colors uppercase tracking-wider text-teal-400 hover:text-teal-300 [.theme-paper_&]:text-teal-700 [.theme-paper_&]:hover:text-teal-800"
+                  >
+                    {
+                      (resolvedType === 'website' || resolvedType === 'project')
+                        ? (isFr ? 'Site officiel' : 'Official website')
+                        : (isFr ? 'En savoir plus' : 'Learn more')
+                    }
+                    <Globe className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
+              <Popover.Arrow className="fill-slate-700 [.theme-paper_&]:fill-[#dbd5be]" />
+            </motion.div>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+      {extraTextAfter}
+    </>
   );
 };
 

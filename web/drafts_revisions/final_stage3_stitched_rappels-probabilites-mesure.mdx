@@ -1,0 +1,120 @@
+---
+title: « Rappels de Probabilités et Mesure »
+subject: « Finance quantitative et modélisation stochastique »
+level: « M1 »
+module: « Rappels de Probabilités et Mesure »
+order: 2
+---
+
+<DiagnosticQuiz question="Soit (Ω, F, P) un espace de probabilité. Laquelle des affirmations suivantes est FAUSSE concernant la mesure de probabilité P?" options="P(Ω) = 1|||P(A) ≥ 0 pour tout A ∈ F|||Si A|||B ∈ F et A ∩ B = " /> 0«  correctIndex= »3«  targetSectionId= »introduction-espaces-probabilite«  sectionTitle= »Introduction aux Espaces de Probabilité« />
+
+
+
+## Introduction
+
+Ce cours de Master 1 en Finance Quantitative vise à vous équiper des outils mathématiques fondamentaux nécessaires à la compréhension et à la modélisation des marchés financiers. Avant d'aborder les concepts avancés de calcul stochastique et de modélisation des instruments financiers complexes, il est impératif de consolider vos bases en théorie des probabilités et de la mesure. Cette leçon introductive est dédiée à la révision et à l'approfondissement de ces concepts essentiels.
+
+La <ConceptLink id="finance_quantitative" name="finance quantitative" term="finance quantitative" unresolved={true}>finance quantitative</ConceptLink> repose intrinsèquement sur la capacité à quantifier l'incertitude et à modéliser l'évolution aléatoire des variables financières. Une compréhension rigoureuse des espaces de probabilité, des tribus (ou σ-algèbres) et des mesures est donc indispensable. Ces fondations permettent de définir précisément ce qu'est un événement, de formaliser l'information disponible à un instant donné, et d'attribuer des probabilités de manière cohérente. Sans ces prérequis, l'étude des <Glossary id="processus_stochastique" name="processus stochastiques" term="processus stochastiques">processus stochastiques</Glossary> – tels que le mouvement brownien ou les processus de Lévy – qui sont au cœur de la modélisation des prix d'actifs, des taux d'intérêt ou des volatilités, serait impossible ou lacunaire <Reference id="1" name="1" term="1">1</Reference>.
+
+Cette révision vous préparera à aborder sereinement les chapitres ultérieurs sur le calcul stochastique, les martingales, et les applications directes en valorisation d'options et gestion des risques. Comme le soulignent des auteurs tels que <RealPerson id="shreve" name="Steven E. Shreve" searchQuery="Steven E. Shreve" wikipediaUrl="https://en.wikipedia.org/wiki/Steven_Shreve">Steven E. Shreve</RealPerson> <Reference id="2" name="2" term="2">2</Reference> ou <RealPerson id="bjork" name="Tomas Björk" searchQuery="Tomas Björk" wikipediaUrl="https://en.wikipedia.org/wiki/Tomas_Bj%C3%B6rk" unresolved={true}>Tomas Björk</RealPerson> <Reference id="3" name="3" term="3">3</Reference>, une maîtrise solide de ces concepts probabilistes est la pierre angulaire de toute expertise en ingénierie financière.
+
+<Mermaid caption="Figure 1 : " chart={``}/>
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Décrire les axiomes fondamentaux de la théorie de la mesure et de la probabilité.</li>
+      <li>Expliquer les concepts de tribu (σ-algèbre), fonction mesurable et intégrale de Lebesgue.</li>
+      <li>Identifier les propriétés des espaces de probabilité et des variables aléatoires.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Appliquer les théorèmes de convergence (e.g., convergence dominée, monotone) pour calculer des espérances.</li>
+      <li>analyser la mesurabilité de fonctions et d'ensembles dans différents contextes probabilistes.</li>
+      <li>Évaluer la validité d'un espace de probabilité ou d'une mesure donnée.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Apprécier la rigueur mathématique nécessaire à la modélisation stochastique en finance.</li>
+      <li>Développer une approche critique face aux hypothèses sous-jacentes aux modèles probabilistes.</li>
+      <li>Manifester de la persévérance dans la résolution de problèmes complexes impliquant la théorie de la mesure.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Espaces de Probabilité et Tribus
+
+La modélisation mathématique de phénomènes aléatoires, y compris ceux rencontrés en finance, commence par la définition d'un **espace de probabilité**. Un espace de probabilité est un triplet $(\Omega, \mathcal{F}, P)$, où chaque composant joue un rôle distinct et fondamental.
+
+1.  **L'univers des possibles ($\Omega$)**: C'est l'ensemble de tous les résultats possibles d'une expérience aléatoire. Chaque élément $\omega \in \Omega$ représente une réalisation unique de l'expérience. Par exemple, si nous modélisons le prix d'une action à un horizon futur, $\Omega$ pourrait être l'ensemble de toutes les valeurs possibles que le prix pourrait prendre.
+
+2.  **La tribu (ou σ-algèbre) ($\mathcal{F}$)**: C'est une collection de sous-ensembles de $\Omega$, appelés **événements mesurables**. La tribu $\mathcal{F}$ représente l'ensemble de tous les événements pour lesquels nous souhaitons assigner une probabilité. Elle doit satisfaire trois propriétés essentielles pour garantir la cohérence mathématique et la capacité à modéliser l'information:
+    *   $\Omega \in \mathcal{F}$ (L'événement certain est mesurable).
+    *   Si $A \in \mathcal{F}$, alors $A^c \in \mathcal{F}$ (Le complémentaire d'un événement mesurable est mesurable).
+    *   Si $(A_i)_{i \in \mathbb{N}}$ est une suite dénombrable d'événements dans $\mathcal{F}$, alors $\bigcup_{i=1}^{\infty} A_i \in \mathcal{F}$ (L'union dénombrable d'événements mesurables est mesurable).
+
+    La notion de <ConceptLink id="sigma_algebre" name="σ-algèbre" term="σ-algèbre">σ-algèbre</ConceptLink> est cruciale car elle formalise l'information disponible. À un instant donné, seuls les événements appartenant à la tribu sont « observables » ou « mesurables », c'est-à-dire que nous pouvons déterminer s'ils se sont produits ou non. En finance, la tribu est souvent interprétée comme l'information accumulée au cours du temps, permettant de prendre des décisions.
+
+    **Exemples de tribus usuelles**:
+    *   **Tribu triviale**: $\{\emptyset, \Omega\}$. C'est la plus petite tribu possible, ne permettant de distinguer aucun événement en dehors de l'impossible et du certain.
+    *   **Tribu discrète**: $\mathcal{P}(\Omega)$, l'ensemble de toutes les parties de $\Omega$. C'est la plus grande tribu, où chaque sous-ensemble est un événement mesurable. Elle est utilisée lorsque $\Omega$ est fini ou dénombrable.
+    *   **Tribu de Borel ($\mathcal{B}(\mathbb{R})$)**: Pour $\Omega = \mathbb{R}$, c'est la plus petite σ-algèbre contenant tous les intervalles ouverts (ou fermés) de $\mathbb{R}$. Elle est fondamentale pour la modélisation des variables aléatoires continues et est générée par les ensembles qui peuvent être formés par des opérations dénombrables sur des intervalles. Des références comme Oksendal <Reference id="4" name="4" term="4">4</Reference> ou Karatzas et Shreve <Reference id="5" name="5" term="5">5</Reference> détaillent l'importance de cette tribu en calcul stochastique.
+
+3.  **La mesure de probabilité ($P$)**: C'est une fonction $P: \mathcal{F} \to [0, 1]$ qui attribue une probabilité à chaque événement mesurable de la tribu $\mathcal{F}$. Elle doit satisfaire les axiomes de Kolmogorov:
+    *   $P(A) \ge 0$ pour tout $A \in \mathcal{F}$ (La probabilité d'un événement est non-négative).
+    *   $P(\Omega) = 1$ (La probabilité de l'événement certain est 1).
+    *   Pour toute suite dénombrable d'événements disjoints $(A_i)_{i \in \mathbb{N}}$ dans $\mathcal{F}$, $P(\bigcup_{i=1}^{\infty} A_i) = \sum_{i=1}^{\infty} P(A_i)$ (Additivité dénombrable).
+
+    La <Glossary definition="Une fonction P définie sur une tribu F qui associe à chaque événement un nombre réel entre 0 et 1, telle que P(Ω) = 1 et P est σ-additive." id="mesure_probabilite" name="mesure de probabilité" term="mesure de probabilité">mesure de probabilité</Glossary> $P$ quantifie la vraisemblance de chaque événement. En finance, c'est sous cette mesure que nous évaluons les espérances de gains ou de pertes, et que nous définissons les propriétés des processus stochastiques.
+
+<Image description="Ce diagramme conceptuel illustre les trois éléments fondamentaux qui constituent un espace de probabilité formel : l'ensemble fondamental (Ω), la tribu ou sigma-algèbre (F), et la mesure de probabilité (P). L'ensemble fondamental représente tous les résultats possibles d'une expérience aléatoire. La tribu est une collection de sous-ensembles de Ω, appelés événements, qui sont mesurables. La mesure de probabilité est une fonction qui assigne une probabilité à chaque événement de la tribu, respectant les axiomes de Kolmogorov." caption="Figure 1: Ce diagramme conceptuel illustre les trois éléments fondamentaux qui constituent un espace de probabilité formel : l'ensemble fondamental (Ω), la tribu ou sigma-algèbre (F), et la mesure de probabilité (P). L'ensemble fondamental représente tous les résultats possibles d'une expérience aléatoire. La tribu est une collection de sous-ensembles de Ω, appelés événements, qui sont mesurables. La mesure de probabilité est une fonction qui assigne une probabilité à chaque événement de la tribu, respectant les axiomes de Kolmogorov. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:CPT-Databases-ExampleLinkTables.svg)" title="Les Éléments d'un Espace de Probabilité" src="https://commons.wikimedia.org/wiki/Special:FilePath/CPT-Databases-ExampleLinkTables.svg" fallbackUrl="https://commons.wikimedia.org/wiki/File:CPT-Databases-ExampleLinkTables.svg" />
+
+Nous avons établi les fondements d'un espace de probabilité $(\Omega, \mathcal{F}, P)$, qui nous permet de modéliser l'incertitude et d'attribuer des probabilités aux événements. Cependant, en finance quantitative, nous sommes rarement intéressés par les événements bruts de l'espace $\Omega$ directement, mais plutôt par des quantités numériques qui dépendent de ces événements, comme le prix d'un actif ou le rendement d'un portefeuille. C'est ici qu'intervient la notion de variable aléatoire.
+
+## Variables Aléatoires et Mesure
+
+Une <ConceptLink id="variable_aleatoire" name="variable aléatoire" term="variable aléatoire">variable aléatoire</ConceptLink> $X$ est une fonction qui associe un nombre réel à chaque résultat possible d'une expérience aléatoire. Plus formellement, sur un espace de probabilité $(\Omega, \mathcal{F}, P)$, une variable aléatoire $X$ est une fonction $X: \Omega \to \mathbb{R}$ telle que, pour tout ensemble de Borel $B \in \mathcal{B}(\mathbb{R})$, l'ensemble $X^{-1}(B) = \{\omega \in \Omega : X(\omega) \in B\}$ appartient à la tribu $\mathcal{F}$. Cette condition signifie que $X$ est une <Glossary definition="Une fonction f d'un espace mesurable (Ω, F) vers un autre espace mesurable (E, G) telle que l'image réciproque de tout ensemble mesurable de G est un ensemble mesurable de F." id="fonction_mesurable" name="fonction mesurable" term="fonction mesurable">fonction mesurable</Glossary> de $(\Omega, \mathcal{F})$ vers $(\mathbb{R}, \mathcal{B}(\mathbb{R}))$. La mesurabilité est cruciale car elle garantit que nous pouvons attribuer une probabilité à tout événement lié aux valeurs prises par $X$.
+
+Les variables aléatoires se classent principalement en deux catégories:
+*   **Variables aléatoires discrètes**: Elles ne peuvent prendre qu'un nombre fini ou dénombrable de valeurs. Leur comportement est décrit par une fonction de masse de probabilité (FMP), $P(X=x_i)$, qui attribue une probabilité à chaque valeur possible $x_i$. Des exemples incluent le nombre de défauts sur un portefeuille de crédits ou le résultat d'un lancer de dé.
+*   **Variables aléatoires continues**: Elles peuvent prendre n'importe quelle valeur dans un intervalle donné. Leur comportement est décrit par une fonction de densité de probabilité (FDP), $f_X(x)$, telle que $P(a \le X \le b) = \int_a^b f_X(x) dx$. Les rendements d'actifs financiers ou les taux d'intérêt sont souvent modélisés comme des variables aléatoires continues.
+
+<Image description="Quatre nuages de points illustrant des corrélations nulle, faible positive, forte positive et forte négative." alt="Quatre nuages de points illustrant des corrélations nulle, faible positive, forte positive et forte négative." caption="Figure 2: Quatre nuages de points illustrant des corrélations nulle, faible positive, forte positive et forte négative. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Correlation_types-Language-neutral.png)" title="Classification des Variables Aléatoires" src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Correlation_types-Language-neutral.png" fallbackUrl="https://commons.wikimedia.org/wiki/File:Correlation_types-Language-neutral.png" />
+
+La loi de probabilité d'une variable aléatoire $X$ est la mesure de probabilité $P_X$ induite sur $(\mathbb{R}, \mathcal{B}(\mathbb{R}))$ par $X$, définie par $P_X(B) = P(X \in B)$ pour tout $B \in \mathcal{B}(\mathbb{R})$. Cette loi est entièrement caractérisée par la fonction de répartition $F_X(x) = P(X \le x)$.
+
+L'**espérance mathématique** (ou valeur attendue) d'une variable aléatoire $X$, notée $\mathbb{E}[X]$, est une mesure de sa tendance centrale. Elle représente la valeur moyenne que l'on s'attend à observer si l'expérience était répétée un grand nombre de fois.
+*   Pour une variable discrète $X$ prenant les valeurs $x_i$ avec probabilité $p_i$: $\mathbb{E}[X] = \sum_i x_i p_i$.
+*   Pour une variable continue $X$ de densité $f_X(x)$: $\mathbb{E}[X] = \int_{-\infty}^{\infty} x f_X(x) dx$.
+
+La puissance de la théorie de la mesure réside dans sa capacité à unifier ces définitions sous le concept d'**intégrale de Lebesgue**. Pour toute variable aléatoire $X$ intégrable (c'est-à-dire $\mathbb{E}[|X|] < \infty$), son espérance mathématique est donnée par l'intégrale de Lebesgue de $X$ par rapport à la mesure de probabilité $P$ sur l'espace fondamental $\Omega$:
+
+$$ \mathbb{E}[X] = \int_{\Omega} X(\omega) dP(\omega) $$
+
+Cette formulation est fondamentale en finance quantitative, car elle permet de traiter de manière rigoureuse des variables aléatoires complexes, y compris celles issues de processus stochastiques. Elle est la pierre angulaire pour la définition des martingales et pour l'évaluation des actifs financiers sous des mesures de probabilité équivalentes, comme détaillé dans des ouvrages de référence tels que <Reference id="6" name="6" term="6">6</Reference> et .
+
+<Mermaid caption="Figure 4 : " chart={``}/>
+
+## Espérance Conditionnelle
+
+En finance, l'information évolue constamment. Les décisions d'investissement sont prises non pas avec une connaissance parfaite de l'avenir, mais en fonction de l'information disponible à un instant donné. L'**espérance conditionnelle** est l'outil mathématique qui formalise cette idée de « mise à jour de l'espérance » en fonction d'une information partielle.
+
+Soit $(\Omega, \mathcal{F}, P)$ un espace de probabilité et $X$ une variable aléatoire intégrable sur cet espace. Soit $\mathcal{G}$ une sous-$\sigma$-algèbre de $\mathcal{F}$ (c'est-à-dire $\mathcal{G} \subseteq \mathcal{F}$). La tribu $\mathcal{G}$ représente l'information disponible. L'<ConceptLink id="esperance_conditionnelle" name="espérance conditionnelle" term="espérance conditionnelle">espérance conditionnelle</ConceptLink> de $X$ sachant $\mathcal{G}$, notée $\mathbb{E}[X|\mathcal{G}]$, est une variable aléatoire qui satisfait les deux propriétés suivantes:
+1.  $\mathbb{E}[X|\mathcal{G}]$ est $\mathcal{G}$-mesurable. Cela signifie que sa valeur est déterminée par l'information contenue dans $\mathcal{G}$.
+2.  Pour tout événement $A \in \mathcal{G}$, on a $\int_A \mathbb{E}[X|\mathcal{G}] dP = \int_A X dP$. Cette propriété, souvent appelée « propriété de projection », indique que l'espérance de $X$ sur tout événement de $\mathcal{G}$ est la même que l'espérance de $\mathbb{E}[X|\mathcal{G}]$ sur cet événement.
+
+L'existence et l'unicité (presque sûre) de $\mathbb{E}[X|\mathcal{G}]$ sont garanties par le théorème de Radon-Nikodym, un résultat fondamental de la théorie de la mesure. Le mathématicien <RealPerson id="kolmogorov" name="Andreï Kolmogorov" searchQuery="Andreï Kolmogorov" wikipediaUrl="https://fr.wikipedia.org/wiki/Andre%C3%AF_Kolmogorov">Andreï Kolmogorov</RealPerson> a joué un rôle central dans la formalisation moderne de la théorie des probabilités et de l'espérance conditionnelle.
+
+L'interprétation intuitive de $\mathbb{E}[X|\mathcal{G}]$ est la « meilleure estimation » de $X$ étant donnée l'information contenue dans $\mathcal{G}$. C'est la valeur moyenne de $X$ si nous connaissions tous les événements de $\mathcal{G}$.
+
+Les propriétés fondamentales de l'espérance conditionnelle sont essentielles pour sa manipulation en finance:
+*   **Linéarité**: $\mathbb{E}[aX+bY|\mathcal{G}] = a\mathbb{E}[X|\mathcal{G}] + b\mathbb{E}[Y|\mathcal{G}]$ pour des constantes $a, b \in \mathbb{R}$.
+*   **Positivité**: Si $X \ge 0$, alors $\mathbb{E}[X|\mathcal{G}] \ge 0$ presque sûrement.
+*   **Propriété de projection**: $\mathbb{E}[X|\mathcal{G}]$ est la projection orthogonale de $X$ sur l'espace des variables aléatoires $\mathcal{G}$-mesurables dans $L^2(P)$.
+*   **Propriété de la tour (Tower Property)**: Si $\mathcal{H} \subseteq \mathcal{G} \subseteq \mathcal{F}$ sont des sous-$\sigma$-algèbres, alors $\mathbb{E}|\mathcal{H}] = \mathbb{E}[X|\mathcal{H}]$. Un cas particulier est $\mathbb{E}] = \mathbb{E}[X]$.
+*   **« Sortir ce qui est connu »**: Si $Y$ est une variable aléatoire $\mathcal{G}$-mesurable, alors $\mathbb{E}[XY|\mathcal{G}] = Y\mathbb{E}[X|\mathcal{G}]$.
+*   **Indépendance**: Si $X$ est indépendante de $\mathcal{G}$, alors $\mathbb{E}[X|\mathcal{G}] = \mathbb{E}[X]$.
+
+... [content truncated for context efficiency]

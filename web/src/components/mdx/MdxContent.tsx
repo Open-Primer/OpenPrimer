@@ -888,7 +888,7 @@ const CustomFigure = ({ src, alt: rawAlt, caption: rawCaption, fallbackText, fal
     }
   }, [unresolved, isBlocked, failed, markDegraded]);
 
-  if (unresolved || isBlocked || failed) {
+  if (unresolved || isBlocked || failed || (!src?.trim() && !caption?.trim())) {
     return null;
   }
 

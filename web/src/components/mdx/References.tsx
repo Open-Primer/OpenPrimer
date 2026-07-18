@@ -183,6 +183,14 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
                     {idx > 0 && <span className="text-slate-600">,</span>}
                     <a 
                       href={`#cite-${num}`} 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const target = document.getElementById(`cite-${num}`);
+                        if (target) {
+                          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          window.history.pushState(null, '', `#cite-${num}`);
+                        }
+                      }}
                       className="no-underline hover:text-indigo-300 transition-colors"
                       title={`Scroll back to citation [${num}]`}
                     >

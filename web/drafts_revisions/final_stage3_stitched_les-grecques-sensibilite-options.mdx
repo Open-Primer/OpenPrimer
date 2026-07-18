@@ -1,0 +1,244 @@
+---
+title: « Les Grecques et la Sensibilité des Options »
+subject: « Finance quantitative et modélisation stochastique »
+level: « M1 »
+module: « Les Grecques et la Sensibilité des Options »
+order: 9
+---
+
+
+
+## Introduction aux Grecques et à la Sensibilité des Options
+
+Les <ConceptLink id="option_financiere" name="options financières" term="options financières" unresolved={true}>options financières</ConceptLink> sont des instruments dérivés qui confèrent à leur détenteur le droit, mais non l'obligation, d'acheter (option d'achat ou *call*) ou de vendre (option de vente ou *put*) un actif sous-jacent à un prix et à une date prédéterminés. Elles jouent un rôle fondamental sur les marchés financiers modernes, permettant aux acteurs de spéculer sur les mouvements futurs des prix, de gérer les risques (couverture) ou de générer des revenus supplémentaires <Reference id="1" name="1" term="1">1</Reference>.
+
+La valorisation et la gestion des risques associées aux options sont des défis complexes, car leur prix dépend de multiples facteurs, tels que le prix de l'actif sous-jacent, la volatilité implicite, le temps restant jusqu'à l'échéance, les taux d'intérêt sans risque et les dividendes attendus. Pour naviguer dans cette complexité, les professionnels de la finance quantitative utilisent un ensemble de mesures de sensibilité appelées les <Glossary id="grecques" name="Grecques" term="Grecques">Grecques</Glossary>. Ces mesures quantifient l'impact d'une variation de chacun de ces facteurs sur le prix de l'option, offrant ainsi une compréhension cruciale de son comportement dynamique <Reference id="2" name="2" term="2">2</Reference>.
+
+La maîtrise des Grecques est indispensable pour plusieurs raisons:
+*   **Évaluation:** Elles permettent de comprendre comment les modèles de valorisation, tels que le modèle de Black-Scholes-Merton, réagissent aux changements des paramètrès d'entrée <Reference id="3" name="3" term="3">3</Reference>.
+*   **Gestion des risques:** Elles aident à identifier et à quantifier les expositions au risque d'un portefeuille d'options, permettant ainsi une surveillance proactive.
+*   **Couverture (*Hedging*):** Elles sont le fondement des stratégies de couverture, visant à neutraliser ou à réduire l'exposition d'un portefeuille aux fluctuations des marchés <Reference id="4" name="4" term="4">4</Reference>.
+
+Dans cette leçon, nous explorerons les principales Grecques: le Delta, le Gamma, le Vega, le Theta et le Rho. Nous commencerons par les deux mesures les plus fondamentales liées à la sensibilité au prix de l'actif sous-jacent: le Delta et le Gamma.
+
+<Mermaid caption="Figure 1 : " chart={``}/>
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les définitions et les formules des principales grecques (Delta, Gamma, Vega, Theta, Rho).</li>
+      <li>Évaluer l'impact des paramètrès du marché sur la valeur des options via les grecques.</li>
+      <li>Comprendre les hypothèses sous-jacentes au calcul des grecques dans le modèle de Black-Scholes.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Calculer les valeurs des grecques pour différentes options en utilisant des formules analytiques ou numériques.</li>
+      <li>Interpréter la signification économique des grecques pour la gestion des risques de portefeuille.</li>
+      <li>Construire des stratégies de couverture basées sur les grecques pour minimiser l'exposition au risque.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Développer une approche critique face aux limites des modèles de calcul des grecques.</li>
+      <li>Apprécier l'importance de la gestion dynamique des risques dans le trading d'options.</li>
+      <li>Adopter une rigueur méthodologique dans l'application des concepts des grecques à des cas pratiques.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Delta et Gamma: Mesures de la Sensibilité au Prix de l'Actif Sous-Jacent
+
+### Le Delta ($\Delta$)
+
+Le <Glossary definition="Mesure la sensibilité du prix d'une option à une variation du prix de l'actif sous-jacent. Un Delta de 0.5 signifie que le prix de l'option augmentera de 0.50€ si le prix de l'actif sous-jacent augmente de 1€." id="delta" name="Delta" term="Delta">Delta</Glossary> d'une option est la mesure de la sensibilité du prix de l'option aux variations du prix de son actif sous-jacent. Mathématiquement, il est défini comme la dérivée partielle du prix de l'option par rapport au prix de l'actif sous-jacent ($S$):
+
+$$
+\Delta = \frac{\partial V}{\partial S}
+$$
+
+où $V$ est le prix de l'option.
+
+**Interprétation et Utilisation:**
+*   **Changement de prix:** Un Delta de 0,50 pour une option d'achat signifie que pour chaque augmentation de 1 € du prix de l'actif sous-jacent, le prix de l'option augmentera approximativement de 0,50 €.
+*   **Équivalent actions:** Le Delta peut être interprété comme le nombre d'unités de l'actif sous-jacent qu'il faudrait détenir pour répliquer la sensibilité du prix de l'option. Par exemple, une option d'achat avec un Delta de 0,60 se comporte, en première approximation, comme la détention de 0,60 action de l'actif sous-jacent.
+*   **Probabilité *in-the-money*:** Pour les options de type européen, le Delta d'une option d'achat est souvent considéré comme une approximation de la probabilité que l'option expire dans la monnaie (*in-the-money*) <Reference id="5" name="5" term="5">5</Reference>.
+*   **Plage de valeurs:** Le Delta d'une option d'achat varie entre 0 et 1, tandis que celui d'une option de vente varie entre -1 et 0. Les options profondément dans la monnaie ont un Delta proche de 1 (pour les *calls*) ou -1 (pour les *puts*), se comportant presque comme l'actif sous-jacent lui-même. Les options loin de la monnaie ont un Delta proche de 0.
+
+La <ConceptLink id="couverture_delta" name="couverture Delta" term="couverture Delta" unresolved={true}>couverture Delta</ConceptLink> est une stratégie fondamentale de gestion des risques qui consiste à créer un portefeuille dont le Delta total est nul. Cela permet de rendre le portefeuille insensible aux petites variations du prix de l'actif sous-jacent. Cependant, cette couverture n'est efficace que pour de petits mouvements de prix et doit être ajustée fréquemment, car le Delta lui-même change.
+
+<Image description="La façade en marbre du bâtiment de la Bourse de New York est ornée d'un grand drapeau américain et de plusieurs drapeaux plus petits." alt="La façade en marbre du bâtiment de la Bourse de New York est ornée d'un grand drapeau américain et de plusieurs drapeaux plus petits." caption="Figure 1: La façade en marbre du bâtiment de la Bourse de New York est ornée d'un grand drapeau américain et de plusieurs drapeaux plus petits. Source: NASA Images (Public Domain)" title="Évolution du Delta d'une option d'achat" src="https://images-assets.nasa.gov/image/NHQ202604300007/NHQ202604300007~thumb.jpg" />
+
+### Le Gamma ($\Gamma$)
+
+Le <Glossary definition="Mesure la sensibilité du Delta d'une option à une variation du prix de l'actif sous-jacent. Il indique la convexité du prix de l'option par rapport au prix du sous-jacent." id="gamma" name="Gamma" term="Gamma">Gamma</Glossary> d'une option mesure la sensibilité du Delta de l'option aux variations du prix de l'actif sous-jacent. Il s'agit donc de la dérivée seconde du prix de l'option par rapport au prix de l'actif sous-jacent:
+
+$$
+\Gamma = \frac{\partial \Delta}{\partial S} = \frac{\partial^2 V}{\partial S^2}
+$$
+
+**Interprétation et Rôle:**
+*   **Taux de changement du Delta:** Le Gamma indique à quelle vitesse le Delta d'une option change lorsque le prix du sous-jacent bouge. Un Gamma élevé signifie que le Delta est très volatil et que la couverture Delta doit être réajustée plus fréquemment.
+*   **Convexité:** Le Gamma est une mesure de la convexité du prix de l'option par rapport au prix de l'actif sous-jacent. Une option avec un Gamma positif bénéficie des mouvements importants du sous-jacent (àl'hausse comme à la baisse), car son Delta augmente lorsque le prix se déplace dans la direction favorable et diminue lorsque le prix se déplace dans la direction défavorable. Cela reflète la nature non linéaire des options .
+*   **Gestion du risque de Delta:** Le Gamma est crucial pour la gestion du risque de Delta. Un portefeuille avec un Gamma élevé est plus difficile à couvrir car son Delta change rapidement, nécessitant des ajustements constants (rebalancement). Les traders cherchent souvent à gérer leur exposition au Gamma pour contrôler la fréquence et le coût de leurs ajustements de couverture.
+
+Les options *at-the-money* (à la monnaie) ont généralement le Gamma le plus élevé, car leur Delta est le plus sensible aux mouvements du sous-jacent à ce point. À mesure que l'option s'éloigne de la monnaie (profondément *in-the-money* ou *out-of-the-money*), son Gamma tend vers zéro, indiquant que son Delta devient plus stable.
+
+<Image description="Décret imprimé du Conseil d'État du Roi de 1787, interdisant le terme &quot;bourreaux&quot;, illustré d'une gravure de symboles royaux et de justice." alt="Décret imprimé du Conseil d'État du Roi de 1787, interdisant le terme &quot;bourreaux&quot;, illustré d'une gravure de symboles royaux et de justice." caption="Figure 2: Décret imprimé du Conseil d'État du Roi de 1787, interdisant le terme &quot;bourreaux&quot;, illustré d'une gravure de symboles royaux et de justice. Source: [Gallica / Bibliothèque nationale de France (Domaine Public)](https://gallica.bnf.fr/ark:/12148/bpt6k42240462/f1.highres)" title="Évolution du Gamma d'une option" src="https://gallica.bnf.fr/ark:/12148/bpt6k42240462/f1.highres" fallbackUrl="https://gallica.bnf.fr/ark:/12148/bpt6k42240462/f1.highres" />
+
+### Vega, Theta et Rho: Sensibilités aux Autres Facteurs de Marché
+
+Au-delà des sensibilités directes au prix du sous-jacent (Delta) et à la vitesse de changement de cette sensibilité (Gamma), la valeur d'une option est également influencée par d'autres paramètrès de marché cruciaux. Les Grecques Vega, Theta et Rho quantifient ces sensibilités, offrant une perspective plus complète sur les risques associés aux produits dérivés.
+
+#### Le Vega ($\mathcal{V}$)
+
+Le <Glossary definition="Mesure la sensibilité du prix d'une option à une variation de la volatilité implicite de l'actif sous-jacent." id="vega" name="Vega" term="Vega">Vega</Glossary> (parfois noté Kappa, $\kappa$) mesure la sensibilité du prix d'une option aux variations de la <ConceptLink id="volatilite_implicite" name="volatilité implicite" term="volatilité implicite" unresolved={true}>volatilité implicite</ConceptLink> du sous-jacent. Il s'agit de la dérivée première du prix de l'option par rapport à la volatilité implicite:
+
+$$
+\mathcal{V} = \frac{\partial V}{\partial \sigma}
+$$
+
+**Interprétation et Impact:**
+*   **Sensibilité à la volatilité:** Le Vega indique de combien le prix de l'option change pour chaque variation d'un point de pourcentage de la volatilité implicite. Par exemple, un Vega de 0,10 signifie que si la volatilité implicite augmente de 1%, le prix de l'option augmentera de 0,10 unité monétaire.
+*   **Impact sur la valeur:** Pour les options longues (achat d'options), le Vega est toujours positif. Cela signifie qu'une augmentation de la volatilité implicite augmente la valeur de l'option, car elle accroît la probabilité que le prix du sous-jacent atteigne ou dépasse le prix d'exercice, augmentant ainsi le potentiel de gain. Inversement, une baisse de la volatilité réduit la valeur de l'option. Pour les options courtes (vente d'options), le Vega est négatif.
+*   **Facteurs influençant le Vega:**
+    *   **Moneyness:** Le Vega est généralement le plus élevé pour les options <ConceptLink id="at_the_money" name="à la monnaie" term="à la monnaie" unresolved={true}>à la monnaie</ConceptLink> (*at-the-money*), car ce sont celles dont la valeur est la plus incertaine et donc la plus sensible aux changements de volatilité. Il diminue à mesure que l'option s'éloigne de la monnaie (profondément *in-the-money* ou *out-of-the-money*) .
+    *   **Maturité:** Le Vega est plus élevé pour les options ayant une longue durée de vie, car il y a plus de temps pour que la volatilité ait un impact significatif sur le prix du sous-jacent. Les options à court terme ont un Vega plus faible.
+
+<Image description="Image astronomique d'un objet céleste très lumineux, potentiellement un quasar, entouré d'un halo bleu diffus dans l'espace." alt="Image astronomique d'un objet céleste très lumineux, potentiellement un quasar, entouré d'un halo bleu diffus dans l'espace." caption="Figure 3: Image astronomique d'un objet céleste très lumineux, potentiellement un quasar, entouré d'un halo bleu diffus dans l'espace. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Vega_Spitzer.jpg)" title="Évolution du Vega d'une option" src="https://upload.wikimedia.org/wikipedia/commons/d/d3/Vega_Spitzer.jpg" fallbackUrl="https://commons.wikimedia.org/wiki/File:Vega_Spitzer.jpg" />
+
+#### Le Theta ($\Theta$)
+
+Le <Glossary definition="Mesure la sensibilité du prix d'une option au passage du temps. Il représente la dégradation de la valeur de l'option à mesure que la date d'échéance approche." id="theta" name="Theta" term="Theta">Theta</Glossary> (ou « décroissance temporelle » ou « time decay ») mesure la sensibilité du prix d'une option au passage du temps. Il s'agit de la dérivée première du prix de l'option par rapport au temps restant jusqu'à l'échéance:
+
+$$
+\Theta = \frac{\partial V}{\partial t}
+$$
+
+**Interprétation et Impact:**
+*   **Décroissance temporelle:** Le Theta indique de combien le prix de l'option diminue (ou augmente, dans de rares cas pour des portefeuilles complexes) pour chaque jour qui passe, toutes choses égales par ailleurs.
+*   **Impact sur la valeur:** Pour la plupart des options longues (achat d'options), le Theta est négatif. Cela signifie que le prix de l'option diminue à mesure que l'échéance approche, car il y a moins de temps pour que le sous-jacent bouge favorablement. Les options sont des actifs périssables. Pour les options courtes (vente d'options), le Theta est positif, ce qui signifie que le vendeur bénéficie du passage du temps.
+*   **Facteurs influençant le Theta:**
+    *   **Moneyness:** Le Theta est le plus négatif (la décroissance temporelle est la plus rapide) pour les options à la monnaie (*at-the-money*), car ce sont celles qui ont le plus de valeur temps. Les options profondément *in-the-money* ou *out-of-the-money* ont un Theta plus proche de zéro car leur valeur est principalement intrinsèqu'ou très faible.
+    *   **Maturité:** Le Theta est plus prononcé à l'approche de l'échéance, en particulier pour les options à la monnaie. La valeur temps s'érode de manière non linéaire, s'accélérant dans les dernières semaines ou jours avant l'expiration .
+
+<Mermaid caption="Figure 5 : " chart={``}/>
+
+#### Le Rho ($\rho$)
+
+Le <Glossary definition="Mesure la sensibilité du prix d'une option à une variation des taux d'intérêt sans risque." id="rho" name="Rho" term="Rho">Rho</Glossary> mesure la sensibilité du prix d'une option aux variations du taux d'intérêt sans risque. Il s'agit de la dérivée première du prix de l'option par rapport au taux d'intérêt sans risque:
+
+$$
+\rho = \frac{\partial V}{\partial r}
+$$
+
+**Interprétation et Impact:**
+*   **Sensibilité aux taux d'intérêt:** Le Rho indique de combien le prix de l'option change pour chaque variation d'un point de pourcentage du taux d'intérêt sans risque.
+*   **Impact sur la valeur:**
+    *   Pour les options d'achat (*calls*), le Rho est généralement positif. Une augmentation des taux d'intérêt sans risque augmente la valeur des options d'achat. Cela s'explique par deux raisons principales: le coût d'opportunité de détenir le sous-jacent est plus élevé (rendant l'option plus attractive), et la valeur actuelle du prix d'exercice (qui ne sera payé qu'à l'échéance) diminue.
+    *   Pour les options de vente (*puts*), le Rho est généralement négatif. Une augmentation des taux d'intérêt sans risque diminue la valeur des options de vente.
+*   **Facteurs influençant le Rho:**
+    *   **Maturité:** Le Rho est plus élevé pour les options à longue maturité, car l'impact des taux d'intérêt est cumulatif sur une période plus longue .
+    *   **Moneyness:** Le Rho est généralement plus significatif pour les options *in-the-money* ou *at-the-money* avec une longue maturité.
+
+### Stratégies de Couverture et Gestion du Risque avec les Grecques
+
+La compréhension des Grecques est fondamentale pour la gestion active des risques dans le trading d'options et de produits dérivés. Elles permettent aux traders et aux gestionnaires de portefeuille de construire et de maintenir des positions dont les sensibilités aux différents facteurs de marché sont contrôlées.
+
+#### Couverture en Delta (Delta Hedging)
+
+La couverture Delta vise à rendre un portefeuille insensible aux petites variations du prix du sous-jacent. Un portefeuille <Glossary id="delta_neutre" name="Delta-neutre" term="Delta-neutre">Delta-neutre</Glossary> a un Delta total égal à zéro, ce qui signifie que les gains ou pertes sur les options sont compensés par des pertes ou gains équivalents sur le sous-jacent ou d'autres options.
+*   **Mécanisme:** Si un portefeuille a un Delta positif, le trader vendra une quantité appropriée du sous-jacent (ou achètera des options de vente ou vendra des options d'achat) pour annuler ce Delta. Inversement pour un Delta négatif.
+*   **Dynamisme:** Le Delta change constamment avec le prix du sous-jacent, le temps et la volatilité. Une couverture Delta est donc dynamique et nécessite des ajustements fréquents (rebalancement) pour maintenir la neutralité.
+
+#### Couverture en Gamma (Gamma Hedging)
+
+La couverture en Gamma va au-delà de la simple neutralité Delta en cherchant à stabiliser le Delta lui-même. Un portefeuille <Glossary id="gamma_neutre" name="Gamma-neutre" term="Gamma-neutre">Gamma-neutre</Glossary> a un Gamma total nul, ce qui signifie que le Delta du portefeuille ne changera pas (ou très peu) en réponse aux mouvements du prix du sous-jacent.
+*   **Avantage:** Un portefeuille Gamma-neutre nécessite moins de rebalancements Delta, réduisant ainsi les coûts de transaction. Il protège également contre les mouvements de prix plus importants que la couverture Delta seule.
+*   **Mécanisme:** Pour rendre un portefeuille Gamma-neutre, on utilise généralement des options. Si un portefeuille a un Gamma négatif (par exemple, une position vendeuse d'options), le trader achètera des options (généralement à la monnaie et à court terme, car elles ont un Gamma élevé) pour rendre le Gamma total positif et le ramener à zéro.
+
+#### Couverture en Vega (Vega Hedging)
+
+La couverture en Vega vise à protéger un portefeuille contre les variations de la volatilité implicite. Un portefeuille <Glossary id="vega_neutre" name="Vega-neutre" term="Vega-neutre">Vega-neutre</Glossary> a un Vega total égal à zéro.
+*   **Importance:** Les changements de volatilité peuvent avoir un impact significatif sur la valeur des options, en particulier celles à longue maturité. La couverture Vega est cruciale pour les teneurs de marché et les traders qui ont des positions importantes en options.
+*   **Mécanisme:** Pour neutraliser le Vega, un trader achètera ou vendra des options dont le Vega compense celui du portefeuille existant. Par exemple, si un portefeuille a un Vega positif (longue volatilité), le trader pourrait vendre des options pour réduire cette exposition.
+
+#### Couverture Multi-Grecques
+
+Les stratégies de couverture les plus sophistiquées impliquent la gestion simultanée de plusieurs Grecques (Delta, Gamma, Vega, Theta, Rho). L'objectif est de construire un portefeuille qui est neutre ou a une exposition contrôlée à plusieurs facteurs de risque.
+*   **Complexité:** Atteindre une neutralité multi-Grecques est complexe car les Grecques sont interdépendantes et changent constamment. Par exemple, un ajustement pour la neutralité Delta peut affecter le Gamma et le Vega.
+*   **Compromis:** Il est souvent impossible d'être parfaitement neutre à toutes les Grecques en même temps, et des compromis doivent être faits en fonction des risques jugés les plus importants.
+
+#### Défis et Limites des Stratégies de Couverture
+
+Malgré leur utilité théorique, les stratégies de couverture basées sur les Grecques rencontrent plusieurs défis dans un environnement de marché réel , :
+*   **Coûts de transaction:** Le rebalancement fréquent nécessaire pour maintenir la neutralité Delta ou Gamma engendre des coûts de transaction (commissions, *bid-ask spread*) qui peuvent éroder les profits.
+*   **Volatilité et Sauts de Prix (Jump Risk):** Les Grecques sont des mesures de sensibilité locales, valables pour de petits mouvements de prix. En cas de mouvements de marché importants et soudains (sauts de prix), les hypothèses sous-jacentes aux modèles (comme la diffusion continue des prix) peuvent être violées, rendant la couverture inefficace. Le <ConceptLink id="jump_diffusion" name="risque de saut" term="risque de saut" unresolved={true}>risque de saut</ConceptLink> est une considération majeure, souvent modélisée par des processus de saut-diffusion <Reference id="6" name="6" term="6">6</Reference>.
+*   **Liquidité du marché:** La capacité à exécuter des transactions de rebalancement au bon moment et au bon prix dépend de la liquidité du marché du sous-jacent et des options. Sur des marchés illiquides, la couverture peut être difficile ou coûteuse.
+*   **Modèle de risque:** Les Grecques sont dérivées de modèles de valorisation d'options (comme le modèle de Black-Scholes). Si le modèl'est imparfait ou si ses hypothèses ne sont pas respectées, les Grecques calculées peuvent ne pas refléter fidèlement les sensibilités réelles.
+*   **Variations des Grecques:** Les Grecques elles-mêmes ne sont pas statiques. Le Gamma du Delta, le Vanna (sensibilité du Delta à la volatilité), le Charm (sensibilité du Delta au temps) sont des Grecques de second ordre qui décrivent comment les Grecques de premier ordre changent, ajoutant une couche de complexité à la gestion des risques.
+
+<Image description="Couverture du livre &quot;How to Draw Animation&quot; de Christopher Hart, présentant des personnages de dessins animés dans un décor médiéval." alt="Couverture du livre &quot;How to Draw Animation&quot; de Christopher Hart, présentant des personnages de dessins animés dans un décor médiéval." caption="Figure 4: Couverture du livre &quot;How to Draw Animation&quot; de Christopher Hart, présentant des personnages de dessins animés dans un décor médiéval. Source: [Internet Archive: &quot;How to Draw Animation Book by Christopher Hart - RFART419 (2024) - Image Collection&quot; (CC License)](https://archive.org/download/how-to-draw-animation-2024-2-48/20241203_RFART419_Draw_Animation_Book.jpg)" src="https://archive.org/download/how-to-draw-animation-2024-2-48/20241203_RFART419_Draw_Animation_Book.jpg" fallbackUrl="https://archive.org/download/how-to-draw-animation-2024-2-48/20241203_RFART419_Draw_Animation_Book.jpg" />
+
+En conclusion, les Grecques fournissent un cadre puissant pour comprendre et gérer les risques des options. Cependant, leur application pratique exige une compréhension approfondie des dynamiques de marché, des limites des modèles et une gestion prudente des coûts et des contraintes opérationnelles.
+
+## Conclusion
+En dépit des défis inhérents à leur application pratique, tels que les coûts de transaction, les limites des modèles et la gestion des risques de saut , , les Grecques demeurent les piliers fondamentaux de la <ConceptLink id="finance_quantitative" name="Finance Quantitative" term="Finance Quantitative" unresolved={true}>Finance Quantitative</ConceptLink> moderne. Elles offrent une lentille indispensable à travers laquelle les professionnels peuvent décomposer et comprendre la complexité des produits dérivés, en particulier les options. Pour les traders, elles sont des outils de pilotage essentiels, permettant d'ajuster finement l'exposition au marché et de mettre en œuvre des stratégies sophistiquées de couverture et de spéculation. La capacité à interpréter et à manipuler le Delta, le Gamma, le Vega, le Theta et le Rho est synonyme d'une maîtrise approfondie des dynamiques sous-jacentes des prix et des risques.
+
+Pour les gestionnaires de risques, la connaissance des Grecques est cruciale pour l'évaluation et la surveillance des portefeuilles d'options. Elles permettent non seulement de quantifier l'impact des variations des paramètrès de marché sur la valeur d'un portefeuille, mais aussi de concevoir des stratégies de <Glossary id="gestion_risques" name="gestion des risques" term="gestion des risques">gestion des risques</Glossary> robustes, visant à neutraliser ou à cibler des expositions spécifiques . L'intégration des Grecques dans les modèles de valorisation, comme ceux décrits par <RealPerson id="hull_john" name="John Hull" searchQuery="John C. Hull" wikipediaUrl="https://en.wikipedia.org/wiki/John_C._Hull" year="1870–1947">John Hull</RealPerson>  ou  , est au cœur de la détermination des prix justes et de la détection des opportunités d'arbitrage. Elles sont, en somme, le langage universel pour naviguer dans l'univers volatil et complexe des marchés dérivés, transformant des instruments financiers apparemment opaques en des entités dont les sensibilités sont mesurables et gérables.
+
+<Mermaid caption="Figure 7 : " chart={``}/>
+
+L'étude des Grecques ne se limite pas à la compréhension de leurs définitions. Elle englobe également la capacité à anticiper leurs évolutions (via les Grecques de second ordre), à comprendre leurs interdépendances et à évaluer les compromis nécessaires lors de la construction de portefeuilles. Cette expertise est d'autant plus précieuse dans un environnement de marché en constante mutation, où la rapidité d'analyse et la précision des ajustements peuvent faire la différence entre le succès et l'échec. Les Grecques ne sont donc pas de simples mesures techniques, mais des concepts stratégiques qui éclairent les décisions d'investissement et de couverture, formant le socle de toute analyse quantitative rigoureuse des options.
+
+<Quote id="wilmott_greeks" name="Citation de Paul Wilmott sur l'importance des Grecques" term="Citation de Paul Wilmott sur l'importance des Grecques">Citation de Paul Wilmott sur l'importance des Grecques</Quote>
+
+<Summary itemsString="Les Grecques sont des mesures de sensibilité des prix des options par rapport à différents facteurs de marché, essentielles pour la gestion des risques.|||Delta mesure la variation du prix de l'option pour une variation d'un euro du prix de l'actif sous-jacent, indiquant la direction et l'ampleur de cette sensibilité.|||Gamma mesure la variation du Delta pour une variation d'un euro du prix de l'actif sous-jacent, reflétant la convexité du prix de l'option.|||Vega mesure la sensibilité du prix de l'option aux changements de la volatilité implicite, un facteur clé dans la valorisation des options.|||Theta mesure la dégradation du prix de l'option due au passage du temps, soulignant l'érosion de la valeur temporelle.|||Rho mesure la sensibilité du prix de l'option aux changements des taux d'intérêt sans risque, bien que son impact soit souvent moins significatif que les autres Grecques.|||La compréhension et la gestion des Grecques sont fondamentales pour la couverture et l'optimisation des portefeuilles d'options."/>
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+    <Question q="Comment le Theta d'une option se comporte-t-il généralement à l'approche de l'échéance pour une option hors de la monnaie?" explanation="Le Theta mesure l'érosion de la valeur de l'option due au passage du temps. Pour les options hors de la monnaie, le Theta s'accélère à l'approche de l'échéance, signifiant une perte de valeur plus rapide.">
+  <Option text="Il devient moins négatif." correct={false} />
+  <Option text="Il devient plus négatif (en valeur absolue)." correct={true} />
+  <Option text="Il reste constant." correct={false} />
+  <Option text="Il devient positif." correct={false} />
+</Question>
+    <Question q="Quelle Grecque est la plus pertinente pour évaluer le risque lié aux changements de la volatilité du marché?" explanation="Le Vega mesure la sensibilité du prix d'une option aux variations de la volatilité implicite de l'actif sous-jacent. Il est essentiel pour gérer le risque de volatilité.">
+  <Option text="Delta" correct={false} />
+  <Option text="Gamma" correct={false} />
+  <Option text="Vega" correct={true} />
+  <Option text="Rho" correct={false} />
+</Question>
+    <Question q="Le Rho d'une option de vente (put) est généralement:" explanation="Le Rho mesure la sensibilité du prix de l'option aux variations des taux d'intérêt sans risque. Pour une option de vente, une augmentation des taux d'intérêt diminue généralement sa valeur, rendant le Rho négatif.">
+  <Option text="Positif." correct={false} />
+  <Option text="Négatif." correct={true} />
+  <Option text="Nul." correct={false} />
+  <Option text="Indépendant des taux d'intérêt." correct={false} />
+</Question>
+    <Question q="Pour une couverture Delta-neutre, un portefeuille doit avoir un Delta total de:" explanation="Un portefeuille Delta-neutre est conçu pour que sa valeur ne change pas pour de petites variations du prix de l'actif sous-jacent, ce qui est atteint lorsque le Delta total du portefeuille est nul.">
+  <Option text="1" correct={false} />
+  <Option text="-1" correct={false} />
+  <Option text="0" correct={true} />
+  <Option text="Indéfini" correct={false} />
+</Question>
+    <Question q="Pour une option d'achat (call) à la monnaie (at-the-money), le Delta est approximativement:" explanation="Pour une option d'achat à la monnaie, la probabilité qu'elle expire dans la monnaie est d'environ 50%, d'où un Delta proche de 0.5.">
+  <Option text="0" correct={false} />
+  <Option text="0.5" correct={true} />
+  <Option text="1" correct={false} />
+  <Option text="-0.5" correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IsOAIGxhIE1vbm5haWUgKEF0LXRoZS1Nb25leSAtIEFUTSkiLCJkZWZpbml0aW9uIjoiVW5lIG9wdGlvbiBlc3Qgw6AgbGEgbW9ubmFpZSBzaSBsZSBwcml4IGR1IHNvdXMtamFjZW50IGVzdCDDqWdhbCBvdSB0csOocyBwcm9jaGUgZHUgcHJpeCBkJ2V4ZXJjaWNlLiJ9LHsidGVybSI6IkFjdGlmIFNvdXMtamFjZW50IiwiZGVmaW5pdGlvbiI6IkwnYWN0aWYgZmluYW5jaWVyIChhY3Rpb24sIGluZGljZSwgbWF0acOocmUgcHJlbWnDqHJlLCBkZXZpc2UpIHN1ciBsZXF1ZWwgcG9ydGUgdW5lIG9wdGlvbi4ifSx7InRlcm0iOiJDb3V2ZXJ0dXJlIChIZWRnaW5nKSIsImRlZmluaXRpb24iOiJTdHJhdMOpZ2llIHZpc2FudCDDoCByw6lkdWlyZSBvdSDDqWxpbWluZXIgbGUgcmlzcXVlIGQndW4gcG9ydGVmZXVpbGxlIGVuIHByZW5hbnQgZGVzIHBvc2l0aW9ucyBjb21wZW5zYXRvaXJlcyBzdXIgZGVzIGluc3RydW1lbnRzIGZpbmFuY2llcnMuIn0seyJ0ZXJtIjoiRGFucyBsYSBNb25uYWllIChJbi10aGUtTW9uZXkgLSBJVE0pIiwiZGVmaW5pdGlvbiI6IlVuZSBvcHRpb24gZXN0IGRhbnMgbGEgbW9ubmFpZSBzaSBzb24gZXhlcmNpY2UgZ8OpbsOpcmVyYWl0IHVuIHByb2ZpdCBpbW3DqWRpYXQuIFBvdXIgdW4gY2FsbCwgc2kgbGUgcHJpeCBkdSBzb3VzLWphY2VudCA+IHByaXggZCdleGVyY2ljZTsgcG91ciB1biBwdXQsIHNpIGxlIHByaXggZHUgc291cy1qYWNlbnQgPCBwcml4IGQnZXhlcmNpY2UuIn0seyJ0ZXJtIjoiRGF0ZSBkJ8OJY2jDqWFuY2UgKERhdGUgZCdleHBpcmF0aW9uKSIsImRlZmluaXRpb24iOiJMYSBkYXRlIMOgIGxhcXVlbGxlIGwnb3B0aW9uIGNlc3NlIGQnw6p0cmUgdmFsaWRlLiJ9LHsidGVybSI6IkRlbHRhIiwiZGVmaW5pdGlvbiI6Ik1lc3VyZSBsYSBzZW5zaWJpbGl0w6kgZHUgcHJpeCBkJ3VuZSBvcHRpb24gw6AgdW5lIHZhcmlhdGlvbiBkdSBwcml4IGRlIGwnYWN0aWYgc291cy1qYWNlbnQuIFVuIERlbHRhIGRlIDAuNSBzaWduaWZpZSBxdWUgbGUgcHJpeCBkZSBsJ29wdGlvbiBhdWdtZW50ZXJhIGRlIDAuNTDigqwgc2kgbGUgcHJpeCBkZSBsJ2FjdGlmIHNvdXMtamFjZW50IGF1Z21lbnRlIGRlIDHigqwuIn0seyJ0ZXJtIjoiR2FtbWEiLCJkZWZpbml0aW9uIjoiTWVzdXJlIGxhIHNlbnNpYmlsaXTDqSBkdSBEZWx0YSBkJ3VuZSBvcHRpb24gw6AgdW5lIHZhcmlhdGlvbiBkdSBwcml4IGRlIGwnYWN0aWYgc291cy1qYWNlbnQuIElsIGluZGlxdWUgbGEgY29udmV4aXTDqSBkdSBwcml4IGRlIGwnb3B0aW9uIHBhciByYXBwb3J0IGF1IHByaXggZHUgc291cy1qYWNlbnQuIn0seyJ0ZXJtIjoiSG9ycyBkZSBsYSBNb25uYWllIChPdXQtb2YtdGhlLU1vbmV5IC0gT1RNKSIsImRlZmluaXRpb24iOiJVbmUgb3B0aW9uIGVzdCBob3JzIGRlIGxhIG1vbm5haWUgc2kgc29uIGV4ZXJjaWNlIG5lIGfDqW7DqXJlcmFpdCBwYXMgZGUgcHJvZml0IGltbcOpZGlhdC4gUG91ciB1biBjYWxsLCBzaSBsZSBwcml4IGR1IHNvdXMtamFjZW50IDwgcHJpeCBkJ2V4ZXJjaWNlOyBwb3VyIHVuIHB1dCwgc2kgbGUgcHJpeCBkdSBzb3VzLWphY2VudCA+IHByaXggZCdleGVyY2ljZS4ifSx7InRlcm0iOiJPcHRpb24iLCJkZWZpbml0aW9uIjoiVW4gY29udHJhdCBxdWkgZG9ubmUgw6Agc29uIGTDqXRlbnRldXIgbGUgZHJvaXQsIG1haXMgbm9uIGwnb2JsaWdhdGlvbiwgZCdhY2hldGVyIG91IGRlIHZlbmRyZSB1biBhY3RpZiBzb3VzLWphY2VudCDDoCB1biBwcml4IGV0IMOgIHVuZSBkYXRlIHByw6lkw6l0ZXJtaW7DqXMuIn0seyJ0ZXJtIjoiUHJpbWUgZCdPcHRpb24iLCJkZWZpbml0aW9uIjoiTGUgcHJpeCBwYXnDqSBwYXIgbCdhY2hldGV1ciBkZSBsJ29wdGlvbiBhdSB2ZW5kZXVyIHBvdXIgYWNxdcOpcmlyIGxlIGRyb2l0IGNvbmbDqXLDqSBwYXIgbCdvcHRpb24uIn0seyJ0ZXJtIjoiUHJpeCBkJ0V4ZXJjaWNlIChQcml4IGQnRXhlcmNpY2UpIiwiZGVmaW5pdGlvbiI6IkxlIHByaXggYXVxdWVsIGwnYWN0aWYgc291cy1qYWNlbnQgcGV1dCDDqnRyZSBhY2hldMOpIChwb3VyIHVuZSBvcHRpb24gZCdhY2hhdCkgb3UgdmVuZHUgKHBvdXIgdW5lIG9wdGlvbiBkZSB2ZW50ZSkgc2kgbCdvcHRpb24gZXN0IGV4ZXJjw6llLiJ9LHsidGVybSI6IlJobyIsImRlZmluaXRpb24iOiJNZXN1cmUgbGEgc2Vuc2liaWxpdMOpIGR1IHByaXggZCd1bmUgb3B0aW9uIMOgIHVuZSB2YXJpYXRpb24gZGVzIHRhdXggZCdpbnTDqXLDqnQgc2FucyByaXNxdWUuIn0seyJ0ZXJtIjoiVGhldGEiLCJkZWZpbml0aW9uIjoiTWVzdXJlIGxhIHNlbnNpYmlsaXTDqSBkdSBwcml4IGQndW5lIG9wdGlvbiBhdSBwYXNzYWdlIGR1IHRlbXBzLiBJbCByZXByw6lzZW50ZSBsYSBkw6lncmFkYXRpb24gZGUgbGEgdmFsZXVyIGRlIGwnb3B0aW9uIMOgIG1lc3VyZSBxdWUgbGEgZGF0ZSBkJ8OpY2jDqWFuY2UgYXBwcm9jaGUuIn0seyJ0ZXJtIjoiVmVnYSIsImRlZmluaXRpb24iOiJNZXN1cmUgbGEgc2Vuc2liaWxpdMOpIGR1IHByaXggZCd1bmUgb3B0aW9uIMOgIHVuZSB2YXJpYXRpb24gZGUgbGEgdm9sYXRpbGl0w6kgaW1wbGljaXRlIGRlIGwnYWN0aWYgc291cy1qYWNlbnQuIn0seyJ0ZXJtIjoiVm9sYXRpbGl0w6kgSW1wbGljaXRlIiwiZGVmaW5pdGlvbiI6IkxhIHZvbGF0aWxpdMOpIGR1IHByaXggZGUgbCdhY3RpZiBzb3VzLWphY2VudCBxdWksIGxvcnNxdSdlbGxlIGVzdCBpbnPDqXLDqWUgZGFucyB1biBtb2TDqGxlIGRlIHZhbG9yaXNhdGlvbiBkJ29wdGlvbnMgKGNvbW1lIEJsYWNrLVNjaG9sZXMpLCBkb25uZSBsZSBwcml4IGRlIG1hcmNow6kgYWN0dWVsIGRlIGwnb3B0aW9uLiJ9XQ==" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiVG9tYXMgQmrDtnJrICgyMDA1KS4gwqsgQXJiaXRyYWdlIFByaWNpbmcgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Ub21hcyUyMEJqJUMzJUI2cmslMjAlMjJBcmJpdHJhZ2UlMjBQcmljaW5nJTIyJTIwMjAwNSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MiwidGV4dCI6IkRhbWlhbm8gQnJpZ28sIEZhYmlvIE1lcmN1cmlvICgyMDEzKS4gwqsgT3RoZXIgSW50ZXJlc3QtUmF0ZSBNb2RlbHMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy02NjItMDQ1NTMtNF85Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjMsInRleHQiOiJHZXJhbGQgRC4gR2F5LCBKb2huIEh1bGwgKDIwMDYpLiDCqyBPcHRpb25zLCBGdXR1cmVzLCBhbmQgT3RoZXIgRGVyaXZhdGl2ZSBTZWN1cml0aWVzLiDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUdlcmFsZCUyMEdheSUyMCUyMk9wdGlvbnMlMjIlMjAyMDA2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo0LCJ0ZXh0IjoiRGFtaWVuIExhbWJlcnRvbiwgQmVybmFyZCBMYXBleXJlICgyMDE4KS4gwqsgSW50cm9kdWN0aW9uIHRvIFN0b2NoYXN0aWMgQ2FsY3VsdXMgQXBwbGllZCB0byBGaW5hbmNlIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEyMDEvOTc4MTQyMDAwOTk0MSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo1LCJ0ZXh0IjoiU3RldmVuIEUuIFNocmV2ZSAoMjAxMikuIMKrIFN0b2NoYXN0aWMgQ2FsY3VsdXMgZm9yIEZpbmFuY2UgSSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0wLTM4Ny0yMjUyNy0yIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjYsInRleHQiOiJJb2FubmlzIEthcmF0emFzLCBTdGV2ZW4gRS4gU2hyZXZlICgyMDEyKS4gwqsgQnJvd25pYW4gTW90aW9uIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTEtNDY4NC0wMzAyLTJfMiIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo3LCJ0ZXh0IjoiTW9uaXF1ZSBKZWFuYmxhbmMgKDIwMTkpLiDCqyBDcml0aXF1ZSBkZSBsJ291dnJhZ2UgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Nb25pcXVlJTIwSmVhbmJsYW5jJTIwJTIyQ3JpdGlxdWUlMjBkZSUyMGwnb3V2cmFnZSUyMiUyMDIwMTkiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6OCwidGV4dCI6Ik1hcmVrIE11c2llbGEsIE1hcmVrIFJ1dGtvd3NraSAoMjAwNikuIMKrIE1hcnRpbmdhbGUgTWV0aG9kcyBpbiBGaW5hbmNpYWwgTW9kZWxsaW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNjYyLTIyMTMyLTciLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjo5LCJ0ZXh0IjoiTWFydGluIEJheHRlciwgQW5kcmV3IFJlbm5pZSAoMjAxNCkuIMKrIEZpbmFuY2lhbCBDYWxjdWx1cyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDE3L2Nibzk3ODA1MTE4MDY2MzYiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxMCwidGV4dCI6IlBhdWwgR2xhc3Nlcm1hbiAoMjAxMykuIMKrIFF1YXNpLU1vbnRlIENhcmxvIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTAtMzg3LTIxNjE3LTFfNSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjExLCJ0ZXh0IjoiSm9uYXRoYW4gRS4gSW5nZXJzb2xsLCBEYXJyZWxsIER1ZmZpZSAoMjAwNikuIMKrIER5bmFtaWMgQXNzZXQgUHJpY2luZyBUaGVvcnkuIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Sm9uYXRoYW4lMjBJbmdlcnNvbGwlMjAlMjJEeW5hbWljJTIwQXNzZXQlMjBQcmljaW5nJTIwVGhlb3J5LiUyMiUyMDIwMDYiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTIsInRleHQiOiJTYWxpaCBOLiBOZWZ0Y2kgKDIwMTIpLiDCqyBJbnRyb2R1Y3Rpb24gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAxNi9iOTc4LTAtMTItMzczNTc0LTQuNTAwMDQtNCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjEzLCJ0ZXh0IjoiUmVuw6kgTC4gU2NoaWxsaW5nICgyMDE2KS4gwqsgU3RvY2hhc3RpYyBkaWZmZXJlbnRpYWwgZXF1YXRpb25zOiBBbiBpbnRyb2R1Y3Rpb24gd2l0aCBhcHBsaWNhdGlvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1SZW4lQzMlQTklMjBTY2hpbGxpbmclMjAlMjJTdG9jaGFzdGljJTIwZGlmZmVyZW50aWFsJTIwZXF1YXRpb25zJTIyJTIwMjAxNiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNCwidGV4dCI6IkF1dGV1ciBpbmNvbm51ICgyMDA3KS4gwqsgUGh5c2ljcyBvZiBmaW5hbmNlLiBLaXJpbGwgSWxpbnNraS4gSm9obiBXaWxleSBhbmQgU29ucyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUF1dGV1ciUyMGluY29ubnUlMjAlMjJQaHlzaWNzJTIwb2YlMjBmaW5hbmNlLiUyMEtpcmlsbCUyMElsaW5za2kuJTIwSm9obiUyMFdpbGV5JTIwYW5kJTIwU29ucyUyMiUyMDIwMDciLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTUsInRleHQiOiJBdXRldXIgaW5jb25udSAoMjAxNSkuIMKrIFRoZSBWb2xhdGlsaXR5IFN1cmZhY2UgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuNjQwNjUvY29uZ28tYWZyaXF1ZS4yMDI1LjYwLjU1MC42MDEiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNiwidGV4dCI6Ik1vbmlxdWUgSmVhbmJsYW5jLCBNYXJjIFlvciwgTWFyYyBDaGVzbmV5ICgyMDA5KS4gwqsgTWF0aGVtYXRpY2FsIE1ldGhvZHMgZm9yIEZpbmFuY2lhbCBNYXJrZXRzIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTEtODQ2MjgtNzM3LTQiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNywidGV4dCI6IlBoaWxpcCBQcm90dGVyICgyMDEzKS4gwqsgU3RvY2hhc3RpYyBEaWZmZXJlbnRpYWwgRXF1YXRpb25zIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNjYyLTAyNjE5LTlfNiIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE4LCJ0ZXh0IjoiQXV0ZXVyIGluY29ubnUgKDIwMDgpLiDCqyBNYXRoZW1hdGljYWwgTW9kZWxzIG9mIEZpbmFuY2lhbCBEZXJpdmF0aXZlcyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0zLTU0MC02ODY4OC0wIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTksInRleHQiOiJBbmRyZWEgUGFzY3VjY2kgKDIwMTEpLiDCqyBQREUgYW5kIE1hcnRpbmdhbGUgTWV0aG9kcyBpbiBPcHRpb24gUHJpY2luZyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC04OC00NzAtMTc4MS04Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjAsInRleHQiOiJKb2huIEMuIEh1bGwuIDIwMTguIMKrIE9wdGlvbnMsIENvbnRyYXRzIMOgIHRlcm1lIGV0IEF1dHJlcyBwcm9kdWl0cyBkw6lyaXbDqXMgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC40MzI0Lzk3ODA0MjkwNTI2MjAiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMSwidGV4dCI6IlNoZWxkb24gTmF0ZW5iZXJnLiAyMDE0LiDCqyBWb2xhdGlsaXTDqSBldCBQcml4IGRlcyBPcHRpb25zIDogU3RyYXTDqWdpZXMgZXQgVGVjaG5pcXVlcyBkZSBUcmFkaW5nIEF2YW5jw6llcyDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjcwNjc1LzI4YzRkMjdlemY2NTR6NDViY3o5MWYyemMwY2FlNjUwYzVmYSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjIyLCJ0ZXh0IjoiQmVybmFyZCBLd2FsLiAyMDA3LiDCqyBGb3JtdWxhdGlvbiByYXRpb25uZWxsZSBkZSBsYSB0aMOpb3JpZSBkZXMgY29ycHVzY3VsZXMgZGUgc3BpbiAxLCBlbiB2dWUgZCd1bmUgdGjDqW9yaWUgZGVzIG3DqXNvbnMgZXQgZGVzIGZvcmNlcyBudWNsw6lhaXJlcyDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9QmVybmFyZCUyMEt3YWwlMjAlMjJGb3JtdWxhdGlvbiUyMHJhdGlvbm5lbGxlJTIwZGUlMjBsYSUyMHRoJUMzJUE5b3JpZSUyMGRlcyUyMGNvcnB1c2N1bGVzJTIwZGUlMjBzcGklMjIlMjAyMDA3Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjIzLCJ0ZXh0IjoiV2lsbW90dCwgwqsgU2VydmluZyB0aGUgcXVhbnRpdGF0aXZlIGZpbmFuY2UgY29tbXVuaXR5IMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1XaWxtb3R0JTIwJTIyU2VydmluZyUyMHRoZSUyMHF1YW50aXRhdGl2ZSUyMGZpbmFuY2UlMjBjb21tdW5pdHklMjIiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfV0=" />
+

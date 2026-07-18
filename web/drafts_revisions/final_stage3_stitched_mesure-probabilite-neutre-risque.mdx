@@ -1,0 +1,209 @@
+---
+title: « Mesure de Probabilité Neutre au Risque »
+subject: « Finance quantitative et modélisation stochastique »
+level: « M1 »
+module: « Mesure de Probabilité Neutre au Risque »
+order: 7
+---
+
+
+
+<DiagnosticQuiz question="Dans un marché financier sans opportunité d'arbitrage, quelle est la propriété fondamentale d'une mesure de probabilité équivalente utilisée pour l'évaluation des actifs?" options="Elle rend tous les processus de prix des actifs des martingales actualisées.|||Elle minimise la variance des rendements des actifs.|||Elle est toujours égale à la probabilité historique.|||Elle garantit que les prix des actifs suivent une distribution normale." correctIndex="0" targetSectionId="introduction-mesure-neutre-risque" sectionTitle="Introduction à la Mesure Neutre au Risque" />
+
+
+
+## Introduction à la Mesure Neutre au Risque
+
+La <ConceptLink id="finance_quantitative" name="finance quantitative" term="finance quantitative" unresolved={true}>finance quantitative</ConceptLink> est une discipline qui applique des outils mathématiques et statistiques avancés à la modélisation et à l'analyse des marchés financiers. Au cœur de cette discipline se trouve la problématique de la valorisation des actifs dérivés. Un actif dérivé, tel qu'une option ou un swap, tire sa valeur d'un ou plusieurs actifs sous-jacents (actions, taux d'intérêt, devises, etc.) et ses flux de trésorerie futurs sont souvent incertains. La question fondamentale est de déterminer un prix « juste » pour ces instruments, un prix qui reflète leur valeur intrinsèque sans permettre d'opportunités d'arbitrage.
+
+L'absence d'<Glossary id="arbitrage" name="opportunité d'arbitrage" term="opportunité d'arbitrage">opportunité d'arbitrage</Glossary> est un principe fondateur en finance moderne. Il stipule qu'il ne devrait pas être possible de réaliser un profit sans risque et sans investissement initial. Dans un marché sans arbitrage, la valorisation des dérivés ne peut pas être arbitraire ; elle doit être cohérente avec les prix des actifs sous-jacents. C'est dans ce contexte que la notion de mesure neutre au risque émerge comme un concept central et élégant.
+
+Intuitivement, la mesure neutre au risque (souvent notée Q) est une mesure de probabilité « fictive » sous laquelle le rendement espéré de tout actif financier est égal au taux sans risque. En d'autres termes, sous cette mesure, les investisseurs sont « neutres au risque », ce qui signifie qu'ils ne demandent aucune prime de risque pour détenir des actifs risqués. La beauté de cette approche est qu'elle permet de valoriser n'importe quel actif dérivé comme l'espérance de ses flux de trésorerie futurs actualisés au taux sans risque, sans avoir à modéliser explicitement les préférences de risque des investisseurs. Ce concept a été formalisé par des travaux pionniers, notamment ceux de  pour le modèle de Black-Scholes <Reference id="1" name="1" term="1">1</Reference>, <Reference id="2" name="2" term="2">2</Reference>.
+
+<Mermaid caption="Figure 1 : " chart={``}/>
+
+L'importance de la mesure neutre au risque est double :
+1.  **Théorique :** Elle fournit un cadre rigoureux pour la valorisation sans arbitrage, reliant les prix des dérivés aux prix des sous-jacents de manière cohérente. Elle est la pierre angulaire du théorème fondamental de la valorisation sans arbitrage.
+2.  **Pratique :** Elle simplifie considérablement les calculs de valorisation. Au lieu de devoir estimer des primes de risque complexes et subjectives, on peut se concentrer sur la modélisation de la dynamique des sous-jacents sous cette mesure particulière, puis calculer des espérances. Cela est particulièrement utile pour les méthodes numériques comme les simulations de Monte Carlo <Reference id="3" name="3" term="3">3</Reference>.
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les conditions d'existence et d'unicité d'une mesure de probabilité neutre au risque dans différents modèles de marché.</li>
+      <li>Évaluer la relation entre l'absence d'arbitrage et l'existence d'une mesure de probabilité équivalente de martingale.</li>
+      <li>Distinguer les propriétés d'une mesure de probabilité historique et d'une mesure de probabilité neutre au risque.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Appliquer le théorème fondamental de l'évaluation des actifs pour valoriser des produits dérivés sous la mesure neutre au risque.</li>
+      <li>Construire des changements de mesure pour passer d'une probabilité historique à une probabilité neutre au risque.</li>
+      <li>Développer des modèles stochastiques simples pour illustrer l'utilisation de la mesure neutre au risque dans la tarification.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Apprécier la rigueur mathématique nécessaire à la construction et à l'application des mesures neutres au risque.</li>
+      <li>Adopter une approche critique face aux hypothèses sous-jacentes aux modèles de tarification basés sur la mesure neutre au risque.</li>
+      <li>Reconnaître l'importance de la mesure neutre au risque comme outil fondamental en finance quantitative.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Fondements: Mesure Équivalente et Densité de Radon-Nikodym
+
+Pour comprendre la mesure neutre au risque, il est essentiel de saisir les concepts de mesure de probabilité équivalente et de densité de Radon-Nikodym.
+
+Une **mesure de probabilité** est une fonction qui attribue une probabilité à chaque événement d'un espace mesurable, respectant les axiomes de Kolmogorov. Dans le contexte financier, nous travaillons généralement avec une mesure de probabilité « réelle » ou « historique », souvent notée P, qui décrit la probabilité des événements tels qu'ils se produisent dans le monde réel, reflétant les anticipations et les primes de risque des investisseurs.
+
+Une **mesure de probabilité équivalente** Q par rapport à une mesure P (notée $Q \sim P$) est une autre mesure de probabilité sur le mêm'espace mesurable telle que P et Q ont les mêmes ensembles de mesure nulle. Autrement dit, si un événement a une probabilité nulle sous P, il a également une probabilité nulle sous Q, et vice-versa. Cela signifie que les deux mesures « sont d'accord » sur ce qui est possible ou impossible. L'équivalence est cruciale car elle garantit que le passage à la mesure neutre au risque ne modifie pas les événements qui peuvent se produire (ou ne pas se produire) sur le marché.
+
+Le lien mathématique entre deux mesures de probabilité équivalentes est établi par la **densité de Radon-Nikodym**. Si $Q \sim P$, alors il existe une fonction aléatoire non négative $Z$ (appelée densité de Radon-Nikodym ou dérivée de Radon-Nikodym) telle que pour tout événement $A$, la probabilité de $A$ sous Q peut être exprimée comme l'espérance de $Z$ sous P, conditionnée par $A$:
+
+$$Q(A) = E_P[Z \cdot \mathbf{1}_A]$$
+
+où $\mathbf{1}_A$ est la fonction indicatrice de l'événement $A$. Plus généralement, pour toute variable aléatoire intégrable $X$, l'espérance de $X$ sous Q peut être calculée comme l'espérance de $X \cdot Z$ sous P:
+
+$$E_Q[X] = E_P[X \cdot Z]$$
+
+La fonction $Z$ est souvent notée $dQ/dP$ et agit comme un « facteur de correction » qui ajuste les probabilités de P pour obtenir celles de Q. Dans le contexte de la finance quantitative, cette densité est étroitement liée au processus de Girsanov, qui permet de changer la mesure de probabilité sous laquelle un processus stochastique est une martingale <Reference id="4" name="4" term="4">4</Reference>, <Reference id="5" name="5" term="5">5</Reference>.
+
+<Image description="Tableau noir rempli d'équations mathématiques, de formules scientifiques et de noms écrits à la craie blanche." alt="Tableau noir rempli d'équations mathématiques, de formules scientifiques et de noms écrits à la craie blanche." caption="Tableau noir rempli d'équations mathématiques, de formules scientifiques et de noms écrits à la craie blanche. Source: Photo by [Thomas T](https://unsplash.com/@pyssling240?utm_source=OpenPrimer&utm_medium=referral) on [Unsplash](https://unsplash.com/?utm_source=OpenPrimer&utm_medium=referral)" title="Formule de la densité de Radon-Nikodym" src="https://images.unsplash.com/photo-1635372722656-389f87a941b7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5ODcyMjJ8MHwxfHNlYXJjaHwxfHxNYXRoZW1hdGljYWwlMjBmb3JtdWxhfGVufDB8fHx8MTc4NDMwMzg2NHww&ixlib=rb-4.1.0&q=80&w=1080" fallbackUrl="https://images.unsplash.com/photo-1635372722656-389f87a941b7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5ODcyMjJ8MHwxfHNlYXJjaHwxfHxNYXRoZW1hdGljYWwlMjBmb3JtdWxhfGVufDB8fHx8MTc4NDMwMzg2NHww&ixlib=rb-4.1.0&q=80&w=1080" isIllustration={true} />
+
+Un changement de mesure est nécessaire pour passer d'une mesure historique (P) à une mesure neutre au risque (Q) pour plusieurs raisons fondamentales:
+1.  **Élimination de la prime de risque :** Sous la mesure P, les rendements des actifs risqués incluent une prime de risque pour compenser les investisseurs pour l'incertitude. Sous la mesure Q, cette prime de risque est « supprimée » ou « absorbée » par le changement de mesure, de sorte que tous les actifs (actualisés au taux sans risque) ont le même rendement espéré que l'actif sans risque.
+2.  **Valorisation sans arbitrage :** Le premier théorème fondamental de la valorisation sans arbitrage stipule qu'un marché est sans arbitrage si et seulement s'il existe une mesure de probabilité équivalente sous laquelle les prix des actifs actualisés sont des martingales <Reference id="6" name="6" term="6">6</Reference>, <Reference id="7" name="7" term="7">7</Reference>. Cette mesure est précisément la mesure neutre au risque.
+3.  **Simplification des calculs :** En transformant le problème de valorisation en un calcul d'espérance sous Q, on évite la nécessité de modéliser les préférences de risque individuelles des investisseurs, qui sont difficiles à observer et à quantifier.
+
+La densité de Radon-Nikodym est donc l'outil mathématique qui permet ce passage crucial du « monde réel » (P) au « monde neutre au risque » (Q), transformant les probabilités de manière à ce que les prix actualisés des actifs deviennent des martingales.
+
+Le concept de densité de Radon-Nikodym, introduit précédemment, est le fondement mathématique qui permet de passer d'une mesure de probabilité à une autre. Dans le contexte des processus stochastiques, et plus particulièrement des mouvements browniens, cet outil prend une forme spécifique et puissante connue sous le nom de théorème de Girsanov.
+
+## Le Théorème de Girsanov et le Changement de Drift
+
+Le <ConceptLink id="theoreme_girsanov" name="Théorème de Girsanov" term="Théorème de Girsanov">Théorème de Girsanov</ConceptLink> est l'un des piliers de la modélisation en finance quantitative, car il fournit le mécanisme précis pour transformer un processus stochastique, tel qu'un mouvement brownien, lors d'un changement de mesure de probabilité équivalente <Reference id="8" name="8" term="8">8</Reference>, . Son essence réside dans la modification du *drift* d'un processus tout en laissant sa *volatilité* inchangée.
+
+Considérons un mouvement brownien standard $W_t$ sous la mesure de probabilité historique $P$. Si nous souhaitons passer à une mesure équivalente $Q$, le théorème de Girsanov stipule qu'il existe un processus $\lambda_t$ (souvent interprété comme le prix de marché du risque) tel que le processus transformé $\tilde{W}_t$ défini par:
+
+$$ \tilde{W}_t = W_t - \int_0^t \lambda_s ds $$
+
+est un mouvement brownien sous la nouvelle mesure $Q$. Le processus $\lambda_t$ est lié à la densité de Radon-Nikodym $Z_t = \frac{dQ}{dP}|_{\mathcal{F}_t}$ par la relation $dZ_t = -Z_t \lambda_t dW_t$.
+
+Ce résultat est d'une importance capitale. Il signifie que si un actif financier suit une équation différentielle stochastique (EDS) de la forme $dS_t = \mu S_t dt + \sigma S_t dW_t$ sous la mesure $P$ (où $\mu$ est le <Glossary id="drift" name="drift" term="drift">drift</Glossary> et $\sigma$ la <Glossary definition="Une mesure de l'ampleur des fluctuations du prix d'un actif financier. Elle est un paramètre clé dans les modèles de valorisation des options, comme le modèle de Black-Scholes." id="volatilite" name="volatilité" term="volatilité">volatilité</Glossary>), alors sous la mesure $Q$, l'EDS de l'actif sera transformée. En substituant $dW_t = d\tilde{W}_t + \lambda_t dt$, l'EDS devient:
+
+$$ dS_t = (\mu + \sigma \lambda_t) S_t dt + \sigma S_t d\tilde{W}_t $$
+
+Le théorème de Girsanov permet donc de changer le terme de drift du processus, passant de $\mu$ à $(\mu + \sigma \lambda_t)$, tandis que le terme de volatilité $\sigma$ reste rigoureusement identique. C'est cette invariance de la volatilité qui est cruciale : elle assure que la structure fondamentale de l'incertitude du marché est préservée, seule la « direction moyenne » du mouvement change.
+
+<Mermaid caption="Figure 3 : " chart={``}/>
+
+Pour la neutralité au risque, l'objectif est de choisir $\lambda_t$ de telle sorte que le drift de l'actif actualisé devienne le taux sans risque. Plus précisément, sous la mesure neutre au risque $Q$, le drift de tout actif actualisé doit être nul, ce qui en fait une martingale. Pour un actif $S_t$ dont le prix actualisé est $e^{-rt}S_t$, son drift sous $Q$ doit être $r$. Le processus $\lambda_t$ est alors directement lié à la prime de risque de l'actif.
+
+Le mathématicien russe <RealPerson id="girsanov" name="Igor Girsanov" searchQuery="Igor Girsanov" wikipediaUrl="https://fr.wikipedia.org/wiki/Igor_Girsanov">Igor Girsanov</RealPerson> a formalisé ce théorème dans les années 1960, fournissant ainsi un outil indispensable pour la théorie moderne de la valorisation des options et des produits dérivés , .
+
+## Valorisation des Actifs Dérivés sous Mesure Neutre au Risque
+
+Le principe fondamental de la valorisation des actifs dérivés en finance quantitative repose sur l'absence d'opportunité d'arbitrage. Ce principe, couplé au théorème de Girsanov, conduit à la conclusion que le prix d'un actif dérivé peut être exprimé comme l'espérance de son payoff futur, actualisé au taux sans risque, sous la <ConceptLink id="mesure_neutre_risque" name="mesure neutre au risque" term="mesure neutre au risque" unresolved={true}>mesure neutre au risque</ConceptLink> $Q$.
+
+Formellement, le prix à l'instant $t$ d'un actif dérivé dont le payoff à l'échéance $T$ est $V_T$ est donné par:
+
+$$ V_t = E_Q[e^{-r(T-t)} V_T | \mathcal{F}_t] $$
+
+où $r$ est le taux d'intérêt sans risque (supposé constant ici pour simplifier), et $E_Q[\cdot | \mathcal{F}_t]$ désigne l'espérance conditionnelle sous la mesure neutre au risque $Q$, étant donné l'information disponible à l'instant $t$.
+
+Ce résultat est d'une puissance considérable car il transforme un problème de valorisation complexe (qui dépendrait des préférences de risque des investisseurs) en un calcul d'espérance sous une mesure de probabilité spécifique. L'absence d'arbitrage garantit l'existence et l'unicité de cette mesure $Q$ (dans un marché complet). Sous $Q$, tous les actifs actualisés (y compris l'actif sous-jacent et le dérivé) sont des martingales, ce qui signifie qu'ils n'offrent aucune prime de risque.
+
+La célèbre formule de  pour la valorisation des options européennes est un cas particulier de cette approche. Développée par Fischer Black, Myron Scholes et Robert Merton, elle permet de valoriser des options européennes sur des actions ne versant pas de dividendes, en supposant que le prix de l'action suit un mouvement brownien géométrique et que le taux sans risque et la volatilité sont constants , <Reference id="9" name="9" term="9">9</Reference>. La formule de Black-Scholes calcule précisément cette espérance sous la mesure neutre au risque.
+
+**Exemple simple de valorisation d'une option européenne:**
+
+Considérons une option d'achat (call) européenne avec un prix d'exercice $K$ et une échéance $T$. Son payoff à l'échéance est $V_T = \max(S_T - K, 0)$, où $S_T$ est le prix de l'actif sous-jacent à l'échéance. Le prix de l'option à l'instant $t=0$ est alors:
+
+$$ C_0 = E_Q[e^{-rT} \max(S_T - K, 0)] $$
+
+Le défi consiste à calculer cette espérance. Dans le cadre du modèle de Black-Scholes, $S_T$ suit une distribution log-normale sous la mesure $Q$, ce qui permet de dériver une formule analytique explicite pour $C_0$. Pour d'autres dérivés ou des modèles plus complexes, cette espérance peut être calculée numériquement, par exemple, via des méthodes de Monte Carlo  ou des schémas aux différences finies pour résoudre l'équation aux dérivées partielles associée.
+
+## Conclusion
+Cette exploration de la mesure de probabilité neutre au risque a mis en lumière des concepts fondamentaux de la finance quantitative. Nous avons vu comment le théorème de Girsanov permet de passer d'une mesure de probabilité physique (historique) à une mesure équivalente sous laquelle les actifs financiers actualisés deviennent des <ConceptLink id="martingale" name="martingales" term="martingales" unresolved={true}>martingales</ConceptLink>. Cette transformation est cruciale car elle élimine la nécessité de modéliser les préférences de risque des investisseurs, simplifiant ainsi considérablement le problème de la valorisation des dérivés.
+
+Le principe de <Glossary id="valorisation_neutre_risque" name="valorisation neutre au risque" term="valorisation neutre au risque">valorisation neutre au risque</Glossary>, découlant de l'absence d'opportunités d'<Glossary id="arbitrage" name="arbitrage" term="arbitrage">arbitrage</Glossary>, fournit un cadre robuste et cohérent pour le calcul du prix de tout instrument dérivé comme l'espérance de son payoff futur actualisé sous cette mesure. Ce cadre est la pierre angulaire de la modélisation financière moderne, permettant non seulement la valorisation d'options simples comme celles de Black-Scholes, mais aussi d'instruments plus complexes tels que les dérivés de taux d'intérêt <Reference id="10" name="10" term="10">10</Reference>, les dérivés de crédit, ou les options exotiques. Il est également essentiel pour la gestion des risques et la mise en place de stratégies de couverture efficaces.
+
+<Mermaid caption="Figure 4 : " chart={``}/>
+
+Bien que puissant, le cadre de la mesure neutre au risque dans sa forme la plus simple (comme dans le modèle de Black-Scholes) repose sur des hypothèses simplificatrices, telles que la volatilité et les taux d'intérêt constants, ou l'absence de sauts dans les prix d'actifs. Les recherches et développements en finance quantitative visent à lever ces restrictions en intégrant des modèles plus sophistiqués, comme les modèles à volatilité stochastique (par exemple, le modèle de ) <Reference id="11" name="11" term="11">11</Reference>, les modèles à sauts <Reference id="12" name="12" term="12">12</Reference>, ou les modèles multi-actifs. Ces avancées nécessitent souvent des techniques numériques plus complexes, telles que les méthodes de Monte Carlo  ou la résolution d'équations aux dérivées partielles stochastiques <Reference id="13" name="13" term="13">13</Reference>, pour calculer les espérances sous la mesure neutre au risque.
+
+<SolvedExercise title="Valorisation d'une option européenne par mesure neutre au risque" solution="">
+  
+</SolvedExercise>
+
+La compréhension approfondie de la mesure neutre au risque est donc indispensable pour tout professionnel de la finance quantitative. Elle offre une perspective unifiée et rigoureuse pour aborder la complexité des marchés financiers et la valorisation des instruments dérivés, tout en ouvrant la voie à des modèles plus réalistes et sophistiqués.
+
+<Quote id="shreve_risk_neutral" name="Citation de Steven Shreve sur l'importance de la mesure neutre au risque" term="Citation de Steven Shreve sur l'importance de la mesure neutre au risque">Citation de Steven Shreve sur l'importance de la mesure neutre au risque</Quote>
+
+<Summary itemsString="La mesure de probabilité neutre au risque est un concept central en finance quantitative, permettant d'évaluer les actifs financiers en l'absence d'opportunités d'arbitrage.|||Sous cette mesure, le prix d'un actif est l'espérance actualisée de ses flux de trésorerie futurs, calculée à l'aide du taux sans risque.|||L'existence d'une mesure neutre au risque est directement liée à l'absence d'arbitrage sur le marché financier.|||L'unicité de cette mesure est garantie par la complétude du marché, ce qui signifie que tout actif peut être répliqué par un portefeuille d'actifs de base.|||La transformation de Girsanov est l'outil mathématique fondamental qui permet de passer de la mesure de probabilité réelle à la mesure neutre au risque, en changeant la dérive des processus stochastiques.|||Cette approche est indispensable pour la valorisation des produits dérivés, notamment dans le cadre du modèle de Black-Scholes et ses extensions."/>
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+    <Question q="Quelle est la caractéristique principale d'une mesure de probabilité neutre au risque?" explanation="Sous une mesure de probabilité neutre au risque, le rendement attendu de tout actif négocié, lorsqu'il est actualisé au taux sans risque, est égal à son prix actuel. Cela implique que tous les actifs devraient croître au taux sans risque.">
+  <Option text="Tous les actifs rapportent le taux sans risque." correct={true} />
+  <Option text="Tous les actifs rapportent la prime de risque du marché." correct={false} />
+  <Option text="Elle reflète la véritable aversion au risque des investisseurs." correct={false} />
+  <Option text="Elle est identique à la mesure de probabilité du monde réel." correct={false} />
+</Question>
+    <Question q="En modélisation financière, pourquoi la mesure de probabilité neutre au risque est-elle particulièrement utile pour la tarification des produits dérivés?" explanation="La mesure neutre au risque permet de valoriser les produits dérivés en prenant l'espérance actualisée des flux de trésorerie futurs, où l'espérance est prise sous cette mesure spécifique. Cela élimine le besoin de modéliser explicitement l'aversion au risque et les primes de risque, simplifiant ainsi le processus de tarification.">
+  <Option text="Elle simplifie le calcul des paiements futurs attendus en supprimant la nécessité d'estimer les primes de risque." correct={true} />
+  <Option text="Elle reflèt'avec précision les probabilités réelles des mouvements futurs du marché." correct={false} />
+  <Option text="Elle permet l'utilisation directe des données historiques sans ajustements." correct={false} />
+  <Option text="Elle intègre les préférences de risque individuelles des investisseurs dans le modèle de tarification." correct={false} />
+</Question>
+    <Question q="Quel théorèm'est fondamental pour passer de la mesure de probabilité du monde réel à une mesure de probabilité neutre au risque dans les modèles financiers en temps continu?" explanation="Le théorème de Girsanov fournit le cadre mathématique pour changer la mesure de probabilité de telle sorte qu'un processus qui était une semi-martingale sous une mesure devienne une martingale sous une autre, ce qui est crucial pour construire des mesures neutres au risque.">
+  <Option text="Théorème Central Limite" correct={false} />
+  <Option text="Théorème de Bayes" correct={false} />
+  <Option text="Théorème de Girsanov" correct={true} />
+  <Option text="Théorème de Fubini" correct={false} />
+</Question>
+    <Question q="Quelle est la relation entre une mesure de probabilité neutre au risque et le concept de martingale?" explanation="Une propriété clé d'une mesure neutre au risque est que le prix de tout actif, lorsqu'il est actualisé au taux sans risque, devient une martingale. Cette propriété est fondamentale pour la tarification sans arbitrage.">
+  <Option text="Sous une mesure neutre au risque, les prix des actifs actualisés sont des martingales." correct={true} />
+  <Option text="Sous une mesure neutre au risque, les prix des actifs sont des martingales." correct={false} />
+  <Option text="Les martingales ne sont pertinentes que sous la mesure du monde réel." correct={false} />
+  <Option text="Il n'y a pas de relation directe; ce sont des concepts distincts." correct={false} />
+</Question>
+    <Question q="Considérons un marché financier complet. Que signifie l'existence d'une mesure de probabilité neutre au risque unique?" explanation="Le premier théorème fondamental de la tarification des actifs stipule que l'absence d'arbitrage est équivalente à l'existence d'une mesure de martingale équivalente (mesure neutre au risque). Le deuxième théorème fondamental stipule qu'un marché est complet si et seulement s'il existe une mesure de martingale équivalente unique.">
+  <Option text="Il n'y a pas d'opportunités d'arbitrage sur le marché." correct={true} />
+  <Option text="Les investisseurs sont tous averses au risque." correct={false} />
+  <Option text="Tous les actifs ont la même volatilité." correct={false} />
+  <Option text="Le marché est inefficace." correct={false} />
+</Question>
+    <Question q="Laquelle des affirmations suivantes concernant la mesure neutre au risque est FAUSSE?" explanation="La mesure neutre au risque est une construction théorique utilisée pour la tarification, et non pour prendre des décisions d'investissement réelles basées sur les rendements attendus, qui reposent généralement sur la mesure du monde réel et les primes de risque.">
+  <Option text="Elle est généralement différente de la mesure de probabilité du monde réel." correct={false} />
+  <Option text="Elle est utilisée pour calculer les rendements attendus pour les décisions d'investissement." correct={true} />
+  <Option text="C'est une mesure de probabilité équivalente." correct={false} />
+  <Option text="Elle simplifie la tarification des produits dérivés en rendant les prix des actifs actualisés des martingales." correct={false} />
+</Question>
+    <Question q="Quel est le rôle d'un numéraire dans la construction d'une mesure neutre au risque?" explanation="Un numéraire est un actif utilisé comme unité de compte. En changeant le numéraire, on peut changer la mesure de martingale équivalente. L'actif sans risque est un choix courant pour un numéraire lors de la construction de la mesure neutre au risque standard.">
+  <Option text="Il sert d'unité de compte par rapport à laquelle tous les autres actifs sont évalués, simplifiant la propriété de martingale." correct={true} />
+  <Option text="Il représente l'actif sans risque sur le marché." correct={false} />
+  <Option text="C'est une mesure de la volatilité du marché." correct={false} />
+  <Option text="Il détermine l'aversion au risque des investisseurs." correct={false} />
+</Question>
+    <Question q="Dans un marché incomplet, combien de mesures de probabilité neutres au risque existent?" explanation="Dans un marché incomplet, il existe plusieurs mesures de martingale équivalentes (mesures neutres au risque) compatibles avec l'absence d'arbitrage. Cela signifie que les prix des produits dérivés ne sont pas uniques sans hypothèses supplémentaires.">
+  <Option text="Exactement une." correct={false} />
+  <Option text="Aucune." correct={false} />
+  <Option text="Une infinité." correct={true} />
+  <Option text="Un nombre fini supérieur à un." correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFic2VuY2UgZCdvcHBvcnR1bml0w6kgZCdhcmJpdHJhZ2UiLCJkZWZpbml0aW9uIjoiUHJpbmNpcGUgZm9uZGFtZW50YWwgZW4gZmluYW5jZSBzdGlwdWxhbnQgcXUnaWwgbidlc3QgcGFzIHBvc3NpYmxlIGRlIHLDqWFsaXNlciB1biBwcm9maXQgY2VydGFpbiBzYW5zIHByZW5kcmUgZGUgcmlzcXVlIGV0IHNhbnMgaW52ZXN0aXNzZW1lbnQgaW5pdGlhbC4gQydlc3QgdW5lIGNvbmRpdGlvbiBuw6ljZXNzYWlyZSDDoCBsJ2V4aXN0ZW5jZSBkJ3VuZSBtZXN1cmUgbmV1dHJlIGF1IHJpc3F1ZS4ifSx7InRlcm0iOiJFc3DDqXJhbmNlIGNvbmRpdGlvbm5lbGxlIiwiZGVmaW5pdGlvbiI6IkwnZXNww6lyYW5jZSBkJ3VuZSB2YXJpYWJsZSBhbMOpYXRvaXJlIMOpdGFudCBkb25uw6kgcXUndW5lIGNlcnRhaW5lIGluZm9ybWF0aW9uIGVzdCBjb25udWUuIEVsbGUgZXN0IGZvbmRhbWVudGFsZSBkYW5zIGxhIGTDqWZpbml0aW9uIGRlcyBtYXJ0aW5nYWxlcyBldCBsYSB2YWxvcmlzYXRpb24gc291cyBtZXN1cmUgbmV1dHJlIGF1IHJpc3F1ZS4ifSx7InRlcm0iOiJGaWx0cmF0aW9uIiwiZGVmaW5pdGlvbiI6IkVuIHRow6lvcmllIGRlcyBwcm9iYWJpbGl0w6lzLCB1bmUgZmlsdHJhdGlvbiByZXByw6lzZW50ZSBsJ2luZm9ybWF0aW9uIGRpc3BvbmlibGUgw6AgY2hhcXVlIGluc3RhbnQuIEVsbGUgZXN0IGNydWNpYWxlIHBvdXIgZMOpZmluaXIgbGVzIG1hcnRpbmdhbGVzIGV0IGxlcyBwcm9jZXNzdXMgYWRhcHTDqXMuIn0seyJ0ZXJtIjoiTWFyY2jDqSBjb21wbGV0IiwiZGVmaW5pdGlvbiI6IlVuIG1hcmNow6kgZmluYW5jaWVyIGVzdCBkaXQgY29tcGxldCBzaSBsZSBwYXlvZmYgZGUgdG91dCBhY3RpZiBjb250aW5nZW50IHBldXQgw6p0cmUgcsOpcGxpcXXDqSBwYXIgdW4gcG9ydGVmZXVpbGxlIGQnYWN0aWZzIG7DqWdvY2lhYmxlcy4gTGEgY29tcGzDqXR1ZGUgZHUgbWFyY2jDqSBnYXJhbnRpdCBsJ3VuaWNpdMOpIGRlIGxhIG1lc3VyZSBuZXV0cmUgYXUgcmlzcXVlLiJ9LHsidGVybSI6Ik1hcnRpbmdhbGUiLCJkZWZpbml0aW9uIjoiVW4gcHJvY2Vzc3VzIHN0b2NoYXN0aXF1ZSBkb250IGwnZXNww6lyYW5jZSBjb25kaXRpb25uZWxsZSBmdXR1cmUsIMOpdGFudCBkb25uw6kgbCdpbmZvcm1hdGlvbiBwcsOpc2VudGUsIGVzdCDDqWdhbGUgw6Agc2EgdmFsZXVyIGFjdHVlbGxlLiBTb3VzIGxhIG1lc3VyZSBuZXV0cmUgYXUgcmlzcXVlLCBsZXMgcHJpeCBhY3R1YWxpc8OpcyBkZXMgYWN0aWZzIHNvbnQgZGVzIG1hcnRpbmdhbGVzLiJ9LHsidGVybSI6Ik1lc3VyZSBkZSBwcm9iYWJpbGl0w6kgbmV1dHJlIGF1IHJpc3F1ZSIsImRlZmluaXRpb24iOiJVbmUgbWVzdXJlIGRlIHByb2JhYmlsaXTDqSDDqXF1aXZhbGVudGUgw6AgbGEgbWVzdXJlIHLDqWVsbGUgc291cyBsYXF1ZWxsZSBsZSBwcml4IGFjdHVhbGlzw6kgZGUgdG91dCBhY3RpZiBmaW5hbmNpZXIgZXN0IHVuZSBtYXJ0aW5nYWxlLiBFbGxlIGVzdCB1dGlsaXPDqWUgcG91ciB2YWxvcmlzZXIgbGVzIHByb2R1aXRzIGTDqXJpdsOpcyBlbiBhY3R1YWxpc2FudCBsZXMgZXNww6lyYW5jZXMgZGUgZ2FpbnMgZnV0dXJzIGF1IHRhdXggc2FucyByaXNxdWUuIn0seyJ0ZXJtIjoiTW9kw6hsZSBkZSBCbGFjay1TY2hvbGVzIiwiZGVmaW5pdGlvbiI6IlVuIG1vZMOobGUgbWF0aMOpbWF0aXF1ZSB1dGlsaXPDqSBwb3VyIGVzdGltZXIgbGUgcHJpeCB0aMOpb3JpcXVlIGRlcyBvcHRpb25zIGV1cm9ww6llbm5lcywgYmFzw6kgc3VyIGwnaHlwb3Row6hzZSBxdWUgbGUgcHJpeCBkZSBsJ2FjdGlmIHNvdXMtamFjZW50IHN1aXQgdW4gbW91dmVtZW50IGJyb3duaWVuIGfDqW9tw6l0cmlxdWUgZXQgZW4gdXRpbGlzYW50IGxhIHZhbG9yaXNhdGlvbiBuZXV0cmUgYXUgcmlzcXVlLiJ9LHsidGVybSI6Ik51bcOpcmFpcmUiLCJkZWZpbml0aW9uIjoiVW4gYWN0aWYgZmluYW5jaWVyIGRvbnQgbGUgcHJpeCBlc3QgdXRpbGlzw6kgY29tbWUgdW5pdMOpIGRlIGNvbXB0ZSBwb3VyIGV4cHJpbWVyIGxlcyBwcml4IGRlcyBhdXRyZXMgYWN0aWZzLiBMZSBjaG9peCBkJ3VuIG51bcOpcmFpcmUgYXBwcm9wcmnDqSBwZXV0IHNpbXBsaWZpZXIgbGEgdmFsb3Jpc2F0aW9uIGRlcyBwcm9kdWl0cyBkw6lyaXbDqXMuIn0seyJ0ZXJtIjoiT3B0aW9uIChjYWxsL3B1dCkiLCJkZWZpbml0aW9uIjoiVW4gY29udHJhdCBmaW5hbmNpZXIgcXVpIGRvbm5lIMOgIHNvbiBkw6l0ZW50ZXVyIGxlIGRyb2l0LCBtYWlzIG5vbiBsJ29ibGlnYXRpb24sIGQnYWNoZXRlciAob3B0aW9uIGQnYWNoYXQgb3UgJ2NhbGwnKSBvdSBkZSB2ZW5kcmUgKG9wdGlvbiBkZSB2ZW50ZSBvdSAncHV0JykgdW4gYWN0aWYgc291cy1qYWNlbnQgw6AgdW4gcHJpeCBldCDDoCB1bmUgZGF0ZSBwcsOpZMOpdGVybWluw6lzLiJ9LHsidGVybSI6IlByb2Nlc3N1cyBzdG9jaGFzdGlxdWUiLCJkZWZpbml0aW9uIjoiVW5lIGZhbWlsbGUgZGUgdmFyaWFibGVzIGFsw6lhdG9pcmVzIGluZGV4w6llcyBwYXIgbGUgdGVtcHMsIHV0aWxpc8OpZSBwb3VyIG1vZMOpbGlzZXIgbCfDqXZvbHV0aW9uIGRlIGdyYW5kZXVycyBhbMOpYXRvaXJlcyBjb21tZSBsZXMgcHJpeCBkJ2FjdGlmcyBmaW5hbmNpZXJzLiJ9LHsidGVybSI6IlByb2R1aXQgZMOpcml2w6kiLCJkZWZpbml0aW9uIjoiVW4gaW5zdHJ1bWVudCBmaW5hbmNpZXIgZG9udCBsYSB2YWxldXIgZMOpcml2ZSBkZSBjZWxsZSBkJ3VuIG91IHBsdXNpZXVycyBhY3RpZnMgc291cy1qYWNlbnRzIChhY3Rpb25zLCBvYmxpZ2F0aW9ucywgbWF0acOocmVzIHByZW1pw6hyZXMsIGV0Yy4pLiBMZXMgb3B0aW9ucyBldCBsZXMgZnV0dXJlcyBzb250IGRlcyBleGVtcGxlcyBjb3VyYW50cy4ifSx7InRlcm0iOiJUYXV4IHNhbnMgcmlzcXVlIiwiZGVmaW5pdGlvbiI6IkxlIHRhdXggZGUgcmVuZGVtZW50IGQndW4gaW52ZXN0aXNzZW1lbnQgY29uc2lkw6lyw6kgY29tbWUgZXhlbXB0IGRlIHRvdXQgcmlzcXVlIGRlIGTDqWZhdXQsIHNvdXZlbnQgcmVwcsOpc2VudMOpIHBhciBsZSB0YXV4IGRlcyBvYmxpZ2F0aW9ucyBkJ8OJdGF0IMOgIGNvdXJ0IHRlcm1lLiBJbCBlc3QgdXRpbGlzw6kgcG91ciBsJ2FjdHVhbGlzYXRpb24gc291cyBsYSBtZXN1cmUgbmV1dHJlIGF1IHJpc3F1ZS4ifSx7InRlcm0iOiJUaMOpb3LDqG1lIGZvbmRhbWVudGFsIGRlIGxhIHZhbG9yaXNhdGlvbiBkZXMgYWN0aWZzIiwiZGVmaW5pdGlvbiI6IlVuIGVuc2VtYmxlIGRlIHRow6lvcsOobWVzIHF1aSDDqXRhYmxpc3NlbnQgbGVzIGxpZW5zIGVudHJlIGwnYWJzZW5jZSBkJ2FyYml0cmFnZSwgbGEgY29tcGzDqXR1ZGUgZHUgbWFyY2jDqSBldCBsJ2V4aXN0ZW5jZS91bmljaXTDqSBkZSBsYSBtZXN1cmUgbmV1dHJlIGF1IHJpc3F1ZS4ifSx7InRlcm0iOiJUcmFuc2Zvcm1hdGlvbiBkZSBHaXJzYW5vdiIsImRlZmluaXRpb24iOiJVbiB0aMOpb3LDqG1lIGNsw6kgZHUgY2FsY3VsIHN0b2NoYXN0aXF1ZSBxdWkgcGVybWV0IGRlIGNoYW5nZXIgbGEgbWVzdXJlIGRlIHByb2JhYmlsaXTDqSBzb3VzIGxhcXVlbGxlIHVuIHByb2Nlc3N1cyBzdG9jaGFzdGlxdWUgZXN0IGTDqWZpbmksIGVuIG1vZGlmaWFudCBzYSBkw6lyaXZlICh0ZW5kYW5jZSBtb3llbm5lKSB0b3V0IGVuIGNvbnNlcnZhbnQgc2Egdm9sYXRpbGl0w6kuIEVzc2VudGllbCBwb3VyIHBhc3NlciBkZSBsYSBtZXN1cmUgcsOpZWxsZSDDoCBsYSBtZXN1cmUgbmV1dHJlIGF1IHJpc3F1ZS4ifSx7InRlcm0iOiJWb2xhdGlsaXTDqSIsImRlZmluaXRpb24iOiJVbmUgbWVzdXJlIGRlIGwnYW1wbGV1ciBkZXMgZmx1Y3R1YXRpb25zIGR1IHByaXggZCd1biBhY3RpZiBmaW5hbmNpZXIuIEVsbGUgZXN0IHVuIHBhcmFtw6h0cmUgY2zDqSBkYW5zIGxlcyBtb2TDqGxlcyBkZSB2YWxvcmlzYXRpb24gZGVzIG9wdGlvbnMsIGNvbW1lIGxlIG1vZMOobGUgZGUgQmxhY2stU2Nob2xlcy4ifV0=" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiVG9tYXMgQmrDtnJrICgyMDA1KS4gwqsgQXJiaXRyYWdlIFByaWNpbmcgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Ub21hcyUyMEJqJUMzJUI2cmslMjAlMjJBcmJpdHJhZ2UlMjBQcmljaW5nJTIyJTIwMjAwNSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MiwidGV4dCI6IlJlbsOpIEwuIFNjaGlsbGluZyAoMjAxNikuIMKrIFN0b2NoYXN0aWMgZGlmZmVyZW50aWFsIGVxdWF0aW9uczogQW4gaW50cm9kdWN0aW9uIHdpdGggYXBwbGljYXRpb25zIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9UmVuJUMzJUE5JTIwU2NoaWxsaW5nJTIwJTIyU3RvY2hhc3RpYyUyMGRpZmZlcmVudGlhbCUyMGVxdWF0aW9ucyUyMiUyMDIwMTYiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjMsInRleHQiOiJKb25hdGhhbiBFLiBJbmdlcnNvbGwsIERhcnJlbGwgRHVmZmllICgyMDA2KS4gwqsgRHluYW1pYyBBc3NldCBQcmljaW5nIFRoZW9yeS4gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Kb25hdGhhbiUyMEluZ2Vyc29sbCUyMCUyMkR5bmFtaWMlMjBBc3NldCUyMFByaWNpbmclMjBUaGVvcnkuJTIyJTIwMjAwNiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NCwidGV4dCI6Ik1hcnRpbiBCYXh0ZXIsIEFuZHJldyBSZW5uaWUgKDIwMTQpLiDCqyBGaW5hbmNpYWwgQ2FsY3VsdXMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAxNy9jYm85NzgwNTExODA2NjM2Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjUsInRleHQiOiJTYWxpaCBOLiBOZWZ0Y2kgKDIwMTIpLiDCqyBJbnRyb2R1Y3Rpb24gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAxNi9iOTc4LTAtMTItMzczNTc0LTQuNTAwMDQtNCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo2LCJ0ZXh0IjoiTW9uaXF1ZSBKZWFuYmxhbmMgKDIwMTkpLiDCqyBDcml0aXF1ZSBkZSBsJ291dnJhZ2UgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Nb25pcXVlJTIwSmVhbmJsYW5jJTIwJTIyQ3JpdGlxdWUlMjBkZSUyMGwnb3V2cmFnZSUyMiUyMDIwMTkiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjcsInRleHQiOiJEYW1pZW4gTGFtYmVydG9uLCBCZXJuYXJkIExhcGV5cmUgKDIwMTgpLiDCqyBJbnRyb2R1Y3Rpb24gdG8gU3RvY2hhc3RpYyBDYWxjdWx1cyBBcHBsaWVkIHRvIEZpbmFuY2UgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTIwMS85NzgxNDIwMDA5OTQxIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjgsInRleHQiOiJHZXJhbGQgRC4gR2F5LCBKb2huIEh1bGwgKDIwMDYpLiDCqyBPcHRpb25zLCBGdXR1cmVzLCBhbmQgT3RoZXIgRGVyaXZhdGl2ZSBTZWN1cml0aWVzLiDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUdlcmFsZCUyMEdheSUyMCUyMk9wdGlvbnMlMjIlMjAyMDA2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo5LCJ0ZXh0IjoiUGF1bCBHbGFzc2VybWFuICgyMDEzKS4gwqsgUXVhc2ktTW9udGUgQ2FybG8gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMC0zODctMjE2MTctMV81Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjEwLCJ0ZXh0IjoiQXV0ZXVyIGluY29ubnUgKDIwMTUpLiDCqyBUaGUgVm9sYXRpbGl0eSBTdXJmYWNlIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjY0MDY1L2NvbmdvLWFmcmlxdWUuMjAyNS42MC41NTAuNjAxIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjExLCJ0ZXh0IjoiTW9uaXF1ZSBKZWFuYmxhbmMsIE1hcmMgWW9yLCBNYXJjIENoZXNuZXkgKDIwMDkpLiDCqyBNYXRoZW1hdGljYWwgTWV0aG9kcyBmb3IgRmluYW5jaWFsIE1hcmtldHMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMS04NDYyOC03MzctNCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxMiwidGV4dCI6IklvYW5uaXMgS2FyYXR6YXMsIFN0ZXZlbiBFLiBTaHJldmUgKDIwMTIpLiDCqyBCcm93bmlhbiBNb3Rpb24gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMS00Njg0LTAzMDItMl8yIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjEzLCJ0ZXh0IjoiSm9obiBDLiBIdWxsLiAyMDE4LiDCqyBPcHRpb25zLCBDb250cmF0cyDDoCB0ZXJtZSBldCBBdXRyZXMgUHJvZHVpdHMgRMOpcml2w6lzIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuNDMyNC85NzgwNDI5MDUyNjIwIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjE0LCJ0ZXh0IjoiU3RldmVuIEUuIFNocmV2ZSAoMjAxMikuIMKrIFN0b2NoYXN0aWMgQ2FsY3VsdXMgZm9yIEZpbmFuY2UgSSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0wLTM4Ny0yMjUyNy0yIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTUsInRleHQiOiJNYXJlayBNdXNpZWxhLCBNYXJlayBSdXRrb3dza2kgKDIwMDYpLiDCqyBNYXJ0aW5nYWxlIE1ldGhvZHMgaW4gRmluYW5jaWFsIE1vZGVsbGluZyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0zLTY2Mi0yMjEzMi03Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTYsInRleHQiOiJBdXRldXIgaW5jb25udSAoMjAwNykuIMKrIFBoeXNpY3Mgb2YgZmluYW5jZS4gS2lyaWxsIElsaW5za2kuIEpvaG4gV2lsZXkgYW5kIFNvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1BdXRldXIlMjBpbmNvbm51JTIwJTIyUGh5c2ljcyUyMG9mJTIwZmluYW5jZS4lMjBLaXJpbGwlMjBJbGluc2tpLiUyMEpvaG4lMjBXaWxleSUyMGFuZCUyMFNvbnMlMjIlMjAyMDA3Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE3LCJ0ZXh0IjoiRGFtaWFubyBCcmlnbywgRmFiaW8gTWVyY3VyaW8gKDIwMTMpLiDCqyBPdGhlciBJbnRlcmVzdC1SYXRlIE1vZGVscyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0zLTY2Mi0wNDU1My00XzkiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxOCwidGV4dCI6IlBoaWxpcCBQcm90dGVyICgyMDEzKS4gwqsgU3RvY2hhc3RpYyBEaWZmZXJlbnRpYWwgRXF1YXRpb25zIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNjYyLTAyNjE5LTlfNiIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE5LCJ0ZXh0IjoiQXV0ZXVyIGluY29ubnUgKDIwMDgpLiDCqyBNYXRoZW1hdGljYWwgTW9kZWxzIG9mIEZpbmFuY2lhbCBEZXJpdmF0aXZlcyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0zLTU0MC02ODY4OC0wIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjAsInRleHQiOiJBbmRyZWEgUGFzY3VjY2kgKDIwMTEpLiDCqyBQREUgYW5kIE1hcnRpbmdhbGUgTWV0aG9kcyBpbiBPcHRpb24gUHJpY2luZyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC04OC00NzAtMTc4MS04Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjEsInRleHQiOiJTdGV2ZW4gRS4gU2hyZXZlLiAyMDA0LiDCqyBDYWxjdWwgc3RvY2hhc3RpcXVlIHBvdXIgbGEgZmluYW5jZSBJSSA6IE1vZMOobGVzIMOgIHRlbXBzIGNvbnRpbnUgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0wLTM4Ny0yMjUyNy0yIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjIsInRleHQiOiJGaXNjaGVyIEJsYWNrIGV0IE15cm9uIFNjaG9sZXMuIDIwMTUuIMKrIEluZGljYXRldXJzIHN1ciBsZXMgaW52ZXN0aXNzZXVycyBpbnN0aXR1dGlvbm5lbHMgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUZpc2NoZXIlMjBCbGFjayUyMGV0JTIwTXlyb24lMjBTY2hvbGVzJTIwJTIySW5kaWNhdGV1cnMlMjBzdXIlMjBsZXMlMjBpbnZlc3Rpc3NldXJzJTIwaW5zdGl0dXRpb25uZWxzJTIyJTIwMjAxNSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMywidGV4dCI6IkJvdWNoYXVkLCDCqyBIYXNhcmQgZXQgRMOpdGVybWluaXNtZSA6IGRlIGxhIFBoeXNpcXVlIEF1eCBNYXJjaMOpcyBGaW5hbmNpZXJzIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTA1MS85NzgtMi04Njg4My02OTItMi5jMDA3Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjQsInRleHQiOiJNb25pcXVlIEplYW5ibGFuYywgTWFyYyBZb3IsIE1hcmMgQ2hlc25leS4gMjAxMi4gwqsgSW50cm9kdWN0aW9uIGF1IGNhbGN1bCBzdG9jaGFzdGlxdWUgZXQgYXBwbGljYXRpb25zIMOgIGxhIGZpbmFuY2UgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0zLTY0Mi0zMTg5OC02XzUiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyNSwidGV4dCI6IkRlIGwnZXh0cmFjdGlvbiBub24tcGFyYW3DqXRyaXF1ZSBkZSBsYSBkZW5zaXTDqSByaXNxdWUgbmV1dHJlLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuNzA2NzUvZDk1Njk1YTh6MjI2OHo0MzA3emI1NzZ6ZjYwNzkwZWI0NzZhIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfV0=" />
+

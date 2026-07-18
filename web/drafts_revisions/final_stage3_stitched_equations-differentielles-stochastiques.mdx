@@ -1,0 +1,227 @@
+---
+title: « Équations Différentielles Stochastiques (EDS) »
+subject: « Finance quantitative et modélisation stochastique »
+level: « M1 »
+module: « Équations Différentielles Stochastiques (EDS) »
+order: 6
+---
+
+
+
+<DiagnosticQuiz question="Quelle est la propriété fondamentale qui distingue le mouvement brownien standard d'un processus de Lévy général ?" options="Il a des accroissements stationnaires et indépendants.|||Ses trajectoires sont continues presque sûrement.|||Sa variance est proportionnelle au temps.|||Il est un processus de Markov." correctIndex="1" targetSectionId="introduction-mouvement-brownien" sectionTitle="Introduction au Mouvement Brownien" />
+
+
+
+## Introduction aux Équations Différentielles Stochastiques
+
+Dans le domaine de la finance quantitative, la modélisation des prix d'actifs et des taux d'intérêt est une tâche complexe, intrinsèquement liée à l'incertitude et à la volatilité des marchés. Historiquement, les premières tentatives de modélisation s'appuyaient sur des équations différentielles ordinaires (EDO), des outils déterministes qui décrivent l'évolution d'un système sans composante aléatoire explicite. Cependant, l'expérience a rapidement montré que ces modèles étaient insuffisants pour capturer la nature imprévisible et les fluctuations erratiques des marchés financiers. Un modèle déterministe, par définition, produirait toujours la même trajectoire future à partir des mêmes conditions initiales, ce qui est en contradiction flagrante avec la réalité observée des prix d'actifs, où les chocs imprévus et les informations nouvelles influencent constamment les trajectoires <Reference id="1" name="1" term="1">1</Reference>.
+
+La nécessité d'intégrer cette incertitude a conduit au développement des Équations Différentielles Stochastiques (EDS). Les EDS sont des outils mathématiques fondamentaux qui permettent de modéliser des systèmes dynamiques dont l'évolution est influencée par des forces aléatoires. Elles sont devenues la pierre angulaire de la finance quantitative moderne, offrant un cadre rigoureux pour la valorisation des produits dérivés, la gestion des risques et l'optimisation de portefeuille <Reference id="2" name="2" term="2">2</Reference>, <Reference id="3" name="3" term="3">3</Reference>.
+
+La source principale de stochasticité dans la plupart des modèles d'EDS en finance est le <ConceptLink id="mouvement_brownien" name="Mouvement Brownien" term="Mouvement Brownien">Mouvement Brownien</ConceptLink>, également connu sous le nom de processus de Wiener. Ce processus, nommé d'après le botaniste Robert Brown qui observa le mouvement aléatoire de particules de pollen dans l'eau, a été formalisé mathématiquement par <RealPerson id="wiener_norbert" name="Norbert Wiener" wikipediaUrl="https://fr.wikipedia.org/wiki/Norbert_Wiener" year="Norbert Wiener (1894-1964) était un mathématicien américain, considéré comme le père de la cybernétique. Ses travaux ont eu un impact majeur sur l'ingénierie, les systèmes de contrôl'et la communication. Il a également apporté des contributions significatives à la théorie des processus stochastiques, notamment le mouvement brownien.">Norbert Wiener</RealPerson> et est devenu un pilier de la théorie des processus stochastiques <Reference id="4" name="4" term="4">4</Reference>. Le mouvement brownien est caractérisé par des accroissements indépendants et stationnaires, distribués selon une loi normale, et une trajectoire continue mais nulle part différentiable. C'est cette non-différentiabilité qui rend les méthodes de calcul classiques inapplicables et nécessite le développement d'un nouveau calcul, le calcul stochastique, dont l'intégrale d'Itô est une composante essentielle.
+
+<Image description="De la vapeur est émise horizontalement depuis une installation industrielle avec des structures métalliques et des tuyaux, sous un ciel nuageux." alt="De la vapeur est émise horizontalement depuis une installation industrielle avec des structures métalliques et des tuyaux, sous un ciel nuageux." caption="Figure 1: De la vapeur est émise horizontalement depuis une installation industrielle avec des structures métalliques et des tuyaux, sous un ciel nuageux. Source: NASA Images (Public Domain)" title="Trajectoire de Mouvement Brownien" src="https://images-assets.nasa.gov/image/SSC-20070913-S2895/SSC-20070913-S2895~thumb.jpg" />
+
+L'intégration du mouvement brownien dans les modèles financiers permet de représenter la nature imprévisible des chocs de marché et la <Glossary id="volatilite" name="volatilité" term="volatilité">volatilité</Glossary> des prix d'actifs, qui est une mesure de l'amplitude de ces fluctuations. Sans cette composante stochastique, les modèles financiers resteraient des abstractions éloignées de la complexité des marchés réels.
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les propriétés fondamentales des équations différentielles stochastiques (EDS) et leur lien avec les processus de diffusion.</li>
+      <li>Évaluer les conditions d'existence et d'unicité des solutions d'EDS, notamment le théorème de Picard-Lindelöf stochastique.</li>
+      <li>Créer des modèles stochastiques simples pour représenter des phénomènes financiers ou physiques en utilisant des EDS.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Appliquer le calcul d'Itô pour dériver des EDS et transformer des processus stochastiques.</li>
+      <li>Résoudre des EDS linéaires et certaines classes d'EDS non linéaires par des méthodes analytiques ou numériques.</li>
+      <li>Évaluer la stabilité et le comportement asymptotique des solutions d'EDS.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Développer une approche critique envers la modélisation stochastique en reconnaissant ses limites et ses hypothèses.</li>
+      <li>Adopter une rigueur mathématique dans la formulation et la résolution des problèmes impliquant des EDS.</li>
+      <li>Collaborer efficacement pour interpréter les résultats des simulations d'EDS dans des contextes appliqués.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Fondements Mathématiques et Définitions Clés des EDS
+
+Pour appréhender les Équations Différentielles Stochastiques, il est impératif de maîtriser certains concepts fondamentaux du calcul stochastique. Contrairement au calcul différentiel classique, où les fonctions sont suffisamment lisses pour être dérivées, les trajectoires des processus stochastiques comme le mouvement brownien sont trop irrégulières. Cela a conduit à l'élaboration de l'intégrale d'Itô.
+
+### L'Intégrale d'Itô
+
+L'intégrale d'Itô, développée par le mathématicien japonais , est une généralisation de l'intégrale de Riemann-Stieltjes pour les processus stochastiques. Elle permet d'intégrer des fonctions par rapport à un mouvement brownien. Formellement, pour un processus stochastique $X_t$ et un mouvement brownien $W_t$, l'intégrale d'Itô est définie comme:
+
+$$ \int_0^T X_s \, dW_s $$
+
+Cette intégrale possède des propriétés distinctes de l'intégrale classique, notamment le fait que son espérance est nulle sous certaines conditions, et que son carré est un processus de martingale. C'est un outil crucial pour la construction et la résolution des EDS <Reference id="5" name="5" term="5">5</Reference>, <Reference id="6" name="6" term="6">6</Reference>.
+
+### Le Lemme d'Itô
+
+Le lemme d'Itô est l'équivalent stochastique de la règle de la chaîne du calcul différentiel classique. Il est absolument fondamental pour la manipulation des fonctions de processus d'Itô (qui sont les solutions des EDS). Si $X_t$ est un processus d'Itô défini par $dX_t = a(t, X_t) \, dt + b(t, X_t) \, dW_t$, et si $f(t, x)$ est une fonction de classe $C^{1,2}$ (c'est-à-dire une fois continûment différentiable par rapport à $t$ et deux fois par rapport à $x$), alors le processus $Y_t = f(t, X_t)$ est aussi un processus d'Itô et son différentiel stochastique est donné par le lemme d'Itô:
+
+$$ dY_t = \left( \frac{\partial f}{\partial t} + a(t, X_t) \frac{\partial f}{\partial x} + \frac{1}{2} b(t, X_t)^2 \frac{\partial^2 f}{\partial x^2} \right) \, dt + b(t, X_t) \frac{\partial f}{\partial x} \, dW_t $$
+
+Le terme $\frac{1}{2} b(t, X_t)^2 \frac{\partial^2 f}{\partial x^2} \, dt$ est le terme d'Itô, qui n'a pas d'équivalent dans le calcul classique et est une conséquence directe de la nature non-différentiable du mouvement brownien. Ce lemme est omniprésent en finance quantitative, notamment pour dériver des équations aux dérivées partielles (EDP) comme l'équation de Black-Scholes à partir de modèles d'EDS , <Reference id="7" name="7" term="7">7</Reference>.
+
+### Définition Formelle d'une EDS
+
+Une Équation Différentielle Stochastique unidimensionnelle peut être formellement écrite sous la forme:
+
+$$ dX_t = \mu(t, X_t) \, dt + \sigma(t, X_t) \, dW_t $$
+
+où:
+*   $X_t$ est le processus stochastique que nous cherchons à modéliser (par exemple, le prix d'un actif financier).
+*   $dW_t$ représente le différentiel d'un mouvement brownien standard, source de la stochasticité.
+*   $\mu(t, X_t)$ est la fonction de **dérive** (ou *drift*). Elle représente la tendance déterministe du processus, c'est-à-dire la direction moyenne dans laquelle le processus évoluerait en l'absence de chocs aléatoires. En finance, elle est souvent associée au taux de rendement espéré de l'actif <Reference id="8" name="8" term="8">8</Reference>.
+*   $\sigma(t, X_t)$ est la fonction de **diffusion** (ou *volatilité*). Elle mesure l'amplitude des fluctuations aléatoires autour de la tendance déterministe. En finance, elle est directement liée à la volatilité de l'actif, indiquant à quel point le prix de l'actif est susceptible de varier de manière imprévisible <Reference id="9" name="9" term="9">9</Reference>.
+
+<Mermaid caption="Figure 2 : " chart={``}/>
+
+L'interprétation économique et probabiliste de ces composantes est cruciale. Le terme de dérive $\mu(t, X_t) \, dt$ capture l'évolution systématique ou prévisible du système, tandis que le terme de diffusion $\sigma(t, X_t) \, dW_t$ représente la composante aléatoire, les chocs imprévus du marché. La combinaison de ces deux termes permet de construire des modèles réalistes pour une multitude de phénomènes financiers, allant de la dynamique des prix d'actions aux modèles de taux d'intérêt et de crédit <Reference id="10" name="10" term="10">10</Reference>.
+
+### Théorèmes d'Existence et d'Unicité des Solutions d'EDS
+
+La pertinence des Équations Différentielles Stochastiques en finance quantitative repose sur la certitude que les modèles qu'elles décrivent possèdent des solutions bien définies et uniques. Sans cette garantie, les prédictions et les valorisations dérivées de ces modèles seraient dépourvues de fondement théorique. L'existence et l'unicité des solutions d'EDS sont assurées sous certaines conditions sur les fonctions de dérive $\mu(t, x)$ et de diffusion $\sigma(t, x)$.
+
+Les conditions les plus courantes pour garantir l'existence et l'unicité d'une solution forte à une EDS sont les suivantes :
+
+1.  **Condition de Lipschitz locale** sur les fonctions $\mu$ et $\sigma$ par rapport à la variable d'état $x$. Cela signifie qu'il existe une constante $L > 0$ telle que pour tout $t \in [0, T]$ et pour tout $x_1, x_2$ dans un domaine donné:
+    $$ |\mu(t, x_1) - \mu(t, x_2)| + |\sigma(t, x_1) - \sigma(t, x_2)| \le L |x_1 - x_2| $$
+    Cette <ConceptLink id="lipschitz_condition" name="Condition de Lipschitz" term="Condition de Lipschitz" unresolved={true}>Condition de Lipschitz</ConceptLink> assure que les fonctions ne varient pas trop rapidement, ce qui est crucial pour éviter des bifurcations ou des comportements chaotiques qui empêcheraient une solution unique.
+
+2.  **Condition de croissance linéaire** sur les fonctions $\mu$ et $\sigma$ par rapport à la variable d'état $x$. Cela signifie qu'il existe une constante $K > 0$ telle que pour tout $t \in [0, T]$ et pour tout $x$:
+    $$ |\mu(t, x)| + |\sigma(t, x)| \le K (1 + |x|) $$
+    Cette <ConceptLink id="linear_growth" name="Croissance Linéaire" term="Croissance Linéaire" unresolved={true}>Croissance Linéaire</ConceptLink> garantit que les solutions ne « divergent » pas à l'infini en temps fini, assurant ainsi leur existence sur un intervalle de temps donné.
+
+Sous ces deux conditions, le théorème d'existence et d'unicité de solutions fortes pour les EDS, souvent attribué à  et d'autres, affirme qu'étant donné une condition initiale $X_0 = x_0$, il existe une unique solution $X_t$ à l'EDS sur un intervalle de temps $[0, T]$. Ce théorèm'est l'analogue stochastique du théorème de Picard-Lindelöf pour les équations différentielles ordinaires.
+
+<Mermaid caption="Figure 3 : " chart={``}/>
+
+L'importance pratique de ces théorèmes en finance est capitale. Ils valident l'utilisation des EDS comme outils de modélisation. Par exemple, pour la valorisation des options, la garantie d'une solution unique à l'EDS décrivant le prix de l'actif sous-jacent est fondamentale pour que le prix de l'option soit lui-mêm'unique et bien défini. Sans cette unicité, les stratégies de couverture et d'arbitrage seraient incertaines, minant la cohérence des marchés financiers , <Reference id="11" name="11" term="11">11</Reference>.
+
+### EDS Linéaires et l'Équation de Black-Scholes
+
+Les Équations Différentielles Stochastiques linéaires constituent une classe d'EDS pour lesquelles les fonctions de dérive et de diffusion dépendent linéairement du processus $X_t$. Une EDS linéaire générale peut s'écrire sous la forme:
+
+$$ dX_t = (a(t)X_t + b(t)) \, dt + (c(t)X_t + d(t)) \, dW_t $$
+
+où $a(t), b(t), c(t), d(t)$ sont des fonctions déterministes du temps. Ces EDS sont particulièrement importantes car elles admettent souvent des solutions explicites ou semi-explicites, ce qui facilite leur analyse et leur application. Un exemple classique est l'EDS linéaire où $c(t)=0$ et $d(t)$ est une constante, menant à un processus d'Ornstein-Uhlenbeck si $a(t)$ est une constante négative.
+
+L'exemple le plus emblématique d'une EDS linéaire en finance est l'Équation Différentielle Stochastique de Black-Scholes pour la modélisation du prix d'un actif financier. Développée par  (et indépendamment par Robert Merton), elle est la pierre angulaire de la théorie moderne de la valorisation des options . L'EDS de Black-Scholes modélise le prix $S_t$ d'un actif (comme une action) comme un processus de mouvement brownien géométrique:
+
+$$ dS_t = \mu S_t \, dt + \sigma S_t \, dW_t $$
+
+où:
+*   $S_t$ est le prix de l'actif au temps $t$.
+*   $\mu$ est le taux de rendement espéré de l'actif (la dérive), supposé constant.
+*   $\sigma$ est la volatilité de l'actif (la diffusion), supposée constante.
+*   $dW_t$ est le différentiel d'un mouvement brownien standard.
+
+Cette équation postule que les rendements instantanés de l'actif sont normalement distribués et que la volatilité est proportionnelle au prix de l'actif. Sa dérivation repose sur l'hypothèse d'un marché sans arbitrage et l'application du lemme d'Itô à la fonction de valeur d'une option. En appliquant le lemme d'Itô à une fonction $V(S_t, t)$ représentant le prix d'une option, et en construisant un portefeuille sans risque, on peut dériver l'équation aux dérivées partielles de Black-Scholes, qui est une équation de la chaleur parabolique , <Reference id="12" name="12" term="12">12</Reference>.
+
+L'EDS de Black-Scholes est centrale dans la valorisation des options car elle fournit un cadre pour comprendre la dynamique des prix des actifs sous-jacents. La solution de cette EDS, $S_t = S_0 \exp\left(\left(\mu - \frac{1}{2}\sigma^2\right)t + \sigma W_t\right)$, montre que le prix de l'actif suit une distribution log-normale. Cette propriété est essentielle pour calculer les probabilités que le prix de l'actif atteigne certains niveaux, ce qui est directement lié au paiement des options. Elle est également fondamentale pour la gestion des risques, notamment pour la couverture des positions en options via le concept de « Grecques » .
+
+## Conclusion
+Les Équations Différentielles Stochastiques (EDS) se sont révélées être un outil mathématique d'une puissance et d'une polyvalence inégalées pour la modélisation des phénomènes financiers. Depuis les travaux pionniers de  sur le calcul stochastique, elles ont transformé notre compréhension des marchés, permettant de capturer l'incertitude inhérente aux prix des actifs et aux taux d'intérêt. Leur capacité à décrire l'évolution dynamique de variables sous l'influence de chocs aléatoires, comme le mouvement brownien, en fait le pilier de la finance quantitative moderne, de la valorisation des produits dérivés à la gestion des risques et à l'optimisation de portefeuille , .
+
+Cependant, les modèles fondamentaux présentés, à l'instar de l'EDS de Black-Scholes, reposent sur des hypothèses simplificatrices qui, bien que facilitant l'analyse, ne reflètent pas toujours la complexité des marchés réels. La constance de la volatilité, l'absence de sauts dans les prix des actifs, la normalité des rendements et l'hypothèse de marchés parfaits sont autant de limites reconnues. Ces lacunes ont stimulé le développement de modèles plus sophistiqués, cherchant à mieux coller à la réalité empirique des marchés financiers.
+
+<Image description="Une page de notes manuscrites en physique, incluant des équations sur le mouvement brownien, la distribution de masse et la diffusion." alt="Une page de notes manuscrites en physique, incluant des équations sur le mouvement brownien, la distribution de masse et la diffusion." caption="Figure 2: Une page de notes manuscrites en physique, incluant des équations sur le mouvement brownien, la distribution de masse et la diffusion. Source: [Internet Archive: &quot;Brownian motion in the universe&quot; (CC License)](https://archive.org/download/img-20220324-124512/IMG_20220324_124512.jpg)" title="Diffusion avec Sauts vs. GBM" src="https://archive.org/download/img-20220324-124512/IMG_20220324_124512.jpg" fallbackUrl="https://archive.org/download/img-20220324-124512/IMG_20220324_124512.jpg" />
+
+Parmi les directions d'approfondissement, les <ConceptLink id="eds_a_sauts" name="EDS à sauts" term="EDS à sauts" unresolved={true}>EDS à sauts</ConceptLink> (ou modèles de diffusion-sauts) intègrent des discontinuités dans les trajectoires des prix, permettant de modéliser les chocs soudains et les événements extrêmes observés sur les marchés <Reference id="13" name="13" term="13">13</Reference>. Les modèles à <ConceptLink id="volatilite_stochastique" name="volatilité stochastique" term="volatilité stochastique">volatilité stochastique</ConceptLink> (par exemple, le modèlede Heston ou de SABR) reconnaissent que la volatilité elle-même n'est pas constante mais évolue de manière aléatoire au fil du temps, capturant ainsi des phénomènes comme le « smile » ou le « skew » de volatilité <Reference id="14" name="14" term="14">14</Reference>.
+
+<Mermaid caption="Figure 5 : " chart={``}/>
+
+D'autres avancées incluent l'utilisation de <Glossary id="processus_de_levy" name="processus de Lévy" term="processus de Lévy">processus de Lévy</Glossary> plus généraux que le mouvement brownien pour modéliser des distributions de rendements à queues épaisses, le contrôle stochastique pour l'optimisation dynamique des décisions financières, et la calibration de modèles, qui consiste à ajuster les paramètrès des EDS aux données de marché observées. Les méthodes numériques, telles que les simulations de Monte Carlo <Reference id="15" name="15" term="15">15</Reference> ou les schémas aux différences finies pour les équations aux dérivées partielles associées, deviennent alors indispensables pour résoudre ces modèles plus complexes. L'étude des EDS ouvre ainsi la voie à une compréhension plus fine et à une gestion plus robuste des risques et des opportunités dans l'univers financier.
+
+<Quiz durationLimit={300} limit={3}>
+    <Question q="Quelle est la principale différence entre une Équation Différentielle Ordinaire (EDO) et une Équation Différentielle Stochastique (EDS)?" explanation="Les EDS se distinguent des EDO par l'ajout d'un terme stochastique, généralement lié à un mouvement brownien, qui introduit de l'aléatoire dans l'évolution du système.">
+  <Option text="Les EDO décrivent des systèmes déterministes, tandis que les EDS incluent un terme de bruit aléatoire." correct={true} />
+  <Option text="Les EDO sont toujours linéaires, alors que les EDS sont toujours non-linéaires." correct={false} />
+  <Option text="Les EDS ont toujours des solutions analytiques, contrairement aux EDO." correct={false} />
+  <Option text="Les EDO modélisent des phénomènes continus, les EDS des phénomènes discrets." correct={false} />
+</Question>
+    <Question q="Quel composant d'une EDS est responsable de l'introduction de l'aléatoire dans le système?" explanation="Le mouvement brownien (ou processus de Wiener) est le terme stochastique fondamental qui introduit l'aléatoire et les fluctuations dans une EDS.">
+  <Option text="Le terme de dérive (drift)." correct={false} />
+  <Option text="Le terme de diffusion (diffusion)." correct={false} />
+  <Option text="Le mouvement brownien (ou processus de Wiener)." correct={true} />
+  <Option text="Les conditions initiales." correct={false} />
+</Question>
+    <Question q="Parmi les domaines suivants, lesquels sont des applications courantes des EDS en finance quantitative?" explanation="Les EDS sont largement utilisées en finance pour modéliser l'évolution des actifs, valoriser les produits dérivés et gérer les risques grâce à leur capacité à capturer l'incertitude des marchés. La conception de bases de données n'est pas un domaine d'application des EDS.">
+  <Option text="Modélisation des prix d'actifs (actions, taux d'intérêt)." correct={true} />
+  <Option text="Gestion des risques et couverture de portefeuille." correct={false} />
+  <Option text="Conception de bases de données relationnelles." correct={false} />
+</Question>
+</Quiz>
+
+<Summary itemsString="Les Équations Différentielles Stochastiques (EDS) sont des outils mathématiques essentiels pour modéliser des systèmes dynamiques influencés par des phénomènes aléatoires.|||Elles généralisent les équations différentielles ordinaires (EDO) en incorporant un terme de bruit stochastique, souvent lié au mouvement brownien.|||L'intégrale d'Itô est la pierre angulaire des EDS, permettant d'intégrer des fonctions par rapport à des processus stochastiques non différentiables.|||Le Lemme d'Itô est un résultat fondamental qui fournit une règle de changement de variable pour les processus d'Itô, indispensable pour la résolution et l'analyse des EDS.|||Les EDS trouvent des applications cruciales dans de nombreux domaines, notamment la finance quantitative (modélisation des prix d'actifs), la physique, la biologie et l'ingénierie.|||Des méthodes numériques, telles que le schéma d'Euler-Maruyama, sont souvent employées pour approximer les solutions des EDS lorsque des solutions analytiques exactes ne sont pas disponibles."/>
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+    <Question q="Qu'est-ce qu'une Équation Différentielle Stochastique (EDS) ?" explanation="Une EDS est une équation différentielle où le terme de perturbation est un processus stochastique, généralement un mouvement brownien (processus de Wiener), ce qui la distingue des équations différentielles ordinaires.">
+  <Option text="Une équation différentielle dont les coefficients sont des variables aléatoires." correct={false} />
+  <Option text="Une équation différentielle qui inclut un terme de bruit blanc modélisé par un processus de Wiener." correct={true} />
+  <Option text="Une équation différentielle ordinaire résolue par des méthodes stochastiques." correct={false} />
+  <Option text="Une équation différentielle partielle utilisée en finance quantitative." correct={false} />
+</Question>
+    <Question q="Quel est le rôle principal du Lemme d'Itô dans la résolution des EDS ?" explanation="Le Lemme d'Itô est un outil fondamental pour différencier des fonctions de processus stochastiques, car les règles de calcul différentiel classique ne s'appliquent pas directement en raison de la non-différentiabilité du mouvement brownien.">
+  <Option text="Il permet de calculer la dérivée d'une fonction d'un processus stochastique." correct={true} />
+  <Option text="Il fournit une solution analytique directe pour toutes les EDS." correct={false} />
+  <Option text="Il transforme une EDS en une équation différentielle ordinaire." correct={false} />
+  <Option text="Il est utilisé pour simuler numériquement les trajectoires des EDS." correct={false} />
+</Question>
+    <Question q="Comment le modèle de Black-Scholes est-il lié aux Équations Différentielles Stochastiques ?" explanation="Le modèle de Black-Scholes suppose que le prix de l'actif sous-jacent suit une EDS de type mouvement brownien géométrique, ce qui est la base de la dérivation de l'équation aux dérivées partielles de Black-Scholes.">
+  <Option text="Le prix de l'actif sous-jacent dans le modèle de Black-Scholes est modélisé par une EDS." correct={true} />
+  <Option text="Le modèle de Black-Scholes utilise des EDS pour calibrer les paramètrès du marché." correct={false} />
+  <Option text="Les EDS sont utilisées pour dériver la formule de Black-Scholes sans mouvement brownien." correct={false} />
+</Question>
+    <Question q="Dans une EDS de la forme dXt = " explanation="μ(Xt, t) est le coefficient de dérive (drift), représentant la tendance déterministe du processus, tandis que σ(Xt, t) est le coefficient de diffusion (diffusion), représentant l'amplitude de la composante stochastique (bruit).">
+  <Option text="μ est le terme de diffusion et σ est le terme de dérive." correct={false} />
+  <Option text="μ est le terme de dérive et σ est le terme de diffusion." correct={true} />
+  <Option text="μ et σ sont tous deux des termes de bruit." correct={false} />
+  <Option text="μ et σ sont des constantes de corrélation." correct={false} />
+</Question>
+    <Question q="Quelle est la différence principale entre une solution forte et une solution faible d'une EDS ?" explanation="Une solution forte est un processus stochastique qui satisfait l'EDS sur un espace de probabilité et un mouvement brownien donnés. Une solution faible est un couple (processus, mouvement brownien) sur un espace de probabilité potentiellement différent, qui satisfait l'EDS.">
+  <Option text="Une solution forte est déterministe, tandis qu'une solution faible est stochastique." correct={false} />
+  <Option text="Une solution forte est un processus stochastique défini sur l'espace de probabilité donné, tandis qu'une solution faible est un processus stochastique pour lequel on peut trouver un espace de probabilité approprié." correct={true} />
+  <Option text="Une solution forte est une solution analytique, tandis qu'une solution faible est une solution numérique." correct={false} />
+  <Option text="Une solution forte existe toujours, alors qu'une solution faible n'existe que sous certaines conditions." correct={false} />
+</Question>
+    <Question q="Quelle méthode est couramment utilisée pour la simulation numérique des trajectoires d'une EDS ?" explanation="La méthode d'Euler-Maruyama est une extension de la méthode d'Euler pour les équations différentielles ordinaires, adaptée aux EDS en discrétisant le temps et en ajoutant un terme de bruit aléatoire.">
+  <Option text="La méthode de Newton-Raphson." correct={false} />
+  <Option text="La méthode d'Euler-Maruyama." correct={true} />
+  <Option text="La méthode des moindres carrés ordinaires." correct={false} />
+  <Option text="La transformée de Fourier rapide." correct={false} />
+</Question>
+    <Question q="Sous quelles conditions un processus d'Itô est-il une martingale ?" explanation="Un processus d'Itô X_t = 'X_0 + ∫_0^t μ_s ds + ∫_0^t σ_s dW_s est une martingale si son terme de dérive (μ_s) est nul, sous certaines conditions d'intégrabilité.">
+  <Option text="Si son terme de dérive est nul." correct={true} />
+  <Option text="Si son terme de diffusion est nul." correct={false} />
+  <Option text="Si les coefficients de dérive et de diffusion sont constants." correct={false} />
+  <Option text="Si le processus est borné." correct={false} />
+</Question>
+    <Question q="À quoi sert le théorème de Girsanov en finance quantitative ?" explanation="Le théorème de Girsanov permet de passer d'une mesure de probabilité à une autre (par exemple, de la mesure historique à la mesure risque-neutre) tout en transformant le mouvement brownien, ce qui est essentiel pour la valorisation des produits dérivés.">
+  <Option text="À trouver des solutions analytiques aux EDS non linéaires." correct={false} />
+  <Option text="À changer la mesure de probabilité sous laquelle un processus de Wiener est défini, ce qui est crucial pour la valorisation sans arbitrage." correct={true} />
+  <Option text="À prouver l'existence et l'unicité des solutions d'EDS." correct={false} />
+  <Option text="À simuler des trajectoires de processus stochastiques plus efficacement." correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkNvZWZmaWNpZW50IGRlIERpZmZ1c2lvbiIsImRlZmluaXRpb24iOiJMZSB0ZXJtZSBiKHQsIFhfdCkgZGFucyB1bmUgRURTIChkWF90ID0gYSh0LCBYX3QpZHQgKyBiKHQsIFhfdClkV190KSBxdWkgcmVwcsOpc2VudGUgbCdpbnRlbnNpdMOpIGR1IGJydWl0IHN0b2NoYXN0aXF1ZSBvdSBsYSB2b2xhdGlsaXTDqSBkdSBwcm9jZXNzdXMuIn0seyJ0ZXJtIjoiQ29lZmZpY2llbnQgZGUgRHJpZnQgKETDqXJpdmUpIiwiZGVmaW5pdGlvbiI6IkxlIHRlcm1lIGEodCwgWF90KSBkYW5zIHVuZSBFRFMgKGRYX3QgPSBhKHQsIFhfdClkdCArIGIodCwgWF90KWRXX3QpIHF1aSByZXByw6lzZW50ZSBsYSBjb21wb3NhbnRlIGTDqXRlcm1pbmlzdGUgb3UgbGEgdGVuZGFuY2UgZHUgcHJvY2Vzc3VzLiJ9LHsidGVybSI6IkRpZmbDqXJlbnRpZWxsZSBTdG9jaGFzdGlxdWUiLCJkZWZpbml0aW9uIjoiTGEgbm90YXRpb24gZm9ybWVsbGUgZFhfdCA9IGEodCwgWF90KWR0ICsgYih0LCBYX3QpZFdfdCBwb3VyIHVuZSBFRFMsIG/DuSBkV190IHJlcHLDqXNlbnRlIGxhIGRpZmbDqXJlbnRpZWxsZSBkdSBtb3V2ZW1lbnQgYnJvd25pZW4uIn0seyJ0ZXJtIjoiw4lxdWF0aW9uIERpZmbDqXJlbnRpZWxsZSBTdG9jaGFzdGlxdWUgKEVEUykiLCJkZWZpbml0aW9uIjoiVW5lIMOpcXVhdGlvbiBkaWZmw6lyZW50aWVsbGUgcXVpIGNvbnRpZW50IHVuIG91IHBsdXNpZXVycyB0ZXJtZXMgZGUgcHJvY2Vzc3VzIHN0b2NoYXN0aXF1ZXMsIGfDqW7DqXJhbGVtZW50IHVuIG1vdXZlbWVudCBicm93bmllbiwgbW9kw6lsaXNhbnQgZGVzIHBow6lub23DqG5lcyBzb3VtaXMgw6AgZGVzIGZsdWN0dWF0aW9ucyBhbMOpYXRvaXJlcy4ifSx7InRlcm0iOiJGaWx0cmF0aW9uIiwiZGVmaW5pdGlvbiI6IlVuZSBzdWl0ZSBjcm9pc3NhbnRlIGRlIHNpZ21hLWFsZ8OoYnJlcyByZXByw6lzZW50YW50IGwnaW5mb3JtYXRpb24gZGlzcG9uaWJsZSDDoCBjaGFxdWUgaW5zdGFudCB0LiBFbGxlIG1vZMOpbGlzZSBsJ2FjY3VtdWxhdGlvbiBwcm9ncmVzc2l2ZSBkZSBsJ2luZm9ybWF0aW9uIGF1IGNvdXJzIGR1IHRlbXBzLiJ9LHsidGVybSI6IkludMOpZ3JhbGUgZCdJdMO0IiwiZGVmaW5pdGlvbiI6IlVuZSBnw6luw6lyYWxpc2F0aW9uIGRlIGwnaW50w6lncmFsZSBkZSBSaWVtYW5uLVN0aWVsdGplcyBwb3VyIGxlcyBpbnTDqWdyYW5kcyBub24tYWRhcHTDqXMgZXQgbGVzIGludMOpZ3JhdGV1cnMgZGUgdHlwZSBtb3V2ZW1lbnQgYnJvd25pZW4sIG/DuSBsJ2ludMOpZ3JhbmRlIGVzdCDDqXZhbHXDqSBhdSBkw6lidXQgZGUgbCdpbnRlcnZhbGxlIGRlIHRlbXBzLiJ9LHsidGVybSI6IkxlbW1lIGQnSXTDtCIsImRlZmluaXRpb24iOiJVbmUgcsOoZ2xlIGZvbmRhbWVudGFsZSBkZSBjaGFuZ2VtZW50IGRlIHZhcmlhYmxlIHBvdXIgbGVzIHByb2Nlc3N1cyBkJ0l0w7QsIGFuYWxvZ3VlIMOgIGxhIHLDqGdsZSBkZSBsYSBjaGHDrm5lIGVuIGNhbGN1bCBkaWZmw6lyZW50aWVsIG9yZGluYWlyZSwgbWFpcyBpbmNsdWFudCB1biB0ZXJtZSBkZSBjb3JyZWN0aW9uIGxpw6kgw6AgbGEgdmFyaWFuY2UgcXVhZHJhdGlxdWUuIn0seyJ0ZXJtIjoiTWFydGluZ2FsZSIsImRlZmluaXRpb24iOiJVbiBwcm9jZXNzdXMgc3RvY2hhc3RpcXVlIGRvbnQgbCdlc3DDqXJhbmNlIGNvbmRpdGlvbm5lbGxlIGRlIHNhIHZhbGV1ciBmdXR1cmUsIMOpdGFudCBkb25uw6kgdG91dGVzIGxlcyBpbmZvcm1hdGlvbnMgcGFzc8OpZXMsIGVzdCDDqWdhbGUgw6Agc2EgdmFsZXVyIGFjdHVlbGxlLiJ9LHsidGVybSI6Ik1lc3VyZSBkZSBQcm9iYWJpbGl0w6kgTmV1dHJlIGF1IFJpc3F1ZSIsImRlZmluaXRpb24iOiJVbmUgbWVzdXJlIGRlIHByb2JhYmlsaXTDqSDDqXF1aXZhbGVudGUgw6AgbGEgbWVzdXJlIHLDqWVsbGUgc291cyBsYXF1ZWxsZSBsZXMgcHJpeCBkZXMgYWN0aWZzIGFjdHVhbGlzw6lzIHNvbnQgZGVzIG1hcnRpbmdhbGVzLiBFbGxlIGVzdCBjcnVjaWFsZSBwb3VyIGxhIHZhbG9yaXNhdGlvbiBkZXMgcHJvZHVpdHMgZMOpcml2w6lzIGVuIGZpbmFuY2UuIn0seyJ0ZXJtIjoiTW91dmVtZW50IEJyb3duaWVuIChQcm9jZXNzdXMgZGUgV2llbmVyKSIsImRlZmluaXRpb24iOiJVbiBwcm9jZXNzdXMgc3RvY2hhc3RpcXVlIGVuIHRlbXBzIGNvbnRpbnUsIGNhcmFjdMOpcmlzw6kgcGFyIGRlcyBhY2Nyb2lzc2VtZW50cyBpbmTDqXBlbmRhbnRzIGV0IHN0YXRpb25uYWlyZXMsIHVuZSB0cmFqZWN0b2lyZSBjb250aW51ZSBldCB1bmUgdmFyaWFuY2UgcHJvcG9ydGlvbm5lbGxlIGF1IHRlbXBzLiBJbCBlc3QgZm9uZGFtZW50YWwgZW4gY2FsY3VsIHN0b2NoYXN0aXF1ZS4ifSx7InRlcm0iOiJQcm9jZXNzdXMgZCdJdMO0IiwiZGVmaW5pdGlvbiI6IlVuIHByb2Nlc3N1cyBzdG9jaGFzdGlxdWUgWF90IHF1aSBwZXV0IMOqdHJlIMOpY3JpdCBzb3VzIGxhIGZvcm1lIGQndW5lIGludMOpZ3JhbGUgZCdJdMO0IGV0IGQndW5lIGludMOpZ3JhbGUgZGUgTGViZXNndWUsIGMnZXN0LcOgLWRpcmUgWF90ID0gWF8wICsg4oirIGFfcyBkcyArIOKIqyBiX3MgZFdfcy4ifSx7InRlcm0iOiJQcm9jZXNzdXMgU3RvY2hhc3RpcXVlIiwiZGVmaW5pdGlvbiI6IlVuZSBjb2xsZWN0aW9uIGRlIHZhcmlhYmxlcyBhbMOpYXRvaXJlcyBpbmRleMOpZXMgcGFyIGxlIHRlbXBzLCBkw6ljcml2YW50IGwnw6l2b2x1dGlvbiBkJ3VuIHN5c3TDqG1lIGF1IGNvdXJzIGR1IHRlbXBzIGRlIG1hbmnDqHJlIGFsw6lhdG9pcmUuIn0seyJ0ZXJtIjoiU2Now6ltYSBkJ0V1bGVyLU1hcnV5YW1hIiwiZGVmaW5pdGlvbiI6IlVuZSBtw6l0aG9kZSBudW3DqXJpcXVlIGRlIGRpc2Nyw6l0aXNhdGlvbiBwb3VyIGFwcHJveGltZXIgbGVzIHNvbHV0aW9ucyBkZXMgRURTLCBhbmFsb2d1ZSDDoCBsYSBtw6l0aG9kZSBkJ0V1bGVyIHBvdXIgbGVzIEVETywgbWFpcyBpbmNsdWFudCB1biB0ZXJtZSBhbMOpYXRvaXJlIHBvdXIgbGUgYnJ1aXQgc3RvY2hhc3RpcXVlLiJ9LHsidGVybSI6IlRow6lvcsOobWUgZGUgR2lyc2Fub3YiLCJkZWZpbml0aW9uIjoiVW4gdGjDqW9yw6htZSBmb25kYW1lbnRhbCBlbiBjYWxjdWwgc3RvY2hhc3RpcXVlIHF1aSBkw6ljcml0IGNvbW1lbnQgbGVzIHByb3ByacOpdMOpcyBkJ3VuIHByb2Nlc3N1cyBzdG9jaGFzdGlxdWUgY2hhbmdlbnQgbG9yc3F1ZSBsYSBtZXN1cmUgZGUgcHJvYmFiaWxpdMOpIHNvdXMtamFjZW50ZSBlc3QgbW9kaWZpw6llLCBlc3NlbnRpZWwgcG91ciBsYSB2YWxvcmlzYXRpb24gZCdvcHRpb25zLiJ9LHsidGVybSI6IlZhcmlhbmNlIFF1YWRyYXRpcXVlIiwiZGVmaW5pdGlvbiI6IlVuZSBtZXN1cmUgZGUgbGEgdmFyaWF0aW9uIGQndW4gcHJvY2Vzc3VzIHN0b2NoYXN0aXF1ZSwgcGFydGljdWxpw6hyZW1lbnQgaW1wb3J0YW50ZSBwb3VyIGxlcyBtYXJ0aW5nYWxlcyBldCBsZSBtb3V2ZW1lbnQgYnJvd25pZW4uIFBvdXIgbGUgbW91dmVtZW50IGJyb3duaWVuIFdfdCwgc2EgdmFyaWFuY2UgcXVhZHJhdGlxdWUgZXN0IFtXLFddX3QgPSB0LiJ9XQ==" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiVG9tYXMgQmrDtnJrICgyMDA1KS4gwqsgQXJiaXRyYWdlIFByaWNpbmcgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Ub21hcyUyMEJqJUMzJUI2cmslMjAlMjJBcmJpdHJhZ2UlMjBQcmljaW5nJTIyJTIwMjAwNSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MiwidGV4dCI6IkdlcmFsZCBELiBHYXksIEpvaG4gSHVsbCAoMjAwNikuIMKrIE9wdGlvbnMsIEZ1dHVyZXMsIGFuZCBPdGhlciBEZXJpdmF0aXZlIFNlY3VyaXRpZXMuIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9R2VyYWxkJTIwR2F5JTIwJTIyT3B0aW9ucyUyMiUyMDIwMDYiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjMsInRleHQiOiJNb25pcXVlIEplYW5ibGFuYyAoMjAxOSkuIMKrIENyaXRpcXVlIGRlIGwnb3V2cmFnZSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPU1vbmlxdWUlMjBKZWFuYmxhbmMlMjAlMjJDcml0aXF1ZSUyMGRlJTIwbCdvdXZyYWdlJTIyJTIwMjAxOSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NCwidGV4dCI6Ik1hcmVrIE11c2llbGEsIE1hcmVrIFJ1dGtvd3NraSAoMjAwNikuIMKrIE1hcnRpbmdhbGUgTWV0aG9kcyBpbiBGaW5hbmNpYWwgTW9kZWxsaW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNjYyLTIyMTMyLTciLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NSwidGV4dCI6IkF1dGV1ciBpbmNvbm51ICgyMDA3KS4gwqsgUGh5c2ljcyBvZiBmaW5hbmNlLiBLaXJpbGwgSWxpbnNraS4gSm9obiBXaWxleSBhbmQgU29ucyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUF1dGV1ciUyMGluY29ubnUlMjAlMjJQaHlzaWNzJTIwb2YlMjBmaW5hbmNlLiUyMEtpcmlsbCUyMElsaW5za2kuJTIwSm9obiUyMFdpbGV5JTIwYW5kJTIwU29ucyUyMiUyMDIwMDciLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjYsInRleHQiOiJBdXRldXIgaW5jb25udSAoMjAwOCkuIMKrIE1hdGhlbWF0aWNhbCBNb2RlbHMgb2YgRmluYW5jaWFsIERlcml2YXRpdmVzIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNTQwLTY4Njg4LTAiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NywidGV4dCI6IlNhbGloIE4uIE5lZnRjaSAoMjAxMikuIMKrIEludHJvZHVjdGlvbiDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDE2L2I5NzgtMC0xMi0zNzM1NzQtNC41MDAwNC00Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjgsInRleHQiOiJTdGV2ZW4gRS4gU2hyZXZlICgyMDEyKS4gwqsgU3RvY2hhc3RpYyBDYWxjdWx1cyBmb3IgRmluYW5jZSBJIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTAtMzg3LTIyNTI3LTIiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6OSwidGV4dCI6IkRhbWlhbm8gQnJpZ28sIEZhYmlvIE1lcmN1cmlvICgyMDEzKS4gwqsgT3RoZXIgSW50ZXJlc3QtUmF0ZSBNb2RlbHMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy02NjItMDQ1NTMtNF85Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjEwLCJ0ZXh0IjoiQXV0ZXVyIGluY29ubnUgKDIwMTUpLiDCqyBUaGUgVm9sYXRpbGl0eSBTdXJmYWNlIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjY0MDY1L2NvbmdvLWFmcmlxdWUuMjAyNS42MC41NTAuNjAxIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjExLCJ0ZXh0IjoiRGFtaWVuIExhbWJlcnRvbiwgQmVybmFyZCBMYXBleXJlICgyMDE4KS4gwqsgSW50cm9kdWN0aW9uIHRvIFN0b2NoYXN0aWMgQ2FsY3VsdXMgQXBwbGllZCB0byBGaW5hbmNlIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEyMDEvOTc4MTQyMDAwOTk0MSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxMiwidGV4dCI6IlJlbsOpIEwuIFNjaGlsbGluZyAoMjAxNikuIMKrIFN0b2NoYXN0aWMgZGlmZmVyZW50aWFsIGVxdWF0aW9uczogQW4gaW50cm9kdWN0aW9uIHdpdGggYXBwbGljYXRpb25zIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9UmVuJUMzJUE5JTIwU2NoaWxsaW5nJTIwJTIyU3RvY2hhc3RpYyUyMGRpZmZlcmVudGlhbCUyMGVxdWF0aW9ucyUyMiUyMDIwMTYiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjEzLCJ0ZXh0IjoiSW9hbm5pcyBLYXJhdHphcywgU3RldmVuIEUuIFNocmV2ZSAoMjAxMikuIMKrIEJyb3duaWFuIE1vdGlvbiDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0xLTQ2ODQtMDMwMi0yXzIiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MTQsInRleHQiOiJNb25pcXVlIEplYW5ibGFuYywgTWFyYyBZb3IsIE1hcmMgQ2hlc25leSAoMjAwOSkuIMKrIE1hdGhlbWF0aWNhbCBNZXRob2RzIGZvciBGaW5hbmNpYWwgTWFya2V0cyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0xLTg0NjI4LTczNy00Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjE1LCJ0ZXh0IjoiSm9uYXRoYW4gRS4gSW5nZXJzb2xsLCBEYXJyZWxsIER1ZmZpZSAoMjAwNikuIMKrIER5bmFtaWMgQXNzZXQgUHJpY2luZyBUaGVvcnkuIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Sm9uYXRoYW4lMjBJbmdlcnNvbGwlMjAlMjJEeW5hbWljJTIwQXNzZXQlMjBQcmljaW5nJTIwVGhlb3J5LiUyMiUyMDIwMDYiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjE2LCJ0ZXh0IjoiTWFydGluIEJheHRlciwgQW5kcmV3IFJlbm5pZSAoMjAxNCkuIMKrIEZpbmFuY2lhbCBDYWxjdWx1cyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDE3L2Nibzk3ODA1MTE4MDY2MzYiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNywidGV4dCI6IlBhdWwgR2xhc3Nlcm1hbiAoMjAxMykuIMKrIFF1YXNpLU1vbnRlIENhcmxvIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTAtMzg3LTIxNjE3LTFfNSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE4LCJ0ZXh0IjoiUGhpbGlwIFByb3R0ZXIgKDIwMTMpLiDCqyBTdG9jaGFzdGljIERpZmZlcmVudGlhbCBFcXVhdGlvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy02NjItMDI2MTktOV82Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTksInRleHQiOiJBbmRyZWEgUGFzY3VjY2kgKDIwMTEpLiDCqyBQREUgYW5kIE1hcnRpbmdhbGUgTWV0aG9kcyBpbiBPcHRpb24gUHJpY2luZyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC04OC00NzAtMTc4MS04Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjAsInRleHQiOiJCZXJudCDDmGtzZW5kYWwuIDIwMDMuIMKrIMOJcXVhdGlvbnMgZGlmZsOpcmVudGllbGxlcyBzdG9jaGFzdGlxdWVzIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuNTEyNTcvYS12MS1hZjEwNSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjIxLCJ0ZXh0IjoiSW9hbm5pcyBLYXJhdHphcywgU3RldmVuIEUuIFNocmV2ZS4gMTk5MS4gwqsgTW91dmVtZW50IGJyb3duaWVuIGV0IGNhbGN1bCBzdG9jaGFzdGlxdWUgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC41MTI1Ny9hLXYxLWFmNTY2Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjIsInRleHQiOiJFUEZMLiDCqyBDb3VycyBkZSBDYWxjdWwgU3RvY2hhc3RpcXVlIC0gRVBGTCDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9RVBGTCUyMCUyMkNvdXJzJTIwZGUlMjBDYWxjdWwlMjBTdG9jaGFzdGlxdWUlMjIiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjMsInRleHQiOiJDb250cmlidXRldXJzIGRlIFdpa2lww6lkaWEuIMKrIMOJcXVhdGlvbiBkaWZmw6lyZW50aWVsbGUgc3RvY2hhc3RpcXVlIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2ZyLndpa2lwZWRpYS5vcmcvd2lraS8lQzMlODlxdWF0aW9uX2RpZmYlQzMlQTlyZW50aWVsbGVfc3RvY2hhc3RpcXVlIiwic2Nob2xhclRleHQiOiJXaWtpcMOpZGlhIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyNCwidGV4dCI6IiwgSGFkamVyIE1vdXNzYW91aS4gMjAyNi4gwqsgQ29udHJpYnV0aW9uIGF1eCDDqXF1YXRpb25zIGRpZmbDqXJlbnRpZWxsZXMgc3RvY2hhc3RpcXVlcyByw6l0cm9ncmFkZXMgZXQgYXBwbGljYXRpb24gYXV4IMOpcXVhdGlvbnMgYXV4IGTDqXJpdsOpZXMgcGFydGllbGxlcyBldCBhdSBjb250csO0bGUgc3RvY2hhc3RpcXVlIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuNzA2NzUvZDhiOWUwMWZ6MGZmNno0MTgwemFlYzB6NGM4M2I4Njk3ZGFjIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjUsInRleHQiOiJTdGV2ZW4gRS4gU2hyZXZlLiAyMDA0LiDCqyBDYWxjdWwgc3RvY2hhc3RpcXVlIHBvdXIgbGEgZmluYW5jZSBJIDogTGUgbW9kw6hsZSBiaW5vbWlhbCBkJ8OpdmFsdWF0aW9uIGRlcyBhY3RpZnMgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0wLTM4Ny0yMjUyNy0yIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjYsInRleHQiOiJTdGV2ZW4gRS4gU2hyZXZlLiAyMDA0LiDCqyBDYWxjdWwgc3RvY2hhc3RpcXVlIHBvdXIgbGEgZmluYW5jZSBJSSA6IE1vZMOobGVzIMOgIHRlbXBzIGNvbnRpbnUgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0wLTM4Ny0yMjUyNy0yIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfV0=" />
+

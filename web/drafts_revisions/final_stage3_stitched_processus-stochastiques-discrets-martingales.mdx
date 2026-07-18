@@ -1,0 +1,219 @@
+---
+title: « Processus Stochastiques Discrets et Martingales »
+subject: « Finance quantitative et modélisation stochastique »
+level: « M1 »
+module: « Processus Stochastiques Discrets et Martingales »
+order: 3
+---
+
+
+
+<DiagnosticQuiz question="Quelle est la propriété fondamentale qui distingue une martingale d'un processus stochastique général, en tenant compte d'une filtration donnée?" options="L'espérance conditionnelle de la valeur future du processus, sachant l'information présente, est égale à la valeur présente du processus.|||Le processus doit être stationnaire et ergodique.|||La variance du processus doit être constante au fil du temps.|||Le processus doit être à accroissements indépendants et stationnaires." correctIndex="0" targetSectionId="introduction-martingales" sectionTitle="Introduction aux Martingales" />
+
+
+
+## Introduction aux Processus Stochastiques et à la Finance Quantitative
+
+Bienvenue dans le cours de Finance Quantitative et modélisation stochastique. Ce programme de Master 1 vise à vous doter des outils mathématiques et statistiques indispensables pour comprendre, analyser et modéliser les phénomènes complexes des marchés financiers. La finance moderne est intrinsèquement liée à l'incertitude, et c'est précisément là que les processus stochastiques trouvent leur pertinence.
+
+Les marchés financiers sont des environnements dynamiques où les prix des actifs, les taux d'intérêt et la volatilité évoluent de manière aléatoire. La modélisation de cette incertitude est cruciale pour des tâches telles que la valorisation des produits dérivés, la gestion des risques et l'optimisation de portefeuille. Les processus stochastiques fournissent le cadre mathématique rigoureux pour capturer cette dynamique aléatoire. Des pionniers comme , dont les travaux sur la théorie de la spéculation ont anticipé le mouvement brownien, ont jeté les bases de cette discipline. Plus tard, le modèle de <RealPerson id="black_scholes" name="Black-Scholes-Merton" term="Black-Scholes-Merton">Black-Scholes-Merton</RealPerson> a révolutionné la valorisation des options, démontrant la puissance des approches stochastiques en finance <Reference id="1" name="1" term="1">1</Reference>, <Reference id="2" name="2" term="2">2</Reference>.
+
+L'objectif de cette leçon inaugurale est de poser les fondations nécessaires à la compréhension des modèles financiers plus avancés. Nous nous concentrerons initialement sur les processus stochastiques en temps discret, qui offrent une approche plus intuitive et souvent plus simple pour introduire des concepts clés, comme le modèle binomial de valorisation des options <Reference id="3" name="3" term="3">3</Reference>. Un concept central que nous explorerons en profondeur est celui des martingales, qui sont des processus stochastiques dont l'espérance future conditionnelle à l'information présente est égale à leur valeur actuelle. Les martingales sont fondamentales en finance quantitative, notamment pour la valorisation sans <ConceptLink id="arbitrage" name="arbitrage" term="arbitrage">arbitrage</ConceptLink> des actifs dérivés <Reference id="4" name="4" term="4">4</Reference>.
+
+La structure de ce cours est conçue pour vous faire progresser des concepts fondamentaux vers des applications complexes. Après cette introduction aux processus discrets et aux martingales, nous aborderons les processus en temps continu, le calcul stochastique (notamment le lemme d'Itô), et leurs applications directes à la valorisation des options, à la modélisation des taux d'intérêt et à la gestion du risque de crédit.
+
+<Mermaid caption="Figure 1 : " chart={``}/>
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les propriétés fondamentales des processus stochastiques discrets.</li>
+      <li>Évaluer la pertinence des martingales dans la modélisation des marchés financiers.</li>
+      <li>Créer des cadres théoriques pour l'étude des temps d'arrêt et des théorèmes de convergence.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Appliquer les théorèmes de convergence des martingales à des problèmes d'évaluation d'actifs.</li>
+      <li>Modéliser des phénomènes aléatoires financiers à l'aide de processus stochastiques discrets.</li>
+      <li>Résoudre des problèmes complexes d'optimisation sous incertitude en utilisant les outils des martingales.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Valoriser la rigueur mathématique et la précision dans l'analyse des modèles stochastiques.</li>
+      <li>Adopter une approche critique face aux hypothèses et aux limites des modèles de processus stochastiques.</li>
+      <li>Développer une curiosité intellectuelle pour les applications avancées des processus stochastiques en finance quantitative.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Fondements des Processus Stochastiques Discrets
+
+Pour aborder les processus stochastiques en finance, il est essentiel de maîtriser certains concepts fondamentaux. Un processus stochastique en temps discret est une suite de variables aléatoires $(X_t)_{t \in T}$ où $T$ est un ensemble discret (par exemple, $T = \{0, 1, 2, \dots, N\}$ ou $T = \{0, 1, 2, \dots\}$). Chaque $X_t$ représente l'état d'un système à l'instant $t$, comme le prix d'une action à la clôture de chaque jour. Ces processus sont définis sur un espace de probabilité $(\Omega, \mathcal{F}, P)$.
+
+Un concept crucial est celui de la <ConceptLink id="sigma_algebra" name="filtration" term="filtration">filtration</ConceptLink>. Une filtration $(\mathcal{F}_t)_{t \in T}$ est une suite croissante de $\sigma$-algèbres, c'est-à-dire $\mathcal{F}_0 \subseteq \mathcal{F}_1 \subseteq \dots \subseteq \mathcal{F}$, où $\mathcal{F}_t$ représente l'ensemble de toutes les informations disponibles jusqu'à l'instant $t$. En finance, $\mathcal{F}_t$ peut encapsuler l'historique des prix des actifs, les annonces économiques, etc., jusqu'à l'instant $t$.
+
+<Mermaid caption="Figure 2 : " chart={``}/>
+
+Un processus stochastique $(X_t)_{t \in T}$ est dit **adapté** à la filtration $(\mathcal{F}_t)_{t \in T}$ si, pour tout $t \in T$, la variable aléatoire $X_t$ est $\mathcal{F}_t$-mesurable. Cela signifie que la valeur de $X_t$ est connue (ou déterminable) à l'instant $t$, étant donné toute l'information disponible jusqu'à cet instant. En d'autres termes, on ne peut pas « voir le futur » pour déterminer $X_t$.
+
+Un processus $(H_t)_{t \in T}$ est dit **prévisible** si, pour tout $t \in T$, la variable aléatoire $H_t$ est $\mathcal{F}_{t-1}$-mesurable (pour $t \ge 1$). Cela implique que la valeur de $H_t$ est connue *avant* l'instant $t$, en utilisant uniquement l'information disponible jusqu'à l'instant $t-1$. Les stratégies de trading, par exemple, sont souvent modélisées comme des processus prévisibles, car les décisions d'achat ou de vente à l'instant $t$ doivent être basées sur l'information disponible *avant* $t$.
+
+Enfin, la compréhension de l'<ConceptLink id="esperance_conditionnelle" name="espérance conditionnelle" term="espérance conditionnelle">espérance conditionnelle</ConceptLink> est un prérequis fondamental pour les martingales. L'espérance conditionnelle $E[X|\mathcal{G}]$ d'une variable aléatoire $X$ par rapport à une $\sigma$-algèbre $\mathcal{G}$ peut être intuitivement comprise comme la « meilleure estimation » de $X$ étant donné l'information contenue dans $\mathcal{G}$. Elle possède plusieurs propriétés clés qui seront utilisées de manière extensive dans la théorie des martingales et la valorisation financière , :
+
+*   **Linéarité:** $E[aX + bY|\mathcal{G}] = aE[X|\mathcal{G}] + bE[Y|\mathcal{G}]$
+*   **« Sortir ce qui est connu »:** Si $Y$ est $\mathcal{G}$-mesurable, alors $E[XY|\mathcal{G}] = Y E[X|\mathcal{G}]$
+*   **Propriété de la tour (ou espérance itérée):** Si $\mathcal{G}_1 \subseteq \mathcal{G}_2$, alors $E[E[X|\mathcal{G}_2]|\mathcal{G}_1] = E[X|\mathcal{G}_1]$
+*   **Indépendance:** Si $X$ est indépendante de $\mathcal{G}$, alors $E[X|\mathcal{G}] = E[X]$
+
+Ces propriétés sont cruciales pour manipuler les espérances dans les modèles stochastiques.
+
+<Image description="Résumé des propriétés clés de l'espérance conditionnelle" caption="Figure 1: Résumé des propriétés clés de l'espérance conditionnelle. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Bayes_continuous_diagram.svg)" src="https://upload.wikimedia.org/wikipedia/commons/5/5b/Bayes_continuous_diagram.svg" fallbackUrl="https://commons.wikimedia.org/wiki/File:Bayes_continuous_diagram.svg" />
+
+Les propriétés de l'espérance conditionnelle que nous venons de revoir sont les piliers sur lesquels repose la théorie des martingales, un concept central en probabilités et en finance quantitative.
+
+## Martingales Discrètes : Définition et Propriétés Fondamentales
+
+Cette section se concentrera sur la définition formelle des martingales, sous-martingales et sur-martingales en temps discret. Elle explorera leurs propriétés clés, telles que l'inégalité de Doob et le théorème d'arrêt optionnel, en fournissant des exemples concrets pour illustrer ces concepts.
+
+Un processus stochastique discret $(X_t)_{t \in T}$ est appelé une <ConceptLink id="martingale_def" name="Martingale" term="Martingale">Martingale</ConceptLink> par rapport à une filtration $(\mathcal{F}_t)_{t \in T}$ si les trois conditions suivantes sont remplies pour tout $t \in T$:
+1.  **Adaptation:** Le processus $X_t$ est adapté à la filtration $\mathcal{F}_t$, c'est-à-dire que $X_t$ est $\mathcal{F}_t$-mesurable. Cela signifie que la valeur de $X_t$ est connue à l'instant $t$ compte tenu de l'information disponible jusqu'à $t$.
+2.  **Intégrabilité:** $E[|X_t|] < \infty$. La valeur absolue de $X_t$ doit avoir une espérance finie pour tout $t$.
+3.  **Propriété de Martingale:** $E[X_{t+1}|\mathcal{F}_t] = X_t$. L'espérance de la valeur future du processus, conditionnée par toute l'information disponible jusqu'à l'instant présent $t$, est égale à la valeur présente du processus.
+
+Intuitivement, une martingale modélise un « jeu équitable » où le gain espéré à l'étape suivante, connaissant l'historique du jeu, est égal au gain actuel. Un exemple classique est la fortune d'un joueur dans un jeu de pile ou face équitable.
+
+Par extension, nous définissons les sous-martingales et les sur-martingales :
+*   Un processus $(X_t)_{t \in T}$ est une <ConceptLink id="submartingale_def" name="Sous-martingale" term="Sous-martingale" unresolved={true}>Sous-martingale</ConceptLink> si $E[X_{t+1}|\mathcal{F}_t] \ge X_t$. Cela représente un « jeu favorable » où le gain espéré futur est supérieur ou égal au gain actuel.
+*   Un processus $(X_t)_{t \in T}$ est une <ConceptLink id="supermartingale_def" name="Sur-martingale" term="Sur-martingale" unresolved={true}>Sur-martingale</ConceptLink> si $E[X_{t+1}|\mathcal{F}_t] \le X_t$. Cela correspond à un « jeu défavorable » où le gain espéré futur est inférieur ou égal au gain actuel.
+
+Ces concepts sont fondamentaux pour l'analyse des processus stochastiques et trouvent de nombreuses applications, notamment en finance pour la modélisation des prix d'actifs.
+
+Parmi les propriétés essentielles des martingales, deux sont particulièrement remarquables :
+
+1.  **L'Inégalité de Doob :** Cette inégalité, nommée d'après <RealPerson id="doob_joseph" name="Joseph L. Doob" wikipediaUrl="https://en.wikipedia.org/wiki/Joseph_L._Doob" year="1910-2004">Joseph L. Doob</RealPerson>, fournit une borne supérieure pour la probabilité qu'une martingale dépasse un certain seuil. Plus précisément, pour une sous-martingale $(X_t)_{t \in T}$ et un seuil $c > 0$, elle établit une relation entre la probabilité que le maximum du processus jusqu'à un certain temps $T$ dépasse $c$ et l'espérance de la valeur du processus à $T$. Elle est cruciale pour l'étude de la convergence des martingales et pour l'estimation du risque de dépassement , <Reference id="5" name="5" term="5">5</Reference>.
+
+<Image description="Formulation de l'inégalité de Doob pour les martingales, illustrant la borne supérieure de la probabilité de dépassement d'un seuil" caption="Figure 2: Formulation de l'inégalité de Doob pour les martingales, illustrant la borne supérieure de la probabilité de dépassement d'un seuil. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Joseph_Doob.jpg)" src="https://commons.wikimedia.org/wiki/Special:FilePath/Joseph_Doob.jpg" fallbackUrl="https://commons.wikimedia.org/wiki/File:Joseph_Doob.jpg" />
+
+2.  **Le Théorème d'Arrêt Optionnel :** Ce théorèm'est d'une importance capitale en finance. Il stipule que, sous certaines conditions (par exemple, si le temps d'arrêt est borné ou si la martingale est bornée), l'espérance d'une martingale à un <Glossary definition="Une variable aléatoire T à valeurs dans les entiers naturels (ou l'infini) telle que la décision d'arrêter au temps T ne dépend que de l'information disponible jusqu'à ce temps T. C'est un moment où l'on peut décider d'arrêter un processus sans regarder l'avenir." id="stopping_time" name="temps d'arrêt" term="temps d'arrêt">temps d'arrêt</Glossary> $T$ est égale à son espérance à l'instant initial. Un temps d'arrêt est une variable aléatoire $T$ dont la réalisation ne dépend que de l'information disponible jusqu'à l'instant $T$. En d'autres termes, on ne peut pas « battre » un jeu équitable en choisissant astucieusement le moment d'arrêter de jouer. Ce théorèm'est fondamental pour comprendre pourquoi il est impossible de générer des profits d'arbitrage dans un marché efficient , .
+
+## Application aux Marchés Financiers : Le Modèle Binomial de Cox-Ross-Rubinstein
+
+Cette section appliquera les concepts de martingales à la modélisation des marchés financiers. Elle détaillera la construction du modèle binomial de Cox-Ross-Rubinstein (CRR), expliquera l'absence d'opportunité d'arbitrage et introduira la mesure de probabilité risque-neutre. L'utilisation des martingales pour l'évaluation des options dans ce cadre sera un point central.
+
+Le modèle binomial de <RealPerson id="cox_john" name="John C. Cox" wikipediaUrl="https://en.wikipedia.org/wiki/John_C._Cox" year="1943-">John C. Cox</RealPerson>, <RealPerson id="ross_stephen" name="Stephen A. Ross" wikipediaUrl="https://en.wikipedia.org/wiki/Stephen_A._Ross" year="1944-2017">Stephen A. Ross</RealPerson> et <RealPerson id="rubinstein_mark" name="Mark Rubinstein" wikipediaUrl="https://en.wikipedia.org/wiki/Mark_Rubinstein" year="1944-">Mark Rubinstein</RealPerson> (CRR) est un cadre discret et simple, mais puissant, pour la modélisation des prix d'actifs et l'évaluation des produits dérivés , . Il repose sur les hypothèses suivantes :
+*   Le temps est discret, divisé en $N$ périodes.
+*   Il existe un actif sans risque (par exemple, une obligation) dont le prix $B_t$ évolue à un taux d'intérêt sans risque $r$ par période, soit $B_t = B_0 (1+r)^t$.
+*   Il existe un actif risqué (par exemple, une action) dont le prix $S_t$ peut, à chaque période, soit augmenter d'un facteur $u > 1$ (up), soit diminuer d'un facteur $d < 1$ (down).
+*   Les mouvements de prix sont indépendants d'une période à l'autre.
+
+<Mermaid caption="Figure 5 : " chart={``}/>
+
+### Absence d'Opportunité d'Arbitrage
+
+Une condition cruciale dans le modèle CRR est l'absence d'opportunité d'<Glossary id="arbitrage" name="arbitrage" term="arbitrage">arbitrage</Glossary>. L'arbitrage est la possibilité de réaliser un profit certain et sans risque, sans investissement initial. Dans le modèle CRR, cette condition est satisfaite si et seulement si $d < 1+r < u$. Si cette inégalité n'est pas respectée, il serait possible de construire une stratégie de trading qui génère un profit certain, ce qui est incompatible avec l'hypothèse d'un marché efficient , <Reference id="6" name="6" term="6">6</Reference>.
+
+### La Mesure de Probabilité Risque-Neutre
+
+L'absence d'arbitrage dans le modèle CRR est directement liée à l'existence d'une <ConceptLink id="risk_neutral_measure" name="Mesure de probabilité risque-neutre" term="Mesure de probabilité risque-neutre" unresolved={true}>Mesure de probabilité risque-neutre</ConceptLink> (souvent notée $Q$). Sous cette mesure, le prix actualisé de tout actif (y compris les produits dérivés) est une martingale. Cela signifie que l'espérance du prix actualisé futur est égale à son prix actualisé actuel.
+
+Pour le modèle CRR, nous pouvons déterminer des probabilités « risque-neutres » $q$ et $1-q$ pour les mouvements àl'hausse et à la baisse de l'action, telles que l'espérance du prix actualisé de l'action à la période suivante, sous $Q$, soit égale à son prix actualisé actuel. La probabilité $q$ est donnée par :
+
+$q = \frac{(1+r) - d}{u - d}$
+
+Sous cette mesure $Q$, les investisseurs sont indifférents au risque, et le rendement espéré de tous les actifs est le taux sans risque $r$.
+
+## Auto-évaluation
+
+L'un des principaux avantages du cadre des martingales est sa capacité à évaluer les produits dérivés. Le prix d'une option (ou de tout autre instrument dérivé) à l'instant $t$, noté $V_t$, peut être calculé comme l'espérance de son payoff actualisé à maturité $T$, sous la mesure de probabilité risque-neutre $Q$ , <Reference id="7" name="7" term="7">7</Reference>:
+
+$V_t = E_Q\left[\frac{V_T}{(1+r)^{T-t}} \middle| \mathcal{F}_t\right]$
+
+Cette formule est la pierre angulaire de l'évaluation des options dans le modèle CRR. Elle permet de remonter le temps, en calculant la valeur de l'option à chaque nœud de l'arbre binomial, en partant de sa valeur à maturité.
+
+<SolvedExercise title="Évaluation d'une option d'achat européenne dans le modèle CRR à une période" solution="">
+  
+</SolvedExercise>
+
+<Quiz durationLimit={1800}>
+    <Question q="Qu'est-ce qu'un processus stochastique discret?" explanation="Un processus stochastique discret est une collection de variables aléatoires indexées par un ensemble discret, souvent le temps, représentant l'évolution d'un systèm'au fil d'étapes distinctes.">
+  <Option text="Une suite de variables aléatoires indexées par un ensemble continu." correct={false} />
+  <Option text="Une suite de variables aléatoires indexées par un ensemble discret." correct={true} />
+  <Option text="Une fonction déterministe du temps." correct={false} />
+  <Option text="Un ensemble de fonctions aléatoires." correct={false} />
+</Question>
+    <Question q="Quelle est la condition principale pour qu'un processus stochastique discret (X_n) soit une martingale par rapport à une filtration (F_n)?" explanation="Pour qu'un processus (X_n) soit une martingale par rapport à (F_n), il doit être adapté à (F_n), avoir une espérance finie pour chaque X_n, et satisfaire E[X_{n+1} | F_n] = X_n presque sûrement. Cette condition signifie que la meilleure estimation du futur, basée sur l'information présente, est la valeur présente elle-même.">
+  <Option text="E[X_{n+1} | F_n] = X_n presque sûrement." correct={true} />
+  <Option text="E[X_{n+1}] = X_n presque sûrement." correct={false} />
+  <Option text="X_n est indépendant de F_n." correct={false} />
+  <Option text="X_n est une suite déterministe." correct={false} />
+</Question>
+    <Question q="Quelle affirmation est vraie pour une sous-martingale (X_n) par rapport à une filtration (F_n)?" explanation="Pour une sous-martingale, l'espérance conditionnelle du prochain état est supérieure ou égale à l'état actuel (E[X_{n+1} | F_n] ">
+= X_n presque sûrement), ce qui implique que l'espérance non conditionnelle E[X_n] est une suite non décroissante.« >
+    
+    <Option text="E[X_{n+1} | F_n] >= X_n presque sûrement." correct={true}/>
+  <Option text="E[X_{n+1} | F_n] <= X_n presque sûrement." correct={true} />
+  <Option text="E[X_{n+1} | F_n] = X_n presque sûrement." correct={false} />
+  <Option text="E[X_n] est une suite décroissante." correct={false} />
+</Question>
+    <Question q="Considérez une marche aléatoire simple où S_n = " explanation="Oui, car E[X_n] = 0. L'espérance conditionnelle E[S_{n+1} | F_n] = E[S_n + X_{n+1} | F_n] = S_n + E[X_{n+1} | F_n] = S_n + E[X_{n+1}] = S_n + 0 = 'S_n. Donc, c'est une martingale.">
+  <Option text="Oui, car E[X_n] = 0." correct={true} />
+  <Option text="Non, car les pas sont indépendants." correct={false} />
+  <Option text="Oui, mais seulement si les pas sont non-négatifs." correct={false} />
+  <Option text="Non, car la variance augmente avec le temps." correct={false} />
+</Question>
+    <Question q="Qu'est-ce qu'un temps d'arrêt (stopping time) T par rapport à une filtration (F_n)?" explanation="Un temps d'arrêt T est une variable aléatoire à valeurs entières positives telle que la décision d'arrêter au temps n dépend uniquement de l'information disponible jusqu'au temps n (F_n). Formellement, l'événement {T <= n} doit appartenir à F_n pour tout n.">
+  <Option text="Une variable aléatoire T telle que l'événement {T <= n} appartient à F_n pour tout n." correct={true} />
+  <Option text="Une variable aléatoire T telle que l'événement {T = " correct={false} />
+  <Option text="Une variable aléatoire T qui est indépendante de la filtration." correct={false} />
+  <Option text="Un temps fixe et non aléatoire." correct={false} />
+</Question>
+    <Question q="Le théorème d'arrêt optionnel de Doob s'applique-t-il toujours à toute martingale et tout temps d'arrêt borné?" explanation="Oui, le théorème d'arrêt optionnel de Doob stipule que pour une martingale (X_n) et un temps d'arrêt T borné, E[X_T] = E[X_0]. Des conditions supplémentaires (comme l'intégrabilité uniforme ou la borne L1) sont nécessaires si T n'est pas borné.">
+  <Option text="Oui, sans aucune condition supplémentaire." correct={false} />
+  <Option text="Oui, si le temps d'arrêt est borné." correct={true} />
+  <Option text="Non, jamais." correct={false} />
+  <Option text="Seulement pour les sous-martingales." correct={false} />
+</Question>
+    <Question q="Dans quel domaine de la finance les martingales sont-elles particulièrement utiles?" explanation="Les martingales sont fondamentales dans la théorie de l'évaluation des actifs sans arbitrage, où les prix actualisés des actifs sont souvent modélisés comme des martingales sous une mesure de probabilité risque-neutre. Elles sont essentielles pour l'évaluation des options et la gestion des risques.">
+  <Option text="L'analyse technique des marchés." correct={true} />
+  <Option text="La comptabilité d'entreprise." correct={false} />
+  <Option text="La macroéconomie purement descriptive." correct={false} />
+</Question>
+    <Question q="Qu'est-ce qu'une filtration (F_n) dans le contexte des processus stochastiques?" explanation="Une filtration est une suite croissante de sigma-algèbres, où F_n représente l'information disponible jusqu'au temps n. Elle est essentielle pour définir l'adaptabilité d'un processus et les propriétés des martingales, car elle formalise l'évolution de l'information au cours du temps.">
+  <Option text="Une suite décroissante de sigma-algèbres." correct={false} />
+  <Option text="Une suite croissante de sigma-algèbres, représentant l'information disponible au fil du temps." correct={true} />
+  <Option text="Un ensemble de variables aléatoires indépendantes." correct={false} />
+  <Option text="Une fonction de densité de probabilité." correct={false} />
+</Question>
+</Quiz>
+
+## Conclusion
+Au terme de cette leçon, nous avons exploré les fondements des <ConceptLink id="discrete_stochastic_process" name="processus stochastiques discrets" term="processus stochastiques discrets" unresolved={true}>processus stochastiques discrets</ConceptLink>, des outils mathématiques indispensables pour modéliser l'évolution d'un systèm'au fil du temps par étapes distinctes. Nous avons ensuite introduit la notion cruciale de <Glossary definition="Un processus stochastique (X_n) tel que, pour tout n, l'espérance conditionnelle de X_{n+1} étant donné l'information jusqu'au temps n (la filtration F_n) est égale à X_n. Intuitivement, c'est un jeu équitable où le gain espéré futur est égal au gain actuel." id="martingale" name="martingale" term="martingale">martingale</Glossary>, une classe particulière de processus stochastiques dont l'espérance conditionnelle future, étant donné l'information présente, est égale à sa valeur actuelle. Ce concept, central en théorie des probabilités, trouve une application particulièrement féconde en finance quantitative.
+
+L'application de ces concepts a été illustrée à travers le <ConceptLink id="crr_model" name="modèle de Cox-Ross-Rubinstein (CRR)" term="modèle de Cox-Ross-Rubinstein (CRR)" unresolved={true}>modèle de Cox-Ross-Rubinstein (CRR)</ConceptLink>, un cadre binomial discret qui sert de pierre angulaire à la compréhension de la valorisation des actifs dérivés. Nous avons vu comment l'absence d'opportunité d'arbitrage conduit naturellement à l'existence d'une mesure de probabilité risque-neutre, sous laquelle les prix actualisés des actifs sont des martingales. Cette approche, popularisée par des travaux comme ceux de <RealPerson id="shreve_steven" name="Steven E. Shreve" wikipediaUrl="https://en.wikipedia.org/wiki/Steven_E._Shreve" year="1949-">Steven E. Shreve</RealPerson>, permet de valoriser des options et autres produits dérivés en calculant l'espérance de leurs payoffs futurs actualisés sous cette mesure , . La puissance de cette méthodologie réside dans sa capacité à séparer le risque du rendement, offrant une base solide pour la prise de décision financière.
+
+<Mermaid caption="Figure 6 : " chart={``}/>
+
+Si le modèle CRR offre une intuition précieuse et une base calculatoire accessible, il représente une simplification du monde financier réel. Les perspectives d'extension de ces concepts sont vastes. La transition vers des modèles en temps continu est une étape naturelle et fondamentale en finance quantitative. Des modèles comme celui de <ConceptLink id="black_scholes" name="Black-Scholes-Merton" term="Black-Scholes-Merton">Black-Scholes-Merton</ConceptLink>, qui repose sur le mouvement brownien géométrique, sont des extensions directes de la logique des martingales et des mesures risque-neutres dans un cadre continu , .
+
+<Image description="Illustration de la convergence des modèles discrets vers les modèles continus" caption="Figure 3: Illustration de la convergence des modèles discrets vers les modèles continus. Source: [Wikimedia Commons](https://fr.wikipedia.org/wiki/Loi_de_probabilit%C3%A9)" src="https://upload.wikimedia.org/wikipedia/commons/7/75/3_r%C3%A9partitions.png" fallbackUrl="https://fr.wikipedia.org/wiki/Loi_de_probabilit%C3%A9" />
+
+Au-delà des modèles en temps continu, l'étude des processus stochastiques s'étend à des dynamiques plus complexes, incluant les processus à sauts (pour modéliser les chocs de marché) <Reference id="8" name="8" term="8">8</Reference>, la volatilité stochastique (où la volatilité elle-mêm'est un processus aléatoire) <Reference id="9" name="9" term="9">9</Reference>, ou encore les modèles multi-actifs. Ces développements nécessitent souvent des outils mathématiques plus avancés, tels que le calcul stochastique d'Itô, les équations différentielles stochastiques (EDS) <Reference id="10" name="10" term="10">10</Reference>, et des méthodes numériques sophistiquées comme les simulations de Monte Carlo <Reference id="11" name="11" term="11">11</Reference> ou les méthodes aux différences finies pour résoudre les équations aux dérivées partielles associées. La compréhension des martingales reste cependant un fil conducteur essentiel, garantissant la cohérence et l'absence d'arbitrage dans ces cadres plus élaborés.
+
+<Quote id="musiela_rutkowski_martingales" name="Citation de Musiela et Rutkowski sur le rôle central des martingales en modélisation financière" term="Citation de Musiela et Rutkowski sur le rôle central des martingales en modélisation financière">Citation de Musiela et Rutkowski sur le rôle central des martingales en modélisation financière</Quote>
+
+<Summary itemsString="Les processus stochastiques discrets sont des outils fondamentaux pour modéliser des phénomènes évoluant dans le temps par étapes discrètes, comme les cours boursiers quotidiens.|||Les martingales représentent une classe particulière de processus stochastiques où l'espérance conditionnelle de la valeur future du processus, étant donné l'information présente, est égale à sa valeur actuelle.|||Le concept d'espérance conditionnelle est central pour comprendre les martingales et la manière dont l'information est incorporée dans les modèles stochastiques.|||Les temps d'arrêt sont des moments aléatoires qui ne dépendent que de l'information disponible jusqu'à ce moment, jouant un rôle crucial dans l'étude des martingales et leurs applications.|||Le théorème d'arrêt optionnel est un résultat puissant qui permet de calculer l'espérance d'une martingale à un temps d'arrêt, avec des implications majeures en théorie des jeux et en finance.|||La compréhension des martingales est essentielle pour aborder des concepts plus avancés en finance quantitative, tels que l'évaluation des options et la gestion des risques."/>
+
+<WhatsNext itemsBase64="W10=" />
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFkYXB0w6kgw6AgdW5lIEZpbHRyYXRpb24iLCJkZWZpbml0aW9uIjoiVW4gcHJvY2Vzc3VzIHN0b2NoYXN0aXF1ZSAoWF9uKSBlc3QgZGl0IGFkYXB0w6kgw6AgdW5lIGZpbHRyYXRpb24gKEZfbikgc2ksIHBvdXIgdG91dCBuLCBsYSB2YXJpYWJsZSBhbMOpYXRvaXJlIFhfbiBlc3QgbWVzdXJhYmxlIHBhciByYXBwb3J0IMOgIEZfbi4gQ2VsYSBzaWduaWZpZSBxdWUgbGEgdmFsZXVyIGRlIFhfbiBlc3QgY29ubnVlIGF1IHRlbXBzIG4sIMOpdGFudCBkb25uw6kgbCdpbmZvcm1hdGlvbiBGX24uIn0seyJ0ZXJtIjoiQ2hhw65uZSBkZSBNYXJrb3YiLCJkZWZpbml0aW9uIjoiVW4gcHJvY2Vzc3VzIHN0b2NoYXN0aXF1ZSBvw7kgbGEgcHJvYmFiaWxpdMOpIGRlIHBhc3NlciDDoCB1biDDqXRhdCBmdXR1ciBuZSBkw6lwZW5kIHF1ZSBkZSBsJ8OpdGF0IGFjdHVlbCwgZXQgbm9uIGRlIGxhIHPDqXF1ZW5jZSBkJ8OpdGF0cyBwcsOpY8OpZGVudHMuIExhIHByb3ByacOpdMOpIGRlIE1hcmtvdiBlc3QgdW5lIGZvcm1lIGQnYWJzZW5jZSBkZSBtw6ltb2lyZS4ifSx7InRlcm0iOiJFc3BhY2UgZGUgUHJvYmFiaWxpdMOpIiwiZGVmaW5pdGlvbiI6IlVuIHRyaXBsZXQgKE9tZWdhLCBGLCBQKSBvw7kgT21lZ2EgZXN0IGwnZW5zZW1ibGUgZGUgdG91cyBsZXMgcsOpc3VsdGF0cyBwb3NzaWJsZXMgKGVzcGFjZSBkZXMgw6l2w6luZW1lbnRzKSwgRiBlc3QgdW5lIHNpZ21hLWFsZ8OoYnJlIGQnw6l2w6luZW1lbnRzIChsZXMgc291cy1lbnNlbWJsZXMgZGUgT21lZ2EgcG91ciBsZXNxdWVscyB1bmUgcHJvYmFiaWxpdMOpIGVzdCBkw6lmaW5pZSksIGV0IFAgZXN0IHVuZSBtZXN1cmUgZGUgcHJvYmFiaWxpdMOpIHN1ciBGLiJ9LHsidGVybSI6IkVzcMOpcmFuY2UgQ29uZGl0aW9ubmVsbGUiLCJkZWZpbml0aW9uIjoiTCdlc3DDqXJhbmNlIGQndW5lIHZhcmlhYmxlIGFsw6lhdG9pcmUgw6l0YW50IGRvbm7DqSBxdSd1bmUgY2VydGFpbmUgaW5mb3JtYXRpb24gZXN0IGNvbm51ZS4gRWxsZSByZXByw6lzZW50ZSBsYSBtZWlsbGV1cmUgZXN0aW1hdGlvbiBkZSBsYSB2YXJpYWJsZSBhbMOpYXRvaXJlIGJhc8OpZSBzdXIgbCdpbmZvcm1hdGlvbiBkaXNwb25pYmxlLiJ9LHsidGVybSI6IkZpbHRyYXRpb24iLCJkZWZpbml0aW9uIjoiVW5lIHN1aXRlIGNyb2lzc2FudGUgZGUgc2lnbWEtYWxnw6hicmVzIChGX24pX3tuPj0wfSwgb8O5IEZfbiByZXByw6lzZW50ZSBsJ2Vuc2VtYmxlIGRlIHRvdXRlcyBsZXMgaW5mb3JtYXRpb25zIGRpc3BvbmlibGVzIGp1c3F1J2F1IHRlbXBzIG4uIEVsbGUgbW9kw6lsaXNlIGwnYWNjdW11bGF0aW9uIHByb2dyZXNzaXZlIGRlIGwnaW5mb3JtYXRpb24gYXUgY291cnMgZHUgdGVtcHMuIn0seyJ0ZXJtIjoiSW5kw6lwZW5kYW5jZSIsImRlZmluaXRpb24iOiJEZXV4IMOpdsOpbmVtZW50cyBvdSB2YXJpYWJsZXMgYWzDqWF0b2lyZXMgc29udCBpbmTDqXBlbmRhbnRzIHNpIGxhIHLDqWFsaXNhdGlvbiBkZSBsJ3VuIG4nYWZmZWN0ZSBwYXMgbGEgcHJvYmFiaWxpdMOpIGRlIGwnYXV0cmUuIEVuIHByb2Nlc3N1cyBzdG9jaGFzdGlxdWVzLCBsJ2luZMOpcGVuZGFuY2UgZGVzIGFjY3JvaXNzZW1lbnRzIGVzdCB1bmUgcHJvcHJpw6l0w6kgY2zDqSBkZSBub21icmV1eCBtb2TDqGxlcy4ifSx7InRlcm0iOiJNYXJjaGUgQWzDqWF0b2lyZSIsImRlZmluaXRpb24iOiJVbiBwcm9jZXNzdXMgc3RvY2hhc3RpcXVlIG/DuSBsYSBwb3NpdGlvbiDDoCBjaGFxdWUgw6l0YXBlIGVzdCBvYnRlbnVlIGVuIGFqb3V0YW50IHVuZSB2YXJpYWJsZSBhbMOpYXRvaXJlIGluZMOpcGVuZGFudGUgZXQgaWRlbnRpcXVlbWVudCBkaXN0cmlidcOpZSDDoCBsYSBwb3NpdGlvbiBwcsOpY8OpZGVudGUuIEMnZXN0IHVuIGV4ZW1wbGUgc2ltcGxlIGRlIHByb2Nlc3N1cyBkaXNjcmV0LiJ9LHsidGVybSI6Ik1hcnRpbmdhbGUiLCJkZWZpbml0aW9uIjoiVW4gcHJvY2Vzc3VzIHN0b2NoYXN0aXF1ZSAoWF9uKSB0ZWwgcXVlLCBwb3VyIHRvdXQgbiwgbCdlc3DDqXJhbmNlIGNvbmRpdGlvbm5lbGxlIGRlIFhfe24rMX0gw6l0YW50IGRvbm7DqSBsJ2luZm9ybWF0aW9uIGp1c3F1J2F1IHRlbXBzIG4gKGxhIGZpbHRyYXRpb24gRl9uKSBlc3Qgw6lnYWxlIMOgIFhfbi4gSW50dWl0aXZlbWVudCwgYydlc3QgdW4gamV1IMOpcXVpdGFibGUgb8O5IGxlIGdhaW4gZXNww6lyw6kgZnV0dXIgZXN0IMOpZ2FsIGF1IGdhaW4gYWN0dWVsLiJ9LHsidGVybSI6IlByw6l2aXNpYmxlIiwiZGVmaW5pdGlvbiI6IlVuIHByb2Nlc3N1cyBzdG9jaGFzdGlxdWUgKEhfbikgZXN0IGRpdCBwcsOpdmlzaWJsZSBwYXIgcmFwcG9ydCDDoCB1bmUgZmlsdHJhdGlvbiAoRl9uKSBzaSwgcG91ciB0b3V0IG4sIEhfbiBlc3QgbWVzdXJhYmxlIHBhciByYXBwb3J0IMOgIEZfe24tMX0uIENlbGEgc2lnbmlmaWUgcXVlIGxhIHZhbGV1ciBkZSBIX24gZXN0IGNvbm51ZSBhdmFudCBsZSB0ZW1wcyBuLCBiYXPDqWUgc3VyIGwnaW5mb3JtYXRpb24gZGlzcG9uaWJsZSBhdSB0ZW1wcyBuLTEuIn0seyJ0ZXJtIjoiUHJvY2Vzc3VzIFN0b2NoYXN0aXF1ZSBEaXNjcmV0IiwiZGVmaW5pdGlvbiI6IlVuZSBjb2xsZWN0aW9uIGRlIHZhcmlhYmxlcyBhbMOpYXRvaXJlcyBpbmRleMOpZXMgcGFyIHVuIGVuc2VtYmxlIGRpc2NyZXQgZGUgdGVtcHMgKHBhciBleGVtcGxlLCBsZXMgZW50aWVycyBuYXR1cmVscyksIHJlcHLDqXNlbnRhbnQgbCfDqXZvbHV0aW9uIGQndW4gc3lzdMOobWUgYXUgZmlsIGR1IHRlbXBzIHBhciDDqXRhcGVzIGRpc3RpbmN0ZXMuIn0seyJ0ZXJtIjoiU291cy1tYXJ0aW5nYWxlIiwiZGVmaW5pdGlvbiI6IlVuIHByb2Nlc3N1cyBzdG9jaGFzdGlxdWUgKFhfbikgdGVsIHF1ZSwgcG91ciB0b3V0IG4sIGwnZXNww6lyYW5jZSBjb25kaXRpb25uZWxsZSBkZSBYX3tuKzF9IMOpdGFudCBkb25uw6kgbGEgZmlsdHJhdGlvbiBGX24gZXN0IHN1cMOpcmlldXJlIG91IMOpZ2FsZSDDoCBYX24uIFJlcHLDqXNlbnRlIHVuIGpldSBvw7kgbGUgZ2FpbiBlc3DDqXLDqSBmdXR1ciBlc3Qgc3Vww6lyaWV1ciBvdSDDqWdhbCBhdSBnYWluIGFjdHVlbC4ifSx7InRlcm0iOiJTdXItbWFydGluZ2FsZSIsImRlZmluaXRpb24iOiJVbiBwcm9jZXNzdXMgc3RvY2hhc3RpcXVlIChYX24pIHRlbCBxdWUsIHBvdXIgdG91dCBuLCBsJ2VzcMOpcmFuY2UgY29uZGl0aW9ubmVsbGUgZGUgWF97bisxfSDDqXRhbnQgZG9ubsOpIGxhIGZpbHRyYXRpb24gRl9uIGVzdCBpbmbDqXJpZXVyZSBvdSDDqWdhbGUgw6AgWF9uLiBSZXByw6lzZW50ZSB1biBqZXUgb8O5IGxlIGdhaW4gZXNww6lyw6kgZnV0dXIgZXN0IGluZsOpcmlldXIgb3Ugw6lnYWwgYXUgZ2FpbiBhY3R1ZWwuIn0seyJ0ZXJtIjoiVGVtcHMgZCdBcnLDqnQiLCJkZWZpbml0aW9uIjoiVW5lIHZhcmlhYmxlIGFsw6lhdG9pcmUgVCDDoCB2YWxldXJzIGRhbnMgbGVzIGVudGllcnMgbmF0dXJlbHMgKG91IGwnaW5maW5pKSB0ZWxsZSBxdWUgbGEgZMOpY2lzaW9uIGQnYXJyw6p0ZXIgYXUgdGVtcHMgVCBuZSBkw6lwZW5kIHF1ZSBkZSBsJ2luZm9ybWF0aW9uIGRpc3BvbmlibGUganVzcXUnw6AgY2UgdGVtcHMgVC4gQydlc3QgdW4gbW9tZW50IG/DuSBsJ29uIHBldXQgZMOpY2lkZXIgZCdhcnLDqnRlciB1biBwcm9jZXNzdXMgc2FucyByZWdhcmRlciBsJ2F2ZW5pci4ifSx7InRlcm0iOiJUaMOpb3LDqG1lIGQnQXJyw6p0IE9wdGlvbm5lbCIsImRlZmluaXRpb24iOiJVbiB0aMOpb3LDqG1lIGZvbmRhbWVudGFsIHF1aSDDqXRhYmxpdCBkZXMgY29uZGl0aW9ucyBzb3VzIGxlc3F1ZWxsZXMgbCdlc3DDqXJhbmNlIGQndW5lIG1hcnRpbmdhbGUgw6AgdW4gdGVtcHMgZCdhcnLDqnQgZXN0IMOpZ2FsZSDDoCBzb24gZXNww6lyYW5jZSBpbml0aWFsZS4gSWwgZXN0IGNydWNpYWwgcG91ciBsJ8OpdmFsdWF0aW9uIGRlcyBvcHRpb25zIGFtw6lyaWNhaW5lcyBldCBsYSB0aMOpb3JpZSBkZXMgamV1eC4ifSx7InRlcm0iOiJWYXJpYWJsZSBBbMOpYXRvaXJlIiwiZGVmaW5pdGlvbiI6IlVuZSBmb25jdGlvbiBxdWkgYXNzb2NpZSB1biBub21icmUgcsOpZWwgw6AgY2hhcXVlIHLDqXN1bHRhdCBwb3NzaWJsZSBkJ3VuZSBleHDDqXJpZW5jZSBhbMOpYXRvaXJlLiBFbGxlIHBlcm1ldCBkZSBxdWFudGlmaWVyIGxlcyByw6lzdWx0YXRzIGQnw6l2w6luZW1lbnRzIGluY2VydGFpbnMuIn1d" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiR2VyYWxkIEQuIEdheSwgSm9obiBIdWxsICgyMDA2KS4gwqsgT3B0aW9ucywgRnV0dXJlcywgYW5kIE90aGVyIERlcml2YXRpdmUgU2VjdXJpdGllcy4gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1HZXJhbGQlMjBHYXklMjAlMjJPcHRpb25zJTIyJTIwMjAwNiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MiwidGV4dCI6IlRvbWFzIEJqw7ZyayAoMjAwNSkuIMKrIEFyYml0cmFnZSBQcmljaW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9VG9tYXMlMjBCaiVDMyVCNnJrJTIwJTIyQXJiaXRyYWdlJTIwUHJpY2luZyUyMiUyMDIwMDUiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjMsInRleHQiOiJTdGV2ZW4gRS4gU2hyZXZlICgyMDEyKS4gwqsgU3RvY2hhc3RpYyBDYWxjdWx1cyBmb3IgRmluYW5jZSBJIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTAtMzg3LTIyNTI3LTIiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NCwidGV4dCI6Ik1hcnRpbiBCYXh0ZXIsIEFuZHJldyBSZW5uaWUgKDIwMTQpLiDCqyBGaW5hbmNpYWwgQ2FsY3VsdXMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAxNy9jYm85NzgwNTExODA2NjM2Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjUsInRleHQiOiJTYWxpaCBOLiBOZWZ0Y2kgKDIwMTIpLiDCqyBJbnRyb2R1Y3Rpb24gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAxNi9iOTc4LTAtMTItMzczNTc0LTQuNTAwMDQtNCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo2LCJ0ZXh0IjoiTW9uaXF1ZSBKZWFuYmxhbmMgKDIwMTkpLiDCqyBDcml0aXF1ZSBkZSBsJ291dnJhZ2UgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Nb25pcXVlJTIwSmVhbmJsYW5jJTIwJTIyQ3JpdGlxdWUlMjBkZSUyMGwnb3V2cmFnZSUyMiUyMDIwMTkiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjcsInRleHQiOiJQYXVsIEdsYXNzZXJtYW4gKDIwMTMpLiDCqyBRdWFzaS1Nb250ZSBDYXJsbyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0wLTM4Ny0yMTYxNy0xXzUiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6OCwidGV4dCI6IklvYW5uaXMgS2FyYXR6YXMsIFN0ZXZlbiBFLiBTaHJldmUgKDIwMTIpLiDCqyBCcm93bmlhbiBNb3Rpb24gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMS00Njg0LTAzMDItMl8yIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjksInRleHQiOiJNb25pcXVlIEplYW5ibGFuYywgTWFyYyBZb3IsIE1hcmMgQ2hlc25leSAoMjAwOSkuIMKrIE1hdGhlbWF0aWNhbCBNZXRob2RzIGZvciBGaW5hbmNpYWwgTWFya2V0cyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0xLTg0NjI4LTczNy00Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjEwLCJ0ZXh0IjoiQXV0ZXVyIGluY29ubnUgKDIwMDcpLiDCqyBQaHlzaWNzIG9mIGZpbmFuY2UuIEtpcmlsbCBJbGluc2tpLiBKb2huIFdpbGV5IGFuZCBTb25zIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9QXV0ZXVyJTIwaW5jb25udSUyMCUyMlBoeXNpY3MlMjBvZiUyMGZpbmFuY2UuJTIwS2lyaWxsJTIwSWxpbnNraS4lMjBKb2huJTIwV2lsZXklMjBhbmQlMjBTb25zJTIyJTIwMjAwNyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MTEsInRleHQiOiJKb25hdGhhbiBFLiBJbmdlcnNvbGwsIERhcnJlbGwgRHVmZmllICgyMDA2KS4gwqsgRHluYW1pYyBBc3NldCBQcmljaW5nIFRoZW9yeS4gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Kb25hdGhhbiUyMEluZ2Vyc29sbCUyMCUyMkR5bmFtaWMlMjBBc3NldCUyMFByaWNpbmclMjBUaGVvcnkuJTIyJTIwMjAwNiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MTIsInRleHQiOiJNYXJlayBNdXNpZWxhLCBNYXJlayBSdXRrb3dza2kgKDIwMDYpLiDCqyBNYXJ0aW5nYWxlIE1ldGhvZHMgaW4gRmluYW5jaWFsIE1vZGVsbGluZyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0zLTY2Mi0yMjEzMi03Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTMsInRleHQiOiJEYW1pZW4gTGFtYmVydG9uLCBCZXJuYXJkIExhcGV5cmUgKDIwMTgpLiDCqyBJbnRyb2R1Y3Rpb24gdG8gU3RvY2hhc3RpYyBDYWxjdWx1cyBBcHBsaWVkIHRvIEZpbmFuY2UgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTIwMS85NzgxNDIwMDA5OTQxIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTQsInRleHQiOiJSZW7DqSBMLiBTY2hpbGxpbmcgKDIwMTYpLiDCqyBTdG9jaGFzdGljIGRpZmZlcmVudGlhbCBlcXVhdGlvbnM6IEFuIGludHJvZHVjdGlvbiB3aXRoIGFwcGxpY2F0aW9ucyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVJlbiVDMyVBOSUyMFNjaGlsbGluZyUyMCUyMlN0b2NoYXN0aWMlMjBkaWZmZXJlbnRpYWwlMjBlcXVhdGlvbnMlMjIlMjAyMDE2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE1LCJ0ZXh0IjoiRGFtaWFubyBCcmlnbywgRmFiaW8gTWVyY3VyaW8gKDIwMTMpLiDCqyBPdGhlciBJbnRlcmVzdC1SYXRlIE1vZGVscyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0zLTY2Mi0wNDU1My00XzkiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNiwidGV4dCI6IkF1dGV1ciBpbmNvbm51ICgyMDE1KS4gwqsgVGhlIFZvbGF0aWxpdHkgU3VyZmFjZSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC42NDA2NS9jb25nby1hZnJpcXVlLjIwMjUuNjAuNTUwLjYwMSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE3LCJ0ZXh0IjoiUGhpbGlwIFByb3R0ZXIgKDIwMTMpLiDCqyBTdG9jaGFzdGljIERpZmZlcmVudGlhbCBFcXVhdGlvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy02NjItMDI2MTktOV82Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTgsInRleHQiOiJBdXRldXIgaW5jb25udSAoMjAwOCkuIMKrIE1hdGhlbWF0aWNhbCBNb2RlbHMgb2YgRmluYW5jaWFsIERlcml2YXRpdmVzIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNTQwLTY4Njg4LTAiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxOSwidGV4dCI6IkFuZHJlYSBQYXNjdWNjaSAoMjAxMSkuIMKrIFBERSBhbmQgTWFydGluZ2FsZSBNZXRob2RzIGluIE9wdGlvbiBQcmljaW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTg4LTQ3MC0xNzgxLTgiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMCwidGV4dCI6IlN0YXRpc3RpcXVlcyBldCBwcm9iYWJpbGl0w6lzIGVuIHByb2R1Y3Rpb24gaW5kdXN0cmllbGxlLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1TdGF0aXN0aXF1ZXMlMjBldCUyMHByb2JhYmlsaXQlQzMlQTlzJTIwZW4lMjBwcm9kdWN0aW9uJTIwaW5kdXN0cmllbGxlJTIwJTIyU3RhdGlzdGlxdWVzJTIwZXQlMjBwcm9iYWJpbGl0JUMzJUE5cyUyMGVuJTIwcHJvZHVjdGlvbiUyMGluZHVzdHJpZWxsZS4lMjIiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjEsInRleHQiOiJTaGVsZG9uIE0uIFJvc3MuIDE5OTYuIMKrIHN0b2NoYXN0aWMgcHJvY2VzcyDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9U2hlbGRvbiUyMFJvc3MlMjAlMjJzdG9jaGFzdGljJTIwcHJvY2VzcyUyMiUyMDE5OTYiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjIsInRleHQiOiJNSVQgT3BlbkNvdXJzZVdhcmUuIMKrIEludHJvZHVjdGlvbiBhdXggUHJvY2Vzc3VzIHN0b2NoYXN0aXF1ZXMgKENvdXJzIDEgOiBNYXJ0aW5nYWxlcykgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC41MTkyNi9pc3RlLjk3ODE3ODQwNTU0MzEiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMywidGV4dCI6Ik5pY29sZSBFbCBLYXJvdWkuIDIwMDYuIMKrIFRlbXBzIGxvY2FsIGV0IGJhbGF5YWdlIGRlcyBzZW1pLW1hcnRpbmdhbGVzIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy9iZmIwMDcwODgzIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjQsInRleHQiOiJTdGV2ZW4gU2hyZXZlLiAyMDA0LiDCqyBDYWxjdWwgc3RvY2hhc3RpcXVlIHBvdXIgbGEgZmluYW5jZSBJIDogTGUgbW9kw6hsZSBiaW5vbWlhbCBkJ8OpdmFsdWF0aW9uIGRlcyBhY3RpZnMgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0wLTM4Ny0yMjUyNy0yIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfV0=" />
+

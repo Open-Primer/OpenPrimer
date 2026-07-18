@@ -12,6 +12,16 @@ interface ReferenceProps {
 export const Reference = ({ id, name, term, children }: ReferenceProps) => {
   const refNum = id || term || name || String(children || '');
   
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const target = document.getElementById(`ref-${refNum}`);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Update hash in URL without page reload/route change
+      window.history.pushState(null, '', `#ref-${refNum}`);
+    }
+  };
+
   return (
     <sup 
       id={`cite-${refNum}`} 
@@ -19,6 +29,7 @@ export const Reference = ({ id, name, term, children }: ReferenceProps) => {
     >
       <a 
         href={`#ref-${refNum}`} 
+        onClick={handleClick}
         className="no-underline text-indigo-500 hover:text-indigo-400 transition-colors font-extrabold"
         title={`Aller à la référence [${refNum}]`}
       >

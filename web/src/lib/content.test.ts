@@ -73,6 +73,11 @@ test.describe('Multilingual Linguistic Integrity', () => {
     expect(healLinguisticContent("یہ کتاب ہے , اور وہ قلم ہے ;", "ur")).toBe("یہ کتاب ہے، اور وہ قلم ہے؛");
     expect(healLinguisticContent("کرتے \u200C ہیں", "ur")).toBe("کرتے\u200Cہیں");
   });
+
+  test('should clean up double spaces and corrupted punctuation at the end of sentences', () => {
+    expect(healLinguisticContent("Bonjour , . C'est  un test ; .", "fr")).toBe("Bonjour. C'est un test.");
+    expect(healLinguisticContent("Hello , , world . This  is   great .", "en")).toBe("Hello, world. This is great.");
+  });
 });
 
 test.describe('Pedagogical Citation Pipeline Resolution', () => {
