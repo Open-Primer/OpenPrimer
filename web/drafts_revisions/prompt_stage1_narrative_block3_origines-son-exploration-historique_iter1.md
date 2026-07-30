@@ -4,13 +4,13 @@ Your task is to write a section of the academic MDX narrative content for the sp
 We are writing the lesson block-by-block.
 - This is Block 3 out of 3.
 - You MUST write the content for the following sections:
-* Heading: "## Conclusion : Héritage et prélude à l'acoustique moderne"
-  Instructions: "Récapituler les points clés de l'évolution historique de la pensée acoustique. Souligner comment ces fondations ont pavé la voie à l'acoustique classique et moderne, et ouvrir sur les développements futurs de la discipline."
+* Heading: "## Conclusion : L'héritage des origines et les prémices de l'acoustique moderne"
+  Instructions: "Récapituler les étapes clés de l'exploration historique et conceptuelle du son. Souligner comment les théories et observations de l'Antiquité à la Renaissance ont pavé la voie à l'acoustique moderne et à son développement en tant que discipline scientifique à part entière. Ouvrir sur les perspectives des développements ultérieurs."
 
 ---
 
 ### GLOBAL CONTEXT:
-- Course Name: "Acoustique physique et acoustique musicale"
+- Course Name: "Acoustique Physique et Acoustique Musicale"
 - Academic Level: "University Year 2 / Bachelor 2nd Year (L2)"
 - Lesson Title: "Aux origines du son : une exploration historique et conceptuelle"
 - Discipline: "Général"
@@ -33,6 +33,17 @@ We are writing the lesson block-by-block.
 [[WIDGET:Reference:15]] Coulomb, Jean. "L'acoustique". Presses Universitaires de France, Que sais-je ?, 1968.
 
 
+### LEVEL CONSTRAINTS (from database — MANDATORY to enforce):
+- Minimum words per lesson block: 2500 — Maximum: 3500
+- Minimum inline hover-cards per block: **4** (ConceptLink, RealPerson, Glossary)
+- Minimum block widgets per block: **3** (Image, Mermaid, Video, DataChart, etc.)
+- Minimum biographies (RealPerson) in this lesson: 4
+- Minimum concept links (ConceptLink) in this lesson: 8
+- Minimum glossary terms in this lesson: 12
+- Minimum bibliographic references in this lesson: 10
+- **MANDATED widget types for this level** (must include at least one): HistoricalAnecdote, Quiz, Image, Mermaid, SolvedExercise, UnsolvedExercise, DataChart, Biography, Citation, EventLink, Video, Audio
+- **DISCOURAGED widget types for this level** (avoid unless essential): None
+
 ---
 
 ### PRE-EXISTING WIDGET INVENTORY:
@@ -45,16 +56,20 @@ The following relevant media and database resources are available for this cours
 
 ### PEDAGOGICAL WIDGETS MANDATE (CRITICAL):
 To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
+- CRITICAL IMAGE RELEVANCE & CAPTIONING: Every Image or CustomFigure anchor you generate MUST have a strong, direct connection with the current lesson/concept, and must be highly informative (never generic, decorative, or filler). Visual captions for these figures must strictly be inquiry-based and academically relevant rather than purely descriptive. For example, instead of a plain caption like "Cette image représente un monocorde", write an inquiry-based caption like "Comment ce schéma d'un monocorde permet-il de visualiser concrètement les rapports harmoniques des longueurs de cordes ?". All captions must prompt active reflection, invite the learner to think, or show academic utility.
+- CRITICAL INTERACTIVE WIDGET CONNECTION: Every interactive widget anchor (such as Quiz, SolvedExercise, UnsolvedExercise, FillInBlanks, Mermaid, DataChart, and other interactive diagrams/simulations) MUST be strongly connected to the lesson. Ensure they are placed in a context where they have specific parameters, equations, or data relevant to the lesson topics, and where a detailed explanation is pedagogically appropriate. You MUST provide a detailed description acting as a legend/caption in the anchor itself (e.g., [[WIDGET:Mermaid:id:Detailed description of the diagram and its variables]).
 You are REQUIRED to include:
-- At least 2-3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
-- MANDATORY: At least 2-3 block widgets/media placed on separate blank lines, chosen from: [[WIDGET:Image:id:description]], [[WIDGET:CustomFigure:id:description]], [[WIDGET:Mermaid:id:description]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], [[WIDGET:Video:id:description]].
+- At least 4 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
+- MANDATORY: At least 3 block widgets/media placed on separate blank lines, chosen from: [[WIDGET:Image:id:description]], [[WIDGET:CustomFigure:id:description]], [[WIDGET:Mermaid:id:description]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], [[WIDGET:Video:id:description]].
 - MEDIA COMPOSITION REQUIREMENT: Each narrative block MUST include at minimum (a) at least 1 image or figure ([[WIDGET:Image]] or [[WIDGET:CustomFigure]]) showing a relevant diagram, formula, or scientific illustration AND (b) at least 1 structural/diagrammatic widget ([[WIDGET:Mermaid]] for flowcharts/timelines/graphs, or [[WIDGET:Video]] for a pedagogical video). These are NOT optional — a block with only text and hover-cards will be REJECTED.
+- MANDATED WIDGET TYPES for this academic level: you MUST include at least one occurrence of each of the following widget types across the lesson: HistoricalAnecdote, Quiz, Image, Mermaid, SolvedExercise, UnsolvedExercise, DataChart, Biography, Citation, EventLink, Video, Audio.
+
 - ABSOLUTE PROHIBITION ON HORIZONTAL SEPARATOR LINES (like `---` or `___`) immediately below or above any widget.
 Choose from the following options:
 1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
 2. [[WIDGET:Image:unique_id:description]] (or [[WIDGET:CustomFigure:unique_id:description]]) - For relevant paintings, historical photos, maps, diagrams, or illustrations. Note: in the generated MDX component catalog, this maps to the CustomFigure component. (e.g. [[WIDGET:Image:prise_bastille:La prise de la Bastille le 14 juillet 1789]])
 3. [[WIDGET:Video:unique_id:description]] - For relevant documentaries, video archives, or animations. (e.g. [[WIDGET:Video:revolution_francaise:Documentaire sur les grandes étapes de la Révolution française]])
-4. [[WIDGET:Audio:unique_id:description]] - For audio speeches, narrations, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits:Enregistrement sonore de la Déclaration des droits]])
+4. [[WIDGET:Audio:unique_id:description]] - For audio speeches, narrations, musical examples, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits:Enregistrement sonore de la Déclaration des droits]])
 5. [[WIDGET:Mermaid:unique_id:description]] - For timelines, flowcharts, or structural diagrams. (e.g. [[WIDGET:Mermaid:timeline_causes:Chronologie des causes de la Révolution]])
 6. [[WIDGET:Quiz:unique_id]] - For formative multiple-choice quizzes to verify student comprehension.
 7. [[WIDGET:SolvedExercise:unique_id]] - For step-by-step resolved exercises, coding snippets, or analytical case studies.
@@ -63,7 +78,8 @@ Choose from the following options:
 10. [[WIDGET:RealPerson:unique_id:Person Name]] - Inline hover-card highlight for any person mentioned. (e.g. "...alors que [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque...")
 11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
 12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
-13. [[WIDGET:Quote:unique_id:description]] - Block widget for a famous quotation or author quote, including original/translation and source. Scribe must place this anchor on a separate blank line. (e.g. [[WIDGET:Quote:marie_curie_perseverance:Citation de Marie Curie sur la persévérance dans la recherche scientifique]])
+13. [[WIDGET:Quote:unique_id:description]] - Block widget for a famous quotation or author quote, including original/translation and source (renders as Citation in MDX). Scribe must place this anchor on a separate blank line. (e.g. [[WIDGET:Quote:marie_curie_perseverance:Citation de Marie Curie sur la persévérance dans la recherche scientifique]])
+14. [[WIDGET:EventLink:unique_id:Event Name]] - Inline hover-card highlight for any key historical, cultural, or scientific event. (e.g. "...après la [[WIDGET:EventLink:bataille_marignan:Bataille de Marignan]] en 1515...")
 
 Please write them exactly in this anchor format [[WIDGET:Type:unique_id:description]] (or [[WIDGET:Type:unique_id]] where description is not applicable, or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
 
@@ -72,23 +88,17 @@ Please write them exactly in this anchor format [[WIDGET:Type:unique_id:descript
 ### PREVIOUS TEXT (for transitions and context):
 Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
 """
-... approche purement mathématique des Pythagoriciens, en introduisant une dimension physique et mesurable à l'étude du son. Ils ont ouvert la voie à une compréhension plus profonde des phénomènes vibratoires et à l'établissement de l'acoustique comme une branche à part entière de la physique.
+...  graves. Cette compréhension a été cruciale car elle a permis de relier un phénomène physique observable (la vibration) à une sensation auditive (la hauteur du son) par une grandeur mesurable (la fréquence) [[WIDGET:Reference:5]].
 
-## Concepts fondamentaux : Vibration et propagation à travers les âges
+Les expériences avec des cordes vibrantes ont été emblématiques. En variant la tension, la longueur et l'épaisseur des cordes, les chercheurs ont pu systématiquement étudier comment ces paramètres affectent la fréquence de vibration et, par conséquent, la hauteur du son. Les lois de Mersenne, par exemple, ont fourni des relations mathématiques précises pour ces phénomènes, montrant que la fréquence fondamentale d'une corde est inversement proportionnelle à sa longueur, proportionnelle à la racine carrée de sa tension, et inversement proportionnelle à la racine carrée de sa masse linéique [[WIDGET:Reference:6]]. Ces découvertes ont non seulement expliqué la production du son par les instruments de musique, mais ont aussi fourni un cadre pour comprendre la nature physique de la vibration.
 
-L'histoire de l'acoustique est intrinsèquement liée à l'évolution de notre compréhension de deux concepts fondamentaux : la [[WIDGET:ConceptLink:vibration:vibration]] et la [[WIDGET:ConceptLink:propagation:propagation]]. Ces deux piliers décrivent respectivement l'origine du son et son mode de transmission.
+La **propagation du son**, quant à elle, a également connu une évolution conceptuelle significative. Aristote avait déjà postulé que le son était une perturbation de l'air, nécessitant un milieu pour se déplacer. Cette idée a été renforcée par les observations de Léonard de Vinci sur les ondes dans l'eau, qui ont fourni une analogie visuelle pour la propagation du son dans l'air. L'idée que le son se déplace sous forme d'une [[WIDGET:ConceptLink:onde_sonore:onde sonore]], c'est-à-dire une perturbation qui se propage sans transport de matière, mais avec transport d'énergie, a commencé à prendre forme.
 
-Dans l'Antiquité, la vibration était perçue de manière qualitative. Les Pythagoriciens, par exemple, ont découvert les rapports numériques des longueurs de cordes produisant des intervalles consonants, mais sans une compréhension physique du mouvement oscillatoire sous-jacent. La source du son était associée à un "choc" ou un "mouvement", mais le lien précis avec une fréquence de vibration n'était pas établi.
+Les premières tentatives de mesure de la vitesse du son, notamment celles de Mersenne au XVIIe siècle, ont confirmé que le son ne se propageait pas instantanément, mais à une vitesse finie. Mersenne a utilisé des coups de canon et des chronomètres rudimentaires pour estimer cette vitesse, obtenant des valeurs étonnamment proches des mesures modernes [[WIDGET:Reference:15]]. Ces expériences ont solidifié l'idée que le son est un phénomène de transmission à travers un [[WIDGET:Glossary:milieu_elastique:milieu élastique]], où les particules du milieu oscillent autour de leur position d'équilibre, transmettant l'énergie de proche en proche.
 
-[[WIDGET:CustomFigure:sound_propagation_diagram:Schéma illustrant la propagation du son comme une perturbation du milieu, montrant les zones de compression et de raréfaction.]]
+[[WIDGET:HistoricalAnecdote:galileo_vibration_glass:Anecdote sur la découverte par Galilée de la relation entre la fréquence et la hauteur du son en frottant un doigt sur un verre, observant les ondulations et les reliant au nombre de vibrations.]]
 
-La propagation, quant à elle, a été remarquablement bien conceptualisée par [[WIDGET:RealPerson:aristote:Aristote]], qui décrivait le son comme un mouvement de l'air se propageant en ondes concentriques, et avait même l'intuition de l'impossibilité de sa propagation dans le vide [[WIDGET:Reference:4]]. Cependant, cette description restait philosophique, sans les outils mathématiques ou expérimentaux pour en quantifier la vitesse ou la nature exacte.
-
-La Renaissance, avec les travaux de Galilée, a transformé cette compréhension. En liant la hauteur du son à la fréquence de vibration de la source, Galilée a offert la première quantification significative de la vibration. Il a montré que la vibration n'est pas un simple mouvement, mais une oscillation régulière dont la vitesse détermine une propriété fondamentale du son. Cette approche empirique a permis de passer de la spéculation à l'observation mesurable, jetant les bases de la physique des vibrations.
-
-[[WIDGET:Video:sound_wave_animation:Animation expliquant la vibration d'une source sonore et la propagation d'une onde sonore dans un milieu.]]
-
-Concernant la propagation, bien que la nature exacte de l'[[WIDGET:Glossary:onde_sonore:onde sonore]] en tant que variation de pression ne soit pleinement élucidée qu'ultérieurement (notamment par Newton et les travaux du XVIIe siècle), les observations de Galilée sur la vibration ont indirectement renforcé l'idée que le son est un phénomène dynamique nécessitant un milieu pour se propager. L'évolution de ces concepts, de la spéculation philosophique à l'observation empirique et à la quantification, a été un processus graduel mais essentiel, pavant la voie à la théorie ondulatoire du son et à l'acoustique moderne.
+La compréhension de la vibration et de la propagation a été un processus cumulatif, où chaque génération de savants a construit sur les fondations posées par les précédentes. Des observations qualitatives de l'Antiquité aux mesures quantitatives de la Renaissance et au-delà, ces deux concepts sont devenus les piliers de l'acoustique, permettant de modéliser et de prédire le comportement du son dans divers contextes physiques et musicaux [[WIDGET:Reference:9]].
 """
 
 ---

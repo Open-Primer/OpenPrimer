@@ -1,6 +1,6 @@
 You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 Your task is to design the JSON object for the conclusion, glossary, and transition widgets of the lesson:
-Course: "Acoustique physique et acoustique musicale"
+Course: "Acoustique Physique et Acoustique Musicale"
 Level: "University Year 2 / Bachelor 2nd Year (L2)"
 Lesson Title: "Aux origines du son : une exploration historique et conceptuelle"
 Language: "FR"
@@ -46,7 +46,7 @@ Return ONLY a valid JSON object matching this schema:
 Do NOT wrap your JSON response in markdown code blocks.
 
 🚨 PREVIOUS CRITIQUE:
-"The 'goingFurther' section contains a placeholder-like URL for one of its items. Specifically, the YouTube video 'La physique du son' has a URL that appears to be a dummy value (e.g., '...y_e21112111'). All URLs in 'goingFurther' must be real and valid, not placeholders or templates.
+"The 'goingFurther' section contains a placeholder URL. All URLs must be real and functional, or the 'url' property should be omitted entirely if a real URL is not available.
 Detailed errors:
-- Field "goingFurther": The 'goingFurther' section contains a placeholder-like URL for one of its items. Specifically, the YouTube video 'La physique du son' has a URL that appears to be a dummy value (e.g., '...y_e21112111'). All URLs in 'goingFurther' must be real and valid, not placeholders or templates."
+- Field "goingFurther": L'URL pour l'élément 'Comment le son voyage' est un espace réservé ('https://youtube.com/watch?v=example'). Veuillez fournir une URL réelle et fonctionnelle ou supprimer la propriété 'url' pour cet élément."
 Please fix these issues and regenerate.

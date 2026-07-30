@@ -1,5 +1,5 @@
 You are the Lesson Planner Agent. Your job is to design the chapter outline/plan for the lesson:
-Course: "Acoustique physique et acoustique musicale"
+Course: "Acoustique Physique et Acoustique Musicale"
 Level: "University Year 2 / Bachelor 2nd Year (L2)"
 Lesson Title: "Aux origines du son : une exploration historique et conceptuelle"
 Lesson Description/Technical Depth: "Présentation des premières théories sur le son, de l'Antiquité à la Renaissance. Discussion des concepts fondamentaux de vibration et de propagation. Contextualisation de l'acoustique comme science et son évolution jusqu'à l'ère moderne."

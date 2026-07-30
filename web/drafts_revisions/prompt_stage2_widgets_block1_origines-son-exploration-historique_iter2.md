@@ -1,6 +1,6 @@
 You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 Your task is to design the JSON object for the introductory widgets of the lesson:
-Course: "Acoustique physique et acoustique musicale"
+Course: "Acoustique Physique et Acoustique Musicale"
 Level: "University Year 2 / Bachelor 2nd Year (L2)"
 Lesson Title: "Aux origines du son : une exploration historique et conceptuelle"
 Language: "FR"
@@ -35,7 +35,7 @@ Return ONLY a valid JSON object matching this schema:
 Do NOT wrap your JSON response in markdown code blocks.
 
 🚨 PREVIOUS CRITIQUE:
-"The learning objectives use Bloom's Taxonomy verbs that are too high-level for an L1 course. Verbs like 'Analyser' (Analyze), 'Évaluer' (Evaluate), and especially 'Synthétiser' (Synthesize/Create) are typically associated with higher academic levels (L2, L3, Master). For an L1 course, objectives should generally focus on 'Remember', 'Understand', and 'Apply'. Please revise the learning objectives to use verbs appropriate for an introductory L1 level.
+"The learning objectives, particularly in the 'skills' section, use Bloom's Taxonomy verbs (Analyze, Evaluate, Create) that are too advanced (L4-L6) for a course with L1 prerequisites. These objectives need to be revised to align with the foundational level indicated by the prerequisites.
 Detailed errors:
-- Field "learningObjectives": The verbs used in the knowledge and skills objectives ('Analyser', 'Évaluer', 'Synthétiser') are too advanced for an L1 level. For L1, focus on foundational understanding and application. For example, instead of 'Analyser', consider 'Décrire' (Describe) or 'Identifier' (Identify). Instead of 'Évaluer', consider 'Expliquer' (Explain) or 'Démontrer' (Demonstrate). 'Synthétiser' should be replaced with a verb like 'Organiser' (Organize) or 'Classer' (Classify) if appropriate for L1."
+- Field "learningObjectives": The 'skills' objectives (Analyze, Evaluate, Create) are too high on Bloom's Taxonomy for a course with L1 prerequisites. They should be adjusted to reflect a more foundational level, perhaps focusing on understanding, applying, or basic analysis suitable for L1/L2."
 Please fix these issues and regenerate.

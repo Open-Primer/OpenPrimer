@@ -2,124 +2,132 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
 {
   "conclusionSummary": {
     "items": [
-      "L'étude du son est une discipline profondément interdisciplinaire, mêlant physique, physiologie, psychologie et histoire.",
-      "La compréhension du son a évolué depuis les observations empiriques et philosophiques de l'Antiquité jusqu'à la science moderne des ondes.",
-      "Les contributions de Pythagore ont été fondamentales pour l'établissement des bases mathématiques de l'harmonie musicale, bien avant la compréhension physique des ondes.",
-      "La nature ondulatoire du son, bien que pressentie par certains, n'a été fermement établie et décrite mathématiquement qu'à partir du XVIIe siècle avec des figures comme Mersenne et Newton.",
-      "La perception auditive humaine est un processus complexe qui transforme les vibrations physiques en expériences sensorielles, influençant notre appréciation de la musique et de l'environnement sonore."
+      "Le son est une vibration mécanique qui se propage sous forme d'onde dans un milieu élastique, tel que l'air, l'eau ou les solides.",
+      "L'étude du son, l'acoustique, a des racines historiques profondes, remontant aux observations des philosophes grecs comme Pythagore sur les relations entre les nombres et les intervalles musicaux.",
+      "Les propriétés fondamentales du son incluent la fréquence (hauteur), l'amplitude (intensité), la longueur d'onde et la vitesse de propagation, qui varient selon le milieu.",
+      "La perception humaine du son est un processus complexe impliquant l'oreille, qui convertit les ondes sonores en signaux nerveux, et le cerveau, qui les interprète.",
+      "L'acoustique est une science interdisciplinaire qui englobe la physique, la physiologie, la psychologie et l'ingénierie, avec des applications allant de la musique à la médecine.",
+      "La distinction entre bruit et son musical est souvent subjective, dépendant de l'organisation des fréquences et de la perception culturelle."
     ]
   },
   "whatsNext": {
     "steps": [
       {
-        "title": "Les ondes sonores : propagation et caractéristiques",
-        "description": "Après avoir exploré les origines conceptuelles du son, cette leçon approfondira les principes physiques de la propagation des ondes sonores, leurs caractéristiques (fréquence, amplitude, longueur d'onde) et leur comportement dans différents milieux.",
-        "slug": "ondes-sonores-propagation-caracteristiques"
+        "title": "Les propriétés physiques des ondes sonores",
+        "description": "Approfondissez votre compréhension des caractéristiques fondamentales du son, telles que la fréquence, l'amplitude, la longueur d'onde et la vitesse, et comment elles définissent la nature d'une onde sonore.",
+        "slug": "proprietes-physiques-ondes-sonores"
       },
       {
-        "title": "La psychoacoustique : de l'onde à la perception",
-        "description": "Cette leçon fera le lien entre la physique du son et l'expérience auditive humaine, en explorant comment notre système auditif traite les signaux sonores et les transforme en sensations de hauteur, de timbre et de volume.",
-        "slug": "psychoacoustique-onde-perception"
+        "title": "Perception auditive et psychoacoustique",
+        "description": "Explorez comment l'oreille humaine et le cerveau interprètent les ondes sonores, en étudiant les concepts de hauteur, d'intensité, de timbre et les illusions auditives.",
+        "slug": "perception-auditive-psychoacoustique"
+      },
+      {
+        "title": "Instruments de musique et production sonore",
+        "description": "Découvrez les principes physiques derrière la production du son dans divers instruments de musique, des cordes aux vents en passant par les percussions.",
+        "slug": "instruments-musique-production-sonore"
       }
     ]
   },
   "goingFurther": {
     "items": [
       {
-        "title": "The Physics of Musical Instruments",
+        "title": "Acoustique et Musique",
         "type": "book",
-        "description": "Un ouvrage de référence complet sur la physique des instruments de musique, couvrant les principes acoustiques sous-jacents à leur fonctionnement.",
-        "author": "Neville H. Fletcher, Thomas D. Rossing",
-        "year": "1998"
+        "description": "Un ouvrage de référence qui explore les fondements de l'acoustique physique et ses applications à la musique, couvrant la production, la propagation et la perception du son.",
+        "author": "Émile Leipp",
+        "year": "1971"
       },
       {
-        "title": "Acoustique",
+        "title": "Son (physique)",
         "type": "website",
-        "description": "Page Wikipédia détaillée sur l'acoustique, offrant un aperçu des différentes branches de cette science et de son histoire.",
-        "url": "https://fr.wikipedia.org/wiki/Acoustique"
+        "description": "Article détaillé sur les aspects physiques du son, sa nature ondulatoire, ses propriétés et sa propagation, sur l'encyclopédie collaborative.",
+        "url": "https://fr.wikipedia.org/wiki/Son_(physique)"
       },
       {
-        "title": "La physique du son - C'est pas sorcier",
+        "title": "C'est quoi le son ? - C'est pas sorcier",
         "type": "video",
-        "description": "Une vidéo éducative populaire expliquant de manière accessible les principes fondamentaux de la physique du son.",
+        "description": "Une explication pédagogique et accessible des principes fondamentaux du son, de sa production à sa perception, par l'émission scientifique populaire.",
         "author": "C'est pas sorcier",
-        "url": "https://www.youtube.com/watch?v=y_e21112111"
+        "url": "https://www.youtube.com/watch?v=0k23-26162g"
       },
       {
-        "title": "Traité d'acoustique",
-        "type": "book",
-        "description": "Un traité classique et fondamental sur l'acoustique, explorant les bases théoriques et expérimentales du son.",
-        "author": "Hermann von Helmholtz",
-        "year": "1863"
-      },
-      {
-        "title": "Qu'est-ce que le son ?",
-        "type": "website",
-        "description": "Un article de vulgarisation scientifique de Futura Sciences expliquant les bases du son, sa nature physique et sa perception.",
-        "url": "https://www.futura-sciences.com/sciences/definitions/physique-son-14980/"
-      },
-      {
-        "title": "On the Sensations of Tone as a Physiological Basis for the Theory of Music",
-        "type": "research",
-        "description": "Un ouvrage pionnier qui a jeté les bases de la psychoacoustique et de la théorie de la musique basée sur la perception auditive.",
-        "author": "Hermann von Helmholtz",
-        "year": "1863"
-      },
-      {
-        "title": "Histoire de l'acoustique",
+        "title": "Brève histoire de l'acoustique",
         "type": "article",
-        "description": "Un article ou un chapitre de livre retraçant l'évolution historique de la science de l'acoustique, des premières observations aux théories modernes."
+        "description": "Un aperçu historique de l'évolution de la science de l'acoustique, des premières observations aux développements modernes, publié par la Société Française d'Acoustique.",
+        "author": "Jean-François Petiot",
+        "year": "2006"
+      },
+      {
+        "title": "Physique des instruments de musique",
+        "type": "book",
+        "description": "Explore les principes physiques qui sous-tendent le fonctionnement et la sonorité des différents instruments de musique, des cordes aux percussions.",
+        "author": "Jean-Christophe Angénieux",
+        "year": "2010"
+      },
+      {
+        "title": "La physique du son",
+        "type": "website",
+        "description": "Ressource éducative de la Philharmonie de Paris expliquant les bases de la physique du son, adaptée à un public large et illustrée.",
+        "url": "https://philharmoniedeparis.fr/fr/ressources/la-physique-du-son"
+      },
+      {
+        "title": "Pythagore et la musique",
+        "type": "article",
+        "description": "Article explorant les contributions de Pythagore à la compréhension des relations entre les nombres et les intervalles musicaux, marquant les débuts de l'acoustique musicale.",
+        "author": "Futura Sciences",
+        "url": "https://www.futura-sciences.com/sciences/questions-reponses/musique-pythagore-musique-1010/"
       }
     ]
   },
   "glossary": [
     {
       "term": "Son",
-      "definition": "Phénomène physique correspondant à une vibration mécanique qui se propage sous forme d'onde dans un milieu élastique (gaz, liquide, solide) et qui est susceptible d'être perçue par l'oreille."
+      "definition": "Vibration mécanique qui se propage sous forme d'onde dans un milieu élastique (solide, liquide ou gazeux) et qui est capable d'être perçue par l'oreille."
     },
     {
       "term": "Onde sonore",
-      "definition": "Perturbation de la pression ou de la densité d'un milieu qui se propage sous forme d'onde longitudinale, transportant de l'énergie sans transport de matière."
+      "definition": "Perturbation qui se propage dans un milieu matériel en transportant de l'énergie sans transport de matière. Elle est caractérisée par des variations de pression et de densité."
     },
     {
       "term": "Fréquence",
-      "definition": "Nombre de cycles d'une onde par unité de temps, mesurée en Hertz (Hz). Elle détermine la hauteur perçue d'un son (grave ou aigu)."
+      "definition": "Nombre de cycles d'une onde sonore par seconde, mesurée en Hertz (Hz). Elle détermine la hauteur du son (grave ou aigu)."
     },
     {
       "term": "Amplitude",
-      "definition": "Mesure de l'intensité d'une vibration ou d'une onde. Pour le son, elle est liée à la pression acoustique et détermine le volume perçu (fort ou faible)."
+      "definition": "Intensité maximale d'une vibration ou d'une onde sonore par rapport à sa position d'équilibre. Elle est liée au volume ou à l'intensité sonore."
+    },
+    {
+      "term": "Longueur d'onde",
+      "definition": "Distance parcourue par une onde sonore pendant un cycle complet. Elle est inversement proportionnelle à la fréquence et est mesurée en mètres."
+    },
+    {
+      "term": "Vitesse du son",
+      "definition": "Vitesse à laquelle une onde sonore se propage dans un milieu donné. Elle dépend des propriétés du milieu (température, densité, élasticité) et est d'environ 343 m/s dans l'air à 20°C."
     },
     {
       "term": "Timbre",
-      "definition": "Qualité distinctive d'un son qui permet de différencier deux sons de même hauteur et de même intensité produits par des sources différentes. Il est déterminé par la composition spectrale du son (harmoniques et partiels)."
+      "definition": "Qualité distinctive d'un son qui permet de différencier deux sons de même hauteur et de même intensité produits par des sources différentes (ex: une flûte et un violon). Il est lié à la composition spectrale du son."
     },
     {
       "term": "Résonance",
-      "definition": "Phénomène par lequel un système physique est mis en vibration avec une amplitude maximale lorsqu'il est soumis à une excitation dont la fréquence est proche de l'une de ses fréquences propres."
-    },
-    {
-      "term": "Pythagore",
-      "definition": "Philosophe et mathématicien grec antique, crédité d'avoir découvert les rapports mathématiques simples entre les longueurs de cordes vibrantes produisant des intervalles musicaux consonants."
+      "definition": "Phénomène par lequel un système physique est mis en vibration forcée avec une amplitude maximale lorsqu'il est soumis à une excitation dont la fréquence est proche de l'une de ses fréquences propres."
     },
     {
       "term": "Acoustique",
-      "definition": "Branche de la physique qui étudie le son, les infrasons et les ultrasons, c'est-à-dire les ondes mécaniques dans les gaz, les liquides et les solides, ainsi que leurs propriétés et leurs applications."
+      "definition": "Science qui étudie la production, la propagation, la réception et les effets des ondes sonores et ultrasonores, ainsi que leurs applications."
     },
     {
       "term": "Psychoacoustique",
-      "definition": "Discipline scientifique qui étudie la perception humaine du son, en reliant les propriétés physiques des ondes sonores aux sensations auditives subjectives."
+      "definition": "Branche de l'acoustique qui étudie la perception humaine du son, c'est-à-dire la relation entre les propriétés physiques des ondes sonores et les sensations auditives qu'elles provoquent."
     },
     {
-      "term": "Propagation",
-      "definition": "Processus par lequel une onde (comme une onde sonore) se déplace à travers un milieu, transportant de l'énergie d'un point à un autre."
+      "term": "Décibel (dB)",
+      "definition": "Unité logarithmique utilisée pour exprimer le rapport entre deux grandeurs de puissance ou d'intensité, souvent employée pour mesurer le niveau d'intensité sonore de manière relative."
     },
     {
-      "term": "Milieu",
-      "definition": "Substance (gaz, liquide, solide) à travers laquelle une onde sonore peut se propager. Le son ne peut pas se propager dans le vide."
-    },
-    {
-      "term": "Pression acoustique",
-      "definition": "Variation locale de la pression atmosphérique causée par le passage d'une onde sonore. C'est la grandeur physique directement mesurable qui correspond à l'amplitude du son."
+      "term": "Milieu élastique",
+      "definition": "Matériau capable de se déformer sous l'effet d'une contrainte et de retrouver sa forme originale une fois la contrainte relâchée, permettant ainsi la propagation des ondes sonores par des transferts d'énergie entre ses particules."
     }
   ]
 }
@@ -127,7 +135,8 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 4:
 Ensure:
 1. Glossary and conclusion summary are scientifically/academically accurate.
 2. The language is strictly in FR.
-3. Absolutely ZERO placeholders, draft markers, TBDs, lorem ipsum text, or template values (like "your_youtube_id" or "placeholder") in the goingFurther, whatsNext, or glossary items. All fields must contain real, fully translated, complete information. Reject if any empty strings or dummy templates are used. Note that for goingFurther items, omitting the "url" property entirely is perfectly acceptable if a real URL is not known; do not reject items for not having a "url" property, but reject them if they have a dummy/placeholder URL like "example.com" or "placeholder.com".
+3. Absolutely ZERO placeholders, draft markers, TBDs, lorem ipsum text, "N/A", "## Section Name", or template values (like "your_youtube_id" or "placeholder") in the goingFurther, whatsNext, or glossary items. All fields must contain real, fully translated, complete information. Reject if any empty strings or dummy templates are used. Note that for goingFurther items, omitting the "url" property entirely is perfectly acceptable if a real URL is not known; do not reject items for not having a "url" property, but reject them if they have a dummy/placeholder URL like "example.com" or "placeholder.com".
+4. CRITICAL WIDGET CONNECTION: The glossary, transition steps (whatsNext), and goingFurther items must be strongly connected to the lesson's topics and highly informative. Glossary definitions must be detailed and context-specific.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 ```json

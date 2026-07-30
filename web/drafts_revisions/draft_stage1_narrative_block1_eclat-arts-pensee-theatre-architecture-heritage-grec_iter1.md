@@ -1,0 +1,30 @@
+## Introduction : Aux sources de la civilisation grecque
+
+La Grèce antique est universellement reconnue comme le berceau d'une civilisation d'une richesse et d'une influence inégalées, dont l'héritage continue de façonner notre monde contemporain. Bien au-delà de ses paysages méditerranéens, cette civilisation a jeté les bases de la pensée occidentale, de la démocratie, de la philosophie, des sciences, de l'architecture et, bien sûr, des arts. C'est dans ce contexte foisonnant que sont nées des idées et des formes d'expression qui ont traversé les siècles, offrant des modèles et des inspirations aux générations futures [[WIDGET:Reference:4]].
+
+L'étude de la Grèce antique n'est pas seulement un voyage dans le passé ; c'est une exploration des racines de notre propre culture. Les Grecs, organisés en [[WIDGET:ConceptLink:cite_etat:Cités-États]] indépendantes mais partageant une langue, une religion et une culture communes, ont développé une vision du monde où l'homme était au centre des préoccupations. Cette période, s'étendant approximativement du VIIIe siècle avant J.-C. à la conquête romaine en 146 avant J.-C., a vu l'émergence de concepts fondamentaux tels que la citoyenneté, la raison critique et la quête de la beauté et de la vérité.
+
+Dans cette leçon, nous nous pencherons spécifiquement sur l'éclat des arts et de la pensée grecque, en explorant comment le théâtre, l'architecture et d'autres formes d'expression artistique ont non seulement reflété la société de leur temps, mais ont également posé les jalons d'une tradition culturelle durable. Nous découvrirons comment ces créations artistiques étaient intrinsèquement liées à la vie civique, religieuse et philosophique des Grecs, offrant un miroir de leurs valeurs, de leurs mythes et de leurs aspirations.
+
+## Le Théâtre grec : Miroir de la société et de l'âme
+
+Le théâtre, tel que nous le connaissons aujourd'hui, trouve ses origines profondes dans la Grèce antique. Loin d'être un simple divertissement, il était une institution civique et religieuse majeure, un lieu de rassemblement où la communauté se confrontait à ses mythes, ses peurs, ses questionnements moraux et ses idéaux. Né des rites religieux en l'honneur de Dionysos, dieu du vin, de la fertilité et de l'extase, le théâtre grec a évolué à partir de chants choraux appelés [[WIDGET:Glossary:dithyrambe:dithyrambes]], pour devenir une forme d'art dramatique structurée et sophistiquée.
+
+Les représentations théâtrales se déroulaient lors de grandes fêtes religieuses, notamment les Dionysies urbaines à Athènes, et attiraient des milliers de spectateurs. Les pièces étaient jouées en plein air, dans des théâtres construits à flanc de colline, offrant une acoustique remarquable et une vue imprenable sur la scène.
+
+[[WIDGET:Image:theatre_epidaure:Comment l'architecture du théâtre d'Épidaure reflète-t-elle l'acoustique et la fonction sociale du spectacle dans la Grèce antique ?]]
+
+Le théâtre grec se divisait principalement en deux genres majeurs : la [[WIDGET:ConceptLink:tragedie_grecque:tragédie]] et la comédie.
+
+1.  **La Tragédie grecque** : Elle mettait en scène des héros mythiques ou légendaires confrontés à des destins inéluctables, souvent sous l'influence des dieux ou des forces du destin. Les thèmes abordés étaient universels : la justice, le devoir, la folie, la mort, l'amour, la haine, le pouvoir. Le but de la tragédie était de provoquer chez le spectateur la [[WIDGET:Glossary:catharsis:catharsis]], une purification des passions par la terreur et la pitié. Les trois grands maîtres de la tragédie grecque sont :
+    *   [[WIDGET:RealPerson:eschyle:Eschyle]] (vers 525-456 av. J.-C.) : Considéré comme le père de la tragédie, il a introduit le deuxième acteur, permettant le dialogue. Ses œuvres majeures incluent *Les Perses* et l'*Orestie*.
+    *   Sophocle (vers 496-406 av. J.-C.) : Il a ajouté un troisième acteur et a mis l'accent sur la psychologie des personnages. Ses pièces les plus célèbres sont *Œdipe Roi* et *Antigone*.
+    *   Euripide (vers 480-406 av. J.-C.) : Il a exploré des personnages plus humains et complexes, souvent en rupture avec les conventions mythologiques. Parmi ses œuvres, on compte *Médée* et *Les Troyennes*.
+
+2.  **La Comédie grecque** : Elle se moquait des travers de la société, des politiciens, des philosophes et des citoyens ordinaires. Plus légère et souvent satirique, elle offrait une critique sociale acerbe et un exutoire aux tensions de la vie quotidienne. Le principal auteur de comédies est Aristophane (vers 446-386 av. J.-C.), dont les pièces comme *Les Nuées* ou *Lysistrata* sont des exemples éclatants de l'humour et de l'engagement politique de l'époque.
+
+Le théâtre grec était également caractérisé par l'utilisation de masques, qui permettaient aux acteurs de jouer plusieurs rôles et d'exprimer des émotions exagérées, visibles même depuis les rangées les plus éloignées. Le chœur, composé de citoyens, jouait un rôle essentiel, commentant l'action, exprimant les sentiments de la communauté et dialoguant avec les acteurs.
+
+Le théâtre n'était pas seulement un art, mais un puissant outil pédagogique et civique. Il permettait aux citoyens de réfléchir collectivement aux grandes questions de leur temps, de critiquer le pouvoir et de renforcer leur sentiment d'appartenance à la [[WIDGET:ConceptLink:democratie_athenienne:démocratie athénienne]]. Comme le souligne Jacqueline de Romilly, le théâtre était un lieu où la liberté d'expression s'exerçait pleinement, contribuant à la vitalité intellectuelle et politique de la cité [[WIDGET:Reference:5]]. Jean-Pierre Vernant a également mis en lumière la manière dont le théâtre reflétait et interrogeait les mythes et la pensée grecque [[WIDGET:Reference:1]].
+
+[[WIDGET:Mermaid:evolution_theatre_grec:Visualisation des étapes clés de l'évolution du théâtre grec, de ses origines religieuses aux grands dramaturges.]]

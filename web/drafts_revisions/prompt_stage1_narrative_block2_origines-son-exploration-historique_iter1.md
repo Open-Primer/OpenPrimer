@@ -4,15 +4,15 @@ Your task is to write a section of the academic MDX narrative content for the sp
 We are writing the lesson block-by-block.
 - This is Block 2 out of 3.
 - You MUST write the content for the following sections:
-* Heading: "## Du Moyen Âge à la Renaissance : Vers une approche scientifique"
-  Instructions: "Explorer la transition des idées médiévales aux premières observations scientifiques de la Renaissance. Mettre en lumière les travaux de Galilée sur la vibration des cordes et la relation entre fréquence et hauteur, marquant le début de l'acoustique expérimentale."
-* Heading: "## Concepts fondamentaux : Vibration et propagation à travers les âges"
-  Instructions: "Synthétiser la compréhension historique des concepts de vibration (source du son) et de propagation (moyen de transmission). Montrer comment ces idées ont évolué de la spéculation philosophique à l'observation empirique."
+* Heading: "## Du Moyen Âge à la Renaissance : Vers une approche plus systématique"
+  Instructions: "Examiner l'évolution de la compréhension du son durant le Moyen Âge et la Renaissance. Mentionner les contributions de figures clés (par exemple, les savants arabes, puis les penseurs de la Renaissance comme Galilée et ses premières observations sur la fréquence et la résonance). Montrer le passage progressif d'une approche philosophique à une approche plus empirique."
+* Heading: "## Concepts fondamentaux : La vibration et la propagation du son"
+  Instructions: "Détailler l'émergence et l'affinement des concepts de vibration comme source du son et de propagation comme son mode de déplacement. Expliquer comment ces idées ont été formulées et testées au fil des siècles, jetant les bases de la physique du son. Illustrer avec des exemples historiques de compréhension de ces phénomènes."
 
 ---
 
 ### GLOBAL CONTEXT:
-- Course Name: "Acoustique physique et acoustique musicale"
+- Course Name: "Acoustique Physique et Acoustique Musicale"
 - Academic Level: "University Year 2 / Bachelor 2nd Year (L2)"
 - Lesson Title: "Aux origines du son : une exploration historique et conceptuelle"
 - Discipline: "Général"
@@ -35,6 +35,17 @@ We are writing the lesson block-by-block.
 [[WIDGET:Reference:15]] Coulomb, Jean. "L'acoustique". Presses Universitaires de France, Que sais-je ?, 1968.
 
 
+### LEVEL CONSTRAINTS (from database — MANDATORY to enforce):
+- Minimum words per lesson block: 2500 — Maximum: 3500
+- Minimum inline hover-cards per block: **4** (ConceptLink, RealPerson, Glossary)
+- Minimum block widgets per block: **3** (Image, Mermaid, Video, DataChart, etc.)
+- Minimum biographies (RealPerson) in this lesson: 4
+- Minimum concept links (ConceptLink) in this lesson: 8
+- Minimum glossary terms in this lesson: 12
+- Minimum bibliographic references in this lesson: 10
+- **MANDATED widget types for this level** (must include at least one): HistoricalAnecdote, Quiz, Image, Mermaid, SolvedExercise, UnsolvedExercise, DataChart, Biography, Citation, EventLink, Video, Audio
+- **DISCOURAGED widget types for this level** (avoid unless essential): None
+
 ---
 
 ### PRE-EXISTING WIDGET INVENTORY:
@@ -47,16 +58,20 @@ The following relevant media and database resources are available for this cours
 
 ### PEDAGOGICAL WIDGETS MANDATE (CRITICAL):
 To make this curriculum visually rich, interactive, and academically rigorous, you MUST actively insert pedagogical widgets using bracketed anchors directly in the prose. 
+- CRITICAL IMAGE RELEVANCE & CAPTIONING: Every Image or CustomFigure anchor you generate MUST have a strong, direct connection with the current lesson/concept, and must be highly informative (never generic, decorative, or filler). Visual captions for these figures must strictly be inquiry-based and academically relevant rather than purely descriptive. For example, instead of a plain caption like "Cette image représente un monocorde", write an inquiry-based caption like "Comment ce schéma d'un monocorde permet-il de visualiser concrètement les rapports harmoniques des longueurs de cordes ?". All captions must prompt active reflection, invite the learner to think, or show academic utility.
+- CRITICAL INTERACTIVE WIDGET CONNECTION: Every interactive widget anchor (such as Quiz, SolvedExercise, UnsolvedExercise, FillInBlanks, Mermaid, DataChart, and other interactive diagrams/simulations) MUST be strongly connected to the lesson. Ensure they are placed in a context where they have specific parameters, equations, or data relevant to the lesson topics, and where a detailed explanation is pedagogically appropriate. You MUST provide a detailed description acting as a legend/caption in the anchor itself (e.g., [[WIDGET:Mermaid:id:Detailed description of the diagram and its variables]).
 You are REQUIRED to include:
-- At least 2-3 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
-- MANDATORY: At least 2-3 block widgets/media placed on separate blank lines, chosen from: [[WIDGET:Image:id:description]], [[WIDGET:CustomFigure:id:description]], [[WIDGET:Mermaid:id:description]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], [[WIDGET:Video:id:description]].
+- At least 4 inline hover-cards (using [[WIDGET:RealPerson:id:Name]], [[WIDGET:ConceptLink:id:Concept Name]], or [[WIDGET:Glossary:id:Term]]) for key figures, concepts, or technical terms in this block of prose.
+- MANDATORY: At least 3 block widgets/media placed on separate blank lines, chosen from: [[WIDGET:Image:id:description]], [[WIDGET:CustomFigure:id:description]], [[WIDGET:Mermaid:id:description]], [[WIDGET:ComparisonSlider:id]], [[WIDGET:InteractiveDiagram:id]], [[WIDGET:DataChart:id]], [[WIDGET:Video:id:description]].
 - MEDIA COMPOSITION REQUIREMENT: Each narrative block MUST include at minimum (a) at least 1 image or figure ([[WIDGET:Image]] or [[WIDGET:CustomFigure]]) showing a relevant diagram, formula, or scientific illustration AND (b) at least 1 structural/diagrammatic widget ([[WIDGET:Mermaid]] for flowcharts/timelines/graphs, or [[WIDGET:Video]] for a pedagogical video). These are NOT optional — a block with only text and hover-cards will be REJECTED.
+- MANDATED WIDGET TYPES for this academic level: you MUST include at least one occurrence of each of the following widget types across the lesson: HistoricalAnecdote, Quiz, Image, Mermaid, SolvedExercise, UnsolvedExercise, DataChart, Biography, Citation, EventLink, Video, Audio.
+
 - ABSOLUTE PROHIBITION ON HORIZONTAL SEPARATOR LINES (like `---` or `___`) immediately below or above any widget.
 Choose from the following options:
 1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
 2. [[WIDGET:Image:unique_id:description]] (or [[WIDGET:CustomFigure:unique_id:description]]) - For relevant paintings, historical photos, maps, diagrams, or illustrations. Note: in the generated MDX component catalog, this maps to the CustomFigure component. (e.g. [[WIDGET:Image:prise_bastille:La prise de la Bastille le 14 juillet 1789]])
 3. [[WIDGET:Video:unique_id:description]] - For relevant documentaries, video archives, or animations. (e.g. [[WIDGET:Video:revolution_francaise:Documentaire sur les grandes étapes de la Révolution française]])
-4. [[WIDGET:Audio:unique_id:description]] - For audio speeches, narrations, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits:Enregistrement sonore de la Déclaration des droits]])
+4. [[WIDGET:Audio:unique_id:description]] - For audio speeches, narrations, musical examples, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits:Enregistrement sonore de la Déclaration des droits]])
 5. [[WIDGET:Mermaid:unique_id:description]] - For timelines, flowcharts, or structural diagrams. (e.g. [[WIDGET:Mermaid:timeline_causes:Chronologie des causes de la Révolution]])
 6. [[WIDGET:Quiz:unique_id]] - For formative multiple-choice quizzes to verify student comprehension.
 7. [[WIDGET:SolvedExercise:unique_id]] - For step-by-step resolved exercises, coding snippets, or analytical case studies.
@@ -65,7 +80,8 @@ Choose from the following options:
 10. [[WIDGET:RealPerson:unique_id:Person Name]] - Inline hover-card highlight for any person mentioned. (e.g. "...alors que [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque...")
 11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
 12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
-13. [[WIDGET:Quote:unique_id:description]] - Block widget for a famous quotation or author quote, including original/translation and source. Scribe must place this anchor on a separate blank line. (e.g. [[WIDGET:Quote:marie_curie_perseverance:Citation de Marie Curie sur la persévérance dans la recherche scientifique]])
+13. [[WIDGET:Quote:unique_id:description]] - Block widget for a famous quotation or author quote, including original/translation and source (renders as Citation in MDX). Scribe must place this anchor on a separate blank line. (e.g. [[WIDGET:Quote:marie_curie_perseverance:Citation de Marie Curie sur la persévérance dans la recherche scientifique]])
+14. [[WIDGET:EventLink:unique_id:Event Name]] - Inline hover-card highlight for any key historical, cultural, or scientific event. (e.g. "...après la [[WIDGET:EventLink:bataille_marignan:Bataille de Marignan]] en 1515...")
 
 Please write them exactly in this anchor format [[WIDGET:Type:unique_id:description]] (or [[WIDGET:Type:unique_id]] where description is not applicable, or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
 
@@ -74,21 +90,21 @@ Please write them exactly in this anchor format [[WIDGET:Type:unique_id:descript
 ### PREVIOUS TEXT (for transitions and context):
 Below is the text generated in the previous blocks. Do NOT repeat any definitions, concepts, or sentences from this text. Start writing immediately from where it left off, ensuring a smooth transition:
 """
-... les cheminements de pensée, les erreurs et les découvertes de nos prédécesseurs permet d'éclairer les concepts actuels, de saisir leur genèse et leur pertinence, et d'apprécier la complexité et la richesse de l'interaction entre la science, la philosophie et l'art musical.
+...  vibration et de la résonance.
 
-## L'Antiquité : Premières intuitions et théories
+[[WIDGET:Biography:pythagore_bio:Biographie de Pythagore, mathématicien et philosophe grec, fondateur de l'école pythagoricienne, célèbre pour ses contributions à la théorie musicale et aux mathématiques.]]
 
-Les premières tentatives de conceptualisation du son et de la musique remontent à l'Antiquité, principalement en Grèce. L'approche était alors intrinsèquement liée à la philosophie, à la cosmologie et aux mathématiques, bien avant l'émergence d'une science expérimentale au sens moderne.
+### Aristote et la Nature du Son
 
-[[WIDGET:Image:pythagorean_monochord:Représentation d'un monocorde, instrument attribué à Pythagore pour l'étude des rapports musicaux.]]
+Quelques siècles plus tard, [[WIDGET:RealPerson:aristote:Aristote]] (384-322 av. J.-C.), avec son approche plus empirique et systématique de la nature, a apporté des contributions significatives à la compréhension du son. Dans son traité "De l'âme" et d'autres écrits, Aristote a formulé des théories sur la nature du son et sa [[WIDGET:Glossary:propagation_sonore:propagation sonore]] qui, bien que limitées par l'absence d'outils expérimentaux sophistiqués, contenaient des intuitions remarquables.
 
-L'une des figures les plus influentes fut [[WIDGET:RealPerson:pythagore:Pythagore]] (vers 570-495 av. J.-C.). Bien que ses écrits directs soient rares, l'école pythagoricienne est créditée d'avoir découvert les rapports numériques simples qui sous-tendent les intervalles musicaux consonants (octave 1:2, quinte 2:3, quarte 3:4) grâce à l'expérimentation sur le monocorde [[WIDGET:Reference:2]]. Cette découverte a conduit à l'idée que l'harmonie musicale reflétait une harmonie cosmique, la célèbre [[WIDGET:ConceptLink:harmonie_des_spheres:harmonie des sphères]], où les mouvements des corps célestes produiraient une musique inaudible pour l'oreille humaine mais perceptible par l'intellect. Pour les Pythagoriciens, le son n'était pas seulement un phénomène physique, mais une manifestation de l'ordre universel et des principes mathématiques régissant le cosmos.
+Aristote a clairement identifié le son comme un mouvement ou une perturbation de l'air. Il a postulé que le son est généré par un corps en mouvement qui frappe ou déplace l'air environnant, créant ainsi une série de compressions et de dilatations qui se propagent. Il a insisté sur le fait que le son ne peut exister dans le vide, une idée qu'il a illustrée en affirmant qu'un corps en mouvement dans un espace vide ne produirait aucun son, car il n'y aurait pas de milieu pour transmettre la perturbation [[WIDGET:Reference:4]]. Cette observation, bien que non testée expérimentalement à l'époque, est une préfiguration de la nécessité d'un milieu matériel pour la propagation des ondes sonores.
 
-[[WIDGET:Mermaid:timeline_ancient_acoustics:Chronologie des contributions majeures à l'acoustique durant l'Antiquité grecque.]]
+Il a également distingué la source du son de sa perception. Pour Aristote, le son est une "actualisation" du potentiel d'un corps à produire un son, et cette actualisation se manifeste par le mouvement de l'air qui atteint l'oreille. Ses théories, bien que dépourvues des concepts modernes d'onde ou de fréquence, ont jeté les bases d'une compréhension physique du son comme un phénomène de transmission mécanique à travers un milieu élastique.
 
-Plus tard, [[WIDGET:RealPerson:aristote:Aristote]] (384-322 av. J.-C.) a proposé une approche plus empirique, bien que toujours philosophique. Dans son traité "De l'âme" et d'autres écrits, il a formulé des observations sur la nature du son. Aristote a correctement identifié que le son est un mouvement de l'air, une perturbation qui se propage. Il a décrit le son comme une "agitation de l'air" causée par un choc, se déplaçant sous forme d'ondes concentriques, un peu comme les rides à la surface de l'eau [[WIDGET:Reference:4]]. Il a également noté que le son ne pouvait pas se propager dans le vide, une intuition remarquable pour l'époque.
+[[WIDGET:Mermaid:ancient_sound_concepts:Diagramme conceptuel des premières théories du son dans l'Antiquité, illustrant les contributions de Pythagore (rapports numériques, harmonie des sphères) et Aristote (son comme perturbation de l'air, nécessité d'un milieu).]]
 
-Cependant, ces premières conceptualisations, bien qu'ingénieuses, présentaient des limites. Elles étaient souvent basées sur l'observation qualitative et la spéculation philosophique plutôt que sur des mesures précises ou des expériences contrôlées. La compréhension de la nature ondulatoire du son, de sa vitesse de propagation ou de ses propriétés physiques détaillées restait rudimentaire. Néanmoins, ces penseurs antiques ont posé les premières pierres d'une réflexion sur le son, établissant un lien indissociable entre la physique, les mathématiques et la musique qui perdure encore aujourd'hui.
+Les connaissances de l'Antiquité sur le son étaient caractérisées par une combinaison d'intuitions profondes et de limitations inhérentes à l'absence de méthodologie expérimentale rigoureuse. Les penseurs de cette époque ont posé des questions fondamentales sur la nature du son, sa relation avec les mathématiques et sa propagation, mais ils n'avaient pas les moyens de vérifier leurs hypothèses de manière systématique. Leurs théories étaient souvent intégrées dans des cadres philosophiques plus larges, où la distinction entre physique, métaphysique et musique était moins nette qu'aujourd'hui [[WIDGET:Reference:3]], [[WIDGET:Reference:8]]. Néanmoins, ces premières réflexions ont constitué le socle sur lequel les générations futures allaient bâtir une science de l'acoustique de plus en plus sophistiquée.
 """
 
 ---

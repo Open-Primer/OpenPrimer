@@ -236,27 +236,27 @@ export const DEFAULT_LEVEL_CONSTRAINTS: Record<string, LevelConstraints> = {
   "university_undergrad": {
     "minWordCount": 2500,
     "maxWordCount": 3500,
-    "minHoverCardsPerBlock": 3,
-    "minBlockWidgetsPerBlock": 2,
-    "globalWidgetsTarget": 12,
+    "minHoverCardsPerBlock": 4,
+    "minBlockWidgetsPerBlock": 3,
+    "globalWidgetsTarget": 16,
     "minGlossaryCount": 12,
     "minReferencesCount": 10,
-    "minBiographiesCount": 2,
+    "minBiographiesCount": 4,
     "minConceptLinksCount": 8,
-    "mandatedWidgetTypes": ["HistoricalAnecdote", "Quiz", "Image", "Mermaid", "SolvedExercise", "UnsolvedExercise", "DataChart"],
+    "mandatedWidgetTypes": ["HistoricalAnecdote", "Quiz", "Image", "Mermaid", "SolvedExercise", "UnsolvedExercise", "DataChart", "Biography", "Citation", "EventLink", "Video", "Audio"],
     "discouragedWidgetTypes": []
   },
   "university_grad": {
     "minWordCount": 3500,
     "maxWordCount": 4500,
-    "minHoverCardsPerBlock": 4,
-    "minBlockWidgetsPerBlock": 2,
-    "globalWidgetsTarget": 16,
+    "minHoverCardsPerBlock": 5,
+    "minBlockWidgetsPerBlock": 3,
+    "globalWidgetsTarget": 20,
     "minGlossaryCount": 15,
     "minReferencesCount": 15,
-    "minBiographiesCount": 3,
+    "minBiographiesCount": 5,
     "minConceptLinksCount": 12,
-    "mandatedWidgetTypes": ["Quiz", "Image", "Mermaid", "SolvedExercise", "UnsolvedExercise", "DataChart", "InteractiveDiagram"],
+    "mandatedWidgetTypes": ["Quiz", "Image", "Mermaid", "SolvedExercise", "UnsolvedExercise", "DataChart", "InteractiveDiagram", "Biography", "Citation", "EventLink", "Video", "Audio"],
     "discouragedWidgetTypes": ["HistoricalAnecdote"]
   }
 };
@@ -1911,7 +1911,8 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
       const alwaysAllowed = [
         "Quiz", "FillInBlanks", "SolvedExercise", "UnsolvedExercise", "Mermaid", "Video", "Audio",
         "Biography", "Image", "Citation", "Epistemology", "MatchingEvaluation", "AssociationCorrespondance",
-        "ReorderEvaluation", "ReordonnerItems", "RealPerson", "HistoricalPerson"
+        "ReorderEvaluation", "ReordonnerItems", "RealPerson", "HistoricalPerson",
+        "ConceptLink", "Location", "EventLink", "HistoricalEventLink", "EvenementHistorique", "ÉvénementHistorique", "Glossary", "Lexique"
       ];
       if (alwaysAllowed.includes(comp.componentType)) {
         return true;
@@ -4945,7 +4946,7 @@ Choose from the following options:
 1. [[WIDGET:Biography:unique_id]] - For key historical figures, scientists, authors, or artists. (e.g. [[WIDGET:Biography:rousseau]] or [[WIDGET:Biography:robespierre]] or [[WIDGET:Biography:louis_xvi]])
 2. [[WIDGET:Image:unique_id:description]] (or [[WIDGET:CustomFigure:unique_id:description]]) - For relevant paintings, historical photos, maps, diagrams, or illustrations. Note: in the generated MDX component catalog, this maps to the CustomFigure component. (e.g. [[WIDGET:Image:prise_bastille:La prise de la Bastille le 14 juillet 1789]])
 3. [[WIDGET:Video:unique_id:description]] - For relevant documentaries, video archives, or animations. (e.g. [[WIDGET:Video:revolution_francaise:Documentaire sur les grandes étapes de la Révolution française]])
-4. [[WIDGET:Audio:unique_id:description]] - For audio speeches, narrations, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits:Enregistrement sonore de la Déclaration des droits]])
+4. [[WIDGET:Audio:unique_id:description]] - For audio speeches, narrations, musical examples, or pronunciations. (e.g. [[WIDGET:Audio:declaration_droits:Enregistrement sonore de la Déclaration des droits]])
 5. [[WIDGET:Mermaid:unique_id:description]] - For timelines, flowcharts, or structural diagrams. (e.g. [[WIDGET:Mermaid:timeline_causes:Chronologie des causes de la Révolution]])
 6. [[WIDGET:Quiz:unique_id]] - For formative multiple-choice quizzes to verify student comprehension.
 7. [[WIDGET:SolvedExercise:unique_id]] - For step-by-step resolved exercises, coding snippets, or analytical case studies.
@@ -4954,7 +4955,8 @@ Choose from the following options:
 10. [[WIDGET:RealPerson:unique_id:Person Name]] - Inline hover-card highlight for any person mentioned. (e.g. "...alors que [[WIDGET:RealPerson:louis_xvi:Louis XVI]] convoque...")
 11. [[WIDGET:ConceptLink:unique_id:Concept Name]] - Inline hover-card highlight for conceptual terms. (e.g. "...l'essor de la [[WIDGET:ConceptLink:souverainete:Souveraineté]] populaire...")
 12. [[WIDGET:Glossary:unique_id:Term]] - Inline hover-card highlight for vocabulary definitions. (e.g. "...les députés du [[WIDGET:Glossary:tiers_etat:Tiers État]] se réunissent...")
-13. [[WIDGET:Quote:unique_id:description]] - Block widget for a famous quotation or author quote, including original/translation and source. Scribe must place this anchor on a separate blank line. (e.g. [[WIDGET:Quote:marie_curie_perseverance:Citation de Marie Curie sur la persévérance dans la recherche scientifique]])
+13. [[WIDGET:Quote:unique_id:description]] - Block widget for a famous quotation or author quote, including original/translation and source (renders as Citation in MDX). Scribe must place this anchor on a separate blank line. (e.g. [[WIDGET:Quote:marie_curie_perseverance:Citation de Marie Curie sur la persévérance dans la recherche scientifique]])
+14. [[WIDGET:EventLink:unique_id:Event Name]] - Inline hover-card highlight for any key historical, cultural, or scientific event. (e.g. "...après la [[WIDGET:EventLink:bataille_marignan:Bataille de Marignan]] en 1515...")
 
 Please write them exactly in this anchor format [[WIDGET:Type:unique_id:description]] (or [[WIDGET:Type:unique_id]] where description is not applicable, or with topic/label for highlights). Do NOT write raw JSX/HTML tags!
 
@@ -5020,7 +5022,7 @@ ${isAbstractDiscipline ? `6. Presence of pedagogical widgets: Check that the blo
    b) At least 1 image or figure anchor: [[WIDGET:Image:id:description]] or [[WIDGET:CustomFigure:id:description]] showing a relevant diagram, illustration, or scientific figure.
    c) At least 1 structural/diagrammatic widget: [[WIDGET:Mermaid:id:description]] (for graphs, timelines, flowcharts) OR [[WIDGET:Video:id:description]] OR [[WIDGET:DataChart:id]] OR [[WIDGET:InteractiveDiagram:id]].
    d) The TOTAL block widget count (Image + Mermaid + Video + DataChart + etc.) must be at least ${constraint.minBlockWidgetsPerBlock}.
-${constraint.mandatedWidgetTypes.length > 0 ? `   e) MANDATED TYPES: The lesson must contain at least one occurrence of each mandated type: ${constraint.mandatedWidgetTypes.join(', ')}. Reject if any mandated type is completely absent from the lesson so far (check cumulatively).` : ''}
+${constraint.mandatedWidgetTypes.length > 0 ? `   e) MANDATED TYPES: The final lesson must contain at least one occurrence of each mandated type: ${constraint.mandatedWidgetTypes.join(', ')}. If this is the LAST block (block ${bIdx + 1} of ${blocks.length}), you MUST reject the block if any of these mandated types are completely absent from the lesson cumulatively (including the current block and all previous blocks). If this is NOT the last block, do NOT reject the block for missing some mandated types, as they can be generated in subsequent blocks.` : ''}
    A block with ONLY inline hover-cards and no Image/Mermaid/Video block widgets MUST be REJECTED. Count explicitly: if (b) is missing → reject; if (c) is missing → reject; if total block widgets < ${constraint.minBlockWidgetsPerBlock} → reject.`}
 ${lawCriticMandate}
 ${bIdx === blocks.length - 1 ? `8. Valid ## Conclusion section with at least two paragraphs and the required conclusion widgets.` : ''}
@@ -5646,7 +5648,7 @@ Ensure:
 2. Captions and descriptions have no sequential figure prefixes like "Figure 1:".
 3. Biography component details (dates, Wikipedia link) are correct.
 4. ZERO placeholders, draft markers, bracketed texts, or template values are present. Biographies, interactive elements, figures, and diagrams must be fully populated with real, high-quality, professional educational content in the target language. Absolutely no fake URLs, lorem ipsum text, "N/A", "## Section Name", or incomplete fields. Reject the block if any placeholder or skeletal text is detected.
-5. The "year", "dates", "url", or "wikipediaLink" properties can be "null" or omitted for components that do not require them or where the resource is unresolved/needs backend matching (such as ConceptLink, Location, Glossary, Image, Audio, and Video). Do NOT reject the block or treat "null" or omission as a placeholder or incomplete for these properties on non-applicable component types.
+5. The "year", "dates", "url", or "wikipediaLink" properties can be "null" or omitted for components that do not require them or where the resource is unresolved/needs backend matching (such as RealPerson, HistoricalPerson, ConceptLink, Location, Glossary, Image, Audio, Video, EventLink, HistoricalEventLink, EvenementHistorique, and ÉvénementHistorique). Do NOT reject the block or treat "null" or omission as a placeholder or incomplete for these properties on non-applicable component types.
 6. CRITICAL WIDGET CONNECTION: Every interactive component or hover card (Biography, RealPerson, HistoricalPerson, ConceptLink, Location, Glossary, EventLink) must be strongly connected to the lesson's topics, informative, and detailed.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:

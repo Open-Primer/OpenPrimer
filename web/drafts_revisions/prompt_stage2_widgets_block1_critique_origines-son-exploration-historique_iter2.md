@@ -3,52 +3,52 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 1:
   "prerequisites": {
     "items": [
       {
-        "title": "Introduction à la physique des ondes",
-        "slug": "introduction-physique-ondes",
-        "level": "L1",
+        "title": "Concepts fondamentaux des ondes",
+        "slug": "concepts-fondamentaux-ondes",
+        "level": "University Year 1 / Bachelor 1st Year (L1)",
         "subject": "Physique"
       },
       {
-        "title": "Concepts fondamentaux de la physique",
-        "slug": "concepts-fondamentaux-physique",
-        "level": "L1",
+        "title": "Introduction à la physique du son",
+        "slug": "introduction-physique-son",
+        "level": "University Year 1 / Bachelor 1st Year (L1)",
         "subject": "Physique"
       },
       {
         "title": "Histoire des sciences et techniques",
         "slug": "histoire-sciences-techniques",
-        "level": "L1",
-        "subject": "Histoire des sciences"
+        "level": "University Year 1 / Bachelor 1st Year (L1)",
+        "subject": "Histoire"
       }
     ]
   },
   "diagnosticQuiz": {
-    "question": "Quelle est l'une des premières théories majeures concernant la nature du son, souvent attribuée aux philosophes grecs antiques?",
+    "question": "Parmi les propriétés suivantes d'une onde sonore, laquelle est directement liée à la perception de la hauteur d'un son ?",
     "options": [
-      "Le son est une vibration de l'air.",
-      "Le son est une particule émise par la source.",
-      "Le son est une forme d'énergie lumineuse.",
-      "Le son est une manifestation de l'harmonie cosmique sans support matériel."
+      "L'amplitude",
+      "La fréquence",
+      "La vitesse de propagation",
+      "L'intensité"
     ],
-    "correctIndex": 0,
-    "targetSectionId": "introduction-historique-son",
-    "sectionTitle": "Introduction historique au concept de son"
+    "correctIndex": 1,
+    "targetSectionId": "section-1-introduction-son",
+    "sectionTitle": "Introduction aux concepts fondamentaux du son"
   },
   "learningObjectives": {
     "knowledge": [
-      "Analyser les différentes théories historiques sur la nature du son, de l'Antiquité à la période classique.",
-      "Évaluer l'impact des découvertes scientifiques majeures sur la compréhension du phénomène sonore.",
-      "Distinguer les contributions des figures clés (philosophes, scientifiques) à l'élaboration du concept de son."
+      "Décrire les principales théories historiques sur la nature du son.",
+      "Expliquer les concepts physiques fondamentaux qui sous-tendent la production et la propagation du son.",
+      "Identifier les figures clés et leurs contributions à la compréhension du son à travers l'histoire."
     ],
     "skills": [
-      "Établir des liens critiques entre les avancées conceptuelles en acoustique et le contexte socio-historique de leur émergence.",
-      "Synthétiser les informations provenant de diverses sources historiques pour construire une chronologie cohérente de la pensée acoustique.",
-      "Formuler des arguments étayés sur l'évolution des modèles explicatifs du son."
+      "Distinguer les différentes approches conceptuelles du son selon les époques historiques.",
+      "Interpréter des extraits de textes historiques ou scientifiques relatifs à la perception et à la mesure du son.",
+      "Appliquer des principes physiques simples pour analyser des phénomènes sonores élémentaires."
     ],
     "attitudes": [
-      "Développer une curiosité intellectuelle pour les racines historiques des concepts scientifiques actuels.",
-      "Adopter une démarche réflexive face à l'évolution des connaissances et des paradigmes scientifiques.",
-      "Apprécier la complexité et la richesse de l'histoire des sciences à travers l'exemple de l'acoustique."
+      "Apprécier la complexité et la richesse de l'évolution des connaissances sur le son.",
+      "Développer une curiosité pour les liens entre la physique, l'histoire et la musique.",
+      "Valoriser l'approche interdisciplinaire dans l'étude des phénomènes acoustiques."
     ]
   }
 }
@@ -57,7 +57,8 @@ Check:
 1. Prerequisites are realistic.
 2. DiagnosticQuiz index is correct.
 3. LearningObjectives use Bloom's Taxonomy verbs (Analyze, Evaluate, Create for L1/L2/L3/Master levels).
-4. ZERO placeholders, draft markers (e.g. bracketed text like "[insert]"), or template values are allowed. Reject the block if any text or option contains placeholder words like "Option", "placeholder", "todo", "tbd", "tbc", "lorem", "ipsum" or empty strings. All text fields must be fully fleshed out and complete.
+4. ZERO placeholders, draft markers (e.g. bracketed text like "[insert]"), or template values are allowed. Reject the block if any text or option contains placeholder words like "Option", "placeholder", "todo", "tbd", "tbc", "lorem", "ipsum", "N/A" (or "n/a"), "## Section Name" or empty strings. All text fields must be fully fleshed out and complete.
+5. CRITICAL WIDGET CONNECTION: The diagnosticQuiz must be strongly connected to the lesson's topics, containing actual high-quality educational content with specific parameters and a clear explanation of how the question relates to the prerequisites.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 ```json

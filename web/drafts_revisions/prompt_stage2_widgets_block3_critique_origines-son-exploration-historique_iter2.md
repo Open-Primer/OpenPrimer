@@ -2,105 +2,176 @@ You are the Widgets Critic Agent (Agent 4B). Review this Widget Block 3:
 {
   "interactiveComponents": [
     {
-      "id": "timeline_acoustics_overview",
+      "id": "pythagoras_hammer",
+      "componentType": "HistoricalAnecdote",
+      "sectionAnchor": "## Les fondements antiques de l'acoustique",
+      "props": {
+        "content": "Anecdote historique sur la découverte des rapports musicaux par Pythagore, souvent attribuée à l'observation de marteaux de forgerons, bien que l'expérimentation avec le monocorde soit plus plausible et documentée."
+      }
+    },
+    {
+      "id": "monochord_diagram",
+      "componentType": "Image",
+      "sectionAnchor": "## Les fondements antiques de l'acoustique",
+      "props": {
+        "description": "Diagramme détaillé d'un monocorde, un instrument ancien utilisé pour étudier les rapports musicaux. Il montre une corde tendue sur une caisse de résonance avec un chevalet mobile, permettant de modifier la longueur vibrante de la corde et d'observer les fréquences correspondantes. Ce schéma illustre comment les divisions simples de la corde (par exemple, la moitié, le tiers, le quart) produisent des intervalles harmoniques fondamentaux comme l'octave, la quinte et la quarte, démontrant ainsi la relation mathématique entre la longueur de la corde et la hauteur du son.",
+        "title": "Schéma d'un monocorde"
+      }
+    },
+    {
+      "id": "ancient_sound_concepts",
       "componentType": "Mermaid",
-      "sectionAnchor": "Chronologie des grandes étapes de la pensée acoustique",
+      "sectionAnchor": "## Les fondements antiques de l'acoustique",
       "props": {
-        "code": "timeline\n    title Chronologie des grandes étapes de la pensée acoustique\n    section Antiquité\n        VIe siècle av. J.-C.: Pythagore et les rapports harmoniques\n        IVe siècle av. J.-C.: Aristote et la propagation du son\n    section Moyen Âge\n        IXe-XIe siècles: Al-Fārābī et la théorie musicale arabe\n    section Renaissance\n        XVe-XVIe siècles: Léonard de Vinci et l'observation des ondes"
+        "caption": "Ce diagramme conceptuel illustre les contributions majeures de Pythagore et Aristote aux premières théories du son dans l'Antiquité, mettant en évidence leurs approches distinctes mais complémentaires.",
+        "code": "graph TD; A[Antiquité] --> B{Théories du Son}; B --> C[Pythagore]; B --> D[Aristote]; C --> C1[Rapports Numériques]; C --> C2[Harmonie des Sphères]; D --> D1[Son comme Perturbation de l'Air]; D --> D2[Nécessité d'un Milieu];"
       }
     },
     {
-      "id": "pythagorean_monochord",
-      "componentType": "CustomFigure",
-      "sectionAnchor": "Représentation d'un monocorde et des rapports harmoniques de Pythagore",
+      "id": "galileo_pendulum_experiment",
+      "componentType": "Image",
+      "sectionAnchor": "## La révolution scientifique et l'acoustique",
       "props": {
-        "description": "Une illustration schématique d'un monocorde, un instrument ancien utilisé pour étudier les rapports musicaux. Le diagramme montre une corde tendue sur une caisse de résonance avec un chevalet mobile. Des divisions sont marquées sur la corde, illustrant les points où le chevalet peut être placé pour produire des intervalles harmoniques spécifiques, tels que l'octave (1:2), la quinte (2:3) et la quarte (3:4), conformément aux découvertes de Pythagore.",
-        "title": "Le monocorde de Pythagore et les rapports harmoniques",
-        "url": "pythagorean_monochord_image.jpg",
-        "wikipediaLink": "https://fr.wikipedia.org/wiki/Monocorde",
-        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Monocorde",
-        "year": "VIe siècle av. J.-C."
+        "description": "Illustration d'une expérience de Galilée avec un pendule, démontrant l'isochronisme des oscillations. Cette observation a été cruciale pour sa compréhension des phénomènes vibratoires, y compris ceux liés au son. Le diagramme montre un pendule simple en mouvement, avec des indications sur la longueur de la corde et l'amplitude de l'oscillation, soulignant comment la période de l'oscillation est indépendante de l'amplitude pour de petites oscillations, une analogie importante pour la fréquence des ondes sonores.",
+        "title": "Expérience du pendule de Galilée"
       }
     },
     {
-      "id": "aristote_sound_medium",
-      "componentType": "Quote",
-      "sectionAnchor": "Citation d'Aristote sur la nécessité d'un milieu pour la propagation du son",
+      "id": "timeline_acoustic_renaissance",
+      "componentType": "Mermaid",
+      "sectionAnchor": "## La révolution scientifique et l'acoustique",
       "props": {
-        "quote": "Le son est un mouvement de l'air qui, frappant l'oreille, produit la sensation auditive. Il ne peut y avoir de son sans un milieu pour le transporter.",
-        "source": "De l'âme",
-        "year": "IVe siècle av. J.-C."
+        "caption": "Cette chronologie met en lumière les avancées clés en acoustique du Moyen Âge à la Renaissance, soulignant la transition progressive d'une approche philosophique vers une méthode plus empirique grâce aux contributions de figures majeures comme les savants arabes, Léonard de Vinci, Galilée et Mersenne.",
+        "code": "gantt title Chronologie des avancées en acoustique (Moyen Âge - Renaissance) dateFormat YYYY section Moyen Âge Savants Arabes: 1000, 1300 section Renaissance Léonard de Vinci: 1452, 1519 Galilée: 1564, 1642 Mersenne: 1588, 1648"
       }
     },
     {
-      "id": "al_farabi_monochord_divisions",
-      "componentType": "CustomFigure",
-      "sectionAnchor": "Représentation des divisions du monocorde et des intervalles musicaux selon Al-Fārābī",
+      "id": "galileo_vibration_glass",
+      "componentType": "HistoricalAnecdote",
+      "sectionAnchor": "## La révolution scientifique et l'acoustique",
       "props": {
-        "description": "Un diagramme détaillé des divisions d'un monocorde, tel qu'il aurait pu être conçu par Al-Fārābī. Le schéma met en évidence les points spécifiques le long de la corde qui correspondent aux intervalles musicaux de la théorie arabe, incluant des quarts de ton et d'autres micro-intervalles. Les rapports de longueur de corde sont annotés pour illustrer la complexité et la précision de son système musical.",
-        "title": "Le monocorde et les intervalles d'Al-Fārābī",
-        "url": "al_farabi_monochord_image.jpg",
-        "wikipediaLink": "https://fr.wikipedia.org/wiki/Al-F%C4%81r%C4%81b%C4%AB",
-        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Al-F%C4%81r%C4%81b%C4%AB",
-        "year": "IXe-Xe siècles"
+        "content": "Anecdote sur la découverte par Galilée de la relation entre la fréquence et l'hauteur du son en frottant un doigt sur un verre, observant les ondulations et les reliant au nombre de vibrations."
       }
     },
     {
-      "id": "leonardo_sound_observations",
+      "id": "mersenne_speed_sound",
+      "componentType": "HistoricalAnecdote",
+      "sectionAnchor": "## La révolution scientifique et l'acoustique",
+      "props": {
+        "content": "Marin Mersenne, au XVIIe siècle, a non seulement formulé les lois des cordes vibrantes, mais a également réalisé l'une des premières mesures précises de la vitesse du son dans l'air en utilisant des coups de canon et des chronomètres rudimentaires, obtenant des résultats étonnamment proches des valeurs modernes."
+      }
+    },
+    {
+      "id": "timeline_acoustic_evolution",
+      "componentType": "Mermaid",
+      "sectionAnchor": "## Synthèse des concepts historiques",
+      "props": {
+        "caption": "Cette chronologie simplifiée retrace l'évolution des concepts acoustiques de l'Antiquité à la Renaissance, illustrant les contributions majeures et les transitions conceptuelles qui ont mené à une compréhension plus scientifique du son.",
+        "code": "graph TD; A[Antiquité: Pythagore, Aristote] --> B[Moyen Âge: Savants Arabes]; B --> C[Renaissance: Léonard de Vinci, Galilée, Mersenne]; C --> D[Concepts Clés Émergents]; D --> D1[Rapports Numériques]; D --> D2[Vibrations et Fréquence]; D --> D3[Propagation du Son]; D --> D4[Mesure Empirique];"
+      }
+    },
+    {
+      "id": "wave_propagation_diagram",
+      "componentType": "Image",
+      "sectionAnchor": "## Les propriétés fondamentales du son",
+      "props": {
+        "description": "Diagramme illustrant la propagation d'une onde sonore longitudinale dans un milieu élastique, tel que l'air. Le schéma montre des zones de compression (où les particules du milieu sont plus denses) et des zones de raréfaction (où elles sont moins denses), se propageant à travers le milieu. Des flèches indiquent la direction de propagation de l'onde et le mouvement des particules, soulignant que l'énergie est transmise sans déplacement net de matière.",
+        "title": "Propagation d'une onde sonore"
+      }
+    },
+    {
+      "id": "sound_wave_simulation",
       "componentType": "Video",
-      "sectionAnchor": "Animation des observations de Léonard de Vinci sur la propagation du son",
+      "sectionAnchor": "## Les propriétés fondamentales du son",
       "props": {
-        "title": "Léonard de Vinci: Observations sur la propagation du son",
-        "year": "XVe-XVIe siècles"
+        "title": "Simulation de la propagation des ondes sonores"
       }
     },
     {
-      "id": "renaissance_sound_evolution",
+      "id": "speed_of_sound_media",
       "componentType": "Mermaid",
-      "sectionAnchor": "Évolution des idées sur le son de l'Antiquité à la Renaissance",
+      "sectionAnchor": "## Les propriétés fondamentales du son",
       "props": {
-        "code": "graph TD\n    A[Antiquité: Pythagore, Aristote] --> B{Moyen Âge: Al-Fārābī};\n    B --> C[Renaissance: Léonard de Vinci];\n    C --> D[XVIIe siècle: Mersenne, Galilée];\n    style A fill:#f9f,stroke:#333,stroke-width:2px\n    style B fill:#bbf,stroke:#333,stroke-width:2px\n    style C fill:#ccf,stroke:#333,stroke-width:2px\n    style D fill:#cfc,stroke:#333,stroke-width:2px\n    subgraph Évolution des idées sur le son\n        A -- Rapports mathématiques, milieu de propagation --> B\n        B -- Théorie musicale, intervalles --> C\n        C -- Observation empirique, ondes --> D\n    end"
+        "caption": "Ce tableau comparatif illustre les vitesses du son dans différents milieux à température ambiante, démontrant clairement l'influence de la densité et de l'élasticité du milieu sur la vitesse de propagation de l'onde sonore.",
+        "code": "graph TD; A[Milieu] -- Vitesse du Son (m/s) --> B[Air (20°C): 343]; A -- Vitesse du Son (m/s) --> C[Eau (20°C): 1482]; A -- Vitesse du Son (m/s) --> D[Acier: 5100];"
       }
     },
     {
-      "id": "vibrating_string_diagram",
-      "componentType": "Image",
-      "sectionAnchor": "Illustration d'une corde vibrante montrant la relation entre vibration et son",
+      "id": "mersenne_string_calculation",
+      "componentType": "SolvedExercise",
+      "sectionAnchor": "## Applications des lois de Mersenne",
       "props": {
-        "description": "Un diagramme clair d'une corde vibrante fixée à ses deux extrémités. La corde est représentée dans différentes phases de sa vibration, montrant les nœuds et les ventres. Des flèches indiquent le mouvement de la corde, illustrant comment sa vibration génère des ondes sonores dans l'air environnant. Le schéma met en évidence la relation directe entre la fréquence de vibration de la corde et la hauteur du son perçu.",
-        "title": "Corde vibrante et production sonore",
-        "year": "XVIIe siècle"
+        "title": "Calcul de la fréquence d'une corde vibrante (Lois de Mersenne)"
       }
     },
     {
-      "id": "sound_wave_propagation_diagram",
-      "componentType": "CustomFigure",
-      "sectionAnchor": "Schéma de la propagation d'une onde sonore dans un milieu, montrant compressions et raréactions",
+      "id": "string_tension_problem",
+      "componentType": "UnsolvedExercise",
+      "sectionAnchor": "## Applications des lois de Mersenne",
       "props": {
-        "description": "Un schéma didactique illustrant la propagation d'une onde sonore à travers un milieu compressible, tel que l'air. Le diagramme montre des zones alternées de compression (où les particules du milieu sont rapprochées) et de raréfaction (où elles sont espacées). Des flèches indiquent la direction de propagation de l'onde, tandis que les mouvements des particules sont représentés comme des oscillations longitudinales autour de leurs positions d'équilibre.",
-        "title": "Propagation d'une onde sonore: compressions et raréactions",
-        "url": "sound_wave_propagation_diagram_image.jpg",
-        "wikipediaLink": "https://fr.wikipedia.org/wiki/Onde_sonore",
-        "wikipediaUrl": "https://fr.wikipedia.org/wiki/Onde_sonore",
-        "year": "XVIIe siècle"
+        "title": "Détermination de la tension d'une corde"
       }
     },
     {
-      "id": "mersenne_experiment",
-      "componentType": "Image",
-      "sectionAnchor": "Représentation des expériences de Marin Mersenne sur les cordes vibrantes, illustrant la relation entre les propriétés physiques et la fréquence sonore",
+      "id": "pure_tone_harmonics",
+      "componentType": "Audio",
+      "sectionAnchor": "## Le timbre et les harmoniques",
       "props": {
-        "description": "Une représentation stylisée des expériences de Marin Mersenne sur les cordes vibrantes. Le schéma montre différentes configurations de cordes (longueur, tension, épaisseur) et les résultats sonores associés. Des annotations indiquent les lois de Mersenne, qui décrivent la relation entre la fréquence d'une corde vibrante et sa longueur, sa tension, sa masse linéaire et son diamètre, établissant ainsi les fondements de l'acoustique physique.",
-        "title": "Les expériences de Mersenne sur les cordes vibrantes",
-        "year": "1636"
+        "title": "Son pur vs. Son avec harmoniques"
       }
     },
     {
-      "id": "timeline_17_18_century_acoustics",
-      "componentType": "Mermaid",
-      "sectionAnchor": "Chronologie des contributions majeures à l'acoustique aux XVIIe et XVIIIe siècles",
+      "id": "origins_of_sound_quiz",
+      "componentType": "Quiz",
+      "sectionAnchor": "## Évaluation des connaissances",
       "props": {
-        "code": "timeline\n    title Chronologie des contributions majeures à l'acoustique aux XVIIe et XVIIIe siècles\n    section XVIIe siècle\n        1636: Marin Mersenne publie \"Harmonie universelle\"\n        1638: Galilée étudie la résonance et la vibration\n        1660: Robert Boyle démontre la nécessité d'un milieu pour le son\n        1687: Isaac Newton formule la vitesse du son dans \"Principia Mathematica\"\n    section XVIIIe siècle\n        1701: Joseph Sauveur introduit le concept de son fondamental et harmoniques\n        1747: Leonhard Euler développe l'équation d'onde pour le son\n        1759: Joseph-Louis Lagrange contribue à la théorie des cordes vibrantes"
+        "limit": 3,
+        "questions": [
+          {
+            "q": "Selon la tradition, quelle observation a conduit Pythagore à découvrir les rapports numériques des intervalles musicaux ?",
+            "options": [
+              {
+                "text": "L'observation des marées.",
+                "correct": false
+              },
+              {
+                "text": "L'expérimentation avec un monocorde.",
+                "correct": true
+              },
+              {
+                "text": "Le son des cloches.",
+                "correct": false
+              },
+              {
+                "text": "Le chant des oiseaux.",
+                "correct": false
+              }
+            ],
+            "explanation": "Bien que l'anecdote des marteaux soit populaire, l'expérimentation avec le monocorde est la méthode la plus documentée et plausible pour la découverte des rapports harmoniques par Pythagore."
+          },
+          {
+            "q": "Quelle analogie Galilée a-t-il utilisée pour comprendre la relation entre la fréquence et la hauteur du son ?",
+            "options": [
+              {
+                "text": "Le mouvement des planètes.",
+                "correct": false
+              },
+              {
+                "text": "Les oscillations d'un pendule.",
+                "correct": true
+              },
+              {
+                "text": "La chute des corps.",
+                "correct": false
+              },
+              {
+                "text": "La réfraction de la lumière.",
+                "correct": false
+              }
+            ],
+            "explanation": "Galilée a observé l'isochronisme des pendules, ce qui l'a aidé à comprendre que la fréquence des vibrations (et donc la hauteur du son) est indépendante de l'amplitude pour de petites oscillations."
+          }
+        ]
       }
     }
   ]
@@ -110,7 +181,7 @@ Ensure:
 1. Every anchor specified in the prompt is mapped.
 2. Captions and descriptions have no sequential figure prefixes like "Figure 1:".
 3. Biography component details (dates, Wikipedia link) are correct.
-4. ZERO placeholders, draft markers, bracketed texts, or template values are present. Biographies, interactive elements, figures, and diagrams must be fully populated with real, high-quality, professional educational content in the target language. Absolutely no fake URLs, lorem ipsum text, or incomplete fields. Reject the block if any placeholder or skeletal text is detected.
+4. ZERO placeholders, draft markers, bracketed texts, or template values are present. Biographies, interactive elements, figures, and diagrams must be fully populated with real, high-quality, professional educational content in the target language. Absolutely no fake URLs, lorem ipsum text, "N/A", "## Section Name", or incomplete fields. Reject the block if any placeholder or skeletal text is detected.
 5. CRITICAL MEDIA RULES:
    - Image components MUST NOT contain "url", "wikipediaUrl", "wikipediaLink", "imageUrl", or "year" properties.
    - Video components MUST NOT contain "url", "id", "provider", "unresolved", "wikipediaUrl", "wikipediaLink", or "imageUrl" properties.
@@ -118,6 +189,8 @@ Ensure:
    These fields are FORBIDDEN in the raw widgets JSON for Image, Video, and Audio. They are resolved automatically downstream by the external-resource-resolver pipeline using the component's title/searchQuery/description. Any media component missing these fields is CORRECT and must NOT be rejected. If a media component DOES contain any of these forbidden fields (even with a seemingly valid URL), that IS an error and should be flagged.
 6. For other components (Quiz, SolvedExercise, UnsolvedExercise, FillInBlanks, Mermaid): "url", "wikipediaLink", "wikipediaUrl" can be null or omitted — this is acceptable. Do NOT reject those component types for missing URL fields.
 7. For UnsolvedExercise components, the props must contain "title", "problem", and "correctAnswer". Do NOT reject them for missing "questions" or "tasks" as those are not part of the UnsolvedExercise props structure.
+8. CRITICAL IMAGE RELEVANCE: Every Image or media component must have a strong, direct connection with the current lesson/concept, and must be highly informative (not merely decorative or filler). The caption/description must clearly explain its relevance. Reject if decorative/generic or lacking clear informative value.
+9. CRITICAL INTERACTIVE WIDGETS CONNECTION: Every interactive widget (Quiz, SolvedExercise, UnsolvedExercise, Mermaid chart, DataChart, and simulations) must be strongly connected to the lesson. You must verify that the choice of parameters, equations, inputs, or datasets is highly specific to the lesson's topic (not generic defaults). Verify that every interactive widget has a clear, detailed explanation or solution section explaining the logic and how the parameters relate to the lesson's concepts. Reject the block if any interactive widget has generic parameters or lacks a proper explanation section.
 
 Return ONLY a valid JSON object matching widgetBlockAuditSchema:
 ```json

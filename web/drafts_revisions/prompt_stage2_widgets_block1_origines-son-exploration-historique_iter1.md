@@ -1,6 +1,6 @@
 You are a world-class educational curriculum architect and JSON data validator (Agent 3B - Widgets Architect).
 Your task is to design the JSON object for the introductory widgets of the lesson:
-Course: "Acoustique physique et acoustique musicale"
+Course: "Acoustique Physique et Acoustique Musicale"
 Level: "University Year 2 / Bachelor 2nd Year (L2)"
 Lesson Title: "Aux origines du son : une exploration historique et conceptuelle"
 Language: "FR"

@@ -2,24 +2,24 @@ You are the Outline Critic Agent (Agent 2). Review this JIT lesson plan:
 {
   "sections": [
     {
-      "heading": "## Introduction : Pourquoi explorer les origines du son ?",
-      "description": "Présenter l'objectif du cours : retracer l'évolution de la compréhension du son de l'Antiquité à la Renaissance. Souligner l'importance de cette perspective historique pour l'acoustique moderne et musicale."
+      "heading": "## Introduction : Le son, une énigme ancestrale",
+      "description": "Présenter l'objectif du cours : explorer l'histoire et les concepts fondamentaux du son, de l'Antiquité à la Renaissance, et contextualiser l'émergence de l'acoustique comme science. Mettre en évidence la curiosité humaine face à ce phénomène omniprésent."
     },
     {
-      "heading": "## L'Antiquité : Premières intuitions et théories",
-      "description": "Aborder les contributions des penseurs grecs (Pythagore et l'harmonie des sphères, Aristote et la propagation du son comme mouvement de l'air). Discuter des limites et des avancées de ces premières conceptualisations philosophiques."
+      "heading": "## L'Antiquité : Premières théories et observations",
+      "description": "Aborder les premières réflexions sur le son dans les civilisations antiques. Discuter des contributions de penseurs comme Pythagore (rapports musicaux, harmonie des sphères) et Aristote (nature du son, propagation par l'air). Souligner les intuitions et les limites des connaissances de l'époque."
     },
     {
-      "heading": "## Du Moyen Âge à la Renaissance : Vers une approche scientifique",
-      "description": "Explorer la transition des idées médiévales aux premières observations scientifiques de la Renaissance. Mettre en lumière les travaux de Galilée sur la vibration des cordes et la relation entre fréquence et hauteur, marquant le début de l'acoustique expérimentale."
+      "heading": "## Du Moyen Âge à la Renaissance : Vers une approche plus systématique",
+      "description": "Examiner l'évolution de la compréhension du son durant le Moyen Âge et la Renaissance. Mentionner les contributions de figures clés (par exemple, les savants arabes, puis les penseurs de la Renaissance comme Galilée et ses premières observations sur la fréquence et la résonance). Montrer le passage progressif d'une approche philosophique à une approche plus empirique."
     },
     {
-      "heading": "## Concepts fondamentaux : Vibration et propagation à travers les âges",
-      "description": "Synthétiser la compréhension historique des concepts de vibration (source du son) et de propagation (moyen de transmission). Montrer comment ces idées ont évolué de la spéculation philosophique à l'observation empirique."
+      "heading": "## Concepts fondamentaux : La vibration et la propagation du son",
+      "description": "Détailler l'émergence et l'affinement des concepts de vibration comme source du son et de propagation comme son mode de déplacement. Expliquer comment ces idées ont été formulées et testées au fil des siècles, jetant les bases de la physique du son. Illustrer avec des exemples historiques de compréhension de ces phénomènes."
     },
     {
-      "heading": "## Conclusion : Héritage et prélude à l'acoustique moderne",
-      "description": "Récapituler les points clés de l'évolution historique de la pensée acoustique. Souligner comment ces fondations ont pavé la voie à l'acoustique classique et moderne, et ouvrir sur les développements futurs de la discipline."
+      "heading": "## Conclusion : L'héritage des origines et les prémices de l'acoustique moderne",
+      "description": "Récapituler les étapes clés de l'exploration historique et conceptuelle du son. Souligner comment les théories et observations de l'Antiquité à la Renaissance ont pavé la voie à l'acoustique moderne et à son développement en tant que discipline scientifique à part entière. Ouvrir sur les perspectives des développements ultérieurs."
     }
   ]
 }
