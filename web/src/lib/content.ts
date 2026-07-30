@@ -748,7 +748,7 @@ export async function getPageContent(slug: string[], lang: string = 'en', strict
           }
         }
 
-        const enriched = healLinguisticContent(enrichedEntities, lang);
+        const enriched = healCorruptedAttributes(healLinguisticContent(enrichedEntities, lang));
         return {
           meta: {
             title: sanitizeMetadataValue(dbLesson.title || meta.title || manualMeta.title || lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())),
@@ -3294,6 +3294,10 @@ export function healFrenchElisions(text: string): string {
   if (!text) return '';
   let processed = text;
 
+  // 0. Auto-heal any legacy corrupted "Grèc'" words back to "Grèce"
+  processed = processed.replace(/Grèc'([a-zA-Z\u00C0-\u00FF])/g, 'Grèce $1');
+  processed = processed.replace(/Grèc' /g, 'Grèce ');
+
   // List of French words that undergo elision before a vowel or mute h.
   const elisionRules = [
     { pattern: 'le', replacement: "l'" },
@@ -3318,7 +3322,7 @@ export function healFrenchElisions(text: string): string {
   // 1. Pre-cleanup: clean up any legacy/improper quotes or apostrophes surrounding the article or word.
   // For example, "' la' explosion" or "'la' explosion" or "le 'explosion" -> "le explosion" / "la explosion"
   processed = processed.replace(
-    /\b(le|la|de|que|je|ne|se|te|me|ce|jusque|lorsque|puisque|quoique)\b\s*['"»”]?\s+['"«“]?\s*([aeiouyéèêëàâîïôûùœæhAEIOUYÉÈÊËÀÂÎÏÔÛÙŒÆH][a-zA-ZÀ-ÿ]*)\b/gi,
+    /(?<![a-zA-Z\u00C0-\u00FF])(le|la|de|que|je|ne|se|te|me|ce|jusque|lorsque|puisque|quoique)(?![a-zA-Z\u00C0-\u00FF])\s*['"»”]?\s+['"«“]?\s*([aeiouyéèêëàâîïôûùœæhAEIOUYÉÈÊËÀÂÎÏÔÛÙŒÆH][a-zA-Z\u00C0-\u00FF]*)(?![a-zA-Z\u00C0-\u00FF])/gi,
     (match, article, word) => {
       return article + ' ' + word;
     }
@@ -3326,7 +3330,7 @@ export function healFrenchElisions(text: string): string {
 
   // 2. Perform direct elisions (e.g. "le explosion" -> "l'explosion")
   for (const rule of elisionRules) {
-    const regex = new RegExp(`\\b(${rule.pattern})\\s+(${vowelOrH}[a-zA-ZÀ-ÿ]*)\\b`, 'gi');
+    const regex = new RegExp(`(?<![a-zA-Z\\u00C0-\\u00FF])(${rule.pattern})\\s+(${vowelOrH}[a-zA-Z\\u00C0-\\u00FF]*)(?![a-zA-Z\\u00C0-\\u00FF])`, 'gi');
     processed = processed.replace(regex, (match, article, word) => {
       const isCapital = article[0] === article[0].toUpperCase();
       const rep = isCapital 
@@ -3339,7 +3343,7 @@ export function healFrenchElisions(text: string): string {
   // 3. Perform elisions separated by a JSX tag (e.g. "le <RealPerson>Einstein</RealPerson>")
   for (const rule of elisionRules) {
     const regex = new RegExp(
-      `\\b(${rule.pattern})\\s*(<[A-Za-z][A-Za-z0-9._-]*\\b(?:[^>'"/]|"[^"]*"|'[^']*')*\\/?>)\\s*(${vowelOrH}[a-zA-ZÀ-ÿ]*)\\b`,
+      `(?<![a-zA-Z\\u00C0-\\u00FF])(${rule.pattern})\\s*(<[A-Za-z][A-Za-z0-9._-]*(?:[^>'"/]|"[^"]*"|'[^']*')*\\/?>)\\s*(${vowelOrH}[a-zA-Z\\u00C0-\\u00FF]*)(?![a-zA-Z\\u00C0-\\u00FF])`,
       'gi'
     );
     processed = processed.replace(regex, (match, article, tag, word) => {
@@ -3352,7 +3356,7 @@ export function healFrenchElisions(text: string): string {
   }
 
   // 4. Clean up any spaces after l', d', qu', j', n', s', t', m', c', etc. (e.g. "l' explosion" -> "l'explosion")
-  processed = processed.replace(/\b(l|d|qu|j|n|s|t|m|c|jusqu|lorsqu|puisqu|quoiqu)'\s+/gi, "$1'");
+  processed = processed.replace(/(?<![a-zA-Z\u00C0-\u00FF])(l|d|qu|j|n|s|t|m|c|jusqu|lorsqu|puisqu|quoiqu)'\s+/gi, "$1'");
 
   return processed;
 }
@@ -6752,7 +6756,7 @@ export async function resolvePrecompiledAnchors(
     if (typeLower === 'citation' || typeLower === 'reference' || typeLower === 'ref') {
       const num = item.id;
       const desc = item.topic || '';
-      const titleAttr = desc ? ` title="${desc.replace(/"/g, '\\"')}"` : '';
+      const titleAttr = desc ? ` title="${desc.replace(/"/g, "'")}"` : '';
       const tagStr = `<sup id="cite-${num}" class="scroll-mt-24"><a href="#ref-${num}"${titleAttr}>[${num}]</a></sup>`;
       resolvedContent = resolvedContent.replace(item.raw, tagStr);
       continue;
@@ -6812,8 +6816,8 @@ export async function resolvePrecompiledAnchors(
 
         if (typeLower === 'biography') {
           const finalDates = details.dates || '';
-          const datesAttr = finalDates ? ` dates="${finalDates.replace(/"/g, '\\"')}"` : '';
-          tagStr = `<Biography name="${finalName.replace(/"/g, '\\"')}"${datesAttr} description="${finalDesc.replace(/"/g, '\\"')}" wikipediaUrl="${finalUrl.replace(/"/g, '\\"')}" />`;
+          const datesAttr = finalDates ? ` dates="${finalDates.replace(/"/g, "'")}"` : '';
+          tagStr = `<Biography name="${finalName.replace(/"/g, "'")}"${datesAttr} description="${finalDesc.replace(/"/g, "'")}" wikipediaUrl="${finalUrl.replace(/"/g, "'")}" />`;
         } else {
           let tagName = 'ConceptLink';
           if (typeLower === 'location') tagName = 'Location';
@@ -6828,10 +6832,10 @@ export async function resolvePrecompiledAnchors(
           else if (typeLower === 'fictionalcharacter' || typeLower === 'character') tagName = 'FictionalCharacter';
 
           if (tagName === 'Glossary') {
-            tagStr = `<Glossary term="${finalName.replace(/"/g, '\\"')}" definition="${finalDesc.replace(/"/g, '\\"')}" wikipediaUrl="${finalUrl.replace(/"/g, '\\"')}">${finalName}</Glossary>`;
+            tagStr = `<Glossary term="${finalName.replace(/"/g, "'")}" definition="${finalDesc.replace(/"/g, "'")}" wikipediaUrl="${finalUrl.replace(/"/g, "'")}">${finalName}</Glossary>`;
           } else {
-            const datesAttr = details.dates ? ` dates="${details.dates.replace(/"/g, '\\"')}"` : '';
-            tagStr = `<${tagName} name="${finalName.replace(/"/g, '\\"')}"${datesAttr} description="${finalDesc.replace(/"/g, '\\"')}" url="${finalUrl.replace(/"/g, '\\"')}">${finalName}</${tagName}>`;
+            const datesAttr = details.dates ? ` dates="${details.dates.replace(/"/g, "'")}"` : '';
+            tagStr = `<${tagName} name="${finalName.replace(/"/g, "'")}"${datesAttr} description="${finalDesc.replace(/"/g, "'")}" url="${finalUrl.replace(/"/g, "'")}">${finalName}</${tagName}>`;
           }
         }
 
@@ -7032,8 +7036,8 @@ export function extractJsxTags(text: string): { processed: string, jsxTags: stri
             break;
           }
           
-          // Safeguard: a single JSX tag opening/closing definition should not span more than 1500 chars or across paragraphs
-          if (tagContent.length > 1500 || tagContent.includes('\n\n')) {
+          // Safeguard: a single JSX tag opening/closing definition should not span more than 15000 chars or across paragraphs
+          if (tagContent.length > 15000 || tagContent.includes('\n\n')) {
             aborted = true;
             break;
           }
@@ -7178,9 +7182,9 @@ export function healCorruptedAttributes(mdx: string): string {
       if (cleanVal.startsWith('{') && cleanVal.endsWith('}')) {
         // Valid brace expression, keep as-is
       } else if (cleanVal.startsWith('«') && cleanVal.endsWith('»')) {
-        cleanVal = '"' + cleanVal.substring(1, cleanVal.length - 1).replace(/"/g, '\\"') + '"';
+        cleanVal = '"' + cleanVal.substring(1, cleanVal.length - 1).replace(/\\"/g, "'").replace(/"/g, "'") + '"';
       } else if (cleanVal.startsWith('“') && cleanVal.endsWith('”')) {
-        cleanVal = '"' + cleanVal.substring(1, cleanVal.length - 1).replace(/"/g, '\\"') + '"';
+        cleanVal = '"' + cleanVal.substring(1, cleanVal.length - 1).replace(/\\"/g, "'").replace(/"/g, "'") + '"';
       } else if (cleanVal.endsWith('"') && !cleanVal.startsWith('"')) {
         cleanVal = '"' + cleanVal;
       } else if (cleanVal.startsWith('"') && !cleanVal.endsWith('"')) {
@@ -7193,10 +7197,11 @@ export function healCorruptedAttributes(mdx: string): string {
         cleanVal = '"' + cleanVal + '"';
       }
       
-      // Sanitize any surviving &quot; inside a double-quoted JSX string (legacy DB content).
-      // &quot; is valid HTML but NOT valid JSX in a string attribute — acorn rejects it.
+      // Sanitize any surviving &quot;, inner double quotes, or backslashed quotes inside a double-quoted JSX string.
+      // JSX string literals do NOT support backslash escapes (\"); inner double quotes MUST be single quotes.
       if (cleanVal.startsWith('"') && cleanVal.endsWith('"')) {
-        cleanVal = '"' + cleanVal.slice(1, -1).replace(/&quot;/g, '\\"') + '"';
+        const inner = cleanVal.slice(1, -1).replace(/\\"/g, "'").replace(/&quot;/g, "'").replace(/"/g, "'");
+        cleanVal = '"' + inner + '"';
       }
       attrMap.set(attrName.toLowerCase(), `${attrName}=${cleanVal}`);
     }
