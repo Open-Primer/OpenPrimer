@@ -1735,7 +1735,7 @@ function healFillInBlanks(mdx: string): string {
     }
     
     const blanksJson = JSON.stringify(blanks);
-    const questionEscaped = question.replace(/"/g, '&quot;');
+    const questionEscaped = question.replace(/"/g, '\\"');
     return `<FillInBlanks question="${questionEscaped}" blanks='${blanksJson}' />\n`;
   });
 
@@ -1751,7 +1751,7 @@ function healFillInBlanks(mdx: string): string {
     if (attrs.question && attrs.blanks) {
       const question = attrs.question;
       const blanksStr = attrs.blanks;
-      const questionEscaped = question.replace(/"/g, '&quot;');
+      const questionEscaped = question.replace(/"/g, '\\"');
       return `<FillInBlanks question="${questionEscaped}" blanks='${blanksStr}' />`;
     }
     
@@ -1994,7 +1994,7 @@ function healQuestionTags(mdx: string): string {
       optionTags = newContent;
     }
     
-    const explanationAttr = explanation ? ` explanation="${explanation.replace(/"/g, '&quot;')}"` : '';
+    const explanationAttr = explanation ? ` explanation="${explanation.replace(/"/g, '\\"')}"` : '';
     
     return `${imageFigure}<Question q="${q}"${explanationAttr}>\n${optionTags}\n</Question>`;
   });
@@ -2797,6 +2797,17 @@ export function decodeHtmlEncodedTags(mdx: string): string {
     processed = processed.replace(/<([A-Za-zÀ-ÿ][A-Za-z0-9.-À-ÿ]*)\b([^>]*?)&gt;/gi, '<$1$2>');
   } while (processed !== prev);
 
+  // Fix legacy &quot; inside JSX component string attributes — &quot; is NOT valid JSX inside
+  // a double-quoted attribute string; only backslash-escaped \" is. Scan every JSX opening
+  // tag and replace &quot; within its attribute section with backslash-escaped quotes.
+  processed = processed.replace(
+    /<([A-Z][A-Za-z0-9.-]*)\b([^>]*)>/g,
+    (_m: string, tagName: string, attrs: string) => {
+      const healedAttrs = attrs.replace(/&quot;/g, '\\"');
+      return `<${tagName}${healedAttrs}>`;
+    }
+  );
+
   return processed;
 }
 
@@ -2889,7 +2900,7 @@ function sanitizeQuotesInComponentTags(mdx: string): string {
           // Strip any nested JSX/HTML tags inside the attribute value to avoid parser issues
           val = val.replace(/<[A-Za-z][A-Za-z0-9.-]*\b[^>]*?>([\s\S]*?)<\/[A-Za-z][A-Za-z0-9.-]*?>/gi, '$1');
           val = val.replace(/<[A-Za-z][A-Za-z0-9.-]*\b[^>]*?\/>/gi, '');
-          val = val.replace(/"/g, '&quot;');
+          val = val.replace(/"/g, '\\"');
           tagContent += val + '"';
           idx = trueEndIdx + 1;
         } else {
@@ -3250,9 +3261,9 @@ function cleanBiographyAlerts(mdx: string): string {
     const bioText = remainingText.replace(/\[(?:Read more on Wikipedia|En savoir plus sur Wikipédia|Mehr auf Wikipedia lesen|Leer más en Wikipedia)(?:\s*\([^)]*\))?\]\([^)]+\)/gi, '').trim();
     const cleanBio = bioText.replace(/^[:\-–—\s]+/g, '').trim();
 
-    const escName = subjectName.replace(/"/g, '&quot;');
-    const escDates = dates ? ` dates="${dates.replace(/"/g, '&quot;')}"` : '';
-    const escBio = cleanBio.replace(/"/g, '&quot;');
+    const escName = subjectName.replace(/"/g, '\\"');
+    const escDates = dates ? ` dates="${dates.replace(/"/g, '\\"')}"` : '';
+    const escBio = cleanBio.replace(/"/g, '\\"');
 
     return `<Biography name="${escName}"${escDates} description="${escBio}" />`;
   });
@@ -4081,22 +4092,22 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
   // Group images, captions, and fallback links into a single <Image> component
   const figureAboveRegex = /\*\s*(Figure\s*[\d\w]*\s*[:\-\u2013\u2014].*?)\s*\*\s*\r?\n\s*!\[(.*?)\]\(((?:https?:\/\/|\/\/)?.*?)\)(?:\s*\r?\n\s*\[(Accéder directement.*?|Access the resource.*?|Access directly.*?)\]\(((?:https?:\/\/|\/\/).*?)\))?/gi;
   processed = processed.replace(figureAboveRegex, (match, caption, alt, imgUrl, fallbackText, fallbackUrl) => {
-    const cleanAlt = (alt || '').replace(/"/g, '&quot;');
+    const cleanAlt = (alt || '').replace(/"/g, '\\"');
     let cleanCaption = (caption || '');
     cleanCaption = cleanCaption.replace(/<[^>]+>/g, '');
-    cleanCaption = cleanCaption.replace(/"/g, '&quot;');
-    const cleanFallbackText = (fallbackText || '').replace(/"/g, '&quot;');
+    cleanCaption = cleanCaption.replace(/"/g, '\\"');
+    const cleanFallbackText = (fallbackText || '').replace(/"/g, '\\"');
     return `<Image src="${imgUrl}" alt="${cleanAlt}" caption="${cleanCaption}" fallbackText="${cleanFallbackText}" fallbackUrl="${fallbackUrl || ''}" />`;
   });
 
   const figureRegex = /!\[(.*?)\]\(((?:https?:\/\/|\/\/)?.*?)\)\s*\r?\n\s*\*\s*(Figure\s*[\d\w]*\s*[:\-\u2013].*?)\s*\*(?:\s*\r?\n\s*\[(Accéder directement.*?|Access the resource.*?|Access directly.*?)\]\(((?:https?:\/\/|\/\/).*?)\))?/gi;
   processed = processed.replace(figureRegex, (match, alt, imgUrl, caption, fallbackText, fallbackUrl) => {
-    const cleanAlt = (alt || '').replace(/"/g, '&quot;');
+    const cleanAlt = (alt || '').replace(/"/g, '\\"');
     let cleanCaption = (caption || '');
     // Strip any HTML/JSX tags from the caption so they don't render literally
     cleanCaption = cleanCaption.replace(/<[^>]+>/g, '');
-    cleanCaption = cleanCaption.replace(/"/g, '&quot;');
-    const cleanFallbackText = (fallbackText || '').replace(/"/g, '&quot;');
+    cleanCaption = cleanCaption.replace(/"/g, '\\"');
+    const cleanFallbackText = (fallbackText || '').replace(/"/g, '\\"');
     return `<Image src="${imgUrl}" alt="${cleanAlt}" caption="${cleanCaption}" fallbackText="${cleanFallbackText}" fallbackUrl="${fallbackUrl || ''}" />`;
   });
   
@@ -4453,7 +4464,7 @@ export function preprocessMdx(content: string, lang: string = 'en', isSummative:
           .replace(/\bwikipedia=(["'])([\s\S]*?)\1/gi, '')
           .trim();
         
-        const escapedDef = foundItem.definition.replace(/"/g, '&quot;');
+        const escapedDef = foundItem.definition.replace(/"/g, '\\"');
         const wikiUrlAttr = foundItem.wikipediaUrl ? ` wikipediaUrl="${foundItem.wikipediaUrl}"` : '';
         return `<Glossary definition="${escapedDef}"${wikiUrlAttr} ${cleanAttrs}>${children}</Glossary>`;
       }
@@ -5491,7 +5502,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
       }
       const quotedRegex = new RegExp(`\\b${escapedK}\\s*=\\s*["']`);
       if (quotedRegex.test(originalTag)) {
-        const escapedV = cleanV.replace(/"/g, '&quot;');
+        const escapedV = cleanV.replace(/"/g, '\\"');
         return ` ${k}="${escapedV}"`;
       }
     }
@@ -5499,7 +5510,7 @@ export function restoreJsxAfterTranslation(translatedMdx: string, registry: Reco
     if (isBraced) {
       return ` ${k}={${cleanV}}`;
     } else {
-      const escapedV = cleanV.replace(/"/g, '&quot;');
+      const escapedV = cleanV.replace(/"/g, '\\"');
       return ` ${k}="${escapedV}"`;
     }
   }
@@ -6602,7 +6613,7 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
 
           const finalDesc = descVal || details.summary || details.description;
           if (finalDesc) {
-            const escDesc = finalDesc.replace(/"/g, '&quot;').replace(/\n/g, ' ').trim();
+            const escDesc = finalDesc.replace(/"/g, '\\"').replace(/\n/g, ' ').trim();
             if (tagLower === 'glossary') {
               newAttrs = newAttrs.replace(/\b(definition|description)=\s*(["'])(.*?)\2/gi, '').trim();
               newAttrs += ` definition="${escDesc}"`;
@@ -6632,7 +6643,7 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
 
           // Inject lesson domain/subject so the hovercard can display it in the header
           if (domain && !parseAttr(item.attrsString, 'domain') && !parseAttr(item.attrsString, 'subject')) {
-            newAttrs += ` domain="${domain.replace(/"/g, '&quot;')}"`;
+            newAttrs += ` domain="${domain.replace(/"/g, '\\"')}"`;
           }
 
           const cleanAttrs = newAttrs.replace(/\s+/g, ' ').trim();
@@ -6659,7 +6670,7 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
             }
 
             if (!descVal) {
-              const escDesc = glossaryMatch.definition.replace(/"/g, '&quot;').replace(/\n/g, ' ').trim();
+              const escDesc = glossaryMatch.definition.replace(/"/g, '\\"').replace(/\n/g, ' ').trim();
               if (tagLower === 'glossary') {
                 newAttrs = newAttrs.replace(/\b(definition|description)=\s*(["'])(.*?)\2/gi, '').trim();
                 newAttrs += ` definition="${escDesc}"`;
@@ -6672,11 +6683,11 @@ export async function enrichEntityTagsWithWikipedia(content: string, lang: strin
             if (!parseAttr(item.attrsString, 'type')) newAttrs += ` type="${resolvedType}"`;
             if (!parseAttr(item.attrsString, 'name') && !parseAttr(item.attrsString, 'term') && !parseAttr(item.attrsString, 'word')) {
               newAttrs += tagLower === 'glossary'
-                ? ` term="${queryName.replace(/"/g, '&quot;')}"`
-                : ` name="${queryName.replace(/"/g, '&quot;')}"`;
+                ? ` term="${queryName.replace(/"/g, '\\"')}"`
+                : ` name="${queryName.replace(/"/g, '\\"')}"`;
             }
             if (domain && !parseAttr(item.attrsString, 'domain') && !parseAttr(item.attrsString, 'subject')) {
-              newAttrs += ` domain="${domain.replace(/"/g, '&quot;')}"`;
+              newAttrs += ` domain="${domain.replace(/"/g, '\\"')}"`;
             }
 
             const cleanAttrs = newAttrs.replace(/\s+/g, ' ').trim();
@@ -6741,7 +6752,7 @@ export async function resolvePrecompiledAnchors(
     if (typeLower === 'citation' || typeLower === 'reference' || typeLower === 'ref') {
       const num = item.id;
       const desc = item.topic || '';
-      const titleAttr = desc ? ` title="${desc.replace(/"/g, '&quot;')}"` : '';
+      const titleAttr = desc ? ` title="${desc.replace(/"/g, '\\"')}"` : '';
       const tagStr = `<sup id="cite-${num}" class="scroll-mt-24"><a href="#ref-${num}"${titleAttr}>[${num}]</a></sup>`;
       resolvedContent = resolvedContent.replace(item.raw, tagStr);
       continue;
@@ -6801,8 +6812,8 @@ export async function resolvePrecompiledAnchors(
 
         if (typeLower === 'biography') {
           const finalDates = details.dates || '';
-          const datesAttr = finalDates ? ` dates="${finalDates.replace(/"/g, '&quot;')}"` : '';
-          tagStr = `<Biography name="${finalName.replace(/"/g, '&quot;')}"${datesAttr} description="${finalDesc.replace(/"/g, '&quot;')}" wikipediaUrl="${finalUrl.replace(/"/g, '&quot;')}" />`;
+          const datesAttr = finalDates ? ` dates="${finalDates.replace(/"/g, '\\"')}"` : '';
+          tagStr = `<Biography name="${finalName.replace(/"/g, '\\"')}"${datesAttr} description="${finalDesc.replace(/"/g, '\\"')}" wikipediaUrl="${finalUrl.replace(/"/g, '\\"')}" />`;
         } else {
           let tagName = 'ConceptLink';
           if (typeLower === 'location') tagName = 'Location';
@@ -6817,10 +6828,10 @@ export async function resolvePrecompiledAnchors(
           else if (typeLower === 'fictionalcharacter' || typeLower === 'character') tagName = 'FictionalCharacter';
 
           if (tagName === 'Glossary') {
-            tagStr = `<Glossary term="${finalName.replace(/"/g, '&quot;')}" definition="${finalDesc.replace(/"/g, '&quot;')}" wikipediaUrl="${finalUrl.replace(/"/g, '&quot;')}">${finalName}</Glossary>`;
+            tagStr = `<Glossary term="${finalName.replace(/"/g, '\\"')}" definition="${finalDesc.replace(/"/g, '\\"')}" wikipediaUrl="${finalUrl.replace(/"/g, '\\"')}">${finalName}</Glossary>`;
           } else {
-            const datesAttr = details.dates ? ` dates="${details.dates.replace(/"/g, '&quot;')}"` : '';
-            tagStr = `<${tagName} name="${finalName.replace(/"/g, '&quot;')}"${datesAttr} description="${finalDesc.replace(/"/g, '&quot;')}" url="${finalUrl.replace(/"/g, '&quot;')}">${finalName}</${tagName}>`;
+            const datesAttr = details.dates ? ` dates="${details.dates.replace(/"/g, '\\"')}"` : '';
+            tagStr = `<${tagName} name="${finalName.replace(/"/g, '\\"')}"${datesAttr} description="${finalDesc.replace(/"/g, '\\"')}" url="${finalUrl.replace(/"/g, '\\"')}">${finalName}</${tagName}>`;
           }
         }
 
@@ -7167,9 +7178,9 @@ export function healCorruptedAttributes(mdx: string): string {
       if (cleanVal.startsWith('{') && cleanVal.endsWith('}')) {
         // Valid brace expression, keep as-is
       } else if (cleanVal.startsWith('«') && cleanVal.endsWith('»')) {
-        cleanVal = '"' + cleanVal.substring(1, cleanVal.length - 1).replace(/"/g, '&quot;') + '"';
+        cleanVal = '"' + cleanVal.substring(1, cleanVal.length - 1).replace(/"/g, '\\"') + '"';
       } else if (cleanVal.startsWith('“') && cleanVal.endsWith('”')) {
-        cleanVal = '"' + cleanVal.substring(1, cleanVal.length - 1).replace(/"/g, '&quot;') + '"';
+        cleanVal = '"' + cleanVal.substring(1, cleanVal.length - 1).replace(/"/g, '\\"') + '"';
       } else if (cleanVal.endsWith('"') && !cleanVal.startsWith('"')) {
         cleanVal = '"' + cleanVal;
       } else if (cleanVal.startsWith('"') && !cleanVal.endsWith('"')) {
@@ -7182,6 +7193,11 @@ export function healCorruptedAttributes(mdx: string): string {
         cleanVal = '"' + cleanVal + '"';
       }
       
+      // Sanitize any surviving &quot; inside a double-quoted JSX string (legacy DB content).
+      // &quot; is valid HTML but NOT valid JSX in a string attribute — acorn rejects it.
+      if (cleanVal.startsWith('"') && cleanVal.endsWith('"')) {
+        cleanVal = '"' + cleanVal.slice(1, -1).replace(/&quot;/g, '\\"') + '"';
+      }
       attrMap.set(attrName.toLowerCase(), `${attrName}=${cleanVal}`);
     }
     
