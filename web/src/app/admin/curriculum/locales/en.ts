@@ -634,4 +634,14 @@ export const locale: Record<string, string> = {
   "Web Audio API-driven piano synth with ADSR envelopes, waveform selectors, and a real-time wave oscilloscope visualizer.": "Web Audio API-driven piano synth with ADSR envelopes, waveform selectors, and a real-time wave oscilloscope visualizer.",
   "Sankey Flow Diagram": "Sankey Flow Diagram",
   "Interactive vector SVG Sankey flow diagram with drag-to-adjust source/target handles.": "Interactive vector SVG Sankey flow diagram with drag-to-adjust source/target handles.",
+  "Disable Internal AI Tutor": "Disable Internal AI Tutor",
+  "Disable the server-side internal AI tutor to prevent platform API usage costs. Students will be prompted to configure their own external AI tutor in Preferences.": "Disable the server-side internal AI tutor to prevent platform API usage costs. Students will be prompted to configure their own external AI tutor in Preferences.",
+  "Internal AI Tutor Engine Disabled": "Internal AI Tutor Engine Disabled",
+  "The internal server AI tutor is currently disabled by administrator setting to optimize platform operating costs. To use AI tutoring, go to Profile > Preferences to configure your personal AI key (OpenAI, Anthropic, Gemini AI Studio).": "The internal server AI tutor is currently disabled by administrator setting to optimize platform operating costs. To use AI tutoring, go to Profile > Preferences to configure your personal AI key (OpenAI, Anthropic, Gemini AI Studio).",
+  "Global Course Cap Limit": "Global Course Cap Limit",
+  "Maximum total number of courses allowed on the platform (e.g. 100,000). When exceeded, the system automatically prunes lowest-performing courses.": "Maximum total number of courses allowed on the platform (e.g. 100,000). When exceeded, the system automatically prunes lowest-performing courses.",
+  "Enforce Cap & Purge Lowest-Rated": "Enforce Cap & Purge Lowest-Rated",
+  "Course cap enforced: {count} lowest-performing course(s) successfully purged.": "Course cap enforced: {count} lowest-performing course(s) successfully purged.",
+  "Catalog is within the cap limit of {max} courses ({current} courses active).": "Catalog is within the cap limit of {max} courses ({current} courses active).",
+  "EU AI Act Compliant • Art. 50 Disclosure": "EU AI Act Compliant • Art. 50 Disclosure"
 };

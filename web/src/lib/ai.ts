@@ -3066,7 +3066,8 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       compStr = `<UnsolvedExercise title="${(props.title || '').replace(/"/g, '&quot;')}" correctAnswer="${(props.correctAnswer || '').replace(/"/g, '&quot;')}" explanation="${(props.explanation || '').replace(/"/g, '&quot;')}">\n  ${props.problem || ''}\n</UnsolvedExercise>`;
     } else if (comp.componentType === "Mermaid") {
       const mCaption = props.caption ? ` caption="${(props.caption || '').replace(/"/g, '&quot;')}"` : '';
-      compStr = `<Mermaid chart={\`${props.chart || ''}\`}${mCaption} />`;
+      const safeChart = (props.chart || '').replace(/`/g, '\\`').replace(/\${/g, '\\${');
+      compStr = `<Mermaid chart={\`${safeChart}\`}${mCaption} />`;
     } else if (comp.componentType === "FunctionPlotter") {
       compStr = `<FunctionPlotter fn="${props.fn || 'x^2'}" domain={${JSON.stringify(props.domain || [-10, 10])}} />`;
     } else if (comp.componentType === "CodeSandbox") {
@@ -3115,9 +3116,10 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const bWiki = props.wikipediaUrl ? ` wikipediaUrl="${props.wikipediaUrl.replace(/"/g, '&quot;')}"` : '';
       compStr = `<Biography name="${bName}"${bDates} description="${bDesc}"${bWiki} />`;
     } else if (comp.componentType === "Image") {
-      const mDesc = (props.description || '').replace(/"/g, '&quot;');
-      const mAlt = props.alt ? ` alt="${props.alt.replace(/"/g, '&quot;')}"` : '';
-      const mCap = props.caption ? ` caption="${props.caption.replace(/"/g, '&quot;')}"` : '';
+      const rawDesc = props.description || props.caption || props.alt || '';
+      const mDesc = (props.description || rawDesc).replace(/"/g, '&quot;');
+      const mAlt = ` alt="${(props.alt || rawDesc).replace(/"/g, '&quot;')}"`;
+      const mCap = ` caption="${(props.caption || rawDesc).replace(/"/g, '&quot;')}"`;
       const mTitle = props.title ? ` title="${props.title.replace(/"/g, '&quot;')}"` : '';
       const mSrc = props.src ? ` src="${props.src.replace(/"/g, '&quot;')}"` : '';
       const mFallbackUrl = props.fallbackUrl ? ` fallbackUrl="${props.fallbackUrl.replace(/"/g, '&quot;')}"` : '';

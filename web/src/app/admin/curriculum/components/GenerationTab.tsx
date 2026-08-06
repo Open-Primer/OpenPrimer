@@ -17,7 +17,7 @@ import {
 import { dbService } from '@/lib/db';
 
 interface GenerationTabProps {
-  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR' | 'PT' | 'AR' | 'HI' | 'UR';
+  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR';
   t: any;
   tr: (key: string) => string;
   autoApprove: boolean;
@@ -27,6 +27,10 @@ interface GenerationTabProps {
   reevaluationDays: number;
   backlogRetention: number;
   updateParameter: (key: string, value: string) => Promise<void>;
+  globalCourseCap?: number;
+  onUpdateCourseCap?: (cap: number) => void;
+  onEnforceCapAndPurge?: () => void;
+  coursesCount?: number;
   
   proposals: any[];
   refusedCourses: any[];
@@ -112,6 +116,10 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
   reevaluationDays,
   backlogRetention,
   updateParameter,
+  globalCourseCap = 100000,
+  onUpdateCourseCap,
+  onEnforceCapAndPurge,
+  coursesCount = 0,
   proposals,
   refusedCourses,
   handleApproveGen,
@@ -398,6 +406,45 @@ export const GenerationTab: React.FC<GenerationTabProps> = ({
                   className="bg-transparent border-none text-blue-400 text-sm font-black focus:outline-none w-20 text-right"
                 />
                 <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Days")}</span>
+              </div>
+            </div>
+
+            {/* 7. Global Course Cap Limit */}
+            <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-800 rounded-3xl justify-between hover:border-slate-800 transition-all col-span-full md:col-span-2 lg:col-span-3">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Global Course Cap Limit")}</span>
+                  <p className="text-[10px] text-slate-500 leading-normal max-w-2xl">
+                    {tr("Maximum total number of courses allowed on the platform (e.g. 100,000). When exceeded, the system automatically prunes lowest-performing courses.")}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 self-end md:self-auto">
+                  <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 font-mono">
+                    <input 
+                      type="number" 
+                      value={globalCourseCap} 
+                      onChange={(e) => {
+                        const val = Math.max(1, Number(e.target.value) || 100000);
+                        if (onUpdateCourseCap) onUpdateCourseCap(val);
+                        else updateParameter('globalCourseCap', String(val));
+                      }}
+                      className="bg-transparent border-none text-indigo-400 text-sm font-black focus:outline-none w-24 text-right"
+                    />
+                    <span className="text-[10px] text-slate-400 font-semibold uppercase">MAX</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onEnforceCapAndPurge && onEnforceCapAndPurge()}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md"
+                  >
+                    {tr("Enforce Cap & Purge Lowest-Rated")}
+                  </button>
+                </div>
+              </div>
+              <div className="mt-2 pt-2 border-t border-slate-900/60 font-mono text-[10px] text-slate-500">
+                {tr("Catalog is within the cap limit of {max} courses ({current} courses active).")
+                  .replace('{max}', globalCourseCap.toLocaleString())
+                  .replace('{current}', coursesCount.toLocaleString())}
               </div>
             </div>
           </div>

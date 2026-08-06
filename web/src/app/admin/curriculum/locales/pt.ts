@@ -669,4 +669,14 @@ export const locale: Record<string, string> = {
   "Web Audio API-driven piano synth with ADSR envelopes, waveform selectors, and a real-time wave oscilloscope visualizer.": "Sintetizador de piano baseado na API Web Audio com envelopes ADSR, seletores de forma de onda e osciloscópio em tempo real.",
   "Sankey Flow Diagram": "Diagrama de Fluxo de Sankey",
   "Interactive vector SVG Sankey flow diagram with drag-to-adjust source/target handles.": "Diagrama de fluxo de Sankey SVG vetorial interativo com controles de arrastar para ajustar origem e destino.",
+  "Disable Internal AI Tutor": "Desativar Tutor de IA Interno",
+  "Disable the server-side internal AI tutor to prevent platform API usage costs. Students will be prompted to configure their own external AI tutor in Preferences.": "Desativar o tutor de IA interno no servidor para evitar custos de API. Os alunos serão orientados a configurar seu próprio tutor externo nas Preferências.",
+  "Internal AI Tutor Engine Disabled": "Motor do Tutor de IA Interno Desativado",
+  "The internal server AI tutor is currently disabled by administrator setting to optimize platform operating costs. To use AI tutoring, go to Profile > Preferences to configure your personal AI key (OpenAI, Anthropic, Gemini AI Studio).": "O tutor de IA interno do servidor está atualmente desativado por configuração administrativa. Para usar a tutoria de IA, acesse Perfil > Preferências para configurar sua chave pessoal.",
+  "Global Course Cap Limit": "Limite Global de Cursos",
+  "Maximum total number of courses allowed on the platform (e.g. 100,000). When exceeded, the system automatically prunes lowest-performing courses.": "Número máximo total de cursos permitidos na plataforma (ex: 100.000). Quando excedido, o sistema elimina automaticamente os cursos com menor avaliação.",
+  "Enforce Cap & Purge Lowest-Rated": "Aplicar Limite e Eliminar Menos Avaliados",
+  "Course cap enforced: {count} lowest-performing course(s) successfully purged.": "Limite aplicado: {count} curso(s) com menor avaliação eliminado(s) com sucesso.",
+  "Catalog is within the cap limit of {max} courses ({current} courses active).": "O catálogo está dentro do limite de {max} cursos ({current} cursos ativos).",
+  "EU AI Act Compliant • Art. 50 Disclosure": "Conforme Lei de IA da UE • Divulgação Art. 50"
 };

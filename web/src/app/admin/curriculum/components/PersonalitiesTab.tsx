@@ -8,12 +8,14 @@ import { ArchivingLevelButtons } from './ArchivingLevelButtons';
 import { LOCALIZED_POPUPS } from '../strings';
 
 interface PersonalitiesTabProps {
-  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR' | 'PT' | 'AR' | 'HI' | 'UR';
+  lang: 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR';
   tr: (key: string) => string;
   t: any; // CURRICULUM_STRINGS translated
   personalities: TutorPersonality[];
   loadData: () => Promise<void>;
   showToast: (text: string, type?: 'success' | 'error' | 'info') => void;
+  disableInternalTutor?: boolean;
+  onToggleDisableInternalTutor?: (disabled: boolean) => void;
 }
 
 export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
@@ -22,7 +24,9 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
   t,
   personalities,
   loadData,
-  showToast
+  showToast,
+  disableInternalTutor = false,
+  onToggleDisableInternalTutor
 }) => {
   const [showAddPersonality, setShowAddPersonality] = useState(false);
   const [newPers, setNewPers] = useState({ name: '', prompt: '', isDefault: false });
@@ -149,6 +153,31 @@ export const PersonalitiesTab: React.FC<PersonalitiesTabProps> = ({
 
   return (
     <div className="space-y-8">
+      {/* SERVER-SIDE INTERNAL AI TUTOR ADMINISTRATIVE CONTROL */}
+      <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl backdrop-blur-md">
+        <div className="space-y-1.5 max-w-2xl">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className={`w-5 h-5 ${disableInternalTutor ? 'text-amber-400' : 'text-emerald-400'}`} />
+            <h4 className="text-base font-black text-slate-100">{tr("Disable Internal AI Tutor")}</h4>
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            {tr("Disable the server-side internal AI tutor to prevent platform API usage costs. Students will be prompted to configure their own external AI tutor in Preferences.")}
+          </p>
+        </div>
+        <div className="flex items-center gap-3 self-end md:self-auto">
+          <span className={`text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${disableInternalTutor ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+            {disableInternalTutor ? tr("OFF") : tr("ON")}
+          </span>
+          <button
+            type="button"
+            onClick={() => onToggleDisableInternalTutor && onToggleDisableInternalTutor(!disableInternalTutor)}
+            className={`px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all shadow-lg ${disableInternalTutor ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20' : 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/20'}`}
+          >
+            {disableInternalTutor ? tr("ON") : tr("Disable Internal AI Tutor")}
+          </button>
+        </div>
+      </div>
+
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-black text-slate-200">{tr("AI Tutor Personalities")}</h3>
         <button 

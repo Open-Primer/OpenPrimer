@@ -664,4 +664,14 @@ export const locale: Record<string, string> = {
   "Web Audio API-driven piano synth with ADSR envelopes, waveform selectors, and a real-time wave oscilloscope visualizer.": "Web-Audio-API-gesteuerter Pianosynthesizer mit ADSR-Hüllkurven, Wellenformwählern und Echtzeit-Oszilloskop.",
   "Sankey Flow Diagram": "Sankey-Flussdiagramm",
   "Interactive vector SVG Sankey flow diagram with drag-to-adjust source/target handles.": "Interaktives Vektor-SVG-Sankey-Flussdiagramm mit Drag-to-Adjust-Quell-/Zielgriffen.",
+  "Disable Internal AI Tutor": "Internen KI-Tutor deaktivieren",
+  "Disable the server-side internal AI tutor to prevent platform API usage costs. Students will be prompted to configure their own external AI tutor in Preferences.": "Deaktivieren Sie den serverseitigen internen KI-Tutor, um API-Kosten zu vermeiden. Schüler werden aufgefordert, ihren eigenen externen KI-Tutor in den Einstellungen zu konfigurieren.",
+  "Internal AI Tutor Engine Disabled": "Interner KI-Tutor-Motor Deaktiviert",
+  "The internal server AI tutor is currently disabled by administrator setting to optimize platform operating costs. To use AI tutoring, go to Profile > Preferences to configure your personal AI key (OpenAI, Anthropic, Gemini AI Studio).": "Der interne KI-Tutor ist derzeit deaktiviert. Um die KI-Tutorfunktion zu nutzen, wechseln Sie zu Profil > Einstellungen, um Ihren persönlichen API-Schlüssel zu konfigurieren.",
+  "Global Course Cap Limit": "Grenzwerte für Gesamtkurse",
+  "Maximum total number of courses allowed on the platform (e.g. 100,000). When exceeded, the system automatically prunes lowest-performing courses.": "Maximale Gesamtzahl der auf der Plattform zulässigen Kurse (z. B. 100.000). Bei Überschreitung bereinigt das System automatisch die am schlechtesten bewerteten Kurse.",
+  "Enforce Cap & Purge Lowest-Rated": "Limit anwenden & Schlechte Kurse löschen",
+  "Course cap enforced: {count} lowest-performing course(s) successfully purged.": "Kurslimit angewendet: {count} am schlechtesten bewertete(r) Kurs(e) erfolgreich gelöscht.",
+  "Catalog is within the cap limit of {max} courses ({current} courses active).": "Katalog liegt innerhalb des Limits von {max} Kursen ({current} Kurse aktiv).",
+  "EU AI Act Compliant • Art. 50 Disclosure": "EU AI Act Konform • Art. 50 Offenlegung"
 };

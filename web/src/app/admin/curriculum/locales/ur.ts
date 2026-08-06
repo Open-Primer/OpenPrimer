@@ -669,4 +669,14 @@ export const locale: Record<string, string> = {
   "Web Audio API-driven piano synth with ADSR envelopes, waveform selectors, and a real-time wave oscilloscope visualizer.": "ویب آڈیو API سے چلنے والا پیانو سنتھ جس میں ADSR لفافے، ویوفارم سلیکٹرز، اور ریئل ٹائم ویو آسیلوسکوپ ویژولائزر شامل ہیں۔",
   "Sankey Flow Diagram": "سینکی فلو ڈایاگرام",
   "Interactive vector SVG Sankey flow diagram with drag-to-adjust source/target handles.": "انٹرایکٹو ویکٹر SVG سینکی فلو ڈایاگرام جس میں سورس/ٹارگٹ ہینڈلز کو ڈریگ ٹو ایڈجسٹ کیا جا सकता ہے۔",
+  "Disable Internal AI Tutor": "اندرونی AI ٹیوٹر کو غیر فعال کریں",
+  "Disable the server-side internal AI tutor to prevent platform API usage costs. Students will be prompted to configure their own external AI tutor in Preferences.": "پلیٹ فارم API کے استعمال کی لاگت کو روکنے کے لیے سرور سائیڈ اندرونی AI ٹیوٹر کو غیر فعال کریں۔ طلباء سے ترجیحات میں اپنا بیرونی AI ٹیوٹر ترتیب دینے کے لیے کہا جائے گا۔",
+  "Internal AI Tutor Engine Disabled": "اندرونی AI ٹیوٹر انجن غیر فعال ہے",
+  "The internal server AI tutor is currently disabled by administrator setting to optimize platform operating costs. To use AI tutoring, go to Profile > Preferences to configure your personal AI key (OpenAI, Anthropic, Gemini AI Studio).": "پلیٹ فارم کے آپریٹنگ اخراجات کو کم کرنے کے لیے ایڈمنسٹریٹر کی ترتیب کے ذریعے اندرونی سرور AI ٹیوٹر فی الحال غیر فعال ہے۔ AI ٹیوشن کا استعمال کرنے کے لیے، اپنی ذاتی AI کی ترتیب دینے کے لیے پروفائل > ترجیحات پر جائیں۔",
+  "Global Course Cap Limit": "عالمی کورس کی حد",
+  "Maximum total number of courses allowed on the platform (e.g. 100,000). When exceeded, the system automatically prunes lowest-performing courses.": "پلیٹ فارم پر اجازت یافتہ کورسز کی زیادہ سے زیادہ کل تعداد (مثلاً 100,000)۔ حد سے تجاوز کرنے پر، نظام خود بخود سب سے کم کارکردگی والے کورسز کو ہٹا دیتا ہے۔",
+  "Enforce Cap & Purge Lowest-Rated": "حد لاگو کریں اور کم درجہ والے کورسز کو صاف کریں",
+  "Course cap enforced: {count} lowest-performing course(s) successfully purged.": "کورس کی حد لاگو ہو گئی: {count} سب سے کم کارکردگی والے کورسز کامیابی کے ساتھ صاف کر دیے گئے۔",
+  "Catalog is within the cap limit of {max} courses ({current} courses active).": "کیٹلاگ {max} کورسز کی حد کے اندر ہے ({current} کورسز فعال ہیں)۔",
+  "EU AI Act Compliant • Art. 50 Disclosure": "EU AI ایکٹ کے مطابق • آرٹیکل 50 کا افشاء"
 };

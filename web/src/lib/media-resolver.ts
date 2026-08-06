@@ -1793,7 +1793,7 @@ async function validateWikipediaPage(term: string, lang: string): Promise<boolea
   const checkLang = async (currentLang: string): Promise<{ found: boolean; error?: any; status?: number }> => {
     const url = `https://${currentLang.toLowerCase()}.wikipedia.org/w/api.php?action=query&format=json&redirects=1&titles=${encodeURIComponent(lookupTerm)}`;
     try {
-      const res = await fetchWithTimeout(url, { headers: { 'User-Agent': 'OpenPrimer/1.0 (https://openprimer.org; contact@openprimer.org)' } }, 4000);
+      const res = await fetchWithTimeout(url, { headers: { 'User-Agent': 'OpenPrimer/1.0 (https://openprimer.org; contact@openprimer.org)' } }, 1200);
       if (res.ok) {
         const data = await safeResponseJson(res, `Wikipedia validation in ${currentLang}`);
         const pages = data.query?.pages;

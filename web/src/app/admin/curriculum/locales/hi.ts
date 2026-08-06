@@ -669,4 +669,14 @@ export const locale: Record<string, string> = {
   "Web Audio API-driven piano synth with ADSR envelopes, waveform selectors, and a real-time wave oscilloscope visualizer.": "वेब ऑडियो एपीआई-संचालित पियानो सिंथ जिसमें ADSR लिफाफे, तरंग चयनकर्ता, और रीयल-टाइम तरंग ऑसिलोस्कोप विज़ुअलाइज़र शामिल हैं।",
   "Sankey Flow Diagram": "सेंकी प्रवाह आरेख",
   "Interactive vector SVG Sankey flow diagram with drag-to-adjust source/target handles.": "स्रोत/लक्ष्य हैंडल को खींचकर समायोजित करने वाले इंटरैक्टivo वेक्टर SVG सेंकी प्रवाह आरेख।",
+  "Disable Internal AI Tutor": "आंतरिक AI ट्यूटर अक्षम करें",
+  "Disable the server-side internal AI tutor to prevent platform API usage costs. Students will be prompted to configure their own external AI tutor in Preferences.": "प्लेटफ़ॉर्म एपीआई उपयोग लागत को रोकने के लिए सर्वर-साइड आंतरिक एआई ट्यूटर को अक्षम करें। छात्रों को वरीयताएँ में अपने स्वयं के बाहरी एआई ट्यूटर को कॉन्फ़िगर करने के लिए प्रेरित किया जाएगा।",
+  "Internal AI Tutor Engine Disabled": "आंतरिक AI ट्यूटर इंजन अक्षम है",
+  "The internal server AI tutor is currently disabled by administrator setting to optimize platform operating costs. To use AI tutoring, go to Profile > Preferences to configure your personal AI key (OpenAI, Anthropic, Gemini AI Studio).": "प्लेटफ़ॉर्म संचालन लागत को अनुकूलित करने के लिए प्रशासक सेटिंग द्वारा आंतरिक सर्वर एआई ट्यूटर को वर्तमान में अक्षम कर दिया गया है। एआई ट्यूटरिंग का उपयोग करने के लिए, अपनी व्यक्तिगत एआई कुंजी कॉन्फ़िगर करने के लिए प्रोफ़ाइल > वरीयताएँ पर जाएँ।",
+  "Global Course Cap Limit": "वैश्विक पाठ्यक्रम सीमा सीमा",
+  "Maximum total number of courses allowed on the platform (e.g. 100,000). When exceeded, the system automatically prunes lowest-performing courses.": "प्लेटफ़ॉर्म पर अनुमति प्राप्त पाठ्यक्रमों की अधिकतम कुल संख्या (जैसे 100,000)। सीमा से अधिक होने पर, सिस्टम स्वचालित रूप से सबसे कम प्रदर्शन करने वाले पाठ्यक्रमों को हटा देता है।",
+  "Enforce Cap & Purge Lowest-Rated": "सीमा लागू करें और सबसे कम रेटिंग वाले को हटाएँ",
+  "Course cap enforced: {count} lowest-performing course(s) successfully purged.": "पाठ्यक्रम सीमा लागू की गई: {count} सबसे कम प्रदर्शन करने वाले पाठ्यक्रम सफलतापूर्वक हटा दिए गए।",
+  "Catalog is within the cap limit of {max} courses ({current} courses active).": "कैटलॉग {max} पाठ्यक्रमों की सीमा के भीतर है ({current} पाठ्यक्रम सक्रिय)।",
+  "EU AI Act Compliant • Art. 50 Disclosure": "EU AI अधिनियम अनुपालन • अनुच्छेद 50 प्रकटीकरण"
 };

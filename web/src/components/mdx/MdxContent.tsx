@@ -846,9 +846,10 @@ const renderCaptionWithLinks = (captionTextRaw: string, fallbackUrl?: string) =>
   );
 };
 
-const CustomFigure = ({ src, alt: rawAlt, caption: rawCaption, fallbackText, fallbackUrl, unresolved, isIllustration }: { src: string; alt: string; caption: string; fallbackText?: string; fallbackUrl?: string; unresolved?: boolean; isIllustration?: boolean }) => {
-  const alt = unescapeQuotes(rawAlt);
-  const caption = unescapeQuotes(rawCaption);
+const CustomFigure = ({ src, alt: rawAlt, caption: rawCaption, fallbackText, fallbackUrl, unresolved, isIllustration, ...rest }: { src: string; alt?: string; caption?: string; fallbackText?: string; fallbackUrl?: string; unresolved?: boolean; isIllustration?: boolean; [key: string]: any }) => {
+  const description = rest.description || rest.legend || '';
+  const alt = unescapeQuotes(rawAlt || description);
+  const caption = unescapeQuotes(rawCaption || description);
   const [failed, setFailed] = React.useState(false);
   const { markDegraded, registerFigure, unregisterFigure, registeredFigures } = useMdxStatus();
   const { language } = useLanguage();
@@ -888,7 +889,7 @@ const CustomFigure = ({ src, alt: rawAlt, caption: rawCaption, fallbackText, fal
     }
   }, [unresolved, isBlocked, failed, markDegraded]);
 
-  if (unresolved || isBlocked || failed || (!src?.trim() && !caption?.trim())) {
+  if (unresolved || isBlocked || failed || (!src?.trim() && !caption?.trim() && !alt?.trim())) {
     return null;
   }
 

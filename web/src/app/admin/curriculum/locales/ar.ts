@@ -669,4 +669,14 @@ export const locale: Record<string, string> = {
   "Web Audio API-driven piano synth with ADSR envelopes, waveform selectors, and a real-time wave oscilloscope visualizer.": "سنتسيزر بيانو يعمل بواجهة برمجة تطبيقات الويب الصوتية مع أظرف ADSR، ومحددات للموجة، ومحلل راسم إشارة في الوقت الفعلي.",
   "Sankey Flow Diagram": "مخطط تدفق سانكي",
   "Interactive vector SVG Sankey flow diagram with drag-to-adjust source/target handles.": "مخطط تدفق سانكي SVG تفاعلي للمتجهات مع مقابض سحب لضبط المصدر والهدف.",
+  "Disable Internal AI Tutor": "تعطيل المعلم الداخلي للذكاء الاصطناعي",
+  "Disable the server-side internal AI tutor to prevent platform API usage costs. Students will be prompted to configure their own external AI tutor in Preferences.": "تعطيل معلم الذكاء الاصطناعي الداخلي على الخادم لتجنب تكاليف API. سيُطلب من الطلاب تهيئة معلمهم الخارجي في التفضيلات.",
+  "Internal AI Tutor Engine Disabled": "محرك المعلم الداخلي للذكاء الاصطناعي معطل",
+  "The internal server AI tutor is currently disabled by administrator setting to optimize platform operating costs. To use AI tutoring, go to Profile > Preferences to configure your personal AI key (OpenAI, Anthropic, Gemini AI Studio).": "المعلم الداخلي للذكاء الاصطناعي معطل حاليًا بقرار من المسؤول لتقليل تكاليف التشغيل. لاستخدام معلم الذكاء الاصطناعي، اذهب إلى الملف الشخصي > التفضيلات لتهيئة مفتاحك الخاص.",
+  "Global Course Cap Limit": "الحد الأقصى الإجمالي للدورات",
+  "Maximum total number of courses allowed on the platform (e.g. 100,000). When exceeded, the system automatically prunes lowest-performing courses.": "الحد الأقصى لإجمالي عدد الدورات المسموح بها على المنصة (مثل 100,000). عند التجاوز، يقوم النظام تلقائيًا بحذف الدورات الأقل تقييمًا.",
+  "Enforce Cap & Purge Lowest-Rated": "تطبيق الحد وتطهير الأقل تقييمًا",
+  "Course cap enforced: {count} lowest-performing course(s) successfully purged.": "تم تطبيق الحد: تم حذف {count} من الدورات الأقل تقييمًا بنجاح.",
+  "Catalog is within the cap limit of {max} courses ({current} courses active).": "الكتالوج ضمن الحد الأقصى البالغ {max} دورة ({current} دورة نشطة).",
+  "EU AI Act Compliant • Art. 50 Disclosure": "متوافق مع قانون الذكاء الاصطناعي للاتحاد الأوروبي • إفصاح المادة 50"
 };

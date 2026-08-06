@@ -328,6 +328,21 @@ export async function POST(request: Request) {
       }
     }
 
+    // Check if internal AI tutor is disabled by administrator setting
+    try {
+      const { dbService } = await import('@/lib/db');
+      const { data: sysParams } = await dbService.getSystemParameters();
+      const internalDisabledParam = sysParams?.find((p: any) => p.key === 'disableInternalTutor' || p.key === 'disable_internal_ai_tutor');
+      if (internalDisabledParam && internalDisabledParam.value === 'true') {
+        return NextResponse.json({
+          success: false,
+          error: 'Internal AI Tutor Engine Disabled: The internal server AI tutor is currently disabled by administrator setting to optimize platform operating costs. To use AI tutoring, go to Profile > Preferences to configure your personal AI key (OpenAI, Anthropic, Gemini AI Studio).'
+        }, { status: 403 });
+      }
+    } catch (e) {
+      console.warn('[TUTOR CHAT] Failed to check disableInternalTutor system parameter:', e);
+    }
+
     // === PRIMARY: Vertex AI ===
     if (isVertexConfigured()) {
       console.log(`[TUTOR CHAT] Dispatching to Vertex AI (${TASK_MODELS['tutor_chat']}) for persona "${persona}"...`);

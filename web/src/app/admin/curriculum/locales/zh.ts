@@ -664,4 +664,14 @@ export const locale: Record<string, string> = {
   "Web Audio API-driven piano synth with ADSR envelopes, waveform selectors, and a real-time wave oscilloscope visualizer.": "基于 Web Audio API 的钢琴合成器，具有 ADSR 包络、波形选择器和实时波形示波器可视化器。",
   "Sankey Flow Diagram": "桑基流向图",
   "Interactive vector SVG Sankey flow diagram with drag-to-adjust source/target handles.": "具有拖拽调节源/目标手柄的互动矢量 SVG 桑基流向图。",
+  "Disable Internal AI Tutor": "禁用内部 AI 导师",
+  "Disable the server-side internal AI tutor to prevent platform API usage costs. Students will be prompted to configure their own external AI tutor in Preferences.": "禁用服务端默认 AI 导师以防产生 API 成本。学生将被引导至个人偏好中配置自己的外部 AI 导师。",
+  "Internal AI Tutor Engine Disabled": "内部 AI 导师引擎已禁用",
+  "The internal server AI tutor is currently disabled by administrator setting to optimize platform operating costs. To use AI tutoring, go to Profile > Preferences to configure your personal AI key (OpenAI, Anthropic, Gemini AI Studio).": "管理员已禁用内部服务端 AI 导师以优化运营成本。如需使用 AI 导师功能，请前往“个人资料 > 偏好设置”配置您的个人 API 密钥（OpenAI、Anthropic、Gemini AI Studio）。",
+  "Global Course Cap Limit": "全局课程上限",
+  "Maximum total number of courses allowed on the platform (e.g. 100,000). When exceeded, the system automatically prunes lowest-performing courses.": "平台允许的最大课程总数（例如 100,000）。当超出上限时，系统将自动清理评分最低的课程。",
+  "Enforce Cap & Purge Lowest-Rated": "应用上限并清理低分课程",
+  "Course cap enforced: {count} lowest-performing course(s) successfully purged.": "已应用上限：成功清理了 {count} 门最低评分的课程。",
+  "Catalog is within the cap limit of {max} courses ({current} courses active).": "课程目录在 {max} 门课程的上限范围内（当前活跃 {current} 门）。",
+  "EU AI Act Compliant • Art. 50 Disclosure": "符合欧盟 AI 法案 • 第 50 条信息披露"
 };

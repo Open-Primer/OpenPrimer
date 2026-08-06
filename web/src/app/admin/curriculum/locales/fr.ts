@@ -668,4 +668,14 @@ export const locale: Record<string, string> = {
   "Web Audio API-driven piano synth with ADSR envelopes, waveform selectors, and a real-time wave oscilloscope visualizer.": "Synthétiseur Web Audio avec enveloppe d'amplitude ADSR ajustable, oscillateur multi-ondes et oscilloscope temps réel.",
   "Sankey Flow Diagram": "Diagramme de flux de Sankey",
   "Interactive vector SVG Sankey flow diagram with drag-to-adjust source/target handles.": "Représentation vectorielle de flux énergétiques ou de ressources avec poignées d'ajustement interactives.",
+  "Disable Internal AI Tutor": "Désactiver le Tuteur IA Interne",
+  "Disable the server-side internal AI tutor to prevent platform API usage costs. Students will be prompted to configure their own external AI tutor in Preferences.": "Désactiver le tuteur IA serveur par défaut pour éviter les coûts d'utilisation des API. Les étudiants seront invités à configurer leur propre tuteur externe dans Préférences.",
+  "Internal AI Tutor Engine Disabled": "Moteur du Tuteur IA Interne Désactivé",
+  "The internal server AI tutor is currently disabled by administrator setting to optimize platform operating costs. To use AI tutoring, go to Profile > Preferences to configure your personal AI key (OpenAI, Anthropic, Gemini AI Studio).": "Le tuteur IA interne du serveur est actuellement désactivé par l'administration pour optimiser les coûts. Pour interagir avec le tuteur, rendez-vous dans Profil > Préférences afin d'activer votre propre tuteur externe (OpenAI, Anthropic, Gemini AI Studio).",
+  "Global Course Cap Limit": "Limite Globale de Cours",
+  "Maximum total number of courses allowed on the platform (e.g. 100,000). When exceeded, the system automatically prunes lowest-performing courses.": "Nombre maximal de cours gérés sur la plateforme (ex. 100 000). En cas de dépassement, le système purge automatiquement les cours les moins bien notés.",
+  "Enforce Cap & Purge Lowest-Rated": "Appliquer la Limite & Purger les Moins Bons",
+  "Course cap enforced: {count} lowest-performing course(s) successfully purged.": "Limite appliquée : {count} cours les moins bien notés ont été purgés avec succès.",
+  "Catalog is within the cap limit of {max} courses ({current} courses active).": "Le catalogue respecte la limite de {max} cours ({current} cours actifs).",
+  "EU AI Act Compliant • Art. 50 Disclosure": "Conforme IA Act UE • Divulgation Art. 50"
 };

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { BookOpen, CheckCircle, ShieldAlert, Activity } from 'lucide-react';
+import { BookOpen, CheckCircle, ShieldAlert, ShieldCheck, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { dbService, Achievement, TutorPersonality, MockCourse, isDatabaseConfigured } from '@/lib/db';
 import { cleanPathSegment, formatCourseLevel } from '@/lib/translations';
@@ -206,6 +206,10 @@ export default function AdminCurriculumPage() {
   // Backlog Retention Days
   const [backlogRetention, setBacklogRetention] = useState(30);
 
+  // Administrative Controls: Internal Tutor & Global Course Cap
+  const [disableInternalTutor, setDisableInternalTutor] = useState(false);
+  const [globalCourseCap, setGlobalCourseCap] = useState(100000);
+
   // Sorting States
   const [courseSortField, setCourseSortField] = useState<string>('title');
   const [courseSortDir, setCourseSortDir] = useState<'asc' | 'desc'>('asc');
@@ -351,6 +355,9 @@ export default function AdminCurriculumPage() {
         if (process.env.NODE_ENV === 'production') break;
         setExecuteTasksInBrowser(value === 'true');
         break;
+
+      case 'disableInternalTutor': setDisableInternalTutor(value === 'true'); break;
+      case 'globalCourseCap': setGlobalCourseCap(Number(value) || 100000); break;
     }
     try {
       await dbService.saveSystemParameter({ key, value });
@@ -438,6 +445,13 @@ export default function AdminCurriculumPage() {
                 setExecuteTasksInBrowser(val === 'true');
                 loadedExecuteTasksInBrowser = val === 'true';
               }
+              break;
+
+            case 'disableInternalTutor':
+              setDisableInternalTutor(val === 'true');
+              break;
+            case 'globalCourseCap':
+              setGlobalCourseCap(Number(val) || 100000);
               break;
           }
         });
@@ -1604,6 +1618,32 @@ export default function AdminCurriculumPage() {
     loadData();
   };
 
+  const handleEnforceGlobalCourseCap = async () => {
+    const currentCount = courses.length;
+    if (currentCount <= globalCourseCap) {
+      showToast(
+        tr("Catalog is within the cap limit of {max} courses ({current} courses active).")
+          .replace('{max}', globalCourseCap.toLocaleString())
+          .replace('{current}', currentCount.toLocaleString()),
+        'info'
+      );
+      return;
+    }
+    const excess = currentCount - globalCourseCap;
+    // Sort by rating ascending (lowest performing first)
+    const sortedByRating = [...courses].sort((a: any, b: any) => (Number(a.averageRating || a.rating || 0)) - (Number(b.averageRating || b.rating || 0)));
+    const toPurge = sortedByRating.slice(0, excess);
+    for (const c of toPurge) {
+      await dbService.setCourseArchivingLevel(c.id, 3);
+    }
+    await loadData();
+    showToast(
+      tr("Course cap enforced: {count} lowest-performing course(s) successfully purged.")
+        .replace('{count}', excess.toString()),
+      'success'
+    );
+  };
+
   const handleRefuseGen = async (query: string) => {
     await dbService.addRefusedCourse({
       id: `ref_c_${Date.now()}`,
@@ -2472,10 +2512,16 @@ export default function AdminCurriculumPage() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6">
         <div className="space-y-2 w-full">
-          <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
-            <BookOpen className="w-8 h-8 text-blue-500" />
-            {t.title}
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h1 className="text-3xl font-black tracking-tight flex items-center gap-4 text-white">
+              <BookOpen className="w-8 h-8 text-blue-500" />
+              {t.title}
+            </h1>
+            <div className="px-3.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-wider rounded-full flex items-center gap-2 shadow-sm">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>{tr("EU AI Act Compliant • Art. 50 Disclosure")}</span>
+            </div>
+          </div>
           <p className="text-xs text-slate-400 mt-2 font-medium">
             {t.subtitle}
           </p>
@@ -2518,6 +2564,10 @@ export default function AdminCurriculumPage() {
                  reevaluationDays={reevaluationDays}
                  backlogRetention={backlogRetention}
                  updateParameter={updateParameter}
+                 globalCourseCap={globalCourseCap}
+                 onUpdateCourseCap={(cap) => updateParameter('globalCourseCap', String(cap))}
+                 onEnforceCapAndPurge={handleEnforceGlobalCourseCap}
+                 coursesCount={courses.length}
                  proposals={proposals}
                  refusedCourses={refusedCourses}
                  handleApproveGen={handleApproveGen}
@@ -2647,6 +2697,8 @@ export default function AdminCurriculumPage() {
                  personalities={personalities}
                  loadData={loadData}
                  showToast={showToast}
+                 disableInternalTutor={disableInternalTutor}
+                 onToggleDisableInternalTutor={(val) => updateParameter('disableInternalTutor', String(val))}
                />
              )}
         </div>
