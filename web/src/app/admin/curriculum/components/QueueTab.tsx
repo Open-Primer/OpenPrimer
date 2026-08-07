@@ -414,7 +414,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* 0. Auto-Retry Failed Tasks */}
           <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-855 rounded-3xl justify-between hover:border-slate-800 transition-all">
             <div>
@@ -475,7 +475,23 @@ export const QueueTab: React.FC<QueueTabProps> = ({
             </div>
           </div>
 
-          {/* 3. Max Parallel Tasks */}
+          {/* 3. Cloud Cron Worker Status */}
+          <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-855 rounded-3xl justify-between hover:border-slate-800 transition-all">
+            <div>
+              <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Vercel Cloud Cron")}</span>
+              <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                {tr("Server-side execution schedule. Runs automatically without requiring an active browser or computer.")}
+              </p>
+            </div>
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-900/60 font-mono">
+              <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black rounded-full uppercase">
+                {tr("Active (5 min)")}
+              </span>
+              <span className="text-[10px] text-slate-400 font-semibold font-mono">/api/content/cron</span>
+            </div>
+          </div>
+
+          {/* 4. Max Parallel Tasks */}
           <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-855 rounded-3xl justify-between hover:border-slate-800 transition-all">
             <div>
               <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">{tr("Max Parallel Tasks")}</span>
@@ -496,7 +512,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
             </div>
           </div>
 
-          {/* 4. Browser-Side Execution */}
+          {/* 5. Browser-Side Execution */}
           {process.env.NODE_ENV !== 'production' && (
             <div className="flex flex-col gap-2 bg-slate-950 p-5 border border-slate-855 rounded-3xl justify-between hover:border-slate-800 transition-all">
               <div>
