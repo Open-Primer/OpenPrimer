@@ -153,11 +153,14 @@ async function checkVertexPool(customKey?: string): Promise<ServiceResult & { de
           };
         } else {
           const errText = await res.text();
+          const isRateLimit = res.status === 429;
           return {
             projectId,
-            status: 'degraded' as const,
+            status: isRateLimit ? ('degraded' as const) : ('offline' as const),
             latencyMs,
-            errorMessage: `Vertex AI API error (${res.status}): ${errText.slice(0, 200)}`
+            errorMessage: isRateLimit
+              ? `Rate limit active (429 Resource Exhausted): Throttled by request quota`
+              : `Vertex AI API error (${res.status}): ${errText.slice(0, 150)}`
           };
         }
       } catch (e: any) {
@@ -173,6 +176,7 @@ async function checkVertexPool(customKey?: string): Promise<ServiceResult & { de
     const details = await Promise.all(probePromises);
     
     const okCount = details.filter(d => d.status === 'ok').length;
+    const degradedCount = details.filter(d => d.status === 'degraded').length;
     const totalCount = details.length;
 
     let overallStatus: 'ok' | 'degraded' | 'offline' = 'offline';
@@ -180,9 +184,13 @@ async function checkVertexPool(customKey?: string): Promise<ServiceResult & { de
 
     if (okCount === totalCount) {
       overallStatus = 'ok';
-    } else if (okCount > 0) {
+    } else if (okCount > 0 || degradedCount > 0) {
       overallStatus = 'degraded';
-      overallErrorMessage = `${totalCount - okCount} of ${totalCount} projects in the pool are failing`;
+      if (degradedCount === totalCount) {
+        overallErrorMessage = `Rate limit active (429 Resource Exhausted) — Service is online but temporarily throttled by quota`;
+      } else {
+        overallErrorMessage = `${totalCount - okCount} of ${totalCount} projects in the pool are degraded or rate-limited`;
+      }
     } else {
       overallStatus = 'offline';
       overallErrorMessage = 'All projects in the pool are failing: ' + details.map(d => `[${d.projectId}]: ${d.errorMessage || 'unknown'}`).join('; ');
