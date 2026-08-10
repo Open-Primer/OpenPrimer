@@ -1,16 +1,16 @@
 # 📊 Generation Statistics: Évaluation Terminale
 
-- **Course Name**: Finance quantitative et modélisation stochastique
+- **Course Name**: Biochimie Structurale et Métabolique
 - **Lesson Title**: Évaluation Terminale
 - **Lesson Slug**: evaluation-terminale
-- **Academic Level**: M1
+- **Academic Level**: L2
 - **Target Language**: FR
-- **Generation Date**: 17/07/2026 20:12:54
+- **Generation Date**: 07/08/2026 15:18:21
 - **Status**: ✅ SUCCESS
 
 
 ## ⏱️ Performance Metrics
-- **Total Duration**: 214 seconds
+- **Total Duration**: 92 seconds
 - **Syllabus Generation Attempts**: 1
 - **Syllabus Critic Rejections**: 0
 - **Narrative Blocks Total**: 0
@@ -27,12 +27,12 @@
 - **Block 1: Structure**: 0 attempt → ✅ Approved
 - **Block 2: Interactive**: 0 attempt → ✅ Approved
 - **Block 4: Conclusion & Glossary**: 0 attempt → ✅ Approved
-- **Block 5: Evaluation & References**: 1 attempt → ✅ Approved
+- **Block 5A: Final Quiz**: 1 attempt → ✅ Approved
 
 
 ## 🪙 Token & Cost Estimation
-- **Prompt Tokens**: 4 658
-- **Candidates Tokens**: 3 702
-- **Total Tokens**: 8 360
-- **Estimated Cost (Gemini 2.5 Flash)**: **$0.001460**
+- **Prompt Tokens**: 6 041
+- **Candidates Tokens**: 4 536
+- **Total Tokens**: 10 577
+- **Estimated Cost (Gemini 2.5 Flash)**: **$0.001814**
   *(Based on official pricing: $0.075/1M prompt tokens, $0.30/1M output tokens)*

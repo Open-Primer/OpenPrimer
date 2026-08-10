@@ -74,9 +74,16 @@ lesson_content.mdx
 lesson_body_text.txt
 saved_cloud_run_url.txt
 
+# Debug & Draft Revisions
+/drafts_revisions/
+/draft-revisions/
+generation_error.txt
+generation_output.txt
+
 # local next build/test output
 /dist/
 /.debug-mdx/
 /playwright-report/
 /test-results/
+
 

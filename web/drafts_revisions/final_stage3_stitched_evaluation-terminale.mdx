@@ -1,7 +1,7 @@
 ---
 title: « Évaluation Terminale »
-subject: « Finance quantitative et modélisation stochastique »
-level: « M1 »
+subject: « Biochimie Structurale et Métabolique »
+level: « L2 »
 module: « Évaluation Terminale »
 order: 13
 summative: true
@@ -9,83 +9,100 @@ summative: true
 
 <SummativeEvaluation>
 <Quiz isFinal={true} durationLimit={1800}>
-    <Question q="Quelle est la principale caractéristique du Mouvement Brownien Géométrique (MBG) utilisé pour modéliser le prix des actifs financiers?" explanation="Le MBG est souvent utilisé car il garantit que le prix de l'actif reste positif, ce qui est une propriété essentielle pour les actifs financiers. Les rendements sont log-normalement distribués, pas normalement.">
-  <Option text="Il a des rendements normalement distribués." correct={false} />
-  <Option text="Son espérance est constante." correct={false} />
-  <Option text="Il ne peut pas prendre de valeurs négatives." correct={true} />
-  <Option text="Sa variance est déterministe." correct={false} />
+ <Question q="Quelle affirmation concernant la cinétique enzymatique de Michaelis-Menten est correcte ?" explanation="La constante de Michaelis (Km) représente la concentration de substrat à laquelle la vitesse de réaction est la moitié de la vitesse maximale (Vmax). Un Km faible indique une forte affinité de l'enzyme pour son substrat. La Vmax est atteinte lorsque tous les sites actifs de l'enzyme sont saturés par le substrat, et l'ajout d'un inhibiteur compétitif augmente le Km apparent sans affecter la Vmax.">
+  <Option text="Un Km élevé indique une forte affinité de l'enzyme pour son substrat." correct={false} />
+  <Option text="La Vmax est atteinte lorsque tous les sites actifs de l'enzyme sont saturés par le substrat." correct={true} />
+  <Option text="L'ajout d'un inhibiteur compétitif diminue la Vmax." correct={false} />
+  <Option text="La vitesse initiale de la réaction est indépendante de la concentration en substrat." correct={false} />
 </Question>
-    <Question q="À quoi sert principalement le Lemme d'Itô en finance quantitative?" explanation="Le Lemme d'Itô est un outil fondamental du calcul stochastique qui permet de trouver la différentielle d'une fonction d'un processus stochastique, comme le prix d'une option qui dépend du prix de l'actif sous-jacent.">
-  <Option text="À calculer la valeur actuelle nette d'un projet." correct={false} />
-  <Option text="À dériver la dynamique d'une fonction d'un processus stochastique." correct={true} />
-  <Option text="À modéliser les taux d'intérêt sans risque." correct={false} />
+ <Question q="Parmi les enzymes suivantes de la glycolyse, laquelle est un point de régulation majeur et irréversible ?" explanation="La phosphofructokinase-1 (PFK-1) est l'enzyme clé de régulation de la glycolyse. Elle catalyse une étape irréversible et est régulée allostériquement par de nombreux effecteurs, tels que l'ATP, le citrate et le fructose-2,6-bisphosphate, contrôlant ainsi le flux métabolique.">
+  <Option text="Hexokinase" correct={false} />
+  <Option text="Phosphofructokinase-1" correct={true} />
+  <Option text="Glycéraldéhyde-3-phosphate déshydrogénase" correct={false} />
+  <Option text="Pyruvate kinase" correct={false} />
 </Question>
-    <Question q="Quelle hypothèse n'est PAS une hypothèse fondamentale du modèle de Black-Scholes pour l'évaluation des options européennes?" explanation="Le modèle de Black-Scholes est spécifiquement conçu pour les options européennes, qui ne peuvent être exercées qu'à l'échéance. Les options américaines peuvent être exercées à tout moment.">
-  <Option text="Le prix de l'actif sous-jacent suit un Mouvement Brownien Géométrique." correct={true} />
-  <Option text="Il n'y a pas de coûts de transaction ni de taxes." correct={false} />
-  <Option text="La volatilité de l'actif sous-jacent est constante." correct={false} />
+ <Question q="Quel est le produit final principal de la bêta-oxydation complète d'un acide gras saturé à chaîne paire ?" explanation="La bêta-oxydation est un processus catabolique qui dégrade les acides gras en unités d'acétyl-CoA. Ces unités peuvent ensuite entrer dans le cycle de Krebs pour la production d'énergie. Pour un acide gras à chaîne paire, le produit final est uniquement l'acétyl-CoA.">
+  <Option text="Lactate" correct={false} />
+  <Option text="Acétyl-CoA" correct={true} />
+  <Option text="Glucose" correct={false} />
+  <Option text="Corps cétoniques" correct={false} />
 </Question>
-    <Question q="Dans le cadre de la valorisation neutre au risque, quel est le taux d'actualisation utilisé pour les flux de trésorerie futurs?" explanation="La valorisation neutre au risque implique que tous les actifs, y compris les dérivés, sont actualisés au taux sans risque, car le risque est déjà pris en compte dans la probabilité neutre au risque.">
-  <Option text="Le taux de rendement espéré de l'actif risqué." correct={false} />
-  <Option text="Le taux sans risque." correct={true} />
-  <Option text="Le coût moyen pondéré du capital." correct={false} />
-  <Option text="Le taux de rendement requis par les investisseurs." correct={false} />
+ <Question q="Quelle caractéristique est vraie concernant la structure de l'ADN double brin ?" explanation="L'ADN double brin est une hélice droite (dextrogyre) où les deux brins sont antiparallèles et complémentaires. Les bases azotées sont empilées à l'intérieur de l'hélice, stabilisées par des liaisons hydrogène, tandis que le squelette sucre-phosphate forme l'extérieur de la structure.">
+  <Option text="Les deux brins sont parallèles." correct={false} />
+  <Option text="Les bases puriques s'apparient toujours avec les bases puriques." correct={false} />
+  <Option text="La structure est une double hélice dextrogyre." correct={true} />
+  <Option text="Le squelette sucre-phosphate est situé à l'intérieur de l'hélice." correct={false} />
 </Question>
-    <Question q="La parité Put-Call relie le prix d'une option d'achat européenne, d'une option de vente européenne, du prix de l'actif sous-jacent et du prix d'exercice. Quelle est la formule correcte (sans dividendes)?" explanation="La parité Put-Call est C - P = 'S - K * e^(-rT), où C est le prix du call, P le prix du put, S le prix de l'actif, K le prix d'exercice, r le taux sans risque et T l'échéance.">
-  <Option text="C + K * e^(-rT) = P + S" correct={false} />
-  <Option text="C + S = " correct={false} />
-  <Option text="C - P = " correct={true} />
-  <Option text="C + P = " correct={false} />
+ <Question q="Quelle hormone est principalement responsable de la diminution de la glycémie après un repas riche en glucides ?" explanation="L'insuline est l'hormone hypoglycémiante majeure. Elle est sécrétée par les cellules bêta du pancréas en réponse à une glycémie élevée et favorise l'absorption du glucose par les cellules, la synthèse de glycogène (glycogénogenèse) et la lipogenèse, réduisant ainsi la concentration de glucose dans le sang.">
+  <Option text="Glucagon" correct={false} />
+  <Option text="Adrénaline" correct={false} />
+  <Option text="Cortisol" correct={false} />
+  <Option text="Insuline" correct={true} />
 </Question>
-    <Question q="Quel est l'avantage principal des méthodes de Monte Carlo pour l'évaluation des options complexes?" explanation="Les méthodes de Monte Carlo sont particulièrement utiles pour les options dont la valeur dépend de la trajectoire du sous-jacent ou pour les options multi-actifs, où les solutions analytiques sont rares ou inexistantes.">
-  <Option text="Elles sont toujours plus rapides que les méthodes analytiques." correct={true} />
-  <Option text="Elles fournissent une solution exacte sans erreur d'échantillonnage." correct={false} />
+ <Question q="Parmi les propositions suivantes concernant la structure et la fonction des protéines, laquelle est la plus exacte ?" explanation="La structure tertiaire, avec son repliement tridimensionnel spécifique, est cruciale pour la formation du site actif des enzymes et donc pour leur fonction catalytique. La structure primaire détermine les structures supérieures, mais c'est la tertiaire qui confère la fonction spécifique. La dénaturation n'affecte pas la structure primaire. Les liaisons peptidiques sont rigides mais la rotation est possible autour des liaisons alpha-carbone. La structure quaternaire n'est pas universelle.">
+  <Option text="La structure primaire d'une protéine est suffisante pour définir son activité biologique." correct={false} />
+  <Option text="La dénaturation d'une protéine implique la rupture des liaisons peptidiques." correct={false} />
+  <Option text="La structure tertiaire est essentielle pour la formation du site actif d'une enzyme et donc pour sa fonction catalytique." correct={true} />
+  <Option text="Toutes les protéines fonctionnelles possèdent une structure quaternaire." correct={false} />
+  <Option text="Les liaisons peptidiques permettent une rotation libre autour de l'axe C-N, contribuant à la flexibilité de la chaîne." correct={false} />
 </Question>
-    <Question q="Dans un modèle binomial à une période, si le prix de l'actif peut monter à S_u ou descendre à S_d, et le taux sans risque est r, quelle est la probabilité neutre au risque de monter (p*)?" explanation="La probabilité neutre au risque p* est calculée de manière à ce que l'espérance du prix futur actualisé de l'actif sous-jacent soit égale à son prix actuel, sous la mesure neutre au risque.">
-  <Option text="p astérisque est égal à (e puissance rT moins d) sur (u moins d)" correct={true} />
-  <Option text="p étoile = " correct={false} />
-  <Option text="p* = (e^(rT) - u) / (d - u)" correct={false} />
-  <Option text="p* = (d - e^(rT)) / (u - d)" correct={false} />
+ <Question q="Quel est le rôle principal de la voie des pentoses phosphates (VPP) dans le métabolisme cellulaire ?" explanation="La voie des pentoses phosphates est cruciale pour la production de NADPH, nécessaire aux réactions de biosynthèse réductrices (synthèse d'acides gras, de stéroïdes) et à la protection contre le stress oxydatif (via le glutathion réductase). Elle produit également du ribose-5-phosphate, précurseur des nucléotides.">
+  <Option text="Produire de grandes quantités d'ATP par phosphorylation oxydative." correct={false} />
+  <Option text="Synthétiser le glycogène à partir du glucose en période de jeûne." correct={false} />
+  <Option text="Générer du NADPH et du ribose-5-phosphate." correct={true} />
+  <Option text="Dégrader les acides gras en acétyl-CoA." correct={false} />
+  <Option text="Convertir le lactate en glucose dans le foie." correct={false} />
 </Question>
-    <Question q="Qu'est-ce que la volatilité implicite d'une option?" explanation="La volatilité implicite est la valeur de la volatilité qui rend le prix théorique du modèle de Black-Scholes égal au prix observé sur le marché.">
-  <Option text="La volatilité historique de l'actif sous-jacent." correct={true} />
-  <Option text="La volatilité future attendue de l'actif sous-jacent." correct={false} />
-  <Option text="La volatilité calculée à partir des rendements quotidiens de l'actif." correct={false} />
+ <Question q="Concernant les lipides et leur métabolisme, quelle affirmation est exacte ?" explanation="Les phospholipides sont les principaux constituants des membranes biologiques, formant une bicouche lipidique grâce à leur nature amphipathique. La bêta-oxydation des acides gras se déroule dans la mitochondrie et produit de l'acétyl-CoA, NADH et FADH2. La synthèse des acides gras se fait dans le cytosol et nécessite du NADPH. Le cholestérol est un stéroïde, précurseur d'hormones et de sels biliaires, et un composant membranaire.">
+  <Option text="La bêta-oxydation des acides gras se déroule dans le cytosol et produit directement de l'ATP." correct={false} />
+  <Option text="Les triglycérides sont les principaux composants des membranes biologiques." correct={false} />
+  <Option text="Le cholestérol est un précurseur de certaines hormones stéroïdiennes et un composant essentiel des membranes cellulaires." correct={true} />
+  <Option text="La synthèse des acides gras est un processus catabolique qui libère de l'énergie sous forme d'ATP." correct={false} />
+  <Option text="Les acides gras insaturés ont un point de fusion plus élevé que les acides gras saturés de même longueur." correct={false} />
 </Question>
-    <Question q="Lequel des énoncés suivants décrit le mieux la Value at Risk (VaR)?" explanation="La VaR est une mesure de risque qui estime la perte maximale qu'un portefeuille pourrait subir sur une période donnée avec une probabilité spécifiée (niveau de confiance).">
-  <Option text="La perte maximale potentielle d'un portefeuille sur une période donnée avec un certain niveau de confiance." correct={true} />
-  <Option text="La perte moyenne attendue au-delà d'un certain seuil de confiance." correct={false} />
-  <Option text="La perte minimale potentielle d'un portefeuille sur une période donnée." correct={false} />
-  <Option text="La volatilité quotidienne d'un portefeuille." correct={false} />
+ <Question q="Quel est le rôle principal de l'ATP (Adénosine Triphosphate) dans la cellule ?" explanation="L'ATP est la principale molécule de transfert d'énergie dans la cellule. L'hydrolyse de ses liaisons phosphate à haute énergie libère l'énergie nécessaire pour alimenter la plupart des processus cellulaires endergoniques, tels que la synthèse de macromolécules, le transport actif et la contraction musculaire.">
+  <Option text="Servir de monomère pour la synthèse des protéines." correct={false} />
+  <Option text="Transporter l'information génétique du noyau vers le cytoplasme." correct={false} />
+  <Option text="Agir comme principal transporteur d'énergie chimique pour les processus cellulaires." correct={true} />
+  <Option text="Catalyser les réactions biochimiques en tant qu'enzyme." correct={false} />
+  <Option text="Constituer la structure principale des membranes cellulaires." correct={false} />
 </Question>
-    <Question q="Le modèle de Vasicek est un modèle de taux d'intérêt. Quelle est sa principale caractéristique concernant le comportement des taux?" explanation="Le modèle de Vasicek est un modèle de retour à la moyenne, mais il a l'inconvénient de permettre aux taux d'intérêt de devenir négatifs, ce qui n'est pas toujours réaliste.">
-  <Option text="Il permet aux taux d'intérêt de devenir négatifs." correct={true} />
-  <Option text="Il garantit que les taux d'intérêt restent positifs." correct={false} />
-  <Option text="Il modélise les taux d'intérêt comme un processus de Poisson." correct={false} />
-  <Option text="Il suppose que la volatilité des taux d'intérêt est proportionnelle au niveau des taux." correct={false} />
+ <Question q="En période de jeûne prolongé, quel est le principal mécanisme par lequel le foie maintient la glycémie ?" explanation="En période de jeûne prolongé, les réserves de glycogène hépatique sont épuisées. Le foie active alors la néoglucogenèse, synthétisant du glucose à partir de précurseurs non glucidiques comme le lactate, les acides aminés (glucogéniques) et le glycérol. La cétogenèse est également activée pour fournir des corps cétoniques comme source d'énergie alternative pour d'autres tissus.">
+  <Option text="La glycogénolyse hépatique." correct={false} />
+  <Option text="La néoglucogenèse à partir de précurseurs non glucidiques." correct={true} />
+  <Option text="L'oxydation complète des acides gras en CO2 et H2O." correct={false} />
+  <Option text="La synthèse de glycogène à partir du glucose sanguin." correct={false} />
+  <Option text="La dégradation des protéines musculaires pour libérer du glucose directement dans le sang." correct={false} />
 </Question>
-    <Question q="Dans le contexte de la finance quantitative, qu'est-ce qu'une martingale?" explanation="Une martingale est un processus stochastique où, étant donné l'information présente, la meilleure prédiction de la valeur future du processus est sa valeur actuelle. C'est un concept clé en valorisation neutre au risque.">
-  <Option text="Un processus stochastique dont l'espérance conditionnelle future est égale à sa valeur actuelle." correct={true} />
-  <Option text="Un processus stochastique dont la variance est constante." correct={false} />
-  <Option text="Un processus stochastique qui ne peut pas prendre de valeurs négatives." correct={false} />
-  <Option text="Un processus stochastique qui suit une distribution normale." correct={false} />
+ <Question q="Parmi les affirmations suivantes concernant la structure et la fonction des protéines, laquelle est FAUSSE ?" explanation="La dénaturation d'une protéine implique la rupture des liaisons non covalentes (hydrogène, ioniques, hydrophobes) et parfois des ponts disulfures, entraînant une perte de sa structure tridimensionnelle et de sa fonction. Les liaisons peptidiques, qui forment le squelette primaire de la protéine, ne sont généralement pas affectées par la dénaturation et nécessitent des conditions plus drastiques (hydrolyse acide/basique ou enzymatique) pour être rompues. La perte de fonction peut être réversible si la protéine peut se replier correctement après la suppression de l'agent dénaturant.">
+  <Option text="La structure secondaire des protéines est principalement stabilisée par des liaisons hydrogène entre les atomes du squelette peptidique." correct={false} />
+  <Option text="La dénaturation d'une protéine implique la rupture des liaisons peptidiques, entraînant une perte irréversible de sa fonction." correct={true} />
+  <Option text="Les chaperonnes moléculaires aident au repliement correct des protéines et peuvent prévenir l'agrégation." correct={false} />
+  <Option text="La structure quaternaire est la disposition spatiale de plusieurs chaînes polypeptidiques (sous-unités) au sein d'une protéine fonctionnelle." correct={false} />
 </Question>
-    <Question q="Quelle est la principale caractéristique du modèl'HJM (Heath-Jarrow-Morton) par rapport aux modèles de taux courts comme Vasicek ou CIR?" explanation="Contrairement aux modèles de taux courts qui modélisent un seul taux (le taux instantané), le modèl'HJM modélise l'évolution de l'ensemble de la courbe des taux à terme, ce qui est un avantage majeur.">
-  <Option text="Il modélise directement le taux court." correct={false} />
-  <Option text="Il modélise la dynamique de l'ensemble de la courbe des taux à terme." correct={true} />
-  <Option text="Il ne permet pas l'arbitrage." correct={false} />
-  <Option text="Il suppose une volatilité constante pour tous les taux." correct={false} />
+ <Question q="Un individu en jeûne prolongé (plus de 24 heures) présente une glycémie stable. Quel processus métabolique est principalement responsable du maintien de cette glycémie et où se déroule-t-il majoritairement ?" explanation="En jeûne prolongé, les réserves de glycogène hépatique sont épuisées. La néoglucogenèse devient alors le processus essentiel pour maintenir la glycémie en synthétisant du glucose à partir de précurseurs non glucidiques (lactate, glycérol, acides aminés). Ce processus se déroule principalement dans le foie et, dans une moindre mesure, dans les reins.">
+  <Option text="Glycolyse, dans le muscle." correct={false} />
+  <Option text="Glycogénolyse, dans le foie." correct={false} />
+  <Option text="Néoglucogenèse, dans le foie." correct={true} />
+  <Option text="Cycle de Krebs, dans les mitochondries." correct={false} />
 </Question>
-    <Question q="Qu'est-ce que la couverture Delta (Delta Hedging) pour une option?" explanation="La couverture Delta est une technique de gestion des risques qui consiste à ajuster la position dans l'actif sous-jacent pour compenser les variations de la valeur de l'option dues aux changements du prix de l'actif sous-jacent.">
-  <Option text="Une stratégie visant à éliminer tout risque de marché." correct={false} />
-  <Option text="Une stratégie visant à maintenir le portefeuille neutre au risque par rapport aux petites variations du prix de l'actif sous-jacent." correct={true} />
-  <Option text="Une stratégie visant à profiter des mouvements de volatilité." correct={false} />
+ <Question q="Concernant la bêta-oxydation des acides gras, quelle affirmation est correcte ?" explanation="La bêta-oxydation est le processus catabolique qui dégrade les acides gras en unités d'acétyl-CoA. Elle se déroule dans la matrice mitochondriale. Chaque cycle de bêta-oxydation produit une molécule de FADH2, une molécule de NADH et une molécule d'acétyl-CoA (sauf le dernier cycle qui produit deux acétyl-CoA à partir d'un acide gras à nombre pair de carbones). Ces coenzymes réduits et l'acétyl-CoA sont ensuite utilisés pour la production d'ATP via la chaîne respiratoire et le cycle de Krebs.">
+  <Option text="Elle se déroule principalement dans le cytosol des cellules." correct={false} />
+  <Option text="Chaque cycle de bêta-oxydation produit une molécule d'ATP directement." correct={false} />
+  <Option text="Un acide gras saturé à 18 carbones subit 9 cycles de bêta-oxydation." correct={false} />
+  <Option text="Elle génère de l'acétyl-CoA, du NADH et du FADH2." correct={true} />
 </Question>
-    <Question q="Dans quel contexte les processus de Poisson sont-ils souvent utilisés en finance quantitative?" explanation="Les processus de Poisson sont utilisés pour modéliser des événements discrets et aléatoires qui se produisent à des intervalles de temps aléatoires, tels que les sauts de prix dans les modèles de diffusion-saut ou les défauts de crédit.">
-  <Option text="Pour modéliser les mouvements continus des prix des actions." correct={false} />
-  <Option text="Pour modéliser les arrivées d'événements discrets et imprévisibles, comme les sauts de prix ou les défauts de crédit." correct={true} />
-  <Option text="Pour modéliser la volatilité stochastique." correct={false} />
-  <Option text="Pour modéliser les taux d'intérêt sans risque." correct={false} />
+ <Question q="Quelle est la principale différence structurelle au niveau des monomères entre l'ADN et l'ARN ?" explanation="La différence fondamentale entre l'ADN (acide désoxyribonucléique) et l'ARN (acide ribonucléique) réside dans la composition de leurs nucléotides. L'ADN contient le sucre désoxyribose (qui manque un groupe hydroxyle en position 2' du cycle pentose) et la base azotée thymine (T). L'ARN contient le sucre ribose (avec un groupe hydroxyle en 2') et la base azotée uracile (U) à la place de la thymine. Bien que l'ADN soit majoritairement bicaténaire et l'ARN monocaténaire, ce n'est pas une différence au niveau des monomères eux-mêmes, et il existe des exceptions (ARN double brin, ADN simple brin viral).">
+  <Option text="L'ADN est toujours bicaténaire, tandis que l'ARN est toujours monocaténaire." correct={false} />
+  <Option text="L'ADN contient de la désoxyribose et de la thymine, tandis que l'ARN contient de la ribose et de l'uracile." correct={true} />
+  <Option text="L'ADN est présent uniquement dans le noyau, alors que l'ARN est présent uniquement dans le cytoplasme." correct={false} />
+  <Option text="L'ADN est plus stable que l'ARN en raison de la présence d'un groupe hydroxyle en 2' sur le ribose de l'ARN." correct={false} />
+</Question>
+ <Question q="Lors d'un état post-prandial (après un repas riche en glucides), quelle hormone est prédominante et quel est son effet principal sur le métabolisme du glucose ?" explanation="Après un repas riche en glucides, la glycémie augmente, ce qui stimule la sécrétion d'insuline par les cellules β du pancréas. L'insuline est une hormone anabolique qui favorise l'absorption du glucose par les tissus périphériques (muscles, tissu adipeux), stimule la synthèse de glycogène (glycogénogenèse) dans le foie et les muscles, et promeut la glycolyse. Elle inhibe également la néoglucogenèse et la glycogénolyse pour abaisser la glycémie.">
+  <Option text="Glucagon; stimule la glycogénolyse hépatique." correct={false} />
+  <Option text="Insuline; stimule la néoglucogenèse." correct={false} />
+  <Option text="Adrénaline; stimule la dégradation des triglycérides." correct={false} />
+  <Option text="Insuline; stimule la glycogénogenèse et l'absorption du glucose par les tissus périphériques." correct={true} />
 </Question>
 </Quiz>
 </SummativeEvaluation>

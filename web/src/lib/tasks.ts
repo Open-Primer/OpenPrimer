@@ -23,7 +23,8 @@ export async function cleanupStuckTasks() {
       return;
     }
 
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    // Increase cleanup threshold to 3 hours so lengthy multi-lesson courses are not prematurely marked as stuck
+    const threeHoursAgo = new Date(Date.now() - 180 * 60 * 1000);
 
     for (const task of activeTasks) {
       let lastActiveTime = new Date(task.created_at);
@@ -36,7 +37,7 @@ export async function cleanupStuckTasks() {
         }
       } catch (e) {}
 
-      if (lastActiveTime < oneHourAgo) {
+      if (lastActiveTime < threeHoursAgo) {
         console.log(`[CLEANUP] Task "${task.name}" (ID: ${task.id}) was stuck since ${lastActiveTime.toISOString()}. Resetting to failed.`);
         
         let extra: any = {};
@@ -45,7 +46,7 @@ export async function cleanupStuckTasks() {
         } catch (e) {}
 
         extra.completedAt = new Date().toISOString();
-        extra.last_error = "Task timed out or worker process terminated unexpectedly (stuck for > 1 hour).";
+        extra.last_error = "Task timed out or worker process terminated unexpectedly (stuck for > 3 hours).";
 
         await supabase
           .from('task_queue')
@@ -54,7 +55,7 @@ export async function cleanupStuckTasks() {
             description: JSON.stringify(extra),
             logs: [
               ...(task.logs || []),
-              `[${new Date().toISOString()}] 🔴 Reset by automatic system cleanup: task was stuck in "${task.status}" state for over an hour.`
+              `[${new Date().toISOString()}] 🔴 Reset by automatic system cleanup: task was stuck in "${task.status}" state for over 3 hours.`
             ]
           })
           .eq('id', task.id);
@@ -351,8 +352,8 @@ CRITICAL RULES:
     }
   })();
 
-  // Implement native timeout handling via Promise.race
-  const timeoutMs = process.env.CLI_WORKER === 'true' ? 2400000 : 600000;
+  // Implement native timeout handling via Promise.race (120 min for CLI worker, 20 min for Web)
+  const timeoutMs = process.env.CLI_WORKER === 'true' ? 7200000 : 1200000;
 
   const timeoutPromise = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error(`Task execution timed out (took > ${timeoutMs / 1000} seconds).`)), timeoutMs)

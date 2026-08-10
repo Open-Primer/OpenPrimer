@@ -503,9 +503,9 @@ export const QueueTab: React.FC<QueueTabProps> = ({
               <input
                 type="number"
                 min="1"
-                max="5"
+                max="10"
                 value={maxParallelTasks}
-                onChange={(e) => updateParameter("maxParallelTasks", String(Math.max(1, Math.min(5, Number(e.target.value)))))}
+                onChange={(e) => updateParameter("maxParallelTasks", String(Math.max(1, Math.min(10, Number(e.target.value)))))}
                 className="bg-transparent border-none text-cyan-400 text-sm font-black focus:outline-none w-20 text-right"
               />
               <span className="text-[10px] text-slate-400 font-semibold uppercase">{tr("Tasks")}</span>
