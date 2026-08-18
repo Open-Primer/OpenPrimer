@@ -17,6 +17,25 @@ OpenPrimer shifts the paradigm of digital learning by combining structural rigor
 
 ---
 
+## 🖼️ Interface Showcase
+
+![OpenPrimer Platform Showcase](docs/assets/openprimer-showcase.gif)
+
+<details>
+<summary>📸 <b>Click to expand high-resolution screenshots & feature highlights</b></summary>
+<br>
+
+| Feature | Interface Preview |
+| :--- | :--- |
+| **Universal Knowledge Engine**<br><i>Sleek landing page with AI tutor overview and access to global curriculum.</i> | ![Landing Page](docs/assets/01-landing-page.png) |
+| **Multilingual Academic Catalog**<br><i>Explore university & K-12 disciplines with level filtering & active course trackers.</i> | ![Catalog View](docs/assets/02-catalog-view.png) |
+| **Personalized Student Curriculum**<br><i>Track learning streaks, mastery points, verified ECTS modules, and AI summaries.</i> | ![Curriculum Overview](docs/assets/03-curriculum-overview.png) |
+| **Admin Cockpit & Generation Control**<br><i>Monitor automated AI course pipelines, queue tasks, and launch custom disciplines.</i> | ![Admin Cockpit](docs/assets/04-admin-cockpit.png) |
+
+</details>
+
+---
+
 ## 🏗️ Technical Architecture
 
 OpenPrimer is architected as a hardened, modern SaaS application:
