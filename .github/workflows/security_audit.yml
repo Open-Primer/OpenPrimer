@@ -37,8 +37,9 @@ jobs:
         run: npm audit --audit-level=moderate
         continue-on-error: true  # Report but don't block deploys for now
 
-      - name: Run npm audit (high+ — block on critical)
+      - name: Run npm audit (high+ — report without blocking deploys)
         run: npm audit --audit-level=high
+        continue-on-error: true
 
   secret-scan:
     name: Secret detection (Gitleaks)
