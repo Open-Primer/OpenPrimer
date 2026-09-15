@@ -71,13 +71,13 @@ export const MODEL_PRICING: Record<ModelId, { inputPer1M: number; outputPer1M: n
  */
 export const TASK_MODELS: Record<string, ModelId> = {
   course_generation:  (process.env.GEMINI_GENERATION_MODEL as ModelId) || 'gemini-3.7-flash',     // Automated pipeline: narrative gen, critique, revision
-  widget_placement:   'gemini-2.5-flash',     // Automated pipeline: Stage 3B param + 4B Critic + Repair (standard widgets)
-  widgets_workshop:   'gemini-3.5-flash',     // ⭐ Atelier des Widgets Pédagogiques (Admin UI only — manual creation & modification)
-  course_translation: 'gemini-2.5-flash',     // Automated pipeline: academic translation
-  tutor_chat:         'gemini-2.5-flash',     // Real-time tutor chat — fast & cheap
-  batch_translate:    'gemini-2.5-flash',     // Batch field translation
-  analytics:          'gemini-2.5-flash',     // Simple report generation
-  badge_expand:       'gemini-2.5-flash',     // Simple prompt expansion
+  widget_placement:   'gemini-3.7-flash',     // Automated pipeline: Stage 3B param + 4B Critic + Repair (standard widgets)
+  widgets_workshop:   'gemini-3.7-flash',     // ⭐ Atelier des Widgets Pédagogiques (Admin UI only — manual creation & modification)
+  course_translation: 'gemini-3.7-flash',     // Automated pipeline: academic translation in 9 languages
+  tutor_chat:         'gemini-3.7-flash',     // Real-time tutor chat — fast & responsive
+  batch_translate:    'gemini-3.7-flash',     // Batch field translation
+  analytics:          'gemini-3.7-flash',     // Simple report generation
+  badge_expand:       'gemini-3.7-flash',     // Simple prompt expansion
   badge_compile:      'gemini-2.0-flash-lite',// AI compiler for dynamic rules & localization
 };
 
