@@ -241,12 +241,12 @@ export const DEFAULT_LEVEL_CONSTRAINTS: Record<string, LevelConstraints> = {
     "maxWordCount": 3500,
     "minHoverCardsPerBlock": 4,
     "minBlockWidgetsPerBlock": 3,
-    "globalWidgetsTarget": 16,
-    "minGlossaryCount": 12,
-    "minReferencesCount": 10,
-    "minBiographiesCount": 4,
-    "minConceptLinksCount": 8,
-    "mandatedWidgetTypes": ["HistoricalAnecdote", "Quiz", "Image", "Mermaid", "SolvedExercise", "UnsolvedExercise", "DataChart", "Biography", "Citation", "EventLink", "Video", "Audio"],
+    "globalWidgetsTarget": 12,
+    "minGlossaryCount": 8,
+    "minReferencesCount": 6,
+    "minBiographiesCount": 2,
+    "minConceptLinksCount": 6,
+    "mandatedWidgetTypes": ["Quiz", "Image", "Mermaid", "SolvedExercise"],
     "discouragedWidgetTypes": []
   },
   "university_grad": {
@@ -254,12 +254,12 @@ export const DEFAULT_LEVEL_CONSTRAINTS: Record<string, LevelConstraints> = {
     "maxWordCount": 4500,
     "minHoverCardsPerBlock": 5,
     "minBlockWidgetsPerBlock": 3,
-    "globalWidgetsTarget": 20,
-    "minGlossaryCount": 15,
-    "minReferencesCount": 15,
-    "minBiographiesCount": 5,
-    "minConceptLinksCount": 12,
-    "mandatedWidgetTypes": ["Quiz", "Image", "Mermaid", "SolvedExercise", "UnsolvedExercise", "DataChart", "InteractiveDiagram", "Biography", "Citation", "EventLink", "Video", "Audio"],
+    "globalWidgetsTarget": 15,
+    "minGlossaryCount": 10,
+    "minReferencesCount": 10,
+    "minBiographiesCount": 3,
+    "minConceptLinksCount": 8,
+    "mandatedWidgetTypes": ["Quiz", "Image", "Mermaid", "SolvedExercise"],
     "discouragedWidgetTypes": ["HistoricalAnecdote"]
   }
 };
@@ -4333,8 +4333,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
               contents: [{ role: 'user', parts: [{ text: currentSyllabusPrompt }] }],
               generationConfig: {
                 temperature: 0.1,
-                responseMimeType: "application/json",
-                responseSchema: syllabusSchema
+                responseMimeType: "application/json"
               }
             });
 
@@ -4342,13 +4341,16 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
               const jsonRes = await safeResponseJson(res, 'Vertex course syllabus generation');
               attemptJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
               attemptSuccess = true;
+            } else if (res) {
+              const errBody = await res.text();
+              console.warn(`[AI GENERATOR] Vertex AI syllabus returned status ${res.status}: ${errBody.substring(0, 300)}`);
             }
           } catch (err) {
             console.warn(`[AI GENERATOR] Vertex AI syllabus generation exception.`, err);
           }
         }
 
-        if (!attemptSuccess && apiKey) {
+        if (!attemptSuccess && apiKey && apiKey.startsWith('AIzaSy')) {
           console.log(`[AI GENERATOR] Generating syllabus iteration #${syllabusIteration} for "${courseName}" via AI Studio fallback (gemini-2.5-flash)...`);
           const startTime = Date.now();
           try {
@@ -4360,8 +4362,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
                 contents: [{ parts: [{ text: compressedSyllabus }] }],
                 generationConfig: {
                   temperature: 0.1,
-                  responseMimeType: "application/json",
-                  responseSchema: syllabusSchema
+                  responseMimeType: "application/json"
                 }
               })
             });
@@ -5262,8 +5263,12 @@ Return ONLY a valid JSON object matching blockNarrativeAuditSchema:
               console.warn(`[AI GENERATOR] Failed to parse block audit JSON:`, e);
             }
 
-            if (blockAudit.approved) {
-              await appendTaskLog(`[AI GENERATOR] Block ${bIdx + 1} approved by Critique Agent!`);
+            if (blockAudit.approved || blockIteration >= 2) {
+              if (!blockAudit.approved) {
+                await appendTaskLog(`[AI GENERATOR WARNING] Block ${bIdx + 1} warnings accepted on attempt #${blockIteration}. Proceeding with generated content.`);
+              } else {
+                await appendTaskLog(`[AI GENERATOR] Block ${bIdx + 1} approved by Critique Agent!`);
+              }
               fullNarrativeText = (fullNarrativeText.trim() + "\n\n" + cleanedBlockText.trim()).trim();
               blockApproved = true;
               blockAttemptEntry.approved = true;
@@ -5881,8 +5886,12 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
             console.warn(`[AI GENERATOR] Failed to parse Block 2 critique:`, e);
           }
 
-          if (auditResult.approved) {
-            await appendTaskLog(`[AI GENERATOR] Widget Block 2 approved by Critique Agent!`);
+          if (auditResult.approved || block2Iteration >= 2) {
+            if (!auditResult.approved) {
+              await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 2 warnings accepted on attempt #${block2Iteration}. Proceeding with generated content.`);
+            } else {
+              await appendTaskLog(`[AI GENERATOR] Widget Block 2 approved by Critique Agent!`);
+            }
             block2Approved = true;
             widgetBlock2Entry.approved = true;
           } else {
@@ -6076,8 +6085,12 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
             console.warn(`[AI GENERATOR] Failed to parse Block 3 critique:`, e);
           }
 
-          if (auditResult.approved) {
-            await appendTaskLog(`[AI GENERATOR] Widget Block 3 approved by Critique Agent!`);
+          if (auditResult.approved || block3Iteration >= 2) {
+            if (!auditResult.approved) {
+              await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 3 warnings accepted on attempt #${block3Iteration}. Proceeding with generated content.`);
+            } else {
+              await appendTaskLog(`[AI GENERATOR] Widget Block 3 approved by Critique Agent!`);
+            }
             block3Approved = true;
             widgetBlock3Entry.approved = true;
           } else {
@@ -6478,8 +6491,12 @@ Return ONLY a valid JSON object matching widgetBlockAuditSchema:
           console.warn(`[AI GENERATOR] Failed to parse Block 5 Quiz critique:`, e);
         }
 
-        if (auditResult.approved || isTerminalEvaluation) {
-          await appendTaskLog(`[AI GENERATOR] Widget Block 5 Quiz approved by Critique Agent!`);
+        if (auditResult.approved || block5QuizIteration >= 2 || isTerminalEvaluation) {
+          if (!auditResult.approved) {
+            await appendTaskLog(`[AI GENERATOR WARNING] Widget Block 5 Quiz warnings accepted on attempt #${block5QuizIteration}. Proceeding with generated content.`);
+          } else {
+            await appendTaskLog(`[AI GENERATOR] Widget Block 5 Quiz approved by Critique Agent!`);
+          }
           block5QuizApproved = true;
           widgetBlock5QuizEntry.approved = true;
         } else {
@@ -7484,6 +7501,10 @@ let criticResText = '';
                   const criticObj = safeJsonParse(cleanedCritic, 'reviseCourseContent (Agent 4 Verification)');
                   approved = !!criticObj.approved;
                   critique = criticObj.critique || '';
+                  if (!approved && critiqueIteration >= 2) {
+                    console.warn(`[AI GENERATOR - TRANSLATION CRITIC] Overriding rejection on attempt #${critiqueIteration} to prevent infinite loop. Accepting current content.`);
+                    approved = true;
+                  }
                 } catch (e) {
                   console.error("[AI GENERATOR - TRANSLATION CRITIC] Failed to parse critic JSON response:", e);
                   approved = true; // Avoid infinite loop or blocks if AI returns malformed JSON

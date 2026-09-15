@@ -163,22 +163,28 @@ export async function initializeAccounts(forceReload = false): Promise<VertexAcc
   }
 
   // 3. Fallback/Append from direct environment variables
-  const directSA = process.env.VERTEX_SERVICE_ACCOUNT_JSON;
+  const directSA = process.env.VERTEX_SERVICE_ACCOUNT_JSON || process.env.VERTEX_SERVICE_ACCOUNT_BASE64;
   if (directSA) {
     try {
-      const parsed = JSON.parse(directSA);
-      if (parsed.project_id && !registeredProjectIds.has(parsed.project_id)) {
+      let raw = directSA.trim();
+      if (!raw.startsWith('{') && !raw.startsWith('[')) {
+        raw = Buffer.from(raw, 'base64').toString('utf8');
+      }
+      const parsed = JSON.parse(raw);
+      const effectiveProjectId = process.env.VERTEX_PROJECT_ID || parsed.project_id;
+      if (parsed.project_id && !registeredProjectIds.has(effectiveProjectId)) {
+        parsed.project_id = effectiveProjectId;
         loadedAccounts.push({
-          projectId: parsed.project_id,
+          projectId: effectiveProjectId,
           credentials: parsed as ServiceAccountCredentials,
           cachedToken: null,
           tokenExpiry: 0
         });
-        registeredProjectIds.add(parsed.project_id);
-        console.log(`[VERTEX-POOL] Loaded project from VERTEX_SERVICE_ACCOUNT_JSON env (Project: ${parsed.project_id})`);
+        registeredProjectIds.add(effectiveProjectId);
+        console.log(`[VERTEX-POOL] Loaded project from VERTEX_SERVICE_ACCOUNT_JSON/BASE64 env (Project: ${effectiveProjectId})`);
       }
     } catch (e) {
-      console.warn('[VERTEX-POOL] Failed to parse VERTEX_SERVICE_ACCOUNT_JSON:', e);
+      console.warn('[VERTEX-POOL] Failed to parse VERTEX_SERVICE_ACCOUNT_JSON/BASE64:', e);
     }
   }
 
@@ -210,7 +216,28 @@ export async function initializeAccounts(forceReload = false): Promise<VertexAcc
     }
   }
 
-  // If still no project but we have VERTEX_PROJECT_ID, create a pseudo-credentials or warning
+  // If still no project but we have VERTEX_PROJECT_ID or NEXT_PUBLIC_GCP_PROJECT_ID, create gcloud_adc fallback
+  if (loadedAccounts.length === 0) {
+    const fallbackProjectId = process.env.VERTEX_PROJECT_ID || process.env.NEXT_PUBLIC_GCP_PROJECT_ID;
+    if (fallbackProjectId) {
+      loadedAccounts.push({
+        projectId: fallbackProjectId,
+        credentials: {
+          type: 'gcloud_adc',
+          project_id: fallbackProjectId,
+          private_key_id: '',
+          private_key: '',
+          client_email: '',
+          token_uri: ''
+        },
+        cachedToken: null,
+        tokenExpiry: 0
+      });
+      registeredProjectIds.add(fallbackProjectId);
+      console.log(`[VERTEX-POOL] Loaded project using gcloud ADC / OAuth token fallback (Project: ${fallbackProjectId})`);
+    }
+  }
+
   accounts = loadedAccounts;
 
   // Re-build ProjectRegionState endpointStates
@@ -632,6 +659,43 @@ export async function getAccessTokenForAccount(account: VertexAccount): Promise<
 
   account.tokenPromise = (async () => {
     try {
+      // 1. Try GCP Instance Metadata Server (Cloud Run / GCP Serverless environment)
+      try {
+        const metaRes = await fetch('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token', {
+          headers: { 'Metadata-Flavor': 'Google' },
+          signal: AbortSignal.timeout(2000)
+        });
+        if (metaRes.ok) {
+          const metaData = await metaRes.json() as any;
+          if (metaData.access_token) {
+            account.cachedToken = metaData.access_token;
+            account.tokenExpiry = Date.now() + ((metaData.expires_in || 3600) - 60) * 1000;
+            console.log(`[VERTEX-POOL] ✅ OAuth2 token acquired via GCP Metadata Server for project "${account.projectId}".`);
+            return account.cachedToken;
+          }
+        }
+      } catch (_) {
+        // Not running on GCP Instance Metadata Server, proceed to local SAs or gcloud CLI
+      }
+
+      if (account.credentials.type === 'gcloud_adc' || !account.credentials.private_key) {
+        if (typeof window === 'undefined') {
+          try {
+            const { execSync } = await import('child_process');
+            const token = execSync(`gcloud auth print-access-token --project=${account.projectId}`).toString().trim();
+            if (token && token.startsWith('ya29.')) {
+              account.cachedToken = token;
+              account.tokenExpiry = Date.now() + (45 * 60 * 1000);
+              console.log(`[VERTEX-POOL] ✅ OAuth2 token acquired via gcloud CLI for project "${account.projectId}".`);
+              return account.cachedToken;
+            }
+          } catch (e) {
+            console.warn(`[VERTEX-POOL] Failed to acquire gcloud CLI access token for project "${account.projectId}":`, e);
+          }
+        }
+        return null;
+      }
+
       const jwt = await createJWT(account.credentials);
       const res = await fetch(account.credentials.token_uri || 'https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -645,6 +709,20 @@ export async function getAccessTokenForAccount(account: VertexAccount): Promise<
       if (!res.ok) {
         const err = await res.text();
         console.error(`[VERTEX-POOL] Token exchange failed for project "${account.projectId}":`, err);
+
+        // Fallback to gcloud CLI token if available
+        if (typeof window === 'undefined') {
+          try {
+            const { execSync } = await import('child_process');
+            const token = execSync(`gcloud auth print-access-token --project=${account.projectId}`).toString().trim();
+            if (token && token.startsWith('ya29.')) {
+              account.cachedToken = token;
+              account.tokenExpiry = Date.now() + (45 * 60 * 1000);
+              console.log(`[VERTEX-POOL] ✅ Fallback OAuth2 token acquired via gcloud CLI for project "${account.projectId}".`);
+              return account.cachedToken;
+            }
+          } catch (_) {}
+        }
         return null;
       }
 
@@ -834,14 +912,16 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
   
   // Decide candidate models to try
   let modelsToTry: string[] = [configuredModel];
-  if (configuredModel === 'gemini-3.5-flash') {
+  if (configuredModel === 'gemini-3.7-flash') {
+    modelsToTry = ['gemini-3.7-flash', 'gemini-2.5-flash'];
+  } else if (configuredModel === 'gemini-3.5-flash') {
     modelsToTry = ['gemini-3.5-flash', 'gemini-2.5-flash'];
   } else if (configuredModel === 'gemini-2.5-pro') {
     modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-pro'];
   } else if (configuredModel === 'gemini-2.0-flash-lite') {
     modelsToTry = ['gemini-2.0-flash-lite', 'gemini-2.5-flash'];
   } else {
-    modelsToTry = [configuredModel];
+    modelsToTry = [configuredModel || 'gemini-3.7-flash', 'gemini-2.5-flash'];
   }
 
   const method = compressedReq.stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
@@ -879,7 +959,7 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
 
       const currentLocation = endpoint.regionName;
       const currentProjectId = account.projectId;
-      const url = `https://${currentLocation}-aiplatform.googleapis.com/v1/projects/${currentProjectId}/locations/${currentLocation}/publishers/google/models/${model}:${method}`;
+      const url = `https://${currentLocation}-aiplatform.googleapis.com/v1beta1/projects/${currentProjectId}/locations/${currentLocation}/publishers/google/models/${model}:${method}`;
 
       try {
         console.log(`[VERTEX-POOL] Attempting call with model "${model}" in region "${currentLocation}" using project "${currentProjectId}" (attempt ${attempt}/${maxRetries})...`);
@@ -1044,7 +1124,7 @@ export async function recordMetrics(
 
 /** Returns true if Vertex AI credentials are configured */
 export function isVertexConfigured(): boolean {
-  if (process.env.VERTEX_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  if (process.env.VERTEX_SERVICE_ACCOUNT_BASE64 || process.env.VERTEX_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     return true;
   }
   // Check if any json file exists in the secrets folder

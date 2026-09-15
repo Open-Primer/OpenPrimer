@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { executeTask, cleanupStuckTasks } from '@/lib/tasks';
 import { verifySession } from '@/lib/authHelper';
+import { dispatchTasks } from '@/lib/dispatcher';
 
 export const maxDuration = 300; // Let Next.js / Vercel allow up to 5 minutes (300 seconds)
 
@@ -67,6 +68,11 @@ export async function POST(request: Request) {
 
     const res = await executeTask(nextTask, logs);
 
+    // Auto-dispatch next task asynchronously to keep maxParallelTasks workers active
+    dispatchTasks(request.url).catch(err => {
+      console.warn('[DISPATCHER] Post-execution dispatch failed:', err);
+    });
+
     if (res.success) {
       return NextResponse.json({ success: true, taskId: nextTask.id, logs });
     } else {
@@ -75,6 +81,9 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('[CRITICAL] Task endpoint crash:', error);
+    // Even on error, attempt auto-dispatch to keep queue moving
+    dispatchTasks(request.url).catch(() => {});
     return NextResponse.json({ success: false, error: 'Critical worker endpoint crash', details: error.message || String(error) }, { status: 500 });
   }
 }
+

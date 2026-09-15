@@ -2517,10 +2517,6 @@ export default function AdminCurriculumPage() {
               <BookOpen className="w-8 h-8 text-blue-500" />
               {t.title}
             </h1>
-            <div className="px-3.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-wider rounded-full flex items-center gap-2 shadow-sm">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>{tr("EU AI Act Compliant • Art. 50 Disclosure")}</span>
-            </div>
           </div>
           <p className="text-xs text-slate-400 mt-2 font-medium">
             {t.subtitle}

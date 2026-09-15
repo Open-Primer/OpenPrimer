@@ -612,24 +612,22 @@ export const supabaseDatabaseProvider: DatabaseService = {
         if (upsertError) throw upsertError;
       }
 
-      // Eager-trigger the task worker if any newly saved task is queued.
-      // This bridges the gap between enqueuing a task and it actually running,
-      // without depending on CRON_SECRET or a cloudRunUrl DB trigger being configured.
+      // Eager-trigger the task dispatcher if any newly saved task is queued.
+      // This bridges the gap between enqueuing tasks and them actually running,
+      // launching up to maxParallelTasks parallel workers automatically.
       const hasQueuedTasks = rows.some(r => r.status === 'queued');
       if (hasQueuedTasks && typeof window !== 'undefined') {
         (async () => {
           try {
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
-            if (token) {
-              fetch('/api/tasks/run', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                }
-              }).catch(() => { /* silently ignore - background trigger */ });
-            }
+            fetch('/api/tasks/dispatch', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+              }
+            }).catch(() => { /* silently ignore - background trigger */ });
           } catch {
             // silently ignore — this is a best-effort background trigger
           }

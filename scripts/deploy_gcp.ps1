@@ -2,11 +2,11 @@
 # This script automates building and deploying the Next.js app to Google Cloud Run.
 
 # Configuration
-$PROJECT_ID = "openprimer-free"
+$PROJECT_ID = "project-80223a07-e8ad-4edd-874"
 $REGION = "europe-west9"  # Default region
 $REPO_NAME = "openprimer-repo"
 $SERVICE_NAME = "openprimer-worker"
-$ACCOUNT_EMAIL = "vanguard.mysterious@gmail.com"
+$ACCOUNT_EMAIL = "smartinmmichiellot5@gmail.com"
 
 Write-Host "====================================================" -ForegroundColor Cyan
 Write-Host "Starting OpenPrimer Google Cloud Run Deployment" -ForegroundColor Cyan
@@ -31,7 +31,7 @@ if ($LastExitCode -ne 0) { throw "Failed to set gcloud project." }
 
 # 2. Parse Environment Variables from .env.local
 Write-Host "Loading environment variables from .env.local..." -ForegroundColor Yellow
-$envFilePath = Join-Path $PSScriptRoot "..\.env.local"
+$envFilePath = Join-Path $PSScriptRoot "..\web\.env.local"
 if (-not (Test-Path $envFilePath)) {
     throw "Could not find .env.local at $envFilePath. Please make sure it exists."
 }
@@ -92,7 +92,7 @@ if (-not $repoCheck) {
 }
 
 # 4. Trigger Google Cloud Build Remote Compilation
-$webDir = Resolve-Path (Join-Path $PSScriptRoot "..")
+$webDir = Resolve-Path (Join-Path $PSScriptRoot "..\web")
 $imageTag = "$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/web-app:latest"
 
 $envProdPath = Join-Path $webDir ".env.production"
@@ -138,14 +138,21 @@ openprimer-free*.json
     Set-Content -Path $envProdPath -Value $envProdContent -Encoding utf8
     Set-Content -Path $gcloudIgnorePath -Value $gcloudIgnoreContent -Encoding utf8
 
-    Write-Host "Building container image remotely using Google Cloud Build from $webDir..." -ForegroundColor Yellow
-    gcloud builds submit $webDir --tag $imageTag --project=$PROJECT_ID
+    Write-Host "Creating tarball archive source.tgz..." -ForegroundColor Yellow
+    Push-Location $webDir
+    tar -czf source.tgz --exclude=node_modules --exclude=.next --exclude=.git --exclude=playwright-report --exclude=test-results .
+    Pop-Location
+    $tarPath = Join-Path $webDir "source.tgz"
+
+    Write-Host "Building container image remotely using Google Cloud Build..." -ForegroundColor Yellow
+    gcloud builds submit $tarPath --tag $imageTag --project=$PROJECT_ID
     if ($LastExitCode -ne 0) { throw "Google Cloud Build remote compilation failed." }
     Write-Host "Remote build completed and pushed to Artifact Registry." -ForegroundColor Green
 } finally {
     Write-Host "Cleaning up temporary build-time files..." -ForegroundColor Yellow
     if (Test-Path $envProdPath) { Remove-Item $envProdPath -Force }
-    if (Test-Path $gcloudIgnorePath) { Remove-Item $gcloudIgnorePath -Force }
+    $tarPath = Join-Path $webDir "source.tgz"
+    if (Test-Path $tarPath) { Remove-Item $tarPath -Force }
 }
 
 # 5. Deploy Container to Google Cloud Run
@@ -157,7 +164,7 @@ gcloud run deploy $SERVICE_NAME `
     --region=$REGION `
     --allow-unauthenticated `
     --port=3000 `
-    --set-env-vars="NEXT_PUBLIC_SUPABASE_URL=$supabaseUrl,NEXT_PUBLIC_SUPABASE_ANON_KEY=$supabaseAnonKey,SUPABASE_SERVICE_ROLE_KEY=$serviceRoleKey,CRON_SECRET=$cronSecret,GEMINI_API_KEY=$geminiApiKey" `
+    --set-env-vars="NEXT_PUBLIC_SUPABASE_URL=$supabaseUrl,NEXT_PUBLIC_SUPABASE_ANON_KEY=$supabaseAnonKey,SUPABASE_SERVICE_ROLE_KEY=$serviceRoleKey,CRON_SECRET=$cronSecret,GEMINI_API_KEY=$geminiApiKey,VERTEX_PROJECT_ID=$PROJECT_ID,VERTEX_LOCATION=us-central1" `
     --project=$PROJECT_ID
 if ($LastExitCode -ne 0) { throw "Google Cloud Run deployment failed." }
 

@@ -355,6 +355,17 @@ const LOCAL_HOMEPAGE_STRINGS: Record<string, Record<string, string>> = {
     AR: "{count} لغات",
     HI: "{count} भाषाएँ",
     UR: "{count} زبانیں"
+  },
+  courses_available_badge: {
+    EN: "Currently {count} courses available",
+    FR: "Actuellement {count} cours disponibles",
+    ES: "Actualmente {count} cursos disponibles",
+    DE: "Derzeit {count} Kurse verfügbar",
+    ZH: "当前已有 {count} 门精选课程",
+    PT: "Atualmente {count} cursos disponíveis",
+    AR: "حالياً أكثر من {count} دورة متاحة",
+    HI: "वर्तमान में {count} से अधिक पाठ्यक्रम उपलब्ध हैं",
+    UR: "فی الوقت {count} سے زائد کورسز دستیاب ہیں"
   }
 };
 
@@ -1033,6 +1044,19 @@ export default function Home() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Discreet Course Counter (displays only when > 10,000 courses) */}
+          {(stats?.total_courses || 0) > 10000 && (
+            <div className="flex items-center justify-center mt-3 text-xs font-medium text-slate-400">
+              <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900/60 border border-slate-800/80 shadow-sm backdrop-blur-md text-slate-400 text-[11px] tracking-wide">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                {getLocalString('courses_available_badge', lang).replace(
+                  '{count}',
+                  (stats?.total_courses || 0).toLocaleString(lang === 'FR' ? 'fr-FR' : 'en-US')
+                )}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Popular Curricula Kiosk */}

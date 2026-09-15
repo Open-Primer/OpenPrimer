@@ -13,6 +13,7 @@
  */
 
 export type ModelId =
+  | 'gemini-3.7-flash'     // Latest Flash 3.7 generation
   | 'gemini-3.5-flash'     // High-performance workhorse
   | 'gemini-2.5-flash'     // Best cost/quality balance — primary workhorse
   | 'gemini-2.5-pro'       // Highest quality — course chapter generation only
@@ -20,6 +21,11 @@ export type ModelId =
 
 /** Vertex AI pricing in USD per 1M tokens (input / output) */
 export const MODEL_PRICING: Record<ModelId, { inputPer1M: number; outputPer1M: number; label: string }> = {
+  'gemini-3.7-flash': {
+    inputPer1M:  0.075,  // $0.075 / 1M input tokens
+    outputPer1M: 0.30,   // $0.30  / 1M output tokens
+    label: 'Gemini 3.7 Flash'
+  },
   'gemini-3.5-flash': {
     inputPer1M:  1.50,   // $1.50 / 1M input tokens
     outputPer1M: 9.00,   // $9.00 / 1M output tokens
@@ -51,7 +57,7 @@ export const MODEL_PRICING: Record<ModelId, { inputPer1M: number; outputPer1M: n
  * (manual widget creation/modification from the Admin UI → `widgets_workshop` task).
  *
  * It MUST NOT be used for any automated pipeline step:
- *   - Course generation         → gemini-2.5-flash  (course_generation)
+ *   - Course generation         → gemini-3.7-flash / gemini-2.5-flash  (course_generation)
  *   - Widget placement / 4B     → gemini-2.5-flash  (widget_placement)   [Stage 2 Architect + 4B Critic + Repair]
  *   - Translation               → gemini-2.5-flash  (course_translation)
  *   - Tutor chat                → gemini-2.5-flash  (tutor_chat)
@@ -64,7 +70,7 @@ export const MODEL_PRICING: Record<ModelId, { inputPer1M: number; outputPer1M: n
  *                       Admin Atelier UI (QuantumOrbitalExplorer, ChemicalStoichiometry…).
  */
 export const TASK_MODELS: Record<string, ModelId> = {
-  course_generation:  'gemini-2.5-flash',     // Automated pipeline: narrative gen, critique, revision
+  course_generation:  (process.env.GEMINI_GENERATION_MODEL as ModelId) || 'gemini-3.7-flash',     // Automated pipeline: narrative gen, critique, revision
   widget_placement:   'gemini-2.5-flash',     // Automated pipeline: Stage 3B param + 4B Critic + Repair (standard widgets)
   widgets_workshop:   'gemini-3.5-flash',     // ⭐ Atelier des Widgets Pédagogiques (Admin UI only — manual creation & modification)
   course_translation: 'gemini-2.5-flash',     // Automated pipeline: academic translation

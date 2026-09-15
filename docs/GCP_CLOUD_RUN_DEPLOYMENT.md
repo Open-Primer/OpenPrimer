@@ -47,16 +47,16 @@ Ensure you have the Google Cloud SDK (`gcloud`) and Docker installed on your dev
    *Verify that your active account (e.g. `silvere.martinmichiellot@gmail.com`) is highlighted with an asterisk.*
 
 2. **Verify active GCP project**:
-   We will deploy to your active project **`antigravity-498615`** (Credits project).
+   We will deploy to your active project **`project-80223a07-e8ad-4edd-874`** (Credits project).
    Set your CLI context:
    ```powershell
-   gcloud config set project antigravity-498615
+   gcloud config set project project-80223a07-e8ad-4edd-874
    ```
 
 3. **Enable GCP APIs**:
    Ensure Cloud Run, Cloud Build, and Artifact Registry are enabled:
    ```powershell
-   gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com --project=antigravity-498615
+   gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com --project=project-80223a07-e8ad-4edd-874
    ```
 
 ---
@@ -72,7 +72,7 @@ gcloud artifacts repositories create openprimer-repo `
     --repository-format=docker `
     --location=europe-west9 `
     --description="Docker repository for OpenPrimer Web App" `
-    --project=antigravity-498615
+    --project=project-80223a07-e8ad-4edd-874
 ```
 
 ---
@@ -84,7 +84,7 @@ Since Next.js requires compiling and packing, Google Cloud Build provides a high
 We have provided a Dockerfile in `web/Dockerfile` that builds and compiles the Next.js production build. To trigger a remote build and push the container to your registry, run from the `web` folder:
 
 ```powershell
-gcloud builds submit --tag europe-west9-docker.pkg.dev/antigravity-498615/openprimer-repo/web-app:latest --project=antigravity-498615
+gcloud builds submit --tag europe-west9-docker.pkg.dev/project-80223a07-e8ad-4edd-874/openprimer-repo/web-app:latest --project=project-80223a07-e8ad-4edd-874
 ```
 
 ---
@@ -95,14 +95,14 @@ Once the container image is built and pushed to Artifact Registry, deploy it dir
 
 ```powershell
 gcloud run deploy openprimer-worker `
-    --image=europe-west9-docker.pkg.dev/antigravity-498615/openprimer-repo/web-app:latest `
+    --image=europe-west9-docker.pkg.dev/project-80223a07-e8ad-4edd-874/openprimer-repo/web-app:latest `
     --platform=managed `
     --region=europe-west9 `
     --allow-unauthenticated `
     --port=3000 `
     --set-env-vars="NEXT_PUBLIC_SUPABASE_URL=https://cayylzaasyqqpvuezufy.supabase.co,CRON_SECRET=MySuperSecretCronSecret123!" `
     --set-secrets="SUPABASE_SERVICE_ROLE_KEY=SUPABASE_SERVICE_ROLE_KEY:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest" `
-    --project=antigravity-498615
+    --project=project-80223a07-e8ad-4edd-874
 ```
 
 > [!NOTE]
@@ -169,12 +169,12 @@ To fully automate deployments so that pushing to `master` automatically updates 
 
          - name: Build and Push Container
            run: |
-             gcloud builds submit ./web --tag europe-west9-docker.pkg.dev/antigravity-498615/openprimer-repo/web-app:latest
+             gcloud builds submit ./web --tag europe-west9-docker.pkg.dev/project-80223a07-e8ad-4edd-874/openprimer-repo/web-app:latest
 
          - name: Deploy to Cloud Run
            run: |
              gcloud run deploy openprimer-worker \
-               --image=europe-west9-docker.pkg.dev/antigravity-498615/openprimer-repo/web-app:latest \
+               --image=europe-west9-docker.pkg.dev/project-80223a07-e8ad-4edd-874/openprimer-repo/web-app:latest \
                --platform=managed \
                --region=europe-west9 \
                --port=3000 \

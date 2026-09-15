@@ -4,11 +4,11 @@
 set -e
 
 # Configuration
-PROJECT_ID="openprimer-free"
+PROJECT_ID="project-80223a07-e8ad-4edd-874"
 REGION="europe-west9"
 REPO_NAME="openprimer-repo"
 SERVICE_NAME="openprimer-worker"
-ACCOUNT_EMAIL="vanguard.mysterious@gmail.com"
+ACCOUNT_EMAIL="smartinmmichiellot5@gmail.com"
 
 echo "===================================================="
 echo -e "\033[0;36m🚀 Starting OpenPrimer Google Cloud Run Deployment\033[0m"
@@ -31,7 +31,7 @@ gcloud config set project "$PROJECT_ID"
 # 2. Parse Environment Variables from .env.local
 echo -e "\n\033[0;33m🔑 Loading environment variables from .env.local...\033[0m"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-env_file="$script_dir/../.env.local"
+env_file="$script_dir/../web/.env.local"
 
 if [ ! -f "$env_file" ]; then
     echo -e "\033[0;31m❌ Error: .env.local not found at $env_file\033[0m"
@@ -78,7 +78,7 @@ fi
 # 4. Trigger Google Cloud Build Remote Compilation
 echo -e "\n\033[0;33m🏗️ Building container image remotely using Google Cloud Build...\033[0m"
 image_tag="$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/web-app:latest"
-web_dir="$(cd "$script_dir/.." && pwd)"
+web_dir="$(cd "$script_dir/../web" && pwd)"
 
 env_prod_path="$web_dir/.env.production"
 gcloud_ignore_path="$web_dir/.gcloudignore"

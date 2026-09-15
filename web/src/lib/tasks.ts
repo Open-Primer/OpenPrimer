@@ -23,13 +23,12 @@ export async function cleanupStuckTasks() {
       return;
     }
 
-    // Increase cleanup threshold to 3 hours so lengthy multi-lesson courses are not prematurely marked as stuck
-    const threeHoursAgo = new Date(Date.now() - 180 * 60 * 1000);
+    // Cloud Run containers timeout after 20-30 min. Mark tasks stuck for > 25 min as zombie.
+    const twentyFiveMinsAgo = new Date(Date.now() - 25 * 60 * 1000);
 
     for (const task of activeTasks) {
       let lastActiveTime = new Date(task.created_at);
 
-      // Try parsing the last attempt timestamp from description
       try {
         const extra = JSON.parse(task.description || '{}');
         if (extra.last_attempt_at) {
@@ -37,25 +36,36 @@ export async function cleanupStuckTasks() {
         }
       } catch (e) {}
 
-      if (lastActiveTime < threeHoursAgo) {
-        console.log(`[CLEANUP] Task "${task.name}" (ID: ${task.id}) was stuck since ${lastActiveTime.toISOString()}. Resetting to failed.`);
+      // Also check last log line timestamp if present
+      if (task.logs && task.logs.length > 0) {
+        const lastLog = task.logs[task.logs.length - 1];
+        const match = lastLog.match(/\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)\]/);
+        if (match && match[1]) {
+          const logTime = new Date(match[1]);
+          if (!isNaN(logTime.getTime()) && logTime > lastActiveTime) {
+            lastActiveTime = logTime;
+          }
+        }
+      }
+
+      if (lastActiveTime < twentyFiveMinsAgo) {
+        console.log(`[CLEANUP] Task "${task.name}" (ID: ${task.id}) was stuck since ${lastActiveTime.toISOString()}. Re-queuing for worker retry.`);
         
         let extra: any = {};
         try {
           extra = JSON.parse(task.description || '{}');
         } catch (e) {}
 
-        extra.completedAt = new Date().toISOString();
-        extra.last_error = "Task timed out or worker process terminated unexpectedly (stuck for > 3 hours).";
+        extra.last_error = "Task container timed out or process disconnected (inactive > 25 min).";
 
         await supabase
           .from('task_queue')
           .update({
-            status: 'failed',
+            status: 'queued',
             description: JSON.stringify(extra),
             logs: [
               ...(task.logs || []),
-              `[${new Date().toISOString()}] 🔴 Reset by automatic system cleanup: task was stuck in "${task.status}" state for over 3 hours.`
+              `[${new Date().toISOString()}] ⏳ Reset by system cleanup: task was inactive in "${task.status}" state for > 25 minutes. Re-queued for continuation.`
             ]
           })
           .eq('id', task.id);
@@ -352,8 +362,8 @@ CRITICAL RULES:
     }
   })();
 
-  // Implement native timeout handling via Promise.race (120 min for CLI worker, 20 min for Web)
-  const timeoutMs = process.env.CLI_WORKER === 'true' ? 7200000 : 1200000;
+  // Native timeout handling matching Cloud Run's 60-min container limit (55 min timeout = 3300000 ms)
+  const timeoutMs = 3300000;
 
   const timeoutPromise = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error(`Task execution timed out (took > ${timeoutMs / 1000} seconds).`)), timeoutMs)
