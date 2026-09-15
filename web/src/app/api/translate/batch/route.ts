@@ -46,7 +46,7 @@ Format the response exactly like this:
 }`;
 
     if (isVertexConfigured()) {
-      console.log(`[BATCH-TRANSLATE] Translating to [${targetLangs.join(', ')}] via Vertex AI (gemini-2.5-flash)...`);
+      console.log(`[BATCH-TRANSLATE] Translating to [${targetLangs.join(', ')}] via Vertex AI...`);
 
       const res = await callVertexAI({
         task: 'batch_translate',
@@ -69,8 +69,45 @@ Format the response exactly like this:
       }
     }
 
+    // Google AI Studio Direct / Batch Fallback
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (apiKey) {
+      console.log(`[BATCH-TRANSLATE] Translating to [${targetLangs.join(', ')}] via Google AI Studio API...`);
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: geminiPrompt }] }],
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: "application/json"
+            }
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (jsonText) {
+            const parsedTranslations = JSON.parse(jsonText.trim());
+            console.log(`[BATCH-TRANSLATE SUCCESS] Batch translation completed via Google AI Studio.`);
+            return NextResponse.json({ success: true, translations: parsedTranslations });
+          }
+        } else {
+          const errBody = await res.text();
+          console.warn(`[BATCH-TRANSLATE] AI Studio responded with status ${res.status}:`, errBody.substring(0, 200));
+        }
+      } catch (aiStudioErr: any) {
+        console.error("[BATCH-TRANSLATE] AI Studio API exception:", aiStudioErr.message);
+      }
+    }
+
     // Graceful offline mock fallback
-    console.warn('[BATCH-TRANSLATE] Vertex AI unavailable. Falling back to structured prefix translations.');
+    console.warn('[BATCH-TRANSLATE] AI APIs unavailable. Falling back to structured prefix translations.');
     const mockTranslations: Record<string, any> = {};
     targetLangs.forEach(lang => {
       const codeUpper = lang.toUpperCase();

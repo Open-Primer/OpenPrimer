@@ -4350,14 +4350,17 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
           }
         }
 
-        if (!attemptSuccess && apiKey && apiKey.startsWith('AIzaSy')) {
-          console.log(`[AI GENERATOR] Generating syllabus iteration #${syllabusIteration} for "${courseName}" via AI Studio fallback (gemini-2.5-flash)...`);
+        if (!attemptSuccess && apiKey) {
+          console.log(`[AI GENERATOR] Generating syllabus iteration #${syllabusIteration} for "${courseName}" via AI Studio fallback (gemini-3.7-flash)...`);
           const startTime = Date.now();
           try {
             const compressedSyllabus = compressPromptText(currentSyllabusPrompt);
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 
+                'Content-Type': 'application/json',
+                'x-goog-api-key': apiKey
+              },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: compressedSyllabus }] }],
                 generationConfig: {
