@@ -1,0 +1,282 @@
+---
+title: « Graphes Orientés et Cycles : Détection et Analyse »
+subject: « Algorithmes Avancés et Théorie des Graphes »
+level: « L3 »
+module: « Graphes Orientés et Cycles : Détection et Analyse »
+order: 9
+---
+
+
+
+<DiagnosticQuiz question="Quel algorithme de parcours est le plus approprié pour détecter la présence d'un cycle dans un graphe orienté en utilisant la coloration des nœuds (blanc, gris, noir) ?" options="Algorithme de Dijkstra|||Algorithme de Prim|||Parcours en Profondeur (DFS)|||Parcours en Largeur (BFS)" correctIndex="2" targetSectionId="detection-cycles-dfs" sectionTitle="Détection de Cycles avec DFS" />
+
+
+
+## Introduction aux Graphes Orientés et aux Cycles
+Dans le vaste domaine de la théorie des graphes, une distinction fondamentale réside entre les graphes non orientés et les graphes orientés, souvent appelés digraphes. Tandis que les arêtes d'un graphe non orienté représentent une relation symétrique entre deux sommets, les arêtes d'un digraphe, quant à elles, possèdent une direction explicite. Une arête $(u, v)$ signifie qu'il existe une connexion allant du sommet $u$ au sommet $v$, mais pas nécessairement l'inverse. Cette notion de directionnalité confère aux digraphes une puissance expressive accrue, les rendant particulièrement adaptés à la modélisation de systèmes où les flux, les dépendances ou les transitions sont asymétriques.
+
+Au cœur de l'analyse des digraphes se trouve le concept de cycle. Un cycle dans un digraphe est une séquence de sommets $v_0, v_1, \dots, v_k$ telle que pour tout $i$ de 0 à $k-1$, il existe une arête orientée de $v_i$ vers $v_{i+1}$, et une arête orientée de $v_k$ vers $v_0$. En d'autres termes, c'est un chemin qui commence et se termine au même sommet, en parcourant une séquence d'arêtes dans leur direction respective. La présence de cycles dans un digraphe peut avoir des implications profondes et souvent indésirables.
+
+L'importance de la détection de cycles dans divers domaines informatiques ne peut être sous-estimée. Dans la gestion des dépendances, par exemple, un cycle entre des tâches ou des modules logiciels indique une situation de dépendance circulaire, rendant impossible leur exécution ou leur compilation dans un ordre linéaire. Un tel scénario peut entraîner des blocages irrémédiables. De même, dans l'ordonnancement de processus ou de tâches, la détection de cycles est cruciale pour éviter les situations où des tâches attendent indéfiniment des ressources détenues par d'autres tâches bloquées dans une boucle. L'identification de cycles est également fondamentale pour la détection de blocages (deadlocks) dans les systèmes d'exploitation ou les bases de données, où des processus ou des transactions se retrouvent mutuellement bloqués en attendant des ressources les uns des autres. En résumé, la capacité à identifier et à comprendre la structure des cycles est une compétence essentielle pour tout informaticien travaillant avec des systèmes complexes et interconnectés <Reference id="1" name="1" term="1">1</Reference>, <Reference id="2" name="2" term="2">2</Reference>.
+
+<Mermaid caption="Figure 1 : " chart={``} />
+
+L'illustration ci-dessus présente un exemple simple de graphe orienté où un cycle est clairement visible. Les flèches indiquent la direction des relations. Le cycle A -> B -> C -> A démontre comment un chemin peut revenir à son point de départ en suivant les orientations des arêtes.
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les propriétés fondamentales des graphes orientés et leur distinction avec les graphes non orientés.</li>
+      <li>Évaluer les différentes approches algorithmiques pour la détection de cycles dans les graphes orientés (ex: DFS, tri topologique).</li>
+      <li>Comprendre les complexités temporelles et spatiales des algorithmes de détection de cycles.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Appliquer l'algorithme de Parcours en Profondeur (DFS) pour identifier les cycles dans un graphe orienté.</li>
+      <li>Implémenter un algorithme de tri topologique pour vérifier l'absence de cycles dans un graphe orienté.</li>
+      <li>analyser la structure d'un graphe orienté donné pour déterminer la présence et l'emplacement des cycles.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Adopter une démarche rigoureuse dans la modélisation des problèmes à l'aide de graphes orientés.</li>
+      <li>Développer une pensée critique face à l'efficacité et à la pertinence des différents algorithmes de détection de cycles.</li>
+      <li>Collaborer pour concevoir et valider des solutions algorithmiques pour des problèmes complexes impliquant des cycles dans des graphes.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Algorithmes de Détection de Cycles
+La détection de cycles dans les graphes orientés est un problème classique en algorithmique, et plusieurs approches efficaces existent. Parmi elles, l'algorithme de parcours en profondeur (DFS - Depth-First Search) est l'une des méthodes les plus courantes et les plus élégantes pour résoudre ce problème. Le DFS explore un graphe en allant aussi loin que possible le long de chaque branche avant de revenir en arrière. Pour la détection de cycles, nous pouvons adapter le DFS en maintenant un suivi de l'état de chaque sommet visité.
+
+L'idée centrale derrière l'utilisation du DFS pour la détection de cycles repose sur la distinction entre trois états possibles pour chaque sommet lors du parcours :
+
+1. **Non visité (White)** : Le sommet n'a pas encore été exploré.
+2. **En cours de visite (Gray)** : Le sommet est actuellement dans la pile d'appels récursifs du DFS. Cela signifie que nous sommes en train d'explorer son voisinage, mais que nous n'avons pas encore terminé l'exploration de tous les chemins partant de ce sommet.
+3. **Visité (Black)** : Le sommet et tous ses descendants ont été entièrement explorés.
+
+Lorsqu'un algorithme DFS rencontre un sommet qui est déjà dans l'état « en cours de visite » (Gray), cela signifie que nous avons trouvé un chemin qui mène de ce sommet à lui-même, c'est-à-dire un cycle. En effet, si nous sommes en train de visiter un sommet $u$, et que nous rencontrons un voisin $v$ qui est déjà marqué comme « en cours de visite », cela implique qu'il existe un chemin de $v$ vers $u$ (car $v$ est dans la pile d'appels récursifs) et une arête de $u$ vers $v$. La combinaison de ces deux éléments forme un cycle, <Reference id="3" name="3" term="3">3</Reference>.
+
+L'algorithme peut être formalisé comme suit :
+
+1. Initialiser tous les sommets comme « non visités ».
+2. Pour chaque sommet $u$ du graphe :
+ * Si $u$ est « non visité », appeler une fonction DFS_Visit($u$).
+
+La fonction DFS_Visit($u$) :
+1. Marquer $u$ comme « en cours de visite ».
+2. Pour chaque voisin $v$ de $u$ :
+ * Si $v$ est « en cours de visite », un cycle a été détecté. Retourner Vrai.
+ * Si $v$ est « non visité », appeler récursivement DFS_Visit($v$). Si cet appel retourne Vrai, propager le Vrai.
+3. Marquer $u$ comme « visité ».
+4. Retourner Faux (aucun cycle trouvé à partir de $u$ dans cette branche).
+
+<Image description="Illustration schématique des états d'un sommet lors d'un parcours en profondeur pour la détection de cycles. Comment la transition d'un état à un autre, notamment le passage d'En cours de visite ' à ' Visité ', est-elle cruciale pour identifier un cycle ?" alt="Illustration schématique des états d'un sommet lors d'un parcours en profondeur pour la détection de cycles. Comment la transition d'un état à un autre, notamment le passage d'En cours de visite ' à ' Visité ', est-elle cruciale pour identifier un cycle ?" caption="Figure 1: schématique des états d'un sommet lors d'un parcours en profondeur pour la détection de cycles. Comment la transition d'un état à un autre, notamment le passage d'En cours de visite ' à ' Visité ', est-elle cruciale pour identifier un cycle ?. Source: [Wikimedia Commons](https://fr.wikipedia.org/wiki/Algorithme_de_parcours_en_profondeur)" src="https://upload.wikimedia.org/wikipedia/commons/1/1f/Depth-first-tree.svg?utm_source=fr.wikipedia.org&utm_campaign=api&utm_content=original" fallbackUrl="https://fr.wikipedia.org/wiki/Algorithme_de_parcours_en_profondeur" />
+
+L'illustration ci-dessus visualise les différents états qu'un sommet peut prendre durant un parcours en profondeur. La transition d'un sommet de l'état « En cours de visite » à « Visité » marque la fin de son exploration. La détection d'une arête pointant vers un sommet déjà dans l'état « En cours de visite » est le signal d'un cycle.
+
+La complexité temporelle de l'algorithme DFS appliqué à la détection de cycles est de $O(V + E)$, où $V$ est le nombre de sommets et $E$ est le nombre d'arêtes dans le graphe. Chaque sommet et chaque arête est visité au plus une fois. La complexité spatiale est de $O(V)$ pour stocker les états des sommets et pour la pile d'appels récursifs de la fonction DFS. Cette complexité est optimale car tout algorithme doit au minimum examiner chaque sommet et chaque arête, <Reference id="4" name="4" term="4">4</Reference>.
+
+Il est important de noter que le DFS peut non seulement détecter la présence d'un cycle, mais aussi, avec quelques modifications, identifier les sommets qui composent ce cycle. En conservant une trace du chemin parcouru lors de l'appel récursif, il est possible de reconstruire le cycle une fois qu'il est détecté.
+
+D'autres approches existent pour la détection de cycles, notamment dans le contexte de l'ordonnancement topologique. L'algorithme de Kahn, par exemple, est une méthode alternative pour réaliser un ordonnancement topologique. Si un ordonnancement topologique complet ne peut être produit, cela implique la présence d'un cycle dans le graphe. L'algorithme de Kahn repose sur le calcul des degrés entrants des sommets. Il commence par ajouter à une file tous les sommets ayant un degré entrant nul. Ensuite, il retire un sommet de la file, l'ajoute à l'ordre topologique, et décrémente le degré entrant de tous ses voisins. Si un voisin voit son degré entrant devenir nul, il est ajouté à la file. Si, à la fin du processus, le nombre de sommets dans l'ordre topologique est inférieur au nombre total de sommets dans le graphe, alors le graphe contient un cycle. Cette méthode est particulièrement utile lorsque l'on souhaite obtenir un ordonnancement linéaire des tâches, et la détection de cycle est une conséquence directe de l'impossibilité d'en produire un.
+
+<SolvedExercise title="Exemple résolu de détection de cycle DFS" solution="">
+  
+</SolvedExercise>
+
+L'exercice résolu ci-dessus fournit une application pratique de l'algorithme DFS pour la détection de cycles. Il permet de visualiser concrètement comment les états des sommets évoluent et comment la détection d'une arête pointant vers un sommet « en cours de visite » signale la présence d'un cycle.
+
+Robert Tarjan, un informaticien américain renommé, a également apporté des contributions significatives à l'analyse des graphes, notamment avec des algorithmes efficaces pour trouver des composantes fortement connexes et des ponts dans les graphes, qui sont des concepts étroitement liés à la structure des cycles. Ses travaux, souvent cités dans la littérature académique, ont jeté les bases de nombreuses techniques d'analyse de graphes utilisées aujourd'hui <Reference id="5" name="5" term="5">5</Reference>.
+
+Le concept de composante fortement connexe (SCC) est particulièrement pertinent ici. Un sous-graphe est une composante fortement connexe si, pour toute paire de sommets $u$ et $v$ dans ce sous-graphe, il existe un chemin de $u$ à $v$ et un chemin de $v$ à $u$. Les cycles sont intrinsèquement liés aux SCC : un cycle est le plus petit exemple d'une SCC, et toute SCC contenant plus d'un sommet doit contenir au moins un cycle. Les algorithmes comme celui de Tarjan permettent d'identifier efficacement toutes les SCC d'un graphe, ce qui peut ensuite être utilisé pour détecter la présence de cycles <Reference id="6" name="6" term="6">6</Reference>.
+
+<Quiz durationLimit={300} limit={4}>
+ <Question q="Dans un graphe orienté, qu'est-ce qui définit un cycle ?" explanation="Un cycle est un chemin qui commence et se termine au même sommet, en passant par d'autres sommets.">
+  <Option text="Un chemin qui commence et se termine au même sommet." correct={true} />
+  <Option text="Une séquence de sommets où chaque sommet est connecté au suivant." correct={false} />
+  <Option text="Un chemin qui visite tous les sommets du graphe." correct={false} />
+</Question>
+ <Question q="Quel état d'un sommet est crucial pour détecter un cycle lors d'un parcours DFS ?" explanation="Si nous rencontrons un sommet déjà marqué comme 'En cours de visite' pendant le parcours DFS, cela signifie que nous avons trouvé un chemin de retour vers un ancêtre dans l'arbre de parcours, indiquant un cycle.">
+  <Option text="Non visité" correct={false} />
+  <Option text="En cours de visite (visiting)" correct={true} />
+  <Option text="Visité (visited)" correct={false} />
+</Question>
+ <Question q="L'algorithme DFS peut-il détecter des cycles dans des graphes non orientés ?" explanation="Pour les graphes non orientés, DFS peut détecter des cycles, mais il faut ignorer l'arête qui mène au parent immédiat dans l'arbre DFS pour éviter de le confondre avec un cycle.">
+  <Option text="Oui, avec une légère modification." correct={false} />
+  <Option text="Non, il est spécifiquement conçu pour les graphes orientés." correct={false} />
+  <Option text="Oui, mais il faut faire attention à ne pas considérer le retour immédiat au parent comme un cycle." correct={true} />
+</Question>
+ <Question q="Quelle est la complexité temporelle typique de l'algorithme DFS pour la détection de cycles dans un graphe ?" explanation="L'algorithme DFS visite chaque sommet et chaque arête une seule fois, résultant en une complexité temporelle d'O(V + E), où V est le nombre de sommets et E est le nombre d'arêtes.">
+  <Option text="O(V^2)" correct={false} />
+  <Option text="O(V + E)" correct={true} />
+  <Option text="O(E log V)" correct={false} />
+</Question>
+</Quiz>
+
+## Ordre Topologique
+
+Un concept fondamental dans l'analyse des graphes orientés, particulièrement lorsqu'ils modélisent des dépendances ou des séquences d'activités, est l'**ordre topologique**. Un ordre topologique d'un graphe orienté acyclique (DAG - Directed Acyclic Graph) est une énumération linéaire de tous ses sommets, telle que pour chaque arête orientée de $u$ à $v$, le sommet $u$ apparaît avant le sommet $v$ dans l'énumération. En d'autres termes, si une tâche $A$ doit être effectuée avant une tâche $B$, alors $A$ doit précéder $B$ dans l'ordre topologique.
+
+Le lien entre l'ordre topologique et l'absence de cycles est intrinsèque : **un graphe orienté admet un ordre topologique si et seulement s'il est acyclique**. Si un graphe contient un cycle, il est impossible de satisfaire la condition de précédence pour toutes les arêtes du cycle simultanément. Par exemple, dans un cycle $u \to v \to w \to u$, $u$ doit précéder $v$, $v$ doit précéder $w$, et $w$ doit précéder $u$. Cette exigence cyclique crée une contradiction logique, rendant tout ordonnancement linéaire impossible.
+
+Il existe plusieurs algorithmes pour calculer un ordre topologique. Deux des plus courants sont basés sur la recherche en profondeur (DFS) et sur l'algorithme de Kahn.
+
+### Algorithme basé sur DFS
+
+Cet algorithme exploite la nature de la recherche en profondeur. Lors d'une DFS, lorsqu'un sommet est complètement exploré (c'est-à-dire que tous ses voisins ont été visités et la récursion est terminée), il est ajouté au début d'une liste. L'ordre dans lequel les sommets sont ainsi « terminés » est l'ordre topologique inverse. En inversant cette liste, on obtient un ordre topologique valide. Pour implémenter cela, on utilise généralement trois couleurs pour marquer les sommets : blanc (non visité), gris (en cours de visite), et noir (visite terminée). Si, lors de la DFS, on rencontre une arête pointant vers un sommet déjà marqué en gris, cela indique la présence d'un cycle, et donc l'impossibilité d'un ordre topologique.
+
+### Algorithme de Kahn
+
+L'algorithme de Kahn, quant à lui, est basé sur le calcul des degrés entrants des sommets.
+1. Initialiser une file avec tous les sommets ayant un degré entrant de zéro.
+2. Initialiser une liste vide pour stocker l'ordre topologique.
+3. Tant que la file n'est pas vide :
+ a. Retirer un sommet $u$ de la file.
+ b. Ajouter $u$ à la liste de l'ordre topologique.
+ c. Pour chaque voisin $v$ de $u$ :
+ i. Décrémenter le degré entrant de $v$.
+ ii. Si le degré entrant de $v$ devient zéro, ajouter $v$ à la file.
+4. Si le nombre de sommets dans la liste de l'ordre topologique est égal au nombre total de sommets dans le graphe, alors la liste représente un ordre topologique valide. Sinon, le graphe contient un cycle.
+
+Cet algorithme est particulièrement intuitif pour la planification de tâches, car il commence par les tâches qui n'ont aucune dépendance préalable.
+
+<Mermaid caption="Figure 3 : " chart={``} />
+
+### Cas où un ordre topologique n'existe pas
+
+Comme mentionné précédemment, un ordre topologique n'existe que pour les graphes orientés acycliques (DAG). La présence d'un seul cycle suffit à rendre impossible l'établissement d'un tel ordre. Les algorithmes de détection de cycles, qu'ils soient basés sur DFS ou sur l'algorithme de Kahn, permettent de déterminer si un graphe est un DAG. Si un cycle est détecté, l'algorithme d'ordre topologique échoue ou ne parvient pas à inclure tous les sommets.
+
+L'étude des cycles dans les graphes orientés est intimement liée aux travaux de nombreux chercheurs influents. Par exemple, Donald Knuth, dans sa série d'ouvrages « The Art of Computer Programming », explore en profondeur les algorithmes sur les graphes, y compris ceux liés à la détection de cycles et à l'ordonnancement <RealPerson id="donald_knuth" name="Donald Knuth" text="Donald Knuth is a distinguished American computer scientist and mathematician. He is best known as the author of the multi-volume work 'The Art of Computer Programming', a seminal text in the field. Knuth's work spans algorithm analysis, programming language design, and the development of literate programming. He is also the creator of the TeX digital typesetting system.">Donald Knuth</RealPerson>. Ses analyses rigoureuses ont servi de référence pour des générations d'informaticiens <Reference id="7" name="7" term="7">7</Reference>.
+
+<Image description="Une illustration comparative montrant un exemple de graphe orienté acyclique (DAG) avec un ordre topologique possible, et un graphe orienté contenant un cycle, expliquant pourquoi un ordre topologique est impossible dans ce dernier cas." alt="Graphique montrant la distribution verticale de l'eau en ppmv en fonction de l'altitude et d'une autre variable." caption="Figure 2: Une illustration comparative montrant un exemple de graphe orienté acyclique (DAG) avec un ordre topologique possible, et un graphe orienté contenant un cycle, expliquant pourquoi un ordre topologique est impossible dans ce dernier cas. Source: NASA Images (Public Domain)" src="https://images-assets.nasa.gov/image/PIA22080/PIA22080~thumb.jpg" />
+
+## Analyse des Dépendances et Applications
+
+La détection de cycles et le calcul d'ordres topologiques sont des outils puissants pour analyser les dépendances dans divers domaines de l'informatique et au-delà. Ils permettent de modéliser des relations complexes où l'exécution d'une tâche ou la disponibilité d'une ressource dépend de l'achèvement d'autres éléments.
+
+### Compilation et Gestion des Dépendances entre Modules
+
+Dans le développement logiciel, les projets sont souvent structurés en modules ou bibliothèques qui dépendent les uns des autres. Par exemple, le module $A$ peut dépendre du module $B$, et le module $B$ du module $C$. Ces dépendances peuvent être représentées par un graphe orienté où un arc de $B$ vers $A$ signifie que $A$ dépend de $B$. Pour compiler correctement le projet, les modules doivent être traités dans un ordre qui respecte ces dépendances. Un ordre topologique fournit précisément cet ordre : le module $C$ doit être compilé avant $B$, et $B$ avant $A$. Si une dépendance cyclique existe (par exemple, $A$ dépend de $B$, et $B$ dépend de $A$), le compilateur ne peut pas déterminer un ordre de compilation valide et signalera une erreur. Les systèmes de build modernes, comme Make, CMake, ou Bazel, utilisent ces principes pour gérer efficacement les dépendances et optimiser le processus de compilation.
+
+### Planification de Projets
+
+Dans la gestion de projet, les tâches doivent souvent être exécutées dans un ordre spécifique. Par exemple, la construction d'un mur (tâche $A$) doit être terminée avant de pouvoir peindre le mur (tâche $B$). Ces relations de précédence peuvent être modélisées comme un graphe orienté. L'ordre topologique de ce graphe représente un planning possible pour l'exécution des tâches. Si le graphe contient un cycle, cela signifie qu'il y a une dépendance circulaire irréalisable, indiquant un problème dans la planification du projet. Des algorithmes comme le PERT (Program Evaluation and Review Technique) ou le CPM (Critical Path Method) s'appuient sur ces concepts pour identifier le chemin critique et estimer la durée minimale d'un projet.
+
+### Résolution de Dépendances dans les Systèmes de Gestion de Paquets
+
+Les systèmes d'exploitation et les environnements de développement utilisent des gestionnaires de paquets (comme APT, YUM, pip, npm, Maven) pour installer, mettre à jour et désinstaller des logiciels. Chaque paquet peut dépendre d'autres paquets pour fonctionner correctement. Par exemple, un logiciel $X$ peut nécessiter la bibliothèque $Y$, et la bibliothèque $Y$ peut nécessiter une version spécifique du système d'exploitation ou d'une autre bibliothèque $Z$. Ces dépendances forment un graphe orienté. Le gestionnaire de paquets doit résoudre ces dépendances pour s'assurer que tous les prérequis sont satisfaits avant d'installer un paquet. La détection de cycles est cruciale ici : si un cycle de dépendances est détecté (par exemple, paquet $A$ dépend de $B$, et $B$ dépend de $A$), le système ne peut pas satisfaire les deux exigences simultanément et doit signaler une erreur de dépendance. L'ordre topologique aide à déterminer l'ordre d'installation ou de mise à jour des paquets.
+
+Un exemple concret de l'importance de la détection de cycles dans la gestion des dépendances se trouve dans les systèmes de compilation de code source. Des outils comme `make` utilisent des fichiers de règles pour définir comment construire un projet. Ces règles spécifient les dépendances entre les fichiers sources, les bibliothèques et les exécutables. Si une règle crée une dépendance cyclique, `make` ne pourra pas déterminer l'ordre de compilation correct.
+
+<SolvedExercise title="Détection de cycle de dépendances dans la gestion de paquets" solution="">
+  
+</SolvedExercise>
+
+La capacité à modéliser et analyser ces relations complexes est essentielle pour construire des systèmes logiciels robustes, des planifications de projets efficaces et des infrastructures informatiques fiables. Les concepts d'ordre topologique et de détection de cycles, bien que fondamentaux en théorie des graphes, trouvent ainsi des applications pratiques omniprésentes dans le monde de l'ingénierie et de l'informatique.
+
+Douglas West, dans son ouvrage « Introduction to Graph Theory », aborde ces applications de manière approfondie, soulignant l'utilité des graphes orientés acycliques dans la modélisation de processus et de systèmes ordonnés <RealPerson id="douglas_west" name="Douglas West" text="Douglas West is an American mathematician specializing in graph theory and combinatorics. He is a prolific author and educator, known for his textbook 'Introduction to Graph Theory'. His research interests include extremal graph theory, Ramsey theory, and the study of graph coloring. West's work has been influential in advancing the understanding of complex network structures.">Douglas West</RealPerson> <Reference id="8" name="8" term="8">8</Reference>.
+
+<Quiz durationLimit={300} limit={3}>
+ <Question q="Dans quel domaine la détection de cycles est-elle essentielle pour éviter les compilations infinies ou incorrectes ?" explanation="La détection de cycles est cruciale dans la compilation pour s'assurer qu'il n'y a pas de dépendances circulaires entre les fichiers ou modules, ce qui empêcherait une compilation correcte.">
+  <Option text="Traitement d'images" correct={false} />
+  <Option text="Compilation (gestion des dépendances entre modules)" correct={true} />
+  <Option text="Analyse de sentiments" correct={false} />
+</Question>
+ <Question q="L'ordre topologique est-il utile pour planifier des tâches dans un projet ?" explanation="L'ordre topologique fournit un séquencement valide des tâches en respectant leurs dépendances, ce qui est fondamental pour la planification de projet.">
+  <Option text="Non, car il ne considère que les dépendances directes." correct={false} />
+  <Option text="Oui, il permet de déterminer un ordre d'exécution valide des tâches." correct={true} />
+  <Option text="Seulement si le projet ne contient aucune tâche." correct={false} />
+</Question>
+ <Question q="Comment la détection de cycles peut-elle être appliquée en bio-informatique ?" explanation="En bio-informatique, les cycles peuvent représenter des boucles de rétroaction dans les voies métaboliques ou de signalisation, et leur détection aide à comprendre la régulation biologique.">
+  <Option text="Pour modéliser les voies métaboliques et identifier les boucles de régulation." correct={true} />
+  <Option text="Pour prédire la structure tridimensionnelle des protéines." correct={false} />
+  <Option text="Pour séquencer l'ADN." correct={false} />
+</Question>
+</Quiz>
+
+## Conclusion
+Au terme de cette exploration des graphes orientés, de la détection de cycles et de l'ordre topologique, nous avons parcouru des concepts fondamentaux qui sous-tendent de nombreuses applications en informatique et au-delà. Nous avons débuté par la définition rigoureuse des graphes orientés et la caractérisation des cycles, ces chemins fermés qui peuvent indiquer des dépendances circulaires, des impasses logiques ou des boucles de rétroaction dans un système. La capacité à identifier et à analyser ces cycles est cruciale pour la validation et la robustesse des modèles.
+
+Nous avons ensuite examiné les algorithmes clés pour la détection de cycles, notamment ceux basés sur la recherche en profondeur d'abord (DFS), et des approches plus sophistiquées comme l'algorithme de pour les composantes fortement connexes, ou l'algorithme de Kosaraju. Ces méthodes nous permettent de transformer un problème abstrait en une procédure algorithmique concrète et efficace. Parallèlement, nous avons introduit la notion d'ordre topologique, une linéarisation des nœuds d'un graphe orienté acyclique (DAG) respectant toutes les dépendances. L'existence d'un ordre topologique est la signature d'un DAG, et sa construction est essentielle pour ordonnancer des tâches interdépendantes. Les applications de ces concepts sont vastes et variées, allant de la planification de projets avec le <ConceptLink id="methode_chemin_critique" name="Méthode du Chemin Critique" text="The Critical Path Method (CPM) is an algorithm for scheduling a set of project activities. CPM is a project management technique used to identify the sequence of tasks that determine the duration of a project. It helps in identifying the critical tasks that must be completed on time to avoid delaying the project." unresolved={true}>Méthode du Chemin Critique</ConceptLink> (CPM) à la gestion des dépendances logicielles et à la compilation de code source, comme nous l'avons illustré. La compréhension de ces mécanismes est indispensable pour tout ingénieur ou chercheur en informatique souhaitant concevoir des systèmes fiables et performants.
+
+<Image description="Comment la détection de cycles et l'ordre topologique sont-ils des outils fondamentaux pour modéliser et résoudre des problèmes dans des domaines aussi divers que la planification, la bio-informatique et la sécurité informatique ?" alt="Logo de l'école Mechelen Beiaardschool avec des formes géométriques et le nom de l'école." caption="Figure 3: Comment la détection de cycles et l'ordre topologique sont-ils des outils fondamentaux pour modéliser et résoudre des problèmes dans des domaines aussi divers que la planification, la bio-informatique et la sécurité informatique ?. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Royal_Carillon_School_Jef_Denyn_logo.png)" src="https://commons.wikimedia.org/wiki/Special:FilePath/Royal_Carillon_School_Jef_Denyn_logo.png" fallbackUrl="https://commons.wikimedia.org/wiki/File:Royal_Carillon_School_Jef_Denyn_logo.png" />
+
+<Summary itemsString="La détection de cycles dans les graphes orientés est fondamentale pour identifier les dépendances circulaires et les états impossibles dans divers systèmes.|||Les algorithmes basés sur la recherche en profondeur (DFS) permettent de détecter les cycles en suivant les arêtes et en identifiant les arêtes de retour vers des nœuds déjà visités dans la pile d'appels récursive.|||L'algorithme de Tarjan et l'algorithme de Kosaraju sont des méthodes efficaces pour trouver les composantes fortement connexes (SCC), où la présence d'une SCC de taille supérieure à un indique l'existence d'au moins un cycle.|||Le tri topologique, applicable uniquement aux graphes orientés acycliques (DAG), est directement impacté par la présence de cycles, rendant impossible un ordonnancement linéaire des tâches.|||Comprendre et détecter les cycles est crucial pour des applications telles que la résolution de dépendances, la détection de blocages dans les systèmes distribués et l'analyse de flux de contrôle.|||L'analyse des cycles permet d'identifier des boucles dans les processus, ce qui peut indiquer des erreurs de conception ou des opportunités d'optimisation." />
+
+<WhatsNext itemsBase64="W10=" />
+### Perspectives et Extensions
+
+Les concepts abordés dans cette leçon ne sont qu'une porte d'entrée vers des domaines de recherche et d'application encore plus riches. Plusieurs extensions et sujets connexes méritent d'être explorés :
+
+1. **Graphes Pondérés et Cycles Négatifs** : Jusqu'à présent, nous avons principalement traité des graphes non pondérés ou dont les poids n'influençaient pas directement la détection de cycles. Cependant, dans les <ConceptLink id="graphe_pondere" name="Graphes Pondérés" text="A weighted graph is a graph in which each edge has an associated numerical value, known as a weight. These weights can represent costs, distances, capacities, or other metrics. Weighted graphs are fundamental in many areas of computer science and operations research, including shortest path problems and network flow analysis." unresolved={true}>Graphes Pondérés</ConceptLink>, où chaque arête est associée à un coût ou une valeur, la détection de cycles prend une nouvelle dimension. Les <Glossary id="cycle_negatif" text="A negative cycle in a weighted directed graph is a cycle whose edge weights sum to a negative value. The présence of negative cycles can complicate shortest path algorithms, as it implies that paths can be made arbitrarily short by traversing the cycle repeatedly. Algorithms like Bellman-Ford can detect negative cycles.">cycle_negatif</Glossary> sont particulièrement importants. Un cycle négatif est un cycle dont la somme des poids des arêtes est strictement négative. Leur présence dans un graphe peut indiquer des opportunités d'<Glossary id="arbitrage" text="Arbitrage refers to the simultaneous purchase and sale of an asset in different markets or in derivative forms to profit from a price discrepancy. It is a risk-free strategy when the prices are perfectly correlated. In the context of graphs, arbitrage opportunities can sometimes be modeled using negative cycles.">arbitrage</Glossary> (par exemple, dans les marchés financiers où l'on peut réaliser un profit illimité en parcourant le cycle) ou signaler une absence de solution pour certains problèmes de chemin le plus court (comme avec l'algorithme de Bellman-Ford, qui détecte les cycles négatifs). L'étude de ces cycles est cruciale pour l'optimisation des flux et la détection d'anomalies.
+
+2. **Détection de Cycles dans les Systèmes Distribués et Dynamiques** : Dans les architectures modernes, les graphes peuvent être massifs, dynamiques (les nœuds et arêtes apparaissent et disparaissent fréquemment) et distribués sur plusieurs machines. La détection de cycles dans de tels environnements pose des défis considérables. Comment détecter un cycle si aucune entité n'a une vue globale et instantanée du graphe ? Des algorithmes distribués de détection de cycles sont nécessaires, souvent basés sur l'échange de messages entre les nœuds. Ces problèmes sont pertinents pour les réseaux de capteurs, les systèmes de fichiers distribués, les bases de données distribuées et les réseaux sociaux. La <ConceptLink id="complexite_algorithmique" name="Complexité Algorithmique" text="Algorithmic complexity is the measure of the amount of computational resources (such as time and memory) required by an algorithm to solve a computational problem. It is typically expressed as a function of the input size, using notations like Big O notation. Understanding complexity is crucial for designing efficient algorithms." unresolved={true}>Complexité Algorithmique</ConceptLink> de ces algorithmes est souvent mesurée non seulement en temps et en espace, mais aussi en nombre de messages échangés.
+
+ Voici une comparaison des approches de détection de cycles :
+
+ | Type de Graphe | Algorithme Typique | Complexité (Temps) | Notes |
+ | :--------------------- | :----------------------------------------------- | :----------------- | :------------------------------------------------------------------ |
+ | Graphe Orienté Simple | DFS (avec marquage des états) | O(V + E) | Standard, efficace pour les graphes statiques. |
+ | Graphe Orienté Fort. Conn. | Kosaraju, Tarjan | O(V + E) | Identifie les composantes fortement connexes, utiles pour les cycles. |
+ | Graphe Pondéré | Bellman-Ford (pour cycles négatifs) | O(V * E) | Détecte les cycles négatifs, essentiel pour certains problèmes d'optimisation. |
+ | Graphe Distribué | Algorithmes basés sur la diffusion de messages | Variable | Dépend de la topologie du réseau et du protocole de communication. |
+
+3. **Cycles dans la Bio-informatique et la Modélisation de Réseaux** : Les graphes sont omniprésents en bio-informatique pour modéliser les réseaux de régulation génique, les voies métaboliques ou les interactions protéine-protéine. Les cycles dans ces graphes peuvent représenter des boucles de rétroaction essentielles à la stabilité ou à la dynamique d'un système biologique. Leur analyse aide à comprendre les mécanismes de maladies ou à concevoir de nouvelles thérapies. De même, en écologie, les cycles peuvent modéliser les chaînes alimentaires et les flux d'énergie.
+
+4. **Autres Types de Cycles** : Au-delà des cycles simples que nous avons étudiés, la théorie des graphes s'intéresse à d'autres types de cycles avec des propriétés spécifiques, comme les cycles eulériens (qui visitent chaque arête exactement une fois) et les cycles hamiltoniens (qui visitent chaque sommet exactement une fois). La détection de ces derniers est un problème NP-complet, soulignant la diversité de la complexité des problèmes liés aux cycles.
+
+<Mermaid caption="Figure 6 : " chart={``} />
+
+La maîtrise des concepts de détection de cycles et d'ordre topologique est donc une compétence fondamentale. Elle ouvre la voie à la compréhension et à la résolution de problèmes complexes dans des domaines variés, et constitue une base solide pour aborder des sujets plus avancés en théorie des graphes et en algorithmique. L'évolution constante des systèmes informatiques et des données massives garantit que ces outils analytiques resteront au cœur de l'innovation et de la recherche.
+
+<SolvedExercise title="Exemple résolu de détection de cycle négatif" solution="">
+  
+</SolvedExercise>
+
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+ <Question q="Quelle est la principale différence entre un graphe orienté et un graphe non orienté ?" explanation="Un graphe orienté possède des arêtes avec une direction spécifiée (d'A vers B), tandis qu'un graphe non orienté a des arêtes sans direction.">
+  <Option text="Les graphes orientés ont des poids sur leurs arêtes." correct={false} />
+  <Option text="Les graphes non orientés ne peuvent pas avoir de cycles." correct={false} />
+  <Option text="Dans un graphe orienté, les arêtes ont une direction." correct={true} />
+  <Option text="Les graphes orientés sont toujours plus grands que les graphes non orientés." correct={false} />
+</Question>
+ <Question q="Qu'est-ce qu'un cycle dans un graphe orienté ?" explanation="Un cycle dans un graphe orienté est un chemin qui commence et se termine au même sommet, en suivant la direction des arêtes.">
+  <Option text="Un chemin entre deux sommets distincts." correct={false} />
+  <Option text="Une séquence de sommets où chaque sommet est connecté au suivant par une arête, et le dernier sommet est connecté au premier." correct={true} />
+  <Option text="Un chemin qui utilise chaque arête exactement une fois." correct={false} />
+  <Option text="Un chemin qui ne contient aucun sommet répété, sauf le premier et le dernier." correct={false} />
+</Question>
+ <Question q="Quel algorithme est couramment utilisé pour détecter la présence de cycles dans un graphe orienté ?" explanation="L'algorithme de parcours en profondeur (DFS) est très efficace pour détecter les cycles dans les graphes orientés. Il utilise des états pour marquer les sommets visités et ceux actuellement dans la pile de récursion.">
+  <Option text="Algorithme de Dijkstra" correct={false} />
+  <Option text="Algorithme de Prim" correct={false} />
+  <Option text="Algorithme de parcours en largeur (BFS)" correct={false} />
+  <Option text="Algorithme de parcours en profondeur (DFS)" correct={true} />
+</Question>
+ <Question q="Dans le contexte de la détection de cycles par DFS, qu'indique la découverte d'une arête pointant vers un sommet déjà marqué comme 'en cours de visite' (visiting) ?" explanation="Si lors d'un parcours DFS, on rencontre une arête allant vers un sommet qui est actuellement dans la pile d'appel récursif (marqué comme 'en cours de visite'), cela signifie qu'un cycle a été trouvé.">
+  <Option text="La fin du parcours pour ce chemin." correct={false} />
+  <Option text="Un chemin simple vers ce sommet." correct={false} />
+  <Option text="La présence d'un cycle." correct={true} />
+  <Option text="Un sommet isolé." correct={false} />
+</Question>
+ <Question q="Quelle est l'utilité de la notion de graphe orienté acyclique (DAG) ?" explanation="Les DAGs sont fondamentaux dans de nombreux domaines comme la planification des tâches, la compilation, et la gestion des dépendances, car ils représentent des relations où il n'y a pas de dépendance circulaire.">
+  <Option text="Ils garantissent que tous les sommets sont atteignables depuis n'importe quel autre sommet." correct={false} />
+  <Option text="Ils modélisent des situations où il existe des dépendances circulaires." correct={false} />
+  <Option text="Ils sont utilisés pour représenter des ordres de tâches ou des dépendances sans boucles." correct={true} />
+  <Option text="Ils sont uniquement utiles pour trouver le plus court chemin dans un graphe." correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFsZ29yaXRobWUgZGUgS2FobiIsImRlZmluaXRpb24iOiJVbiBhbGdvcml0aG1lIHBvdXIgZWZmZWN0dWVyIHVuIHRyaSB0b3BvbG9naXF1ZSBiYXPDqSBzdXIgbGUgY2FsY3VsIGRlcyBkZWdyw6lzIGVudHJhbnRzIGRlcyBzb21tZXRzLiBJbCBwZXV0IMOpZ2FsZW1lbnQgw6p0cmUgdXRpbGlzw6kgcG91ciBkw6l0ZWN0ZXIgZGVzIGN5Y2xlcyA6IHNpIGxlIG5vbWJyZSBkZSBzb21tZXRzIHRyacOpcyBlc3QgaW5mw6lyaWV1ciBhdSBub21icmUgdG90YWwgZGUgc29tbWV0cywgbGUgZ3JhcGhlIGNvbnRpZW50IHVuIGN5Y2xlLiJ9LHsidGVybSI6IkFsZ29yaXRobWUgZGUgS29zYXJhanUiLCJkZWZpbml0aW9uIjoiVW5lIGF1dHJlIG3DqXRob2RlIHBvdXIgdHJvdXZlciBsZXMgU0NDcyBkJ3VuIGdyYXBoZSBvcmllbnTDqSwgdXRpbGlzYW50IGRldXggcGFzc2VzIGRlIERGUy4gTGEgcHJlbWnDqHJlIHBhc3NlIHN1ciBsZSBncmFwaGUgb3JpZ2luYWwsIGxhIHNlY29uZGUgc3VyIGxlIGdyYXBoZSB0cmFuc3Bvc8OpLiJ9LHsidGVybSI6IkFsZ29yaXRobWUgZGUgVGFyamFuIiwiZGVmaW5pdGlvbiI6IlVuIGFsZ29yaXRobWUgZWZmaWNhY2UgYmFzw6kgc3VyIERGUyBwb3VyIHRyb3V2ZXIgbGVzIGNvbXBvc2FudGVzIGZvcnRlbWVudCBjb25uZXhlcyBkJ3VuIGdyYXBoZSBvcmllbnTDqS4gSWwgdXRpbGlzZSBkZXMgbnVtw6lyb3MgZCdvcmRyZSBldCBkZXMgJ2xvdy1saW5rIHZhbHVlcycgcG91ciBpZGVudGlmaWVyIGxlcyBTQ0NzLCBldCBwYXIgZXh0ZW5zaW9uLCBsZXMgY3ljbGVzLiJ9LHsidGVybSI6IkFyw6p0ZSBkZSBSZXRvdXIiLCJkZWZpbml0aW9uIjoiRGFucyB1bmUgZXhwbG9yYXRpb24gREZTIGQndW4gZ3JhcGhlIG9yaWVudMOpLCB1bmUgYXLDqnRlIGFsbGFudCBkJ3VuIHNvbW1ldCBjb3VyYW50IHZlcnMgdW4gYW5jw6p0cmUgZGFucyBsJ2FyYnJlIERGUyBhY3R1ZWwuIExhIHByw6lzZW5jZSBkJ3VuZSBhcsOqdGUgZGUgcmV0b3VyIGluZGlxdWUgdW4gY3ljbGUuIn0seyJ0ZXJtIjoiQ29tcG9zYW50ZSBGb3J0ZW1lbnQgQ29ubmV4ZSAoQ0ZDKSIsImRlZmluaXRpb24iOiJVbmUgc291cy1wYXJ0aWUgbWF4aW1hbGUgZCd1biBncmFwaGUgb3JpZW50w6kgb8O5IHBvdXIgdG91dGUgcGFpcmUgZGUgc29tbWV0cyB1IGV0IHYgZGFucyBsYSBzb3VzLXBhcnRpZSwgaWwgZXhpc3RlIHVuIGNoZW1pbiBkZSB1IMOgIHYgZXQgdW4gY2hlbWluIGRlIHYgw6AgdS4gQ2hhcXVlIFNDQyBkZSB0YWlsbGUgc3Vww6lyaWV1cmUgw6AgMSBjb250aWVudCBhdSBtb2lucyB1biBjeWNsZS4ifSx7InRlcm0iOiJDeWNsZSBPcmllbnTDqSIsImRlZmluaXRpb24iOiJVbiBjaGVtaW4gZGFucyB1biBncmFwaGUgb3JpZW50w6kgcXVpIGNvbW1lbmNlIGV0IHNlIHRlcm1pbmUgYXUgbcOqbWUgc29tbWV0LCBlbiBzdWl2YW50IGxhIGRpcmVjdGlvbiBkZXMgYXLDqnRlcy4gSWwgaW1wbGlxdWUgdW5lIHPDqXF1ZW5jZSBkZSBzb21tZXRzIHYxLCB2MiwgLi4uLCB2aywgdjEgb8O5IGlsIGV4aXN0ZSBkZXMgYXLDqnRlcyAodjEsIHYyKSwgKHYyLCB2MyksIC4uLiwgKHZrLCB2MSkuIn0seyJ0ZXJtIjoiRMOpcGVuZGFuY2UgQ2lyY3VsYWlyZSIsImRlZmluaXRpb24iOiJVbmUgc2l0dWF0aW9uIG/DuSB1bmUgc8OpcmllIGQnw6lsw6ltZW50cyAodMOiY2hlcywgcHJvY2Vzc3VzLCBtb2R1bGVzKSBkw6lwZW5kZW50IG11dHVlbGxlbWVudCBsZXMgdW5zIGRlcyBhdXRyZXMsIGZvcm1hbnQgdW4gY3ljbGUuIExhIGTDqXRlY3Rpb24gZGUgY2VzIGTDqXBlbmRhbmNlcyBlc3QgdW5lIGFwcGxpY2F0aW9uIGNsw6kgZGUgbCdhbmFseXNlIGRlIGN5Y2xlcy4ifSx7InRlcm0iOiJHcmFwaGUgT3JpZW50w6kiLCJkZWZpbml0aW9uIjoiVW4gZ3JhcGhlIGRvbnQgbGVzIGFyw6p0ZXMgb250IHVuZSBkaXJlY3Rpb24sIGFsbGFudCBkJ3VuIHNvbW1ldCBzb3VyY2Ugw6AgdW4gc29tbWV0IGRlc3RpbmF0aW9uLiBMZXMgcmVsYXRpb25zIG5lIHNvbnQgcGFzIHN5bcOpdHJpcXVlcy4ifSx7InRlcm0iOiJHcmFwaGUgT3JpZW50w6kgQWN5Y2xpcXVlIChEQUcpIiwiZGVmaW5pdGlvbiI6IlVuIGdyYXBoZSBvcmllbnTDqSBxdWkgbmUgY29udGllbnQgYXVjdW4gY3ljbGUgb3JpZW50w6kuIENlcyBncmFwaGVzIHNvbnQgZm9uZGFtZW50YXV4IHBvdXIgbW9kw6lsaXNlciBkZXMgZMOpcGVuZGFuY2VzIG91IGRlcyBzw6lxdWVuY2VzIHNhbnMgcmV0b3VyIGVuIGFycmnDqHJlLiJ9LHsidGVybSI6IkludGVyYmxvY2FnZSIsImRlZmluaXRpb24iOiJVbiDDqXRhdCBkYW5zIHVuIHN5c3TDqG1lIG/DuSBkZXV4IG91IHBsdXNpZXVycyBwcm9jZXNzdXMgc29udCBibG9xdcOpcyBpbmTDqWZpbmltZW50LCBjaGFjdW4gYXR0ZW5kYW50IHF1J3VuIGF1dHJlIHByb2Nlc3N1cyBsaWLDqHJlIHVuZSByZXNzb3VyY2UuIExhIGTDqXRlY3Rpb24gZGUgY3ljbGVzIGRhbnMgbGUgZ3JhcGhlIGQnYXR0ZW50ZSBkZXMgcmVzc291cmNlcyBlc3QgdW5lIG3DqXRob2RlIHBvdXIgaWRlbnRpZmllciBsZXMgaW50ZXJibG9jYWdlcy4ifSx7InRlcm0iOiJSZWNoZXJjaGUgZW4gUHJvZm9uZGV1ciAoREZTKSIsImRlZmluaXRpb24iOiJVbiBhbGdvcml0aG1lIGRlIHBhcmNvdXJzIGRlIGdyYXBoZSBxdWkgZXhwbG9yZSBhdXNzaSBsb2luIHF1ZSBwb3NzaWJsZSBsZSBsb25nIGRlIGNoYXF1ZSBicmFuY2hlIGF2YW50IGRlIHJldmVuaXIgZW4gYXJyacOocmUuIFV0aWxpc8OpIHBvdXIgbGEgZMOpdGVjdGlvbiBkZSBjeWNsZXMgZW4gaWRlbnRpZmlhbnQgbGVzIGFyw6p0ZXMgZGUgcmV0b3VyLiJ9LHsidGVybSI6IlRyaSBUb3BvbG9naXF1ZSIsImRlZmluaXRpb24iOiJVbiBvcmRvbm5hbmNlbWVudCBsaW7DqWFpcmUgZGVzIHNvbW1ldHMgZCd1biBncmFwaGUgb3JpZW50w6kgYWN5Y2xpcXVlIChEQUcpIHRlbCBxdWUgcG91ciBjaGFxdWUgYXLDqnRlIGRpcmlnw6llIGRlIHUgdmVycyB2LCB1IHZpZW50IGF2YW50IHYgZGFucyBsJ29yZG9ubmFuY2VtZW50LiBJbXBvc3NpYmxlIGVuIHByw6lzZW5jZSBkZSBjeWNsZXMuIn1d" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiVGhvbWFzIEguIENvcm1lbiwgQ2hhcmxlcyBFLiBMZWlzZXJzb24sIFJvbmFsZCBSaXZlc3QsIENsaWZmb3JkIFN0ZWluICgyMDE3KS4gwqsgQWxnb3JpdGhtZW4gLSBFaW5lIEVpbmbDvGhydW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjE1MTUvOTc4MzExMDUyMjAxMyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoyLCJ0ZXh0IjoiS2xlaW5iZXJnLCBKb24sIGFuZCDDiXZhIFRhcmRvcy4gJ0FsZ29yaXRobSBEZXNpZ24nLiBBZGRpc29uLVdlc2xleSwgMjAwNS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjQwODYvdG9jLjIwMTUudjAxMWEwMDQiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MywidGV4dCI6IlNlZGdld2ljaywgUm9iZXJ0LCBhbmQgS2V2aW4gV2F5bmUuICdBbGdvcml0aG1zJy4gQWRkaXNvbi1XZXNsZXksIDIwMTEuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1TZWRnZXdpY2slMjAlMjJTZWRnZXdpY2slMjIlMjAyMDExIiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjQsInRleHQiOiJBaG8sIEFsZnJlZCBWLiwgSm9obiBFLiBIb3Bjcm9mdCwgYW5kIEplZmZyZXkgRC4gVWxsbWFuLiAnRGF0YSBTdHJ1Y3R1cmVzIGFuZCBBbGdvcml0aG1zJy4gQWRkaXNvbi1XZXNsZXksIDE5ODMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1BaG8lMjAlMjJIb3Bjcm9mdCUyMiUyMDE5ODMiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NSwidGV4dCI6IlRhcmphbiwgUm9iZXJ0IEUuICdEYXRhIFN0cnVjdHVyZXMgYW5kIE5ldHdvcmsgQWxnb3JpdGhtcycuIFNvY2lldHkgZm9yIEluZHVzdHJpYWwgYW5kIEFwcGxpZWQgTWF0aGVtYXRpY3MsIDE5ODMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1UYXJqYW4lMjAlMjJTb2NpZXR5JTIwZm9yJTIwSW5kdXN0cmlhbCUyMGFuZCUyMEFwcGxpZWQlMjBNYXRoZW1hdGljcyUyMiUyMDE5ODMiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NiwidGV4dCI6IlJlaW5oYXJkIERpZXN0ZWwgKDIwMTApLiDCqyBHcmFwaCBUaGVvcnkgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1SZWluaGFyZCUyMERpZXN0ZWwlMjAlMjJHcmFwaCUyMFRoZW9yeSUyMiUyMDIwMTAiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjcsInRleHQiOiJNLiBEb25hbGQgTWFjTGFyZW4gKDIwMDUpLiDCqyBUaGUgQXJ0IG9mIENvbXB1dGVyIFByb2dyYW1taW5n4oCUVm9sdW1lIDE6IEZ1bmRhbWVudGFsIEFsZ29yaXRobXMgKERvbmFsZCBFLiBLbnV0aCkgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Eb25hbGQlMjBNYWNMYXJlbiUyMCUyMlRoZSUyMEFydCUyMG9mJTIwQ29tcHV0ZXIlMjBQcm9ncmFtbWluZyVFMiU4MCU5NFZvbHVtZSUyMDElMjIlMjAyMDA1Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo4LCJ0ZXh0IjoiSnVkeSBHb2xkc21pdGggKDIwMDQpLiAqQm9vayByZXZpZXc6IFRoZW9yeSBvZiBDb21wdXRpbmc6IEEgR2VudGxlIEludHJvZHVjdGlvbi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPUp1ZHklMjBHb2xkc21pdGglMjAlMjJCb29rJTIwcmV2aWV3JTIyJTIwMjAwNCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo5LCJ0ZXh0IjoiRXZlbiwgU2hpbW9uLiAnR3JhcGggQWxnb3JpdGhtcycuIENvbXB1dGVyIFNjaWVuY2UgUHJlc3MsIDE5NzkuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1FdmVuJTIwJTIyQ29tcHV0ZXIlMjBTY2llbmNlJTIwUHJlc3MlMjIlMjAxOTc5Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTAsInRleHQiOiJKLiBBLiBCb25keSwgVS4gUy4gUi4gTXVydHkgKDIwMTUpLiDCqyBHcmFwaCBUaGVvcnkgd2l0aCBBcHBsaWNhdGlvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Cb25keSUyMCUyMkdyYXBoJTIwVGhlb3J5JTIwd2l0aCUyMEFwcGxpY2F0aW9ucyUyMiUyMDIwMTUiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTEsInRleHQiOiJTa2llbmEsIFN0ZXZlbiBTLiAnVGhlIEFsZ29yaXRobSBEZXNpZ24gTWFudWFsJy4gU3ByaW5nZXIsIDIwMDguIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0xLTg0ODAwLTA3MC00Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTIsInRleHQiOiJMZXZpLCDCqyBBIHRlY2huaXF1ZSBmb3IgZ3JhcGggZW1iZWRkaW5nIHdpdGggY29uc3RyYWludHMgb24gbm9kZSBhbmQgYXJjIGNvcnJlc3BvbmRlbmNlcyDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9TGV2aSUyMCUyMkElMjB0ZWNobmlxdWUlMjBmb3IlMjBncmFwaCUyMGVtYmVkZGluZyUyMHdpdGglMjBjb25zdHJhaW50cyUyMG9uJTIwbm9kZSUyMGFuZCUyMiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxMywidGV4dCI6IkpvbmF0aGFuIEwuIEdyb3NzLCBKYXkgWWVsbGVuICgyMDE4KS4gwqsgR3JhcGggVGhlb3J5IGFuZCBJdHMgQXBwbGljYXRpb25zIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Sm9uYXRoYW4lMjBHcm9zcyUyMCUyMkdyYXBoJTIwVGhlb3J5JTIwYW5kJTIwSXRzJTIwQXBwbGljYXRpb25zJTIyJTIwMjAxOCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNCwidGV4dCI6IkhhcmFyeSwgRnJhbmsuICdHcmFwaCBUaGVvcnknLiBBZGRpc29uLVdlc2xleSwgMTk2OS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPUhhcmFyeSUyMCUyMkFkZGlzb24lMjIlMjAxOTY5Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTUsInRleHQiOiJSaWNoYXJkIEkuIFNocmVldmUgKDIwMDcpLiAqR3JhcGggdGhlb3J5IHdpdGggYXBwbGljYXRpb25zIHRvIGVuZ2luZWVyaW5nIGFuZCBjb21wdXRlciBzY2llbmNlLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1SaWNoYXJkJTIwU2hyZWV2ZSUyMCUyMkdyYXBoJTIwdGhlb3J5JTIwd2l0aCUyMGFwcGxpY2F0aW9ucyUyMHRvJTIwZW5naW5lZXJpbmclMjBhbmQlMjBjb21wdXRlciUyMHMlMjIlMjAyMDA3Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE2LCJ0ZXh0IjoiUmVwcm9ncmFtbWF0aW9uIGNvbXBvcnRlbWVudGFsZSA6IG1vZMOobGVzLCBhbGdvcml0aG1lcyBldCBhcHBsaWNhdGlvbiBhdXggbWFsYWRpZXMgY29tcGxleGVzLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuNzA2NzUvMmMzNjczNzB6M2VhNno0NmNlejk5N2N6YzI1NDc4ZmQyMjg3Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTcsInRleHQiOiJNYWtobG91ZiBIYWRqaS4gMjAyNi4gwqsgU3ludGjDqHNlIGRlIHLDqXNlYXV4IMOgIGNvbXBvc2FudGVzIGNvbm5leGVzIHVuaWN5Y2xpcXVlcyDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjcwNjc1LzhjNGRmOGIyemY1ZTF6NDI1ZXo5MzIwemM2YmUwOGNhMDdjMSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE4LCJ0ZXh0IjoiRGllc3RlbCwgwqsgRXh0cmVtYWwgR3JhcGggVGhlb3J5IMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy02NjItNTM2MjItM183Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTksInRleHQiOiJNYXhpbWlsaWVuIERhbmlzY2guIDIwMjYuIMKrIE1lc3VyZXMgZGUgcHJveGltaXTDqSBhcHBsaXF1w6llcyDDoCBsYSBkw6l0ZWN0aW9uIGRlIGNvbW11bmF1dMOpcyBkYW5zIGxlcyBncmFuZHMgZ3JhcGhlcyBkZSB0ZXJyYWluIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9TWF4aW1pbGllbiUyMERhbmlzY2glMjAlMjJNZXN1cmVzJTIwZGUlMjBwcm94aW1pdCVDMyVBOSUyMGFwcGxpcXUlQzMlQTllcyUyMCVDMyVBMCUyMGxhJTIwZCVDMyVBOXRlY3Rpb24lMjBkZSUyMGNvbW11bmF1dCVDMyVBOSUyMiUyMDIwMjYiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMCwidGV4dCI6IkxhdXJlbnQgQ2FiYXJldC4gMjAyNi4gwqsgQWxnb3JpdGhtZXMgZCfDqXRpcXVldGFnZSBlbiBjb21wb3NhbnRlcyBjb25uZXhlcyBlZmZpY2FjZXMgcG91ciBhcmNoaXRlY3R1cmVzIGhhdXRlcyBwZXJmb3JtYW5jZXMgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC43MDY3NS80ZTFiYWViZHpmN2YwejQxMTB6YWIzNnphMjMxN2RkOWYzODciLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9XQ==" />

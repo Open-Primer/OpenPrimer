@@ -1,0 +1,286 @@
+---
+title: « Représentations des Graphes et Structures de Données Associées »
+subject: « Algorithmes Avancés et Théorie des Graphes »
+level: « L3 »
+module: « Représentations des Graphes et Structures de Données Associées »
+order: 2
+---
+
+
+
+<DiagnosticQuiz question="Considérez un graphe dense avec 1000 sommets et 499500 arêtes. Quelle représentation (matrice d'adjacence ou liste d'adjacence) serait la plus efficace en termes d'espace mémoire pour stocker ce graphe, et pourquoi ?" options="Matrice d'adjacence, car elle est toujours plus efficace en espace.|||Liste d'adjacence, car elle est plus efficace pour les graphes denses.|||Matrice d'adjacence, car elle est plus efficace pour les graphes denses.|||Liste d'adjacence, car elle utilise moins d'espace lorsque le nombre d'arêtes est significativement inférieur au carré du nombre de sommets." correctIndex="3" targetSectionId="representations-graphes-introduction" sectionTitle="Introduction aux Représentations des Graphes" />
+
+
+
+## Introduction aux Graphes et à leur Importance
+La théorie des graphes est une branche fondamentale des mathématiques discrètes et de l'informatique qui étudie les relations entre des objets. Un graphe est une structure mathématique composée d'un ensemble de *sommets* (ou nœuds) et d'un ensemble d'*arêtes* qui relient des paires de sommets. Formellement, un graphe $G$ est défini comme un couple $(V, E)$, où $V$ est un ensemble fini de sommets et $E$ est un ensemble d'arêtes, chaque arête étant une paire de sommets. Les graphes peuvent être orientés (où les arêtes ont une direction) ou non orientés (où les arêtes sont bidirectionnelles). Ils peuvent également être pondérés, chaque arête se voyant attribuer une valeur numérique.
+
+L'omniprésence des graphes dans la modélisation de systèmes complexes est stupéfiante. Dans le domaine des <ConceptLink id="reseaux_sociaux" name="réseaux sociaux" text="Les réseaux sociaux sont des plateformes en ligne qui permettent aux utilisateurs de créer des profils, de se connecter avec d'autres utilisateurs et de partager du contenu.">réseaux sociaux</ConceptLink>, les utilisateurs sont représentés par des sommets et les relations d'amitié ou de suivi par des arêtes. Les systèmes de <ConceptLink id="routage" name="routage" text="Le routage est le processus de sélection de chemins dans un réseau à travers lesquels les données doivent être transmises.">routage</ConceptLink> de réseaux informatiques et de transport utilisent des graphes pour trouver les chemins les plus courts entre deux points. En <ConceptLink id="bioinformatique" name="bioinformatique" text="La bioinformatique est un domaine interdisciplinaire qui développe des méthodes et des logiciels pour comprendre les données biologiques, en particulier lorsqu'elles sont volumineuses et complexes.">bioinformatique</ConceptLink>, les interactions entre protéines ou les voies métaboliques sont souvent représentées sous forme de graphes. D'autres applications incluent la modélisation de <ConceptLink id="dependances" name="dépendances logicielles" text="Les dépendances logicielles sont des relations entre différents composants logiciels, où un composant dépend de l'existence et du bon fonctionnement d'un autre." unresolved={true}>dépendances logicielles</ConceptLink>, la conception de circuits électroniques, les systèmes de recommandation, la cartographie des <ConceptLink id="connaissances" name="connaissances" text="Les connaissances représentent la compréhension, la conscience ou la familiarité acquise par l'expérience ou l'éducation d'informations factuelles, de descriptions ou de compétences.">connaissances</ConceptLink>, et même l'analyse de la propagation de maladies. La capacité des graphes à représenter des relations complexes en fait un outil indispensable pour la résolution de problèmes dans de nombreux domaines scientifiques et technologiques. L'étude de leurs représentations efficaces est donc primordiale pour le développement d'algorithmes performants <Reference id="1" name="1" term="1">1</Reference>.
+
+<Image description="Ce schéma illustre un graphe simple composé de sommets (nœuds) et d'arêtes (liens entre les sommets). Il montre comment différentes représentations visuelles peuvent mettre en évidence des propriétés distinctes du graphe, telles que la connectivité, la densité ou la présence de cycles. La visualisation aide à comprendre intuitivement la structure globale et les relations locales au sein du réseau." alt="Représentation visuelle d'un graphe avec sommets et arêtes." caption="Figure 1: Comment ce schéma permet-il de visualiser concrètement les relations entre les sommets et les arêtes dans un graphe, et quelles sont les implications de ces différentes visualisations pour la compréhension de la structure du graphe ?. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Graphen.jpg)" title="Exemple de visualisation de graphe" src="https://commons.wikimedia.org/wiki/Special:FilePath/Graphen.jpg" fallbackUrl="https://commons.wikimedia.org/wiki/File:Graphen.jpg" />
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les différentes représentations des graphes (matrice d'adjacence, liste d'adjacence, etc.) et leurs propriétés fondamentales.</li>
+      <li>Évaluer la complexité spatiale et temporelle des opérations courantes sur les graphes selon leur représentation.</li>
+      <li>Créer des structures de données adaptées pour représenter des graphes spécifiques en fonction des contraintes d'une application.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Comparer et contraster les avantages et inconvénients des matrices et listes d'adjacence pour divers scénarios.</li>
+      <li>Identifier la représentation la plus appropriée pour un problème donné en tenant compte de la densité du graphe et des opérations à effectuer.</li>
+      <li>Implémenter des algorithmes de base sur des graphes en utilisant des représentations choisies.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Adopter une approche critique dans le choix des structures de données pour optimiser les performances.</li>
+      <li>Apprécier l'importance de la représentation des données pour l'efficacité des algorithmes.</li>
+      <li>Collaborer pour évaluer différentes stratégies de représentation de graphes dans des contextes complexes.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Représentation par Liste d'Adjacence
+
+La manière dont un graphe est stocké en mémoire a un impact significatif sur l'efficacité des algorithmes qui opèrent sur ce graphe. La <Glossary definition="Un tableau ou une liste où chaque index i correspond à un sommet, et la valeur à cet index est une liste des sommets directement accessibles depuis le sommet i (ses voisins). Pour un graphe orienté, la liste ne contient que les voisins 'sortants'. Par exemple, pour le même graphe, la liste d'adjacence serait [[1], [], []]." id="liste_adjacence" name="liste d'adjacence" text="Une liste d'adjacence est une collection de listes utilisées pour implémenter des graphes abstraits. Chaque liste décrit les voisins d'un sommet dans le graphe.">liste d'adjacence</Glossary> est l'une des représentations les plus courantes et les plus polyvalentes pour les graphes, particulièrement adaptée lorsque le graphe est creux (c'est-à-dire qu'il a beaucoup moins d'arêtes que le nombre maximal possible).
+
+Dans cette représentation, pour chaque sommet $v$ du graphe, on maintient une liste des sommets qui lui sont adjacents. Cette liste peut être implémentée de différentes manières, le plus souvent à l'aide de tableaux ou de listes chaînées.
+
+### Implémentation avec des Tableaux
+
+Une approche consiste à utiliser un tableau principal où chaque indice correspond à un sommet. Chaque élément de ce tableau est lui-même un tableau (ou une liste dynamique) contenant les sommets directement connectés au sommet représenté par l'indice.
+
+Par exemple, pour un graphe non orienté avec 5 sommets étiquetés de 0 à 4, la liste d'adjacence pourrait ressembler à ceci :
+
+* Sommet 0 : [1, 2]
+* Sommet 1 : [0, 3]
+* Sommet 2 : [0, 3, 4]
+* Sommet 3 : [1, 2, 4]
+* Sommet 4 : [2, 3]
+
+Si le graphe est orienté, la liste pour un sommet $u$ contiendra les sommets $v$ tels qu'il existe une arête de $u$ vers $v$.
+
+Pour un graphe pondéré, chaque entrée dans la liste d'adjacence contiendrait non seulement le sommet voisin, mais aussi le poids de l'arête correspondante. Par exemple, pour le sommet 0, une liste d'adjacence pondérée pourrait être : [(1, 5), (2, 3)], indiquant une arête de poids 5 vers le sommet 1 et une arête de poids 3 vers le sommet 2.
+
+### Implémentation avec des Listes Chaînées
+
+Une alternative, souvent plus flexible pour les graphes dont la taille peut varier dynamiquement, est d'utiliser des listes chaînées. Un tableau principal (ou une table d'hachage) contient des pointeurs vers les têtes de listes chaînées. Chaque liste chaînée correspond à un sommet et contient des nœuds représentant ses voisins. Chaque nœud de la liste chaînée stocke le sommet voisin et, le cas échéant, le poids de l'arête.
+
+Cette structure est particulièrement avantageuse car l'ajout ou la suppression de sommets et d'arêtes peut être effectué efficacement sans nécessiter de redimensionnement coûteux de tableaux entiers.
+
+### Analyse de Complexité
+
+Analysons la complexité spatiale et temporelle des opérations clés pour la représentation par liste d'adjacence. Soit $n$ le nombre de sommets et $m$ le nombre d'arêtes dans le graphe.
+
+**Complexité Spatiale :**
+La représentation par liste d'adjacence nécessite de stocker chaque sommet et chaque arête une fois. Pour un graphe non orienté, chaque arête $(u, v)$ est représentée deux fois : une fois dans la liste de $u$ et une fois dans la liste de $v$. Pour un graphe orienté, chaque arête est représentée une seule fois. Par conséquent, la complexité spatiale est $O(n + m)$. C'est particulièrement efficace pour les graphes creux où $m$ est beaucoup plus petit que $n^2$.
+
+**Opérations Clés :**
+
+1. **Ajout d'un sommet :**
+ * **Temps :** $O(1)$ si l'on utilise une structure de données dynamique comme une liste chaînée ou un tableau redimensionnable pour le tableau principal. Il suffit d'ajouter une nouvelle entrée (une liste vide) pour le nouveau sommet.
+ * **Espace :** Augmentation de 1 pour le nombre de sommets.
+
+2. **Suppression d'un sommet $v$ :**
+ * **Temps :** $O(n + \text{deg}(v))$, où $\text{deg}(v)$ est le degré du sommet $v$. Il faut d'abord supprimer $v$ de sa propre liste d'adjacence (qui prend $O(\text{deg}(v))$ si l'on parcourt sa liste, ou $O(1)$ si l'on a un pointeur direct vers le nœud à supprimer, ce qui est possible avec des listes doublement chaînées). Ensuite, il faut parcourir les listes d'adjacence de tous les autres sommets pour supprimer toute arête pointant vers $v$. Dans le pire des cas, cela peut impliquer de parcourir toutes les listes, ce qui prend $O(n+m)$ si l'on ne sait pas quels sommets sont adjacents à $v$. Cependant, si l'on considère les listes d'adjacence comme des tableaux, la suppression d'un élément peut prendre $O(n)$ dans le pire des cas pour chaque voisin. Une analyse plus fine montre que la suppression de toutes les occurrences de $v$ dans les listes des voisins prend au total $O(n + m)$ dans le pire cas si l'on doit rechercher $v$ dans chaque liste. Si l'on utilise des structures de données permettant une suppression rapide (comme des listes chaînées avec des pointeurs vers les éléments à supprimer), cela peut être amélioré. Une approche courante consiste à marquer le sommet comme supprimé et à le nettoyer lors d'un parcours ultérieur. Une suppression effective nécessite de parcourir toutes les listes d'adjacence pour enlever les arêtes incidentes à $v$. La complexité est donc dominée par la recherche et la suppression dans les listes des voisins, ce qui est $O(n + m)$ dans le pire cas si l'on doit parcourir toutes les listes. Une approche plus optimisée, en utilisant des structures de données appropriées, peut atteindre $O(\text{deg}(v) + n)$ pour supprimer les arêtes incidentes et $O(1)$ pour supprimer le sommet lui-même de la structure principale.
+ * **Espace :** Diminution de 1 pour le nombre de sommets.
+
+3. **Ajout d'une arête $(u, v)$ :**
+ * **Temps :** $O(1)$ pour ajouter $v$ à la liste de $u$ et $u$ à la liste de $v$ (pour un graphe non orienté). Pour un graphe orienté, c'est $O(1)$ pour ajouter $v$ à la liste de $u$. Il faut s'assurer que l'arête n'existe pas déjà, ce qui peut prendre $O(\text{deg}(u))$ ou $O(\text{deg}(v))$ dans le pire cas si l'on parcourt la liste. Si l'on utilise des listes chaînées avec des pointeurs, l'ajout peut être $O(1)$ si l'on sait où insérer.
+ * **Espace :** Augmentation de 1 pour le nombre d'arêtes.
+
+4. **Suppression d'une arête $(u, v)$ :**
+ * **Temps :** $O(\text{deg}(u))$ pour trouver et supprimer $v$ de la liste de $u$, et $O(\text{deg}(v))$ pour trouver et supprimer $u$ de la liste de $v$ (pour un graphe non orienté). Pour un graphe orienté, c'est $O(\text{deg}(u))$. Si les listes sont implémentées avec des tableaux, la suppression peut prendre $O(n)$ dans le pire cas. Avec des listes chaînées, cela est généralement plus efficace, $O(\text{deg}(u))$ et $O(\text{deg}(v))$.
+ * **Espace :** Diminution de 1 pour le nombre d'arêtes.
+
+5. **Vérification d'adjacence (l'arête $(u, v)$ existe-t-elle ?) :**
+ * **Temps :** $O(\text{deg}(u))$ pour rechercher $v$ dans la liste d'adjacence de $u$. Dans le pire des cas, si le graphe est dense, cela peut être $O(n)$. Pour un graphe creux, c'est beaucoup plus rapide.
+ * **Espace :** $O(1)$.
+
+6. **Parcours du voisinage d'un sommet $v$ :**
+ * **Temps :** $O(\text{deg}(v))$. On parcourt simplement la liste d'adjacence de $v$. C'est l'un des principaux avantages de cette représentation.
+ * **Espace :** $O(1)$ pour stocker les voisins rencontrés.
+
+La liste d'adjacence est donc une représentation très efficace pour les opérations liées à l'exploration des voisins d'un sommet et pour les graphes creux en général. Elle est la base de nombreux algorithmes de parcours de graphes comme la recherche en largeur (BFS) et la recherche en profondeur (DFS).
+
+<Mermaid caption="Figure 2 : " chart={``} />
+
+Comment cette structure Mermaid illustre-t-elle la manière dont les voisins d'un sommet sont directement accessibles, et quelles sont les implications pour la performance des algorithmes de parcours ?
+
+<Quiz durationLimit={300} limit={3}>
+ <Question q="Quelle est la complexité temporelle pour vérifier si une arête existe entre deux sommets dans une liste d'adjacence pour un graphe non orienté ?" explanation="Il faut parcourir la liste d'adjacence du premier sommet pour trouver le second, ce qui prend un temps proportionnel au nombre de voisins de ce sommet.">
+  <Option text="O(1)" correct={false} />
+  <Option text="O(V)" correct={false} />
+  <Option text="O(deg(v)) où deg(v) est le degré du sommet" correct={true} />
+  <Option text="O(E)" correct={false} />
+</Question>
+ <Question q="Quelle est la complexité pour ajouter une arête dans une liste d'adjacence ?" explanation="L'ajout d'une arête consiste à ajouter un élément à la fin de la liste d'un sommet, ce qui est une opération en temps constant.">
+  <Option text="O(1)" correct={true} />
+  <Option text="O(V)" correct={false} />
+  <Option text="O(E)" correct={false} />
+  <Option text="O(log V)" correct={false} />
+</Question>
+ <Question q="Quelle est la complexité pour lister tous les voisins d'un sommet donné ?" explanation="Il suffit de parcourir la liste d'adjacence du sommet concerné, dont la taille est égale à son degré.">
+  <Option text="O(1)" correct={false} />
+  <Option text="O(V)" correct={false} />
+  <Option text="O(deg(v))" correct={true} />
+  <Option text="O(E)" correct={false} />
+</Question>
+</Quiz>
+
+La flexibilité et l'efficacité de la liste d'adjacence en font un choix privilégié pour de nombreuses applications. Par exemple, l'algorithme de Dijkstra pour trouver le plus court chemin utilise souvent une structure de données qui s'appuie sur la liste d'adjacence pour accéder rapidement aux voisins des sommets. De même, les algorithmes de détection de cycles ou de composantes connexes bénéficient grandement de cette représentation.
+
+<SolvedExercise title="Construction d'une Liste d'Adjacence" solution="">
+  
+</SolvedExercise>
+
+L'étude de la représentation par liste d'adjacence, initiée par des pionniers comme <RealPerson id="hopcroft" name="John Hopcroft" text="John Hopcroft est un informaticien américain, connu pour ses travaux sur la théorie des automates et la théorie de la complexité algorithmique.">John Hopcroft</RealPerson> et dans leurs travaux sur les algorithmes de graphes, a jeté les bases de nombreuses avancées ultérieures dans le domaine. Leurs contributions ont permis de mieux comprendre les compromis entre les différentes structures de données et leur impact sur la performance algorithmique, comme documenté dans des ouvrages de référence tels que <Reference id="2" name="2" term="2">2</Reference> et <Reference id="3" name="3" term="3">3</Reference>.
+
+## Représentation par Matrice d'Adjacence
+Alors que la liste d'adjacence excelle dans la représentation des graphes creux, la matrice d'adjacence offre une perspective différente, particulièrement adaptée aux graphes denses. Une <Glossary id="id" name="matrice_adjacence:matrice d'adjacence" term="matrice_adjacence:matrice d'adjacence">matrice_adjacence:matrice d'adjacence</Glossary> est une matrice carrée $A$ de taille $n \times n$, où $n$ est le nombre de sommets dans le graphe. Pour un graphe non orienté, $A[i][j] = 1$ (ou une valeur de poids si le graphe est pondéré) si une arête existe entre le sommet $i$ et le sommet $j$, et $A[i][j] = 0$ sinon. Dans le cas d'un graphe orienté, $A[i][j] = 1$ signifie qu'il y a une arête allant du sommet $i$ au sommet $j$. La matrice est symétrique pour les graphes non orientés.
+
+<Image description="La matrice d'adjacence est une matrice carrée où les lignes et les colonnes représentent les sommets du graphe. Une entrée A[i][j] vaut 1 si une arête existe entre le sommet i et le sommet j, et 0 sinon. Pour un graphe non orienté, la matrice est symétrique." alt="Structure moléculaire hexagonale de graphène en 3D sur fond gris." caption="Figure 2: Comment cette matrice d'adjacence représente-t-elle les connexions entre les sommets, et quelle est la signification des 0 et des 1 dans ses cellules pour un graphe non orienté ?. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Graphen.jpg)" title="Exemple de matrice d'adjacence" src="https://commons.wikimedia.org/wiki/Special:FilePath/Graphen.jpg" fallbackUrl="https://commons.wikimedia.org/wiki/File:Graphen.jpg" />
+
+Comment la structure de cette matrice d'adjacence reflète-t-elle la connectivité entre les sommets, et quelles sont les implications de cette représentation pour la détection rapide d'une arête spécifique ?
+
+L'analyse de la complexité spatiale et temporelle de la matrice d'adjacence révèle des compromis distincts par rapport à la liste d'adjacence.
+
+### Complexité Spatiale
+
+* **Espace :** La matrice d'adjacence nécessite toujours un espace de stockage de $O(n^2)$, indépendamment du nombre d'arêtes $m$. Cela est dû à la nature de la matrice $n \times n$. Pour les graphes creux (où $m \ll n^2$), cette représentation peut être très inefficace en termes d'espace, gaspillant de la mémoire pour représenter des connexions inexistantes. Cependant, pour les graphes denses (où $m \approx n^2$), elle devient plus compétitive.
+
+### Complexité Temporelle des Opérations Courantes
+
+1. **Ajout d'un sommet :** L'ajout d'un nouveau sommet nécessite de redimensionner la matrice à $(n+1) \times (n+1)$, ce qui implique généralement la création d'une nouvelle matrice et la copie des données existantes. Cela prend un temps de $O(n^2)$.
+2. **Ajout d'une arête $(u, v)$ :** Pour ajouter une arête, il suffit de modifier deux entrées de la matrice : $A[u][v] = 1$ et, pour un graphe non orienté, $A[v][u] = 1$. Cette opération est très rapide, en $O(1)$.
+3. **Suppression d'un sommet :** Similaire à l'ajout, la suppression d'un sommet implique la création d'une nouvelle matrice de taille $(n-1) \times (n-1)$ et la suppression de la ligne et de la colonne correspondantes. Le coût est de $O(n^2)$.
+4. **Suppression d'une arête $(u, v)$ :** Il suffit de mettre à zéro les entrées correspondantes : $A[u][v] = 0$ et, pour un graphe non orienté, $A[v][u] = 0$. Cette opération est également en $O(1)$.
+5. **Vérification d'adjacence (l'arête $(u, v)$ existe-t-elle ?) :** C'est l'une des forces majeures de la matrice d'adjacence. La vérification de l'existence d'une arête entre deux sommets $u$ et $v$ se fait en consultant directement $A[u][v]$. Cette opération est en $O(1)$.
+6. **Parcours du voisinage d'un sommet $v$ :** Pour trouver tous les voisins d'un sommet $v$, il faut parcourir toute la ligne (ou colonne) correspondante dans la matrice. Cela implique de vérifier $n$ entrées. La complexité est donc de $O(n)$. Comparé à la liste d'adjacence où cette opération est en $O(\text{deg}(v))$, la matrice d'adjacence est moins performante pour cette tâche, surtout sur des graphes creux.
+
+<Mermaid caption="Figure 4 : " chart={``} />
+
+Comment ce diagramme Mermaid met-il en évidence les avantages et les inconvénients de la matrice d'adjacence pour différentes opérations, comparativement à la liste d'adjacence ?
+
+La matrice d'adjacence est donc particulièrement avantageuse lorsque le graphe est dense et que les opérations de vérification d'arêtes et de modification d'arêtes doivent être effectuées très rapidement. Les algorithmes qui nécessitent de tester fréquemment l'existence d'arêtes, comme certains algorithmes de flots maximum ou de calcul de chemins dans des graphes denses, peuvent bénéficier de cette représentation. Des chercheurs comme <RealPerson id="warshall" name="Stephen Warshall" text="Stephen Warshall est un informaticien américain, connu pour l'algorithme de Warshall, utilisé pour trouver la fermeture transitive d'une relation binaire.">Stephen Warshall</RealPerson> ont développé des algorithmes (comme l'algorithme de Warshall pour le calcul de la transitivité) qui s'appuient sur des structures matricielles pour explorer les relations entre tous les couples de sommets, comme décrit dans des textes fondamentaux comme <Reference id="4" name="4" term="4">4</Reference>.
+
+<SolvedExercise title="Utilisation de la Matrice d'Adjacence pour un Graphe Dense" solution="">
+  
+</SolvedExercise>
+
+## Représentation par Matrice d'Incidence
+Une autre manière de représenter les graphes est la <Glossary id="id" name="matrice_incidence:matrice d'incidence" term="matrice_incidence:matrice d'incidence">matrice_incidence:matrice d'incidence</Glossary>. Cette représentation met l'accent sur la relation entre les sommets et les arêtes. Pour un graphe avec $n$ sommets et $m$ arêtes, la matrice d'incidence $M$ est une matrice de taille $n \times m$.
+
+Pour un graphe non orienté, $M[i][j] = 1$ si le sommet $i$ est incident à l'arête $j$, et $0$ sinon. Chaque colonne (représentant une arête) aura exactement deux entrées égales à 1, indiquant les deux sommets auxquels l'arête est connectée.
+
+Pour un graphe orienté, la convention est souvent la suivante : $M[i][j] = 1$ si le sommet $i$ est l'origine de l'arête $j$, $M[i][j] = -1$ si le sommet $i$ est la destination de l'arête $j$, et $M[i][j] = 0$ dans tous les autres cas. Une colonne (une arête) aura donc une entrée de 1 et une entrée de -1.
+
+<Mermaid caption="Figure 5 : " chart={``} />
+
+Comment cette structure Mermaid illustre-t-elle la relation directe entre les sommets et les arêtes, et quelles opérations devient-il particulièrement simple de réaliser avec cette représentation ?
+
+### Complexité Spatiale
+
+* **Espace :** La matrice d'incidence a une taille de $n \times m$. Sa complexité spatiale est donc de $O(n \times m)$. Cette représentation peut être plus efficace que la matrice d'adjacence pour les graphes creux, où $m$ est significativement plus petit que $n^2$. Cependant, elle peut être moins efficace que la liste d'adjacence si le nombre d'arêtes est très élevé par rapport au nombre de sommets.
+
+### Complexité Temporelle des Opérations Courantes
+
+La matrice d'incidence est particulièrement utile pour les opérations qui impliquent directement les arêtes.
+
+1. **Ajout d'un sommet :** Nécessite l'ajout d'une nouvelle ligne à la matrice, ce qui prend $O(m)$ temps.
+2. **Ajout d'une arête :** L'ajout d'une nouvelle arête implique l'ajout d'une nouvelle colonne à la matrice. Il faut alors déterminer les deux sommets qu'elle relie et mettre à jour les entrées correspondantes dans la nouvelle colonne. Cela prend $O(n)$ temps pour trouver les sommets et $O(1)$ pour mettre à jour la colonne. La complexité totale est donc $O(n)$.
+3. **Suppression d'un sommet :** Implique la suppression d'une ligne et de toutes les colonnes où cette ligne contient une valeur non nulle. Cela peut prendre jusqu'à $O(n \times m)$ dans le pire des cas.
+4. **Suppression d'une arête :** Nécessite la suppression de la colonne correspondante, ce qui prend $O(n)$ temps.
+5. **Vérification d'adjacence (l'arête $(u, v)$ existe-t-elle ?) :** Pour vérifier si une arête spécifique existe, il faut parcourir la colonne correspondant à cette arête (si les arêtes sont numérotées) ou parcourir les colonnes pour trouver celles qui connectent $u$ et $v$. Si les arêtes ne sont pas numérotées, cette opération peut être coûteuse, potentiellement $O(m)$. Si les arêtes sont numérotées, cela devient $O(n)$ pour vérifier les deux entrées de la colonne.
+6. **Parcours du voisinage d'un sommet $v$ :** Pour trouver tous les voisins d'un sommet $v$, il faut parcourir la ligne $v$ de la matrice d'incidence. Pour chaque entrée non nulle dans cette ligne (qui indique une arête incidente), il faut trouver l'autre sommet connecté à cette arête. Cela implique de parcourir la colonne correspondante pour trouver le second sommet. La complexité est donc de $O(n \times m)$ dans le pire des cas, ce qui est nettement moins performant que la liste d'adjacence pour cette opération.
+7. **Opérations liées aux arêtes :** La matrice d'incidence excelle dans les opérations centrées sur les arêtes. Par exemple, trouver tous les sommets incidents à une arête donnée est une opération en $O(n)$ (parcourir la colonne). Trouver toutes les arêtes incidentes à un sommet donné est en $O(m)$ (parcourir la ligne).
+
+<Quiz durationLimit={300} limit={2}>
+ <Question q="Dans quel cas la matrice d'incidence est-elle plus avantageuse que la liste d'adjacence en termes d'espace mémoire ?" explanation="La matrice d'incidence utilise E colonnes (arêtes) et V lignes (sommets), soit O(V*E) espace. La liste d'adjacence utilise O(V+E) espace. La matrice d'incidence est donc plus efficace pour les graphes creux.">
+  <Option text="Pour les graphes très denses" correct={false} />
+  <Option text="Pour les graphes très creux (sparse graphs)" correct={false} />
+  <Option text="Pour les graphes avec un grand nombre d'arêtes par rapport aux sommets" correct={false} />
+  <Option text="Pour les graphes avec un grand nombre de sommets et peu d'arêtes (graphes creux)" correct={true} />
+</Question>
+ <Question q="Quelle représentation est la plus adaptée pour trouver rapidement tous les voisins d'un sommet donné ?" explanation="La liste d'adjacence stocke directement les voisins de chaque sommet, permettant une récupération en O(deg(v)) temps.">
+  <Option text="Matrice d'adjacence" correct={false} />
+  <Option text="Liste d'adjacence" correct={true} />
+  <Option text="Matrice d'incidence" correct={false} />
+  <Option text="Les trois sont équivalentes pour cette opération" correct={false} />
+</Question>
+</Quiz>
+
+Comment ce quiz compare-t-il la matrice d'incidence et la liste d'adjacence ?
+
+La matrice d'incidence est particulièrement utile dans des domaines comme l'analyse des réseaux électriques, où les arêtes représentent des connexions physiques et les sommets des nœuds. Elle est également employée dans certains algorithmes d'optimisation et de simulation. Les travaux de <RealPerson id="kleinberg" name="Jon Kleinberg" text="Jon Kleinberg est un informaticien américain, connu pour ses recherches sur les algorithmes, la théorie des réseaux et l'analyse des données à grande échelle.">Jon Kleinberg</RealPerson> et <RealPerson id="tardos" name="Éva Tardos" text="Éva Tardos est une informaticienne hongroise-américaine, reconnue pour ses travaux en algorithmique, en particulier dans les domaines de la théorie des jeux algorithmique et de la conception d'algorithmes pour les réseaux.">Éva Tardos</RealPerson> dans leur livre <Reference id="5" name="5" term="5">5</Reference> abordent l'importance de choisir la bonne représentation de graphe en fonction des opérations à effectuer, et la matrice d'incidence trouve sa place dans des contextes spécifiques.
+
+<SolvedExercise title="Opérations centrées sur les arêtes avec la Matrice d'Incidence" solution="">
+  
+</SolvedExercise>
+
+## Analyse Comparative et Choix de la Représentation
+
+Le choix entre la matrice d'adjacence, la liste d'adjacence et la matrice d'incidence dépend intrinsèquement de la nature du graphe et des opérations que l'on prévoit d'effectuer le plus fréquemment. Chaque représentation possède ses propres forces et faiblesses, qui se manifestent différemment en fonction de la densité du graphe (rapport entre le nombre d'arêtes et le nombre maximal possible d'arêtes) et des contraintes de mémoire.
+
+La **matrice d'adjacence** est particulièrement efficace pour vérifier rapidement l'existence d'une arête entre deux sommets donnés ($O(1)$). Elle est également simple à implémenter et convient bien aux graphes denses où le nombre d'arêtes est proche du carré du nombre de sommets ($|E| \approx |V|^2$). Cependant, elle consomme une quantité de mémoire fixe de $O(|V|^2)$, ce qui la rend prohibitive pour les graphes de grande taille, même s'ils sont clairsemés. L'ajout ou la suppression de sommets est coûteux ($O(|V|^2)$ pour la matrice entière). Le parcours du voisinage d'un sommet prend $O(|V|)$ temps, car il faut parcourir toute une ligne ou une colonne.
+
+La **liste d'adjacence** est la représentation la plus couramment utilisée pour les graphes clairsemés, où le nombre d'arêtes est proportionnel au nombre de sommets ($|E| \approx O(|V|)$). Elle est plus économe en mémoire, avec une complexité de $O(|V| + |E|)$. L'ajout d'une arête est rapide ($O(1)$ en moyenne, si l'on ignore la recherche de doublons). Le parcours du voisinage d'un sommet est efficace, prenant un temps proportionnel au degré de ce sommet ($O(\text{deg}(v))$). En revanche, vérifier l'existence d'une arête spécifique entre deux sommets prend $O(\text{deg}(v))$ dans le pire des cas, car il faut potentiellement parcourir la liste d'adjacence d'un des sommets. L'ajout ou la suppression de sommets est plus complexe que pour la matrice d'adjacence, nécessitant la mise à jour de plusieurs listes. Les travaux de <RealPerson id="sedgewick" name="Robert Sedgewick" text="Robert Sedgewick est un informaticien américain, auteur de plusieurs livres influents sur les structures de données et les algorithmes, et professeur à l'Université de Princeton.">Robert Sedgewick</RealPerson> et <RealPerson id="wayne" name="Kevin Wayne" text="Kevin Wayne est un informaticien américain, professeur à l'Université de Princeton, connu pour ses travaux sur l'enseignement de l'informatique et la co-création de livres avec Robert Sedgewick." unresolved={true}>Kevin Wayne</RealPerson> dans leur ouvrage <Reference id="6" name="6" term="6">6</Reference> mettent en lumière l'efficacité de la liste d'adjacence pour de nombreux algorithmes classiques.
+
+La **matrice d'incidence**, comme nous l'avons vu, est optimisée pour les opérations centrées sur les arêtes. Elle est particulièrement pertinente lorsque le nombre d'arêtes est significativement plus petit que le carré du nombre de sommets. Sa complexité mémoire est de $O(|V| \times |E|)$. Elle permet de trouver rapidement les sommets incidents à une arête donnée ($O(|V|)$) et les arêtes incidentes à un sommet donné ($O(|
+
+<Glossary definition="Une matrice carrée V x V où V est le nombre de sommets. L'élément (i, j) est 1 (ou le poids de l'arête) si une arête existe du sommet i au sommet j, et 0 sinon. Pour un graphe orienté, la matrice n'est pas nécessairement symétrique. Par exemple, pour un graphe avec 3 sommets et une arête de 0 à 1, la matrice serait [[0, 1, 0], [0, 0, 0], [0, 0, 0]]." id="matrice_adjacence" name="matrice d'adjacence" text="Une matrice d'adjacence est une matrice carrée utilisée pour représenter un graphe fini, où les entrées indiquent si des paires de sommets sont adjacentes dans le graphe.">matrice d'adjacence</Glossary>
+
+<Glossary id="matrice_incidence" name="matrice d'incidence" text="Une matrice d'incidence est une matrice utilisée pour représenter un graphe, où les lignes correspondent aux sommets et les colonnes aux arêtes, indiquant quelles arêtes sont incidentes à quels sommets.">matrice d'incidence</Glossary>
+
+## Conclusion
+<Summary itemsString="La représentation d'un graphe par une matrice d'adjacence est efficace pour les graphes denses, avec une complexité d'O(V^2) pour l'espace et des vérifications d'arêtes en O(1).|||La représentation par liste d'adjacence est préférable pour les graphes creux, offrant une complexité spatiale d'O(V+E) et une itération sur les voisins en O(deg(v)).|||Le choix de la représentation impacte significativement la complexité temporelle des algorithmes sur les graphes, comme la recherche en largeur (BFS) ou en profondeur (DFS).|||Les structures de données comme les arbres et les ensembles disjoints sont essentielles pour implémenter efficacement certains algorithmes de graphes, notamment pour les algorithmes de spanning tree.|||Comprendre les compromis entre les différentes représentations permet d'optimiser la performance des algorithmes en fonction des caractéristiques spécifiques du graphe traité.|||Les graphes orientés nécessitent des adaptations dans les matrices et listes d'adjacence pour refléter la directionnalité des arêtes." />
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+ <Question q="Quelle structure de données est généralement préférée pour représenter un graphe creux (sparse graph) et pourquoi ?" explanation="Les listes d'adjacence sont préférées pour les graphes creux car elles stockent uniquement les arêtes existantes. Leur complexité spatiale est O(V+E), où V est le nombre de sommets et E le nombre d'arêtes. Les matrices d'adjacence, en revanche, ont une complexité spatiale d'O(V^2), ce qui est inefficace pour les graphes creux où E est beaucoup plus petit que V^2. Les listes d'adjacence permettent également un accès plus rapide aux voisins d'un sommet dans un graphe creux.">
+  <Option text="Matrice d'adjacence, car elle permet un accès en temps constant à n'importe quelle arête." correct={false} />
+  <Option text="Liste d'adjacence, car elle est plus économe en espace pour les graphes creux." correct={true} />
+  <Option text="Table d'hachage, car elle offre une recherche rapide des sommets." correct={false} />
+  <Option text="Arbre binaire de recherche, car il maintient les sommets triés." correct={false} />
+</Question>
+ <Question q="Dans une matrice d'adjacence pour un graphe non orienté, comment est représentée l'absence d'une arête entre le sommet u et le sommet v ?" explanation="Dans une matrice d'adjacence M, M[u][v] représente l'existence d'une arête entre u et v. Pour un graphe non orienté, si aucune arête n'existe entre u et v, la valeur correspondante dans la matrice sera généralement 0 (ou une valeur indiquant l'absence d'arête, comme l'infini pour les poids). La matrice est symétrique, donc M[u][v] = M[v][u].">
+  <Option text="La valeur M[u][v] est 1." correct={false} />
+  <Option text="La valeur M[u][v] est 0." correct={true} />
+  <Option text="La valeur M[u][v] est nulle (null)." correct={false} />
+  <Option text="La valeur M[u][v] est infinie." correct={false} />
+</Question>
+ <Question q="Quelle est la complexité temporelle pour trouver tous les voisins d'un sommet 'v' en utilisant une liste d'adjacence dans un graphe, par rapport à une matrice d'adjacence ?" explanation="Avec une liste d'adjacence, trouver les voisins de 'v' prend un temps proportionnel au degré de 'v' (deg(v)), soit O(deg(v)). Avec une matrice d'adjacence, il faut parcourir toute la ligne (ou colonne) correspondant à 'v', ce qui prend un temps O(V), où V est le nombre total de sommets. Pour les graphes creux, O(deg(v)) est généralement bien inférieur à O(V).">
+  <Option text="Identique dans les deux cas, O(V)." correct={false} />
+  <Option text="Plus rapide avec la matrice d'adjacence, O(deg(v))." correct={false} />
+  <Option text="Plus rapide avec la liste d'adjacence, O(deg(v))." correct={true} />
+  <Option text="Dépend du nombre d'arêtes, O(E)." correct={false} />
+</Question>
+ <Question q="Quelle structure de données est la plus appropriée pour implémenter un algorithme de parcours en largeur (BFS) sur un graphe potentiellement très dense ?" explanation="Bien que les listes d'adjacence soient souvent préférées, une matrice d'adjacence peut être une option viable pour un graphe très dense, car la différence de complexité spatiale (O(V^2) vs O(V+E)) devient moins significative lorsqu'E approche V^2. De plus, l'accès aux voisins est simple, bien que moins efficace que pour les graphes creux. Cependant, pour BFS, la structure de données principale utilisée est une file (queue), indépendamment de la représentation du graphe. La question porte sur la représentation du graphe elle-même. Dans ce contexte, une matrice d'adjacence est une représentation valide et parfois utilisée pour des graphes denses.">
+  <Option text="Liste d'adjacence." correct={false} />
+  <Option text="Matrice d'adjacence." correct={true} />
+  <Option text="Ensemble d'arêtes." correct={false} />
+  <Option text="Arbre de recherche." correct={false} />
+</Question>
+ <Question q="Quel est l'avantage principal de l'utilisation d'une liste d'adjacence par rapport à une matrice d'adjacence pour représenter un graphe ?" explanation="L'avantage principal des listes d'adjacence réside dans leur efficacité spatiale pour les graphes creux. Elles ne stockent que les arêtes existantes, ce qui se traduit par une complexité spatiale d'O(V+E). Les matrices d'adjacence nécessitent O(V^2) espace, ce qui est beaucoup plus pour les graphes avec peu d'arêtes par rapport au nombre de sommets.">
+  <Option text="Temps d'accès en O(1) à n'importe quelle arête." correct={false} />
+  <Option text="Complexité spatiale réduite pour les graphes creux." correct={true} />
+  <Option text="Facilité d'ajout de nouveaux sommets." correct={false} />
+  <Option text="Meilleure performance pour les algorithmes de routage." correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFyYnJlIGNvdXZyYW50IG1pbmltdW0gKE1pbmltdW0gU3Bhbm5pbmcgVHJlZSAtIE1TVCkiLCJkZWZpbml0aW9uIjoiVW4gc291cy1ncmFwaGUgZCd1biBncmFwaGUgbm9uIG9yaWVudMOpIGV0IGNvbm5leGUsIHF1aSBlc3QgdW4gYXJicmUgZXQgcXVpIHJlbGllIHRvdXMgbGVzIHNvbW1ldHMsIGF2ZWMgbGEgc29tbWUgbWluaW1hbGUgcG9zc2libGUgZGVzIHBvaWRzIGRlcyBhcsOqdGVzLiJ9LHsidGVybSI6IkNoZW1pbiBsZSBwbHVzIGNvdXJ0IiwiZGVmaW5pdGlvbiI6IkRhbnMgdW4gZ3JhcGhlIHBvbmTDqXLDqSwgbGUgY2hlbWluIGVudHJlIGRldXggc29tbWV0cyBkb250IGxhIHNvbW1lIGRlcyBwb2lkcyBkZXMgYXLDqnRlcyBlc3QgbWluaW1hbGUuIERlcyBhbGdvcml0aG1lcyBjb21tZSBEaWprc3RyYSBvdSBCZWxsbWFuLUZvcmQgc29udCB1dGlsaXPDqXMgcG91ciB0cm91dmVyIGNlcyBjaGVtaW5zLiJ9LHsidGVybSI6IkNvbXBsZXhpdMOpIHNwYXRpYWxlIiwiZGVmaW5pdGlvbiI6Ik1lc3VyZSBkZSBsYSBxdWFudGl0w6kgZGUgbcOpbW9pcmUgdXRpbGlzw6llIHBhciB1biBhbGdvcml0aG1lIGVuIGZvbmN0aW9uIGRlIGxhIHRhaWxsZSBkZSBsJ2VudHLDqWUuIFBvdXIgbGVzIHJlcHLDqXNlbnRhdGlvbnMgZGUgZ3JhcGhlcywgdW5lIG1hdHJpY2UgZCdhZGphY2VuY2UgdXRpbGlzZSBPKFZeMikgZXNwYWNlLCB0YW5kaXMgcXUndW5lIGxpc3RlIGQnYWRqYWNlbmNlIHV0aWxpc2UgTyhWK0UpIGVzcGFjZS4ifSx7InRlcm0iOiJDb21wbGV4aXTDqSB0ZW1wb3JlbGxlIiwiZGVmaW5pdGlvbiI6Ik1lc3VyZSBkdSB0ZW1wcyBkJ2V4w6ljdXRpb24gZCd1biBhbGdvcml0aG1lIGVuIGZvbmN0aW9uIGRlIGxhIHRhaWxsZSBkZSBsJ2VudHLDqWUuIFBvdXIgbGVzIGdyYXBoZXMsIGVsbGUgZXN0IHNvdXZlbnQgZXhwcmltw6llIGVuIGZvbmN0aW9uIGR1IG5vbWJyZSBkZSBzb21tZXRzIChWKSBldCBkJ2Fyw6p0ZXMgKEUpLiBQYXIgZXhlbXBsZSwgdsOpcmlmaWVyIHNpIHVuZSBhcsOqdGUgZXhpc3RlIGVudHJlIGRldXggc29tbWV0cyBlc3QgZW4gTygxKSBhdmVjIHVuZSBtYXRyaWNlIGQnYWRqYWNlbmNlLCBtYWlzIGVuIE8oZGVnKHYpKSBhdmVjIHVuZSBsaXN0ZSBkJ2FkamFjZW5jZS4ifSx7InRlcm0iOiJHcmFwaGUgY3JldXgiLCJkZWZpbml0aW9uIjoiVW4gZ3JhcGhlIG/DuSBsZSBub21icmUgZCdhcsOqdGVzIGVzdCBiZWF1Y291cCBwbHVzIHBldGl0IHF1ZSBsZSBub21icmUgbWF4aW11bSBwb3NzaWJsZS4gTGVzIGxpc3RlcyBkJ2FkamFjZW5jZSBzb250IGfDqW7DqXJhbGVtZW50IHBsdXMgZWZmaWNhY2VzIGVuIHRlcm1lcyBkJ2VzcGFjZSBldCBkZSB0ZW1wcyBwb3VyIGxlcyBncmFwaGVzIGNyZXV4LiJ9LHsidGVybSI6IkdyYXBoZSBkZW5zZSIsImRlZmluaXRpb24iOiJVbiBncmFwaGUgb8O5IGxlIG5vbWJyZSBkJ2Fyw6p0ZXMgZXN0IHByb2NoZSBkdSBub21icmUgbWF4aW11bSBwb3NzaWJsZSBkJ2Fyw6p0ZXMgKFYqKFYtMSkgcG91ciBsZXMgZ3JhcGhlcyBvcmllbnTDqXMsIFYqKFYtMSkvMiBwb3VyIGxlcyBub24gb3JpZW50w6lzKS4gTGVzIG1hdHJpY2VzIGQnYWRqYWNlbmNlIHNvbnQgc291dmVudCBwbHVzIGFwcHJvcHJpw6llcyBwb3VyIGxlcyBncmFwaGVzIGRlbnNlcy4ifSx7InRlcm0iOiJHcmFwaGUgbm9uIG9yaWVudMOpIiwiZGVmaW5pdGlvbiI6IlVuIGdyYXBoZSBkb250IGxlcyBhcsOqdGVzIG4nb250IHBhcyBkZSBkaXJlY3Rpb24uIFVuZSBhcsOqdGUgZW50cmUgdSBldCB2IGVzdCBsYSBtw6ptZSBxdWUgbCdhcsOqdGUgZW50cmUgdiBldCB1LiBMYSBtYXRyaWNlIGQnYWRqYWNlbmNlIGQndW4gZ3JhcGhlIG5vbiBvcmllbnTDqSBlc3Qgc3ltw6l0cmlxdWUsIGV0IHNpIHYgZXN0IGRhbnMgbGEgbGlzdGUgZCdhZGphY2VuY2UgZGUgdSwgYWxvcnMgdSBlc3QgZGFucyBsYSBsaXN0ZSBkJ2FkamFjZW5jZSBkZSB2LiJ9LHsidGVybSI6IkdyYXBoZSBvcmllbnTDqSAoRGlncmFwaGUpIiwiZGVmaW5pdGlvbiI6IlVuIGdyYXBoZSBkb250IGxlcyBhcsOqdGVzIG9udCB1bmUgZGlyZWN0aW9uLiBVbmUgYXLDqnRlIGR1IHNvbW1ldCB1IGF1IHNvbW1ldCB2IG5lIHNpZ25pZmllIHBhcyBuw6ljZXNzYWlyZW1lbnQgcXUnaWwgZXhpc3RlIHVuZSBhcsOqdGUgZHUgc29tbWV0IHYgYXUgc29tbWV0IHUuIExhIG1hdHJpY2UgZCdhZGphY2VuY2UgZCd1biBkaWdyYXBoZSBuJ2VzdCBwYXMgZm9yY8OpbWVudCBzeW3DqXRyaXF1ZSwgZXQgbGEgbGlzdGUgZCdhZGphY2VuY2UgZCd1biBzb21tZXQgdSBuZSBjb250aWVudCBxdWUgbGVzIHNvbW1ldHMgdiB0ZWxzIHF1J2lsIGV4aXN0ZSB1bmUgYXLDqnRlIHUgLT4gdi4ifSx7InRlcm0iOiJMaXN0ZSBkJ2FkamFjZW5jZSIsImRlZmluaXRpb24iOiJVbiB0YWJsZWF1IG91IHVuZSBsaXN0ZSBvw7kgY2hhcXVlIGluZGV4IGkgY29ycmVzcG9uZCDDoCB1biBzb21tZXQsIGV0IGxhIHZhbGV1ciDDoCBjZXQgaW5kZXggZXN0IHVuZSBsaXN0ZSBkZXMgc29tbWV0cyBkaXJlY3RlbWVudCBhY2Nlc3NpYmxlcyBkZXB1aXMgbGUgc29tbWV0IGkgKHNlcyB2b2lzaW5zKS4gUG91ciB1biBncmFwaGUgb3JpZW50w6ksIGxhIGxpc3RlIG5lIGNvbnRpZW50IHF1ZSBsZXMgdm9pc2lucyAnc29ydGFudHMnLiBQYXIgZXhlbXBsZSwgcG91ciBsZSBtw6ptZSBncmFwaGUsIGxhIGxpc3RlIGQnYWRqYWNlbmNlIHNlcmFpdCBbWzFdLCBbXSwgW11dLiJ9LHsidGVybSI6Ik1hdHJpY2UgZCdhZGphY2VuY2UiLCJkZWZpbml0aW9uIjoiVW5lIG1hdHJpY2UgY2FycsOpZSBWIHggViBvw7kgViBlc3QgbGUgbm9tYnJlIGRlIHNvbW1ldHMuIEwnw6lsw6ltZW50IChpLCBqKSBlc3QgMSAob3UgbGUgcG9pZHMgZGUgbCdhcsOqdGUpIHNpIHVuZSBhcsOqdGUgZXhpc3RlIGR1IHNvbW1ldCBpIGF1IHNvbW1ldCBqLCBldCAwIHNpbm9uLiBQb3VyIHVuIGdyYXBoZSBvcmllbnTDqSwgbGEgbWF0cmljZSBuJ2VzdCBwYXMgbsOpY2Vzc2FpcmVtZW50IHN5bcOpdHJpcXVlLiBQYXIgZXhlbXBsZSwgcG91ciB1biBncmFwaGUgYXZlYyAzIHNvbW1ldHMgZXQgdW5lIGFyw6p0ZSBkZSAwIMOgIDEsIGxhIG1hdHJpY2Ugc2VyYWl0IFtbMCwgMSwgMF0sIFswLCAwLCAwXSwgWzAsIDAsIDBdXS4ifSx7InRlcm0iOiJQb2lkcyBkJ3VuZSBhcsOqdGUiLCJkZWZpbml0aW9uIjoiVW5lIHZhbGV1ciBudW3DqXJpcXVlIGFzc29jacOpZSDDoCB1bmUgYXLDqnRlIGRhbnMgdW4gZ3JhcGhlIHBvbmTDqXLDqSwgcmVwcsOpc2VudGFudCBzb3V2ZW50IHVuIGNvw7t0LCB1bmUgZGlzdGFuY2Ugb3UgdW5lIGNhcGFjaXTDqS4ifSx7InRlcm0iOiJVbmlvbiBkJ2Vuc2VtYmxlcyBkaXNqb2ludHMgKERpc2pvaW50IFNldCBVbmlvbiAtIERTVSkiLCJkZWZpbml0aW9uIjoiVW5lIHN0cnVjdHVyZSBkZSBkb25uw6llcyBxdWkgbWFpbnRpZW50IHVuZSBjb2xsZWN0aW9uIGRlIHNvdXMtZW5zZW1ibGVzIGRpc2pvaW50cy4gRWxsZSBlc3QgcGFydGljdWxpw6hyZW1lbnQgdXRpbGUgZGFucyBsJ2FsZ29yaXRobWUgZGUgS3J1c2thbCBwb3VyIHbDqXJpZmllciBlZmZpY2FjZW1lbnQgc2kgbCdham91dCBkJ3VuZSBhcsOqdGUgY3LDqWUgdW4gY3ljbGUuIn1d" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiUmVpbmhhcmQgRGllc3RlbCAoMjAxMCkuIMKrIEdyYXBoIFRoZW9yeSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVJlaW5oYXJkJTIwRGllc3RlbCUyMCUyMkdyYXBoJTIwVGhlb3J5JTIyJTIwMjAxMCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MiwidGV4dCI6IkFITywgQS5WLiwgSi4gRS4gSE9QQ1JPRlQsIEouIEQuIFVMTE1BTjogRGF0YSBTdHJ1Y3R1cmVzIGFuZCBBbGdvcml0aG1zLiBBZGRpc29u4oCQV2VzbGV5IEFtc3RlcmRhbSAxOTgzLiA0MzYgUy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9QUhPJTIwJTIyQUhPJTIyJTIwMTk4MyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MywidGV4dCI6IlRhcmphbiwgUm9iZXJ0IEUuICdEYXRhIFN0cnVjdHVyZXMgYW5kIE5ldHdvcmsgQWxnb3JpdGhtcycuIFNvY2lldHkgZm9yIEluZHVzdHJpYWwgYW5kIEFwcGxpZWQgTWF0aGVtYXRpY3MsIDE5ODMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1UYXJqYW4lMjAlMjJTb2NpZXR5JTIwZm9yJTIwSW5kdXN0cmlhbCUyMGFuZCUyMEFwcGxpZWQlMjBNYXRoZW1hdGljcyUyMiUyMDE5ODMiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NCwidGV4dCI6IlRob21hcyBILiBDb3JtZW4sIENoYXJsZXMgRS4gTGVpc2Vyc29uLCBSb25hbGQgUml2ZXN0LCBDbGlmZm9yZCBTdGVpbiAoMjAxNykuIMKrIEFsZ29yaXRobWVuIC0gRWluZSBFaW5mw7xocnVuZyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xNTE1Lzk3ODMxMTA1MjIwMTMiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NSwidGV4dCI6IktsZWluYmVyZywgSm9uLCBhbmQgw4l2YSBUYXJkb3MuICdBbGdvcml0aG0gRGVzaWduJy4gQWRkaXNvbi1XZXNsZXksIDIwMDUuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUtsZWluYmVyZyUyMCUyMktsZWluYmVyZyUyMiUyMDIwMDUiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjYsInRleHQiOiJSZXZpZXcgb2YgXCJBbGdvcml0aG1zIGluIEMrKywgdGhpcmQgZWRpdGlvbi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPVJldmlldyUyMG9mJTIwJTIyUmV2aWV3JTIwb2YlMjBBbGdvcml0aG1zJTIwaW4lMjBDJTJCJTJCJTIyIiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjcsInRleHQiOiJKdWR5IEdvbGRzbWl0aCAoMjAwNCkuICpCb29rIHJldmlldzogVGhlb3J5IG9mIENvbXB1dGluZzogQSBHZW50bGUgSW50cm9kdWN0aW9uLiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9SnVkeSUyMEdvbGRzbWl0aCUyMCUyMkJvb2slMjByZXZpZXclMjIlMjAyMDA0Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6OCwidGV4dCI6IkV2ZW4sIFNoaW1vbi4gJ0dyYXBoIEFsZ29yaXRobXMnLiBDb21wdXRlciBTY2llbmNlIFByZXNzLCAxOTc5LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMjMwNy8zOTY0NDgwIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6OSwidGV4dCI6IkouIEEuIEJvbmR5LCBVLiBTLiBSLiBNdXJ0eSAoMjAxNSkuIMKrIEdyYXBoIFRoZW9yeSB3aXRoIEFwcGxpY2F0aW9ucyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUJvbmR5JTIwJTIyR3JhcGglMjBUaGVvcnklMjB3aXRoJTIwQXBwbGljYXRpb25zJTIyJTIwMjAxNSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxMCwidGV4dCI6Ik0uIERvbmFsZCBNYWNMYXJlbiAoMjAwNSkuIMKrIFRoZSBBcnQgb2YgQ29tcHV0ZXIgUHJvZ3JhbW1pbmfigJRWb2x1bWUgMTogRnVuZGFtZW50YWwgQWxnb3JpdGhtcyAoRG9uYWxkIEUuIEtudXRoKSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPURvbmFsZCUyME1hY0xhcmVuJTIwJTIyVGhlJTIwQXJ0JTIwb2YlMjBDb21wdXRlciUyMFByb2dyYW1taW5nJUUyJTgwJTk0Vm9sdW1lJTIwMSUyMiUyMDIwMDUiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTEsInRleHQiOiJTa2llbmEsIFN0ZXZlbiBTLiAnVGhlIEFsZ29yaXRobSBEZXNpZ24gTWFudWFsJy4gU3ByaW5nZXIsIDIwMDguIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3Lzk3OC0xLTg0ODAwLTA3MC00Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTIsInRleHQiOiJMdWNjaW8sIEZhYnJpemlvLCBhbmQgR2lvcmdpbyBNYXp6b25lLiAnR3JhcGggQWxnb3JpdGhtcyBhbmQgQXBwbGljYXRpb25zJy4gU3ByaW5nZXIsIDIwMTMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUx1Y2NpbyUyMCUyMkx1Y2NpbyUyMiUyMDIwMTMiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTMsInRleHQiOiJKb25hdGhhbiBMLiBHcm9zcywgSmF5IFllbGxlbiAoMjAxOCkuIMKrIEdyYXBoIFRoZW9yeSBhbmQgSXRzIEFwcGxpY2F0aW9ucyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUpvbmF0aGFuJTIwR3Jvc3MlMjAlMjJHcmFwaCUyMFRoZW9yeSUyMGFuZCUyMEl0cyUyMEFwcGxpY2F0aW9ucyUyMiUyMDIwMTgiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTQsInRleHQiOiJIYXJhcnksIEZyYW5rLiAnR3JhcGggVGhlb3J5Jy4gQWRkaXNvbi1XZXNsZXksIDE5NjkuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1IYXJhcnklMjAlMjJBZGRpc29uJTIyJTIwMTk2OSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE1LCJ0ZXh0IjoiUmljaGFyZCBJLiBTaHJlZXZlICgyMDA3KS4gKkdyYXBoIHRoZW9yeSB3aXRoIGFwcGxpY2F0aW9ucyB0byBlbmdpbmVlcmluZyBhbmQgY29tcHV0ZXIgc2NpZW5jZS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjIzMDcvMzYxNjgyMyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE2LCJ0ZXh0IjoiUmVwcm9ncmFtbWF0aW9uIGNvbXBvcnRlbWVudGFsZSA6IG1vZMOobGVzLCBhbGdvcml0aG1lcyBldCBhcHBsaWNhdGlvbiBhdXggbWFsYWRpZXMgY29tcGxleGVzLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuNzA2NzUvMmMzNjczNzB6M2VhNno0NmNlejk5N2N6YzI1NDc4ZmQyMjg3Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTcsInRleHQiOiJBYmR1bCBCYXJpLiAyMDE3LiDCqyBTdHJ1Y3R1cmVzIGRlIGRvbm7DqWVzIGdyYXBoaXF1ZXMgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1BYmR1bCUyMEJhcmklMjAlMjJTdHJ1Y3R1cmVzJTIwZGUlMjBkb25uJUMzJUE5ZXMlMjBncmFwaGlxdWVzJTIyJTIwMjAxNyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE4LCJ0ZXh0IjoiU8OpYmFzdGllbiBSdWZpYW5nZSwgTWljaGFlbCBKLiBNY0d1ZmZpbiwgQ2hyaXN0b3BoZXIgRnVocm1hbi4gMjAwOS4gwqsgVmlzdWFsaXNhdGlvbiBoeWJyaWRlIGRlcyBsaWVucyBoacOpcmFyY2hpcXVlcyBpbmNvcnBvcmFudCBkZXMgdHJlZW1hcHMgZGFucyB1bmUgbWF0cmljZSBkJ2FkamFjZW5jZSDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9UyVDMyVBOWJhc3RpZW4lMjBSdWZpYW5nZSUyMCUyMlZpc3VhbGlzYXRpb24lMjBoeWJyaWRlJTIwZGVzJTIwbGllbnMlMjBoaSVDMyVBOXJhcmNoaXF1ZXMlMjBpbmNvcnBvcmFudCUyMGRlJTIyJTIwMjAwOSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxOSwidGV4dCI6IsKrIEFsZ29yaXRobWUgZGUgRGlqa3N0cmEgwrsgKDIwMjMpLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT0lMjJBbGdvcml0aG1lJTIwZGUlMjBEaWprc3RyYSUyMiUyMDIwMjMiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjAsInRleHQiOiJMdWNpbGUgR2ltZW5lei4gMjAyNi4gwqsgT3V0aWxzIG51bcOpcmlxdWVzIHBvdXIgbGEgcmVjb25zdHJ1Y3Rpb24gZXQgbCdhbmFseXNlIHPDqW1hbnRpcXVlIGRlIHJlcHLDqXNlbnRhdGlvbnMgZ3JhcGhpcXVlcyBkZSBiw6J0aW1lbnRzIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuNzA2NzUvZDg2ZWU5NWN6YmUzMXo0MGYxemIyMjZ6ZDZjMWUxNTBlZWRlIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjEsInRleHQiOiJNeUNvZGVTY2hvb2wuIDIwMTMuIMKrIEFsZ29yaXRobWVzIC0gUmVwcsOpc2VudGF0aW9uIGRlIGdyYXBoZXMgKE1hdHJpY2UgZCdhZGphY2VuY2UgZXQgbGlzdGUgZCdhZGphY2VuY2UpIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9TXlDb2RlU2Nob29sJTIwJTIyQWxnb3JpdGhtZXMlMjIlMjAyMDEzIiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MjIsInRleHQiOiJEb25hbGQgRS4gS251dGguIDE5OTMuIMKrIExhIFN0YW5mb3JkIEdyYXBoQmFzZSA6IHVuZSBwbGF0ZWZvcm1lIHBvdXIgbGEgcmVjaGVyY2hlIGNvbWJpbmF0b2lyZSDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNjQyLTc4MDY5LTFfOSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX1d" />

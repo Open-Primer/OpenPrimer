@@ -1,0 +1,103 @@
+---
+title: « Évaluation Terminale »
+subject: « Algorithmes Avancés et Théorie des Graphes »
+level: « L3 »
+module: « Évaluation Terminale »
+order: 13
+summative: true
+---
+
+<SummativeEvaluation>
+<Quiz isFinal={true} durationLimit={1800}>
+ <Question q="Quelle est la complexité temporelle de l'algorithme de Dijkstra pour trouver le plus court chemin dans un graphe avec V sommets et E arêtes, en utilisant un tas binaire (min-heap) ?" explanation="L'algorithme de Dijkstra utilise un tas binaire pour stocker les distances des sommets. Chaque extraction du minimum prend O(log V) et chaque diminution de clé prend O(log V). Comme il y a V extractions et au plus E diminutions de clé, la complexité totale est O((V + E) log V).">
+  <Option text="O(V^2)" correct={false} />
+  <Option text="O(E log V)" correct={false} />
+  <Option text="O(V log V + E)" correct={false} />
+  <Option text="O((V + E) log V)" correct={true} />
+</Question>
+ <Question q="Dans le contexte de la théorie des graphes, qu'est-ce qu'un arbre couvrant minimum (Minimum Spanning Tree - MST) ?" explanation="Un arbre couvrant minimum d'un graphe pondéré connexe est un sous-graphe qui est un arbre, qui connecte tous les sommets, et dont la somme des poids des arêtes est aussi petite que possible. Les algorithmes de Prim et Kruskal sont couramment utilisés pour trouver un MST.">
+  <Option text="Un cycle dans le graphe avec le poids total le plus faible." correct={false} />
+  <Option text="Un sous-graphe qui connecte tous les sommets avec le nombre minimum d'arêtes." correct={false} />
+  <Option text="Un sous-graphe qui est un arbre, connecte tous les sommets, et a la somme des poids des arêtes minimisée." correct={true} />
+  <Option text="Le chemin le plus court entre deux sommets quelconques du graphe." correct={false} />
+</Question>
+ <Question q="Quel est le principal avantage de l'utilisation d'un tas de Fibonacci par rapport à un tas binaire dans l'algorithme de Dijkstra ?" explanation="Les tas de Fibonacci offrent une complexité de diminution de clé amortie en O(1), ce qui peut améliorer la complexité globale de Dijkstra à O(E + V log V) dans certains cas, par rapport à O((V + E) log V) avec un tas binaire. Cependant, les opérations d'insertion et de suppression de minimum sont plus coûteuses en pratique.">
+  <Option text="La suppression du minimum est plus rapide." correct={false} />
+  <Option text="La diminution de clé est plus rapide en moyenne (amortie)." correct={true} />
+  <Option text="La construction initiale du tas est plus rapide." correct={false} />
+  <Option text="Il permet de gérer plus efficacement les graphes non pondérés." correct={false} />
+</Question>
+ <Question q="Considérez un graphe orienté acyclique (DAG). Quelle est la complexité temporelle pour trouver un tri topologique de ses sommets ?" explanation="Un tri topologique peut être effectué en utilisant une recherche en profondeur (DFS) ou une approche basée sur les degrés entrants. Avec DFS, on parcourt chaque arête et chaque sommet une fois, résultant en une complexité d'O(V + E). L'approche par degrés entrants a également une complexité d'O(V + E).">
+  <Option text="O(V^2)" correct={false} />
+  <Option text="O(E log V)" correct={false} />
+  <Option text="O(V + E)" correct={true} />
+  <Option text="O(V log V)" correct={false} />
+</Question>
+ <Question q="Dans le cadre de la théorie des flux maximums, quel théorème établit une relation fondamentale entre le flux maximum et la coupe minimum dans un réseau ?" explanation="Le théorème Max-Flow Min-Cut stipule que la valeur maximale d'un flux d'une source à un puits dans un réseau est égale à la capacité minimale d'une coupe séparant la source du puits. C'est un résultat central en théorie des réseaux.">
+  <Option text="Le théorème de Menger" correct={false} />
+  <Option text="Le théorème de Kuratowski" correct={false} />
+  <Option text="Le théorème Max-Flow Min-Cut" correct={true} />
+  <Option text="Le théorème de la borne inférieure de Ford-Fulkerson" correct={false} />
+</Question>
+ <Question q="Considérant un graphe orienté pondéré, quel algorithme est optimal pour trouver le plus court chemin d'un sommet source unique à tous les autres sommets, même en présence d'arêtes de poids négatifs (mais sans cycles négatifs) ?" explanation="L'algorithme de Bellman-Ford est capable de gérer les poids négatifs, contrairement à Dijkstra. Si des cycles négatifs existent, il peut les détecter.">
+  <Option text="Algorithme de Dijkstra" correct={false} />
+  <Option text="Algorithme de Bellman-Ford" correct={true} />
+  <Option text="Algorithme de Floyd-Warshall" correct={false} />
+  <Option text="Algorithme de Prim" correct={false} />
+</Question>
+ <Question q="Dans le contexte de la théorie des graphes, qu'est-ce qu'un arbre couvrant minimum (Minimum Spanning Tree - MST) ?" explanation="Un arbre couvrant minimum est un sous-ensemble des arêtes d'un graphe pondéré non orienté qui connecte tous les sommets, sans former de cycle, et avec la somme des poids des arêtes la plus faible possible.">
+  <Option text="Un cycle dans le graphe avec le poids total le plus faible." correct={false} />
+  <Option text="Un sous-graphe qui connecte tous les sommets avec le nombre minimum d'arêtes." correct={false} />
+  <Option text="Un sous-graphe qui connecte tous les sommets sans cycle et avec la somme des poids des arêtes la plus faible." correct={true} />
+  <Option text="Le chemin le plus court entre deux sommets quelconques du graphe." correct={false} />
+</Question>
+ <Question q="Quel est le principal avantage de l'utilisation d'une structure de données de type 'union-find' (ou Disjoint Set Union) dans l'implémentation de l'algorithme de Kruskal pour trouver un arbre couvrant minimum ?" explanation="L'union-find permet de vérifier efficacement si l'ajout d'une arête crée un cycle en déterminant rapidement si les deux sommets de l'arête appartiennent déjà au même composant connexe.">
+  <Option text="Il permet de trier les arêtes par poids de manière plus rapide." correct={false} />
+  <Option text="Il permet de trouver le sommet de départ pour l'algorithme." correct={false} />
+  <Option text="Il permet de détecter efficacement la formation de cycles." correct={true} />
+  <Option text="Il optimise le calcul de la somme des poids des arêtes." correct={false} />
+</Question>
+ <Question q="En théorie des algorithmes, qu'est-ce que la complexité temporelle d'un algorithme ?" explanation="La complexité temporelle mesure le temps d'exécution d'un algorithme en fonction de la taille de l'entrée. Elle est généralement exprimée en utilisant la notation Big O.">
+  <Option text="La quantité de mémoire utilisée par l'algorithme." correct={false} />
+  <Option text="Le nombre d'opérations élémentaires effectuées par l'algorithme en fonction de la taille de l'entrée." correct={true} />
+  <Option text="La précision des résultats obtenus par l'algorithme." correct={false} />
+  <Option text="La facilité de compréhension et d'implémentation de l'algorithme." correct={false} />
+</Question>
+ <Question q="Quel problème est résolu par l'algorithme de Ford-Fulkerson dans le contexte des réseaux de flux ?" explanation="L'algorithme de Ford-Fulkerson est utilisé pour trouver le flux maximum possible d'une source à un puits dans un réseau de flux, en s'appuyant sur le principe du flot augmentant.">
+  <Option text="Trouver le plus court chemin entre deux nœuds." correct={false} />
+  <Option text="Déterminer si un graphe est connexe." correct={false} />
+  <Option text="Calculer le flux maximum d'une source à un puits." correct={true} />
+  <Option text="Trouver un arbre couvrant minimum." correct={false} />
+</Question>
+ <Question q="Considérons un graphe orienté pondéré. Quelle est la complexité temporelle de l'algorithme de Bellman-Ford pour trouver les plus courts chemins à partir d'une source unique, en supposant qu'il n'y a pas de cycles de poids négatif ?" explanation="L'algorithme de Bellman-Ford effectue V-1 itérations, où V est le nombre de sommets. Dans chaque itération, il parcourt toutes les arêtes E. Donc, la complexité est O(V*E).">
+  <Option text="O(V^2)" correct={false} />
+  <Option text="O(E log V)" correct={false} />
+  <Option text="O(V*E)" correct={true} />
+  <Option text="O(V + E)" correct={false} />
+</Question>
+ <Question q="Dans le contexte de la théorie des graphes, qu'est-ce qu'un arbre couvrant minimum (Minimum Spanning Tree - MST) d'un graphe non orienté pondéré ?" explanation="Un arbre couvrant minimum est un sous-ensemble des arêtes d'un graphe connexe qui relie tous les sommets, sans former de cycles, et avec la somme minimale des poids des arêtes.">
+  <Option text="Un cycle dans le graphe avec le poids total le plus faible." correct={false} />
+  <Option text="Un sous-graphe qui relie tous les sommets avec le nombre minimum d'arêtes." correct={false} />
+  <Option text="Un sous-graphe qui relie tous les sommets, sans cycles, et avec la somme minimale des poids des arêtes." correct={true} />
+  <Option text="Un chemin qui visite chaque sommet exactement une fois." correct={false} />
+</Question>
+ <Question q="Quel algorithme est couramment utilisé pour trouver un flux maximum dans un réseau de flot ?" explanation="L'algorithme de Ford-Fulkerson est une méthode générale pour trouver le flux maximum dans un réseau. Des variantes comme Edmonds-Karp améliorent son efficacité.">
+  <Option text="Algorithme de Dijkstra" correct={false} />
+  <Option text="Algorithme de Kruskal" correct={false} />
+  <Option text="Algorithme de Ford-Fulkerson" correct={true} />
+  <Option text="Algorithme de Prim" correct={false} />
+</Question>
+ <Question q="Quelle est la principale différence entre un algorithme glouton (greedy) et un algorithme de programmation dynamique ?" explanation="Les algorithmes gloutons font des choix localement optimaux dans l'espoir de trouver un optimum global, tandis que la programmation dynamique résout des sous-problèmes et combine leurs solutions pour trouver l'optimum global.">
+  <Option text="Les algorithmes gloutons sont toujours plus rapides que la programmation dynamique." correct={false} />
+  <Option text="La programmation dynamique garantit toujours l'optimalité, alors que les algorithmes gloutons ne le font pas." correct={true} />
+  <Option text="Les algorithmes gloutons utilisent une approche descendante (top-down), tandis que la programmation dynamique utilise une approche ascendante (bottom-up)." correct={false} />
+  <Option text="Il n'y a pas de différence fondamentale, ce sont des synonymes." correct={false} />
+</Question>
+ <Question q="Dans le contexte des algorithmes de flux, qu'est-ce qu'un chemin augmentant ?" explanation="Un chemin augmentant dans un réseau de flot est un chemin du nœud source au nœud puits dans le graphe résiduel, qui permet d'augmenter la valeur du flot actuel.">
+  <Option text="Un chemin dans le graphe original qui a la capacité la plus élevée." correct={false} />
+  <Option text="Un chemin dans le graphe résiduel du puits à la source." correct={false} />
+  <Option text="Un chemin dans le graphe résiduel de la source au puits qui a une capacité positive." correct={true} />
+  <Option text="Un chemin qui minimise la consommation d'énergie dans le réseau." correct={false} />
+</Question>
+</Quiz>
+</SummativeEvaluation>
