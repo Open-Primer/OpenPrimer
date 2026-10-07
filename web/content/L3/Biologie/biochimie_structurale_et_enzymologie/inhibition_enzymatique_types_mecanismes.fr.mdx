@@ -1,0 +1,318 @@
+---
+title: « Inhibition enzymatique : types et mécanismes d'action »
+subject: « Biochimie structurale et enzymologie »
+level: « L3 »
+module: « Inhibition enzymatique : types et mécanismes d'action »
+order: 10
+---
+
+
+
+<DiagnosticQuiz question="Quelle affirmation décrit le mieux l'effet d'un inhibiteur compétitif sur une réaction enzymatique?" options="Il diminue la Vmax et augmente le Km.|||Il augmente la Vmax et diminue le Km.|||Il ne modifie pas la Vmax mais augmente le Km.|||Il diminue la Vmax et ne modifie pas le Km." correctIndex="2" targetSectionId="section-cinetique-enzymatique" sectionTitle="Rappel sur la cinétique enzymatique" />
+
+
+
+## Introduction à l'inhibition enzymatique
+
+L'inhibition enzymatique représente un processus biochimique fondamental par lequel l'activité catalytique d'une enzyme est réduite ou complètement abolie. Ce phénomène est crucial pour la régulation des voies métaboliques dans les systèmes biologiques et constitue une cible privilégiée en pharmacologie et en toxicologie <Reference id="1" name="1" term="1">1</Reference>. Comprendre les mécanismes d'inhibition enzymatique est essentiel pour appréhender la complexité de la <ConceptLink id="metabolic_regulation_concept" name="régulation métabolique" text="La régulation métabolique est l'ensemble des processus qui contrôlent les taux de réactions biochimiques et de voies métaboliques au sein d'une cellule ou d'un organisme. Elle assure que l'approvisionnement en énergie et en éléments constitutifs correspond aux besoins de la cellule, impliquant souvent un contrôle allostérique, une inhibition par rétroaction et une signalisation hormonale." unresolved={true}>régulation métabolique</ConceptLink> cellulaire et pour le développement rationnel de nouvelles molécules thérapeutiques <Reference id="2" name="2" term="2">2</Reference>.
+
+Au niveau biologique, l'inhibition enzymatique permet aux cellules de contrôler précisément la vitesse et la direction des réactions biochimiques. Par exemple, de nombreuses voies de biosynthèse sont régulées par des mécanismes de rétro-inhibition, où le produit final d'une voie inhibe la première enzyme de cette voie, évitant ainsi une production excessive et un gaspillage d'énergie et de ressources <Reference id="3" name="3" term="3">3</Reference>. Cette capacité d'ajustement est vitale pour maintenir l'homéostasie et répondre aux changements environnementaux.
+
+Sur le plan pharmacologique, les inhibiteurs enzymatiques sont au cœur de la <ConceptLink id="drug_development_concept" name="conception de médicaments" text="La conception de médicaments est le processus d'invention de nouveaux médicaments pharmaceutiques. Elle implique l'identification d'une cible biologique, la synthèse de candidats médicaments potentiels et l'optimisation de leurs propriétés pour l'efficacité, la sécurité et la pharmacocinétique. Ce domaine intègre souvent la chimie, la biologie et les méthodes computationnelles." unresolved={true}>conception de médicaments</ConceptLink>. Une grande proportion des médicaments actuellement sur le marché agissent en inhibant spécifiquement une enzyme impliquée dans une maladie. Par exemple, les statines, utilisées pour abaisser le cholestérol, inhibent l'HMG-CoA réductase, une enzyme clé de la biosynthèse du cholestérol. De même, de nombreux antibiotiques, antiviraux et anticancéreux ciblent des enzymes essentielles à la survie ou à la prolifération des agents pathogènes ou des cellules tumorales <Reference id="4" name="4" term="4">4</Reference>. L'étude de l'inhibition enzymatique permet donc non seulement de comprendre les maladies, mais aussi de concevoir des stratégies pour les traiter.
+
+Ce cours explorera les différents types d'inhibition enzymatique, en distinguant principalement l'inhibition réversible de l'inhibition irréversible. Nous détaillerons les mécanismes moléculaires sous-jacents à chaque type, leurs effets sur la cinétique enzymatique, et la manière dont ils sont caractérisés expérimentalement. Une attention particulière sera portée à l'analyse des courbes de Lineweaver-Burk, un outil graphique indispensable pour la détermination du mode d'inhibition. La pertinence de ces mécanismes pour la régulation physiologique et le développement d'agents thérapeutiques sera constamment mise en évidence.
+
+<Image description="Cette image schématique illustre une enzyme (représentée par une structure tridimensionnelle complexe avec un site actif) interagissant avec son substrat naturel et un inhibiteur. Le substrat est montré se liant spécifiquement au site actif, tandis que l'inhibiteur est représenté soit en compétition avec le substrat pour le site actif, soit en se liant à un site allostérique, modifiant ainsi la conformation de l'enzyme et son affinité pour le substrat. Les flèches indiquent les interactions réversibles ou irréversibles." alt="Représentation d'une molécule organique (modèle bâtonnets) dans une surface de liaison protéique colorée." caption="Figure 1: *Comment cette représentation schématique d'une enzyme et de ses interactions avec un substrat et un inhibiteur illustre-t-elle le concept fondamental de l'inhibition enzymatique, en mettant en évidence les sites de liaison potentiels et les conséquences sur l'activité catalytique ?*. Source: NASA Images (Public Domain)" title="Vue d'ensemble de l'inhibition enzymatique" src="https://images-assets.nasa.gov/image/9804663/9804663~thumb.jpg" />
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les caractéristiques distinctives des inhibitions enzymatiques réversibles (compétitive, incompétitive, non-compétitive) et irréversibles.</li>
+      <li>Évaluer l'impact des différents types d'inhibiteurs sur les paramètrès cinétiques (Km, Vmax) des enzymes.</li>
+      <li>Créer des représentations graphiques (ex: Lineweaver-Burk) illustrant l'effet de chaque type d'inhibiteur.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser des courbes cinétiques enzymatiques en présence et en absence d'inhibiteurs pour déterminer leur type d'action.</li>
+      <li>Évaluer la pertinence d'un inhibiteur enzymatique spécifique pour une application thérapeutique ou de recherche donnée.</li>
+      <li>Créer un plan d'expériences pour tester l'efficacité et le mode d'action d'un nouvel inhibiteur enzymatique.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Développer une pensée critique face aux données expérimentales concernant l'inhibition enzymatique.</li>
+      <li>Valoriser l'importance de la compréhension des mécanismes d'inhibition pour le développement de médicaments.</li>
+      <li>Faire preuve de rigueur scientifique dans l'interprétation et la communication des effets des inhibiteurs enzymatiques.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## L'inhibition réversible : types et cinétique
+
+L'inhibition réversible se caractérise par la formation d'un complexe enzyme-inhibiteur (EI) qui peut se dissocier, permettant à l'enzyme de retrouver son activité catalytique une fois l'inhibiteur retiré. Cette réversibilité est due à des liaisons non covalentes (liaisons hydrogène, interactions ioniques, forces de van der Waals) entre l'enzyme et l'inhibiteur. Les principaux types d'inhibition réversible sont l'inhibition compétitive, l'inhibition non-compétitive (pure et mixte) et l'inhibition incompétitive <Reference id="5" name="5" term="5">5</Reference>. Chacun de ces types présente des caractéristiques cinétiques distinctes, reflétant des mécanismes d'interaction différents entre l'enzyme, le substrat et l'inhibiteur.
+
+### Inhibition Compétitive
+
+L'inhibition compétitive est le type d'inhibition réversible le plus direct. L'inhibiteur, souvent structurellement similaire au substrat naturel, entre en compétition avec ce dernier pour se lier au <Glossary definition="Région spécifique de l'enzyme, généralement une poche ou une fente, où le substrat se lie et où la réaction catalytique a lieu." id="active_site_glossary" text="site actif" title="site actif">site actif</Glossary> de l'enzyme <Reference id="6" name="6" term="6">6</Reference>. La formation du complexe enzyme-inhibiteur (EI) empêche la liaison du substrat et, par conséquent, la catalyse. Cependant, si la concentration en substrat est suffisamment élevée, elle peut « déloger » l'inhibiteur du site actif, permettant à la réaction de se produire.
+
+* **Mécanisme moléculaire :** L'inhibiteur (I) et le substrat (S) se lient mutuellement exclusifs au même site sur l'enzyme (E).
+ E + S ⇌ ES → E + P
+ E + I ⇌ EI
+* **Effets cinétiques :**
+ * La <Glossary id="Vmax_glossary" text="Vmax" title="Vmax">Vmax</Glossary> (vitesse maximale de la réaction) reste inchangée. En présence d'une concentration saturante de substrat, la compétition est surmontée, et l'enzyme peut atteindre sa vitesse maximale.
+ * Le <Glossary id="Km_glossary" text="Km" title="Km">Km</Glossary> (constante de Michaelis-Menten, reflétant l'affinité de l'enzyme pour le substrat) apparent augmente. Cela signifie qu'une concentration plus élevée de substrat est nécessaire pour atteindre la moitié de la Vmax, car l'inhibiteur réduit l'accessibilité du site actif au substrat <Reference id="7" name="7" term="7">7</Reference>.
+* **Représentation de Lineweaver-Burk :** Sur un graphique de Lineweaver-Burk (double inverse, 1/V en fonction de 1/[S]), les lignes tracées en présence et en absence d'inhibiteur se croisent sur l'axe des ordonnées (1/Vmax). La pente de la ligne augmente avec la concentration d'inhibiteur, tandis que l'ordonnée à l'origine reste constante.
+* **Équation cinétique :** L'équation de Michaelis-Menten est modifiée comme suit pour l'inhibition compétitive :
+ $V_0 = \frac{V_{max}[S]}{K_m(1 + \frac{[I]}{K_i}) + [S]}$
+ où $K_i$ est la constante de dissociation de l'inhibiteur de l'enzyme.
+
+Un exemple classique d'inhibition compétitive est l'inhibition de la succinate déshydrogénase par le malonate. Le malonate est structurellement similaire au succinate et se lie au site actif de l'enzyme, empêchant la liaison du succinate <Reference id="8" name="8" term="8">8</Reference>.
+
+### Inhibition Non-Compétitive (Pure et Mixte)
+
+L'inhibition non-compétitive se produit lorsque l'inhibiteur se lie à un site différent du site actif, souvent appelé <Glossary definition="Site de liaison sur une enzyme, distinct du site actif, où des molécules régulatrices (effecteurs allostériques) peuvent se lier pour moduler l'activité enzymatique en induisant des changements de conformation." id="allosteric_site_glossary" text="site allostérique" title="site allostérique">site allostérique</Glossary>. Cette liaison provoque un changement de conformation de l'enzyme qui affecte sa capacité catalytique, mais pas nécessairement son affinité pour le substrat.
+
+#### Inhibition Non-Compétitive Pure
+
+* **Mécanisme moléculaire :** L'inhibiteur (I) peut se lier à l'enzyme libre (E) ou au complexe enzyme-substrat (ES) avec la même affinité. La liaison de l'inhibiteur n'empêche pas la liaison du substrat, mais le complexe ESI formé est catalytiquement inactif ou moins actif.
+ E + S ⇌ ES → E + P
+ E + I ⇌ EI
+ ES + I ⇌ ESI
+ EI + S ⇌ ESI
+* **Effets cinétiques :**
+ * La Vmax apparente diminue. L'inhibiteur réduit le nombre d'enzymes fonctionnelles ou leur efficacité catalytique.
+ * Le Km apparent reste inchangé. L'affinité de l'enzyme pour le substrat n'est pas affectée, car la liaison de l'inhibiteur ne modifie pas la capacité du site actif à lier le substrat.
+* **Représentation de Lineweaver-Burk :** Les lignes se croisent sur l'axe des abscisses (-1/Km). L'ordonnée à l'origine (1/Vmax) augmente avec la concentration d'inhibiteur, indiquant une diminution de la Vmax.
+* **Équation cinétique :**
+ $V_0 = \frac{V_{max}[S]}{K_m + [S](1 + \frac{[I]}{K_i})}$
+
+#### Inhibition Non-Compétitive Mixte
+
+* **Mécanisme moléculaire :** L'inhibiteur peut se lier à l'enzyme libre (E) et au complexe enzyme-substrat (ES), mais avec des affinités différentes ($K_i \neq K_{i'}$). Cela signifie que la liaison de l'inhibiteur affecte à la fois la catalyse et l'affinité apparente pour le substrat.
+* **Effets cinétiques :**
+ * La Vmax apparente diminue.
+ * Le Km apparent peut augmenter ou diminuer, selon que l'inhibiteur a une plus grande affinité pour l'enzyme libre ou pour le complexe ES.
+* **Représentation de Lineweaver-Burk :** Les lignes se croisent entre l'axe des ordonnées et l'axe des abscisses.
+* **Équation cinétique :**
+ $V_0 = \frac{V_{max}[S]}{K_m(1 + \frac{[I]}{K_i}) + [S](1 + \frac{[I]}{K_{i'}})}$
+
+### Inhibition Incompétitive
+
+L'inhibition incompétitive est un type d'inhibition réversible moins courant, où l'inhibiteur se lie **uniquement** au complexe enzyme-substrat (ES), et non à l'enzyme libre <Reference id="9" name="9" term="9">9</Reference>. La formation du complexe ESI est essentielle pour ce type d'inhibition.
+
+* **Mécanisme moléculaire :** L'inhibiteur se lie à un site sur l'enzyme qui devient accessible ou est modifié uniquement après la liaison du substrat. Le complexe ESI ne peut pas libérer le produit.
+ E + S ⇌ ES
+ ES + I ⇌ ESI
+* **Effets cinétiques :**
+ * La Vmax apparente diminue. La formation du complexe ESI réduit la concentration d'ES disponible pour la catalyse.
+ * Le Km apparent diminue. La liaison de l'inhibiteur au complexe ES « tire » l'équilibre E + S ⇌ ES vers la droite, augmentant l'affinité apparente de l'enzyme pour le substrat. Cependant, cette augmentation d'affinité est trompeuse car le complexe ESI est inactif.
+ * La diminution de Vmax et de Km est proportionnelle.
+* **Représentation de Lineweaver-Burk :** Les lignes tracées en présence et en absence d'inhibiteur sont parallèles. Cela est dû au fait que le rapport Km/Vmax (qui est la pente de la droite de Lineweaver-Burk) reste constant.
+* **Équation cinétique :**
+ $V_0 = \frac{V_{max}[S]}{K_m + [S](1 + \frac{[I]}{K_i})}$ (avec $K_m$ et $V_{max}$ apparents modifiés par $(1 + \frac{[I]}{K_i})$ au dénominateur)
+ Une forme plus explicite est :
+ $V_0 = \frac{V_{max}/(1 + [I]/K_i)}{K_m/(1 + [I]/K_i) + [S]}$
+
+<Mermaid caption="Figure 2 : " chart={``} />
+
+La caractérisation de ces différents modes d'inhibition est cruciale pour comprendre la régulation enzymatique et pour le développement de médicaments. Les courbes de Lineweaver-Burk, bien que parfois critiquées pour leur sensibilité aux erreurs expérimentales à faibles concentrations de substrat, restent un outil pédagogique et analytique puissant pour visualiser ces effets cinétiques <Reference id="10" name="10" term="10">10</Reference>. Des méthodes plus modernes, comme les tracés d'Hanes-Woolf ou Eadie-Hofstee, peuvent être utilisées pour une analyse plus précise, mais le principe reste le même : déduire le mécanisme d'inhibition des changements observés dans les paramètrès cinétiques apparents.
+
+L'étude des inhibiteurs enzymatiques a été grandement influencée par les travaux pionniers de <RealPerson id="michaelis_realperson" name="Leonor Michaelis" text="Leonor Michaelis était un biochimiste germano-américain connu pour ses travaux pionniers en cinétique enzymatique. Avec Maud Menten, il a développé le modèle de Michaelis-Menten, qui décrit la vitesse des réactions catalysées par des enzymes. Ses contributions ont jeté les bases de la compréhension des mécanismes enzymatiques.">Leonor Michaelis</RealPerson> et <RealPerson id="menten_realperson" name="Maud Menten" text="Maud Menten était une biochimiste et médecin canadienne qui, avec Leonor Michaelis, a établi l'équation de Michaelis-Menten. Ce modèle fondamental explique la relation entre la vitesse de réaction enzymatique et la concentration du substrat. Son travail a été crucial pour l'étude quantitative de la cinétique enzymatique.">Maud Menten</RealPerson> sur la cinétique enzymatique, ainsi que par ceux d'<RealPerson id="lineweaver_realperson" name="Hans Lineweaver" text="Hans Lineweaver était un biochimiste américain qui, avec Dean Burk, a développé le graphique de Lineweaver-Burk. Cette représentation graphique de l'équation de Michaelis-Menten est largement utilisée pour déterminer des paramètrès cinétiques comme la Vmax et le Km, et pour analyser l'inhibition enzymatique. Son travail a fourni un outil pratique pour la cinétique enzymatique.">Hans Lineweaver</RealPerson> et <RealPerson id="burk_realperson" name="Dean Burk" text="Dean Burk était un biochimiste américain connu pour sa collaboration avec Hans Lineweaver dans le développement du graphique de Lineweaver-Burk. Cette transformation linéaire de l'équation de Michaelis-Menten simplifie l'analyse graphique de la cinétique enzymatique. Burk a également apporté des contributions significatives à la recherche sur le cancer.">Dean Burk</RealPerson> qui ont popularisé la représentation graphique en double inverse pour l'analyse des données cinétiques <Reference id="11" name="11" term="11">11</Reference>. Leurs contributions ont jeté les bases de notre compréhension moderne de la régulation enzymatique et de la conception rationnelle d'inhibiteurs.
+
+## L'inhibition irréversible : mécanismes et conséquences
+
+Contrairement aux inhibiteurs réversibles qui établissent des interactions non covalentes et transitoires avec l'enzyme, les inhibiteurs irréversibles se caractérisent par la formation de liaisons covalentes stables ou de complexes extrêmement stables et non dissociables avec l'enzyme, entraînant une inactivation permanente ou quasi-permanente de son activité catalytique. Cette distinction fondamentale est cruciale tant pour la compréhension des mécanismes enzymatiques que pour la conception de molécules bioactives.
+
+Le mécanisme d'action de l'inhibition irréversible implique généralement une modification chimique de l'enzyme. L'inhibiteur réagit avec un ou plusieurs résidus d'acides aminés essentiels à la catalyse ou au maintien de la structure tridimensionnelle active de l'enzyme. Cette modification peut avoir lieu au niveau du site actif, d'un site allostérique crucial, ou d'autres régions de l'enzyme dont l'intégrité est indispensable à sa fonction. La conséquence est une perte progressive et souvent totale de l'activité enzymatique, qui ne peut être restaurée par dilution ou dialyse, car la liaison est stable et ne se dissocie pas spontanément.
+
+### Mécanismes d'action des inhibiteurs irréversibles
+
+On distingue plusieurs catégories d'inhibiteurs irréversibles, basées sur leur mode d'interaction et de modification de l'enzyme :
+
+1. **Inhibiteurs à affinité (Affinity Labels) ou Modificateurs de Groupe Fonctionnel Dirigés par le Site Actif :**
+ Ces molécules sont structurellement similaires au substrat naturel de l'enzyme, ce qui leur permet de se lier spécifiquement au site actif. Une fois liés, ils possèdent un groupe fonctionnel réactif (par exemple, un halogène, un époxyde, un groupe diazo) qui réagit chimiquement avec un résidu d'acide aminé nucléophile (comme la cystéine, la sérine, l'histidine ou la lysine) présent dans le site actif de l'enzyme. La spécificité de la liaison est assurée par l'affinité pour le site actif, tandis que l'irréversibilité est due à la formation d'une liaison covalente.
+ * **Exemple :** Le tosyl-L-phénylalanylchlorométhylcétone (TPCK) est un inhibiteur irréversible de la chymotrypsine. Il est un analogue du substrat phénylalanine et réagit spécifiquement avec un résidu histidine du site actif de la chymotrypsine, formant une liaison covalente et inactivant l'enzyme. Ce type d'inhibiteur a été fondamental pour l'identification des résidus catalytiques dans de nombreuses enzymes.
+
+2. **Inhibiteurs « Suicides » (Mechanism-Based Inhibitors) :**
+ Ces inhibiteurs sont des analogues de substrat qui ne sont pas réactifs en eux-mêmes, mais qui sont transformés par l'enzyme elle-même au cours de son cycle catalytique normal. C'est au cours de cette transformation que l'inhibiteur est converti en une espèce hautement réactive (un intermédiaire de réaction instable) qui réagit ensuite de manière covalente avec un résidu d'acide aminé essentiel de l'enzyme, l'inactivant de façon irréversible. L'enzyme « se suicide » en participant à sa propre inactivation. Ce mécanisme confère une très grande spécificité à ces inhibiteurs, car seule l'enzyme capable de catalyser la première étape de la réaction peut activer l'inhibiteur.
+ * **Exemple :** La pénicilline est un inhibiteur suicide de la transpeptidase bactérienne (aussi appelée protéine de liaison à la pénicilline, PBP), une enzyme essentielle à la synthèse de la paroi cellulaire bactérienne. La pénicilline est un analogue structurel du substrat naturel de la transpeptidase. L'enzyme tente de catalyser l'hydrolyse de la liaison amide β-lactame de la pénicilline, mais au lieu de libérer le produit, un intermédiaire acyle-enzyme stable se forme, qui est exceptionnellement stable et ne peut pas être hydrolysé, inactivant ainsi l'enzyme de manière irréversible. Cet exemple est un jalon dans la pharmacologie et a valu à <RealPerson id="ernst_chain" name="Ernst Chain" text="Ernst Chain était un biochimiste britannique d'origine allemande qui, avec Howard Florey et Alexander Fleming, a reçu le prix Nobel de physiologie ou médecine en 1945 pour ses travaux sur la pénicilline. Il a joué un rôle crucial dans l'isolement et la purification de la pénicilline, rendant possible son utilisation thérapeutique.">Ernst Chain</RealPerson>, <RealPerson id="howard_florey" name="Howard Florey" text="Howard Florey était un pharmacologue et pathologiste australien qui a partagé le prix Nobel de physiologie ou médecine en 1945 avec Ernst Chain et Alexander Fleming. Son équipe à Oxford a réussi à développer la pénicilline en un médicament salvateur, démontrant son potentiel thérapeutique chez l'homme.">Howard Florey</RealPerson> et <RealPerson id="alexander_fleming" name="Alexander Fleming" text="Alexander Fleming était un médecin et microbiologiste écossais surtout connu pour sa découverte accidentelle de la pénicilline en 1928. Son observation des effets antibactériens de la pénicilline a ouvert la voie au développement des antibiotiques, révolutionnant la médecine et sauvant d'innombrables vies.">Alexander Fleming</RealPerson> le prix Nobel.
+ * **Autre exemple :** L'allopurinol, utilisé dans le traitement de la goutte, est un inhibiteur suicide de la xanthine oxydase. Il est oxydé par l'enzyme en oxypurinol, qui reste fortement lié au site actif, inhibant l'enzyme.
+
+3. **Modificateurs de Groupe Fonctionnel Non Spécifiques :**
+ Ces réactifs peuvent modifier chimiquement des groupes fonctionnels spécifiques (par exemple, des groupes thiols (-SH), des groupes aminés (-NH2), des groupes carboxyles (-COOH)) sur les protéines, y compris les enzymes. Leur spécificité est moindre que celle des inhibiteurs à affinité ou suicides, car ils peuvent réagir avec de nombreux groupes similaires sur différentes protéines. Cependant, ils sont utiles en recherche pour identifier les résidus essentiels à la fonction enzymatique.
+ * **Exemple :** L'iodoacétamide et l'acide N-éthylmaléimide (NEM) réagissent avec les groupes thiols des résidus cystéine. Si une cystéine est essentielle à la catalyse ou à la stabilité structurale de l'enzyme, sa modification par ces réactifs entraînera une perte d'activité.
+
+<Image description="Comment cette illustration schématique d'un inhibiteur suicide (en rouge) interagissant avec le site actif d'une enzyme (en bleu) et formant une liaison covalente irréversible (en jaune) aide-t-elle à comprendre la spécificité et la permanence de ce type d'inhibition ?" alt="Structure protéique en ruban montrant des feuillets bêta (rouge), des boucles (bleu), des hélices alpha (jaune) et un ligand (blanc) lié au centre." caption="Figure 2: Comment cette illustration schématique d'un inhibiteur suicide (en rouge) interagissant avec le site actif d'une enzyme (en bleu) et formant une liaison covalente irréversible (en jaune) aide-t-elle à comprendre la spécificité et la permanence de ce type d'inhibition ?. Source: [Wikimedia Commons](https://fr.wikipedia.org/wiki/Inhibiteur_enzymatique)" src="https://upload.wikimedia.org/wikipedia/commons/0/04/HIV_protease_with_bound_ritonavir.png?utm_source=fr.wikipedia.org&utm_campaign=api&utm_content=original" fallbackUrl="https://fr.wikipedia.org/wiki/Inhibiteur_enzymatique" />
+
+### Conséquences sur l'activité enzymatique
+
+L'inhibition irréversible se manifeste par une perte progressive de l'activité enzymatique au fil du temps, proportionnelle à la concentration de l'inhibiteur et à la durée d'incubation. Contrairement à l'inhibition réversible, où un équilibre dynamique est atteint, l'inactivation irréversible est un processus cinétique où l'enzyme est progressivement retirée du pool des enzymes actives.
+
+* **Cinétique d'inactivation :** L'inactivation par un inhibiteur irréversible suit souvent une cinétique de pseudo-premier ordre si la concentration de l'inhibiteur est en grand excès par rapport à celle de l'enzyme. La vitesse d'inactivation dépend de la concentration de l'inhibiteur et de la constante de vitesse d'inactivation ($k_{inact}$).
+ $E + I \xrightarrow{k_{inact}} EI_{inactif}$
+ La détermination de $k_{inact}$ et de la constante de dissociation de l'inhibiteur ($K_I$) pour la liaison initiale (non covalente) est cruciale pour caractériser ces inhibiteurs.
+* **Perte permanente d'activité :** Une fois l'enzyme modifiée de manière covalente, son activité est perdue de façon permanente. La récupération de l'activité enzymatique ne peut se faire que par la synthèse de nouvelles molécules d'enzyme, un processus qui peut prendre des heures, des jours, voire plus, selon le taux de renouvellement de l'enzyme dans la cellule ou l'organisme.
+* **Stoichiométrie :** Souvent, un seul événement de liaison et de réaction covalente par molécule d'enzyme est suffisant pour inactiver l'enzyme. Cela implique une relation stœchiométrique entre l'inhibiteur et l'enzyme inactivée.
+
+<Mermaid caption="Figure 4 : " chart={``} />
+
+La compréhension des mécanismes d'inhibition irréversible est essentielle pour la conception de médicaments, car elle permet de développer des molécules très spécifiques et puissantes, capables de bloquer durablement des enzymes cibles impliquées dans des processus pathologiques. Cependant, cette permanence implique aussi des considérations toxicologiques importantes, car une inactivation non spécifique ou excessive peut avoir des effets secondaires graves.
+
+### Distinction avec les inhibiteurs réversibles à liaison forte
+
+Il est important de distinguer les inhibiteurs irréversibles des inhibiteurs réversibles à liaison forte (ou « tight-binding inhibitors »). Ces derniers se lient à l'enzyme avec une affinité extrêmement élevée ($K_i$ très faible, de l'ordre du nanomolaire ou picomolaire), mais la liaison reste non covalente et donc théoriquement réversible. Cependant, la vitesse de dissociation de ces complexes peut être si lente qu'ils agissent *fonctionnellement* comme des inhibiteurs irréversibles sur des échelles de temps physiologiques. La distinction clé réside dans la nature de la liaison : covalente pour l'irréversible, non covalente pour le réversible, même si la dissociation est très lente.
+
+## Applications pharmacologiques et toxicologiques des inhibiteurs enzymatiques
+Les inhibiteurs enzymatiques, qu'ils soient réversibles ou irréversibles, représentent une classe de molécules d'une importance capitale en biologie et en médecine. Leur capacité à moduler l'activité des enzymes en fait des outils précieux pour la recherche fondamentale, des agents thérapeutiques puissants et, malheureusement, des toxiques redoutables.
+
+### Applications pharmacologiques : des cibles enzymatiques aux médicaments
+
+La pharmacologie moderne repose largement sur la conception d'inhibiteurs enzymatiques spécifiques pour le traitement d'une multitude de maladies. Les enzymes sont des cibles idéales pour les médicaments car elles catalysent des réactions biochimiques spécifiques, et leur modulation peut perturber des voies métaboliques ou de signalisation essentielles à la progression d'une maladie.
+
+1. **Traitement des maladies cardiovasculaires :**
+ * **Inhibiteurs de l'enzyme de conversion de l'angiotensine (IEC) :** Des médicaments comme le captopril ou l'énalapril sont des inhibiteurs compétitifs de l'enzyme de conversion de l'angiotensine (ECA), une métalloprotéase qui convertit l'angiotensine I en angiotensine II, un puissant vasoconstricteur et stimulateur de la sécrétion d'aldostérone. En inhibant l'ECA, ces médicaments réduisent la tension artérielle et sont largement utilisés dans le traitement de l'hypertension, de l'insuffisance cardiaque et de la néphropathie diabétique.
+ * **Statines :** Des molécules comme l'atorvastatine ou la simvastatine sont des inhibiteurs compétitifs de l'HMG-CoA réductase, l'enzyme clé et limitante de la biosynthèse du cholestérol dans le foie. En bloquant cette enzyme, les statines réduisent efficacement les niveaux de cholestérol LDL (« mauvais cholestérol ») et sont des piliers dans la prévention et le traitement des maladies cardiovasculaires.
+
+2. **Anti-inflammatoires et analgésiques :**
+ * <ConceptLink id="AINS" name="Anti-inflammatoires non stéroïdiens (AINS)" text="Les anti-inflammatoires non stéroïdiens (AINS) sont une classe de médicaments utilisés pour réduire la douleur, la fièvre et l'inflammation. Ils agissent en inhibant l'activité des enzymes cyclooxygénases (COX), qui sont impliquées dans la synthèse des prostaglandines, médiateurs clés de l'inflammation. Les exemples courants incluent l'ibuprofène et l'aspirine." unresolved={true}>Anti-inflammatoires non stéroïdiens (AINS)</ConceptLink> : L'aspirine, l'ibuprofène et le naproxène sont des inhibiteurs des cyclooxygénases (COX-1 et COX-2), des enzymes responsables de la synthèse des prostaglandines, des médiateurs clés de l'inflammation, de la douleur et de la fièvre. L'aspirine est un exemple notable d'inhibiteur irréversible de la COX-1 et COX-2 par acétylation d'un résidu sérine dans le site actif, ce qui explique ses effets antiplaquettaires durables.
+
+3. **Anticancéreux :**
+ * **Méthotrexate :** Cet inhibiteur est un analogue structurel de l'acide folique et agit comme un inhibiteur compétitif de la dihydrofolate réductase (DHFR), une enzyme essentielle à la synthèse des purines et des pyrimidines, et donc à la réplication de l'ADN. En bloquant la DHFR, le méthotrexate inhibe la prolifération cellulaire et est utilisé en chimiothérapie pour traiter divers cancers, ainsi que dans certaines maladies auto-immunes.
+ * **Inhibiteurs de tyrosine kinases :** Des médicaments comme l'imatinib (Gleevec) sont des inhibiteurs spécifiques de tyrosine kinases (par exemple, BCR-ABL dans la leucémie myéloïde chronique), bloquant des voies de signalisation hyperactives dans les cellules cancéreuses.
+
+4. **Antibiotiques et antiviraux :**
+ * **Pénicilline et autres β-lactamines :** Comme mentionné précédemment, la pénicilline est un inhibiteur suicide de la transpeptidase bactérienne, essentielle à la synthèse de la paroi cellulaire. C'est un exemple paradigmatique d'inhibiteur enzymatique ayant révolutionné la médecine.
+ * **Inhibiteurs de protéase du VIH :** Des médicaments comme le saquinavir ou le ritonavir sont des inhibiteurs compétitifs de la protéase du VIH, une enzyme virale cruciale pour la maturation des protéines virales et l'assemblage de nouvelles particules virales. Leur développement a transformé le traitement de l'infection par le VIH en une maladie chronique gérable.
+
+<Quiz durationLimit={300} limit={3}>
+ <Question q="Quel est le principal avantage des inhibiteurs enzymatiques en tant que médicaments par rapport à d'autres types de molécules bioactives ?" explanation="L'haute spécificité des inhibiteurs enzymatiques permet de cibler précisément une enzyme impliquée dans une pathologie, minimisant ainsi les effets indésirables sur d'autres processus biologiques.">
+  <Option text="Haute spécificité pour leur cible" correct={true} />
+  <Option text="Faible coût de production" correct={false} />
+  <Option text="Action rapide et non réversible" correct={false} />
+  <Option text="Absence totale d'effets secondaires" correct={false} />
+</Question>
+ <Question q="Un inhibiteur compétitif est souvent utilisé pour traiter des maladies où une enzyme est hyperactive. Comment agit-il pour réduire l'activité enzymatique ?" explanation="Un inhibiteur compétitif mime le substrat et se lie au site actif de l'enzyme, empêchant ainsi le substrat de se fixer et de réagir. Cela réduit l'activité enzymatique en diminuant le nombre de complexes enzyme-substrat formés.">
+  <Option text="Il se lie de manière irréversible au site actif de l'enzyme." correct={false} />
+  <Option text="Il se lie à un site allostérique, modifiant la conformation de l'enzyme." correct={false} />
+  <Option text="Il entre en compétition avec le substrat naturel pour le site actif de l'enzyme." correct={true} />
+  <Option text="Il augmente la vitesse maximale de la réaction enzymatique." correct={false} />
+</Question>
+ <Question q="Quelle est la caractéristique principale d'un inhibiteur irréversible ?" explanation="Les inhibiteurs irréversibles forment généralement une liaison covalente forte et stable avec l'enzyme, entraînant une inactivation permanente de celle-ci.">
+  <Option text="Il se dissocie rapidement de l'enzyme." correct={false} />
+  <Option text="Il forme une liaison covalente stable avec l'enzyme." correct={true} />
+  <Option text="Son effet peut être annulé en augmentant la concentration du substrat." correct={false} />
+  <Option text="Il se lie uniquement à l'enzyme lorsque le substrat est déjà lié." correct={false} />
+</Question>
+</Quiz>
+
+### Tableau récapitulatif des applications pharmacologiques des inhibiteurs enzymatiques
+
+| Classe de Médicament | Enzyme Ciblée Principale | Mécanisme d'Inhibition | Application Thérapeutique Clé |
+|:---------------------|:-------------------------|:-----------------------|:------------------------------|
+| IEC (ex: Captopril) | Enzyme de Conversion de l'Angiotensine (ECA) | Compétitif | Hypertension, Insuffisance cardiaque |
+| Statines (ex: Atorvastatine) | HMG-CoA Réductase | Compétitif | Hypercholestérolémie |
+| AINS (ex: Aspirine, Ibuprofène) | Cyclooxygénases (COX-1, COX-2) | Irréversible (Aspirine), Compétitif | Inflammation, Douleur, Fièvre |
+| Méthotrexate | Dihydrofolate Réductase (DHFR) | Compétitif | Cancers, Maladies auto-immunes |
+| Inhibiteurs de Tyrosine Kinases (ex: Imatinib) | Tyrosine Kinases spécifiques (ex: BCR-ABL) | Compétitif | Cancers (ex: Leucémie Myéloïde Chronique) |
+| Pénicilline | Transpeptidase bactérienne | Irréversible (« suicide ») | Infections bactériennes |
+| Inhibiteurs de Protéase du VIH (ex: Saquinavir) | Protéase du VIH | Compétitif | Infection par le VIH |
+
+### Applications toxicologiques : des enzymes vitales aux poisons
+
+Malheureusement, la capacité des inhibiteurs à moduler l'activité enzymatique peut également être exploitée à des fins toxiques, ou être la conséquence involontaire de l'exposition à des substances environnementales. De nombreux poisons et toxines exercent leurs effets délétères en ciblant des enzymes vitales.
+
+1. **Organophosphates (pesticides et agents neurotoxiques) :**
+ * Les organophosphates, tels que le malathion (un pesticide) ou le sarin (un agent de guerre chimique), sont des inhibiteurs irréversibles de l'acétylcholinestérase (AChE). L'AChE est une enzyme cruciale qui catalyse l'hydrolyse de l'acétylcholine, un neurotransmetteur, dans la fente synaptique. L'inhibition de l'AChE entraîne une accumulation excessive d'acétylcholine, provoquant une stimulation continue des récepteurs cholinergiques, ce qui se manifeste par des symptômes graves tels que des convulsions, une paralysie respiratoire et la mort.
+
+2. **Cyanure :**
+ * Le cyanure est un inhibiteur puissant et rapide de la cytochrome c oxydase (complexe IV de la chaîne de transport d'électrons mitochondriale). En se liant au fer héminique de l'enzyme, il bloque le transfert d'électrons à l'oxygène, arrêtant ainsi la respiration cellulaire et la production d'ATP. Cela conduit à une asphyxie cellulaire rapide et létale.
+
+3. **Métaux lourds :**
+ * Des métaux lourds comme le plomb, le mercure ou le cadmium peuvent agir comme des toxiques enzymatiques en se liant à des groupes sulfhydryles (-SH) de résidus cystéine dans les enzymes. Cette liaison peut perturber la structure tridimensionnelle de l'enzyme ou bloquer son site actif, entraînant une inactivation. Par exemple, le plomb peut inhiber l'ALA déshydratase, une enzyme de la biosynthèse de l'hème, conduisant à une anémie.
+
+4. **Mycotoxines :**
+ * Certaines toxines produites par des champignons, comme les aflatoxines, peuvent être métabolisées par des enzymes hépatiques en intermédiaires réactifs qui se lient de manière covalente à l'ADN ou aux protéines, y compris des enzymes, perturbant ainsi les fonctions cellulaires normales et augmentant le risque de cancer.
+
+### Importance de la spécificité et de la réversibilité/irréversibilité
+
+La conception de molécules actives, qu'elles soient pharmacologiques ou pour la recherche, repose sur une compréhension approfondie de la spécificité et du caractère réversible ou irréversible de l'inhibition.
+
+* **Spécificité :** C'est un critère primordial. Un bon inhibiteur doit cibler une enzyme spécifique avec une haute affinité, tout en ayant une affinité minimale pour d'autres enzymes. Une faible spécificité (ou « off-target effects ») peut entraîner des effets secondaires indésirables ou toxiques. La conception rationnelle de médicaments vise à maximiser la sélectivité de l'inhibiteur pour sa cible. Par exemple, le développement d'inhibiteurs sélectifs de la COX-2 (coxibs) visait à réduire les effets secondaires gastro-intestinaux associés à l'inhibition de la COX-1 par les AINS non sélectifs, bien que des problèmes cardiovasculaires aient ensuite été identifiés pour certains coxibs. La spécificité est souvent liée à la complémentarité structurelle entre l'inhibiteur et le site actif de l'enzyme.
+
+* **Réversibilité/Irréversibilité :** Le choix entre un inhibiteur réversible et irréversible dépend de l'objectif thérapeutique ou toxicologique :
+ * **Inhibiteurs réversibles :**
+ * **Avantages :** Leurs effets sont transitoires et réversibles, permettant un contrôle fin de la posologie et une adaptation rapide en cas d'effets indésirables. La concentration du médicament peut être ajustée pour maintenir un niveau d'inhibition souhaité. Ils sont souvent préférés pour les traitements chroniques où une modulation continue est nécessaire.
+ * **Inconvénients :** Nécessitent une administration continue pour maintenir l'effet, et peuvent être moins puissants que les irréversibles.
+ * **Inhibiteurs irréversibles :**
+ * **Avantages :** Offrent une inactivation durable de l'enzyme, ce qui peut être avantageux pour des enzymes à renouvellement lent ou lorsque l'objectif est une inactivation complète et prolongée (par exemple, dans le cas d'antibiotiques ou d'anticancéreux). Une seule dose peut avoir des effets prolongés, réduisant la fréquence d'administration.
+ * **Inconvénients :** Leurs effets sont permanents, ce qui signifie que la récupération de l'activité enzymatique dépend de la synthèse de nouvelles molécules d'enzyme. Cela peut être lent et rend les effets secondaires potentiellement plus graves et plus difficiles à gérer. Le risque de toxicité est plus élevé si l'inhibiteur n'est pas parfaitement spécifique. La durée d'action est déterminée par le taux de synthèse de nouvelles enzymes et non par la clairance du médicament.
+
+<SolvedExercise id="irreversible_inhibitor_kinetics" name="Un inhibiteur irréversible est incubé avec une enzyme à différentes concentrations et les activités résiduelles sont mesurées au cours du temps. Comment peut-on déterminer la constante de vitesse d'inactivation ($k_{inact}$) et la constante de dissociation ($K_I$) de cet inhibiteur à partir des données cinétiques obtenues ?" term="Un inhibiteur irréversible est incubé avec une enzyme à différentes concentrations et les activités résiduelles sont mesurées au cours du temps. Comment peut-on déterminer la constante de vitesse d'inactivation ($k_{inact}$) et la constante de dissociation ($K_I$) de cet inhibiteur à partir des données cinétiques obtenues ?">Un inhibiteur irréversible est incubé avec une enzyme à différentes concentrations et les activités résiduelles sont mesurées au cours du temps. Comment peut-on déterminer la constante de vitesse d'inactivation ($k_{inact}$) et la constante de dissociation ($K_I$) de cet inhibiteur à partir des données cinétiques obtenues ?</SolvedExercise>
+
+La conception d'inhibiteurs enzymatiques est un domaine de recherche actif, où la chimie médicinale s'efforce de créer des molécules avec une spécificité et une sélectivité accrues, en tirant parti des connaissances détaillées sur la structure tridimensionnelle des enzymes et de leurs mécanismes catalytiques <Reference id="12" name="12" term="12">12</Reference>. La compréhension des principes de l'inhibition enzymatique est donc fondamentale pour tout étudiant en biochimie et en pharmacologie.
+
+## Conclusion
+Nous avons exploré en détail les mécanismes complexes de l'inhibition enzymatique, un phénomène biochimique fondamental qui régit la régulation de l'activité des enzymes et, par extension, l'ensemble des processus métaboliques et cellulaires. Nous avons distingué les inhibiteurs réversibles – compétitifs, incompétitifs et non-compétitifs – dont les effets peuvent être annulés ou modulés par des changements de concentration, et les inhibiteurs irréversibles, qui forment des liaisons covalentes stables avec l'enzyme, entraînant une inactivation permanente. La caractérisation cinétique de ces interactions, à travers des paramètrès tels que la constante de Michaelis ($K_m$), la vitesse maximale ($V_{max}$), et les constantes d'inhibition ($K_i$, $K_i'$), est cruciale pour comprendre leur mode d'action et leur efficacité. Cette compréhension approfondie des différents types d'inhibition et de leurs signatures cinétiques est indispensable pour quiconque étudie la biochimie, la pharmacologie ou la toxicologie.
+
+L'importance de l'inhibition enzymatique dépasse largement le cadre de la recherche fondamentale. Elle constitue une pierre angulaire dans le développement de nouveaux médicaments, où la conception rationnelle d'inhibiteurs spécifiques permet de cibler des enzymes clés impliquées dans des pathologies variées, des infections bactériennes aux cancers, en passant par les maladies cardiovasculaires et neurodégénératives. La sélectivité et la spécificité d'un inhibiteur sont des critères primordiaux pour minimiser les effets secondaires indésirables, un défi constant pour les chimistes médicinaux. Par exemple, l'étude des inhibiteurs de l'<Glossary id="acétylcholinestérase" text="acétylcholinestérase" title="acétylcholinestérase">acétylcholinestérase</Glossary> est essentielle dans le traitement de la maladie d'Alzheimer, tandis que les inhibiteurs de la <Glossary id="transcriptase_inverse" text="transcriptase inverse" title="transcriptase inverse">transcriptase inverse</Glossary> sont vitaux dans la lutte contre le VIH. Au-delà de la thérapeutique, la connaissance des mécanismes d'inhibition est également fondamentale pour l'évaluation des risques toxicologiques, permettant d'identifier comment certaines substances environnementales ou industrielles peuvent perturber des voies métaboliques essentielles en inhibant des enzymes vitales.
+
+<Image description="Comment la compréhension des mécanismes d'inhibition enzymatique se traduit-elle en applications concrètes dans la santé et l'environnement ?" alt="Comment la compréhension des mécanismes d'inhibition enzymatique se traduit-elle en applications concrètes dans la santé et l'environnement ?" caption="Figure 3: Comment la compréhension des mécanismes d'inhibition enzymatique se traduit-elle en applications concrètes dans la santé et l'environnement ?. Source: NASA Images (Public Domain)" src="https://images-assets.nasa.gov/image/9804663/9804663~thumb.jpg" />
+
+Les perspectives futures dans le domaine de l'ingénierie enzymatique et de la découverte de nouveaux inhibiteurs sont vastes et prometteuses. L'ingénierie dirigée des enzymes permet de modifier leur spécificité, leur stabilité ou leur activité, ouvrant la voie à des applications biotechnologiques innovantes, de la production de biocarburants à la synthèse de molécules complexes en chimie verte. La conception de nouveaux inhibiteurs bénéficie des avancées en biologie structurale, qui permet de visualiser les enzymes à une résolution atomique, et en <ConceptLink id="chimie_computationnelle" name="chimie computationnelle" text="Discipline utilisant des méthodes informatiques pour résoudre des problèmes chimiques, notamment la modélisation moléculaire et la prédiction des interactions ligand-protéine.">chimie computationnelle</ConceptLink>, qui facilite le criblage virtuel et l'optimisation de molécules candidates. Des défis majeurs subsistent, notamment la lutte contre la résistance aux médicaments, l'identification de cibles enzymatiques pour des maladies orphelines, et le développement d'inhibiteurs multi-cibles pour des pathologies complexes. La recherche continue dans ce domaine, souvent inspirée par les travaux pionniers de scientifiques comme, promet de transformer notre approche de la santé et de la biotechnologie.
+
+<Mermaid caption="Figure 6 : Décrivez les étapes clés du processus de découverte et de développement d'un nouvel inhibiteur enzymatique, de l'identification de la cible à l'optimisation du composé, en intégrant les concepts de criblage et de design rationnel." id="inhibitor_discovery_flowchart" description="Décrivez les étapes clés du processus de découverte et de développement d'un nouvel inhibiteur enzymatique, de l'identification de la cible à l'optimisation du composé, en intégrant les concepts de criblage et de design rationnel." />
+
+L'étude de l'inhibition enzymatique est donc bien plus qu'un simple chapitre de biochimie ; c'est une discipline dynamique à l'intersection de la biologie, de la chimie et de la médecine, dont les découvertes continuent de façonner notre compréhension du vivant et notre capacité à intervenir sur ses mécanismes. La maîtrise de ces concepts est essentielle pour les futurs chercheurs et praticiens qui souhaitent contribuer à ces avancées.
+
+
+
+<Summary itemsString="L'inhibition enzymatique est un mécanisme fondamental qui régule l'activité des enzymes, essentiel pour le contrôle des voies métaboliques et le développement de médicaments.|||Il existe deux grandes catégories d'inhibition: réversible et irréversible, chacune ayant des caractéristiques et des conséquences distinctes sur l'activité enzymatique.|||Les inhibiteurs réversibles se classent principalement en trois types: compétitifs, non-compétitifs (ou mixtes) et incompétitifs, différenciés par leur site de liaison et leurs effets sur les paramètrès cinétiques Km et Vmax.|||L'inhibition compétitive se produit lorsque l'inhibiteur se lie au site actif, augmentant le Km apparent sans modifier la Vmax, tandis que l'inhibition non-compétitive affecte principalement la Vmax.|||L'inhibition incompétitive, moins courante, implique la liaison de l'inhibiteur uniquement au complexe enzyme-substrat, entraînant une diminution apparente du Km et de la Vmax.|||Les inhibiteurs irréversibles forment des liaisons covalentes stables avec l'enzyme, conduisant à une inactivation permanente et souvent irréversible de l'activité catalytique.|||La compréhension approfondie des mécanismes d'inhibition enzymatique est cruciale pour la conception rationnelle de molécules thérapeutiques et l'étude des processus biologiques." />
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+ <Question q="Quelle affirmation est VRAIE concernant l'inhibition compétitive ?" explanation="L'inhibiteur compétitif se lie au site actif de l'enzyme, empêchant le substrat de s'y fixer. Cela augmente la concentration apparente de substrat nécessaire pour atteindre la moitié de la Vmax (Km apparent augmente), mais la Vmax reste inchangée car à très haute concentration de substrat, l'inhibiteur peut être déplacé.">
+  <Option text="L'inhibiteur se lie à un site différent du site actif." correct={false} />
+  <Option text="La Vmax de la réaction enzymatique est diminuée." correct={false} />
+  <Option text="Le Km apparent de l'enzyme est augmenté." correct={true} />
+  <Option text="L'inhibiteur forme une liaison covalente avec l'enzyme." correct={false} />
+</Question>
+ <Question q="Dans le cas d'une inhibition non-compétitive pure, comment sont affectés le Km et la Vmax de l'enzyme ?" explanation="L'inhibiteur non-compétitif pur se lie à un site distinct du site actif, que l'enzyme soit libre ou liée au substrat. Il diminue l'efficacité catalytique de l'enzyme, réduisant ainsi la Vmax. Cependant, il n'affecte pas l'affinité de l'enzyme pour le substrat, donc le Km reste inchangé.">
+  <Option text="Le Km est augmenté et la Vmax est diminuée." correct={false} />
+  <Option text="Le Km est diminué et la Vmax est diminuée." correct={false} />
+  <Option text="Le Km est inchangé et la Vmax est diminuée." correct={true} />
+  <Option text="Le Km est inchangé et la Vmax est inchangée." correct={false} />
+</Question>
+ <Question q="Un inhibiteur incompétitif se caractérise par :" explanation="L'inhibiteur incompétitif ne peut se lier qu'au complexe enzyme-substrat (ES). Cette liaison stabilise le complexe ES, ce qui diminue la concentration effective de complexe ES disponible pour la conversion en produit, réduisant ainsi la Vmax. De plus, en 'séquestrant' le complexe ES, il déplace l'équilibre E + S <=">
+ES vers la droite, ce qui donne l'impression d'une affinité accrue pour le substrat, donc un Km apparent diminué.« >
+  <Option text="Il se lie uniquement à l'enzyme libre." correct={false} />
+  <Option text="Il se lie uniquement au complexe enzyme-substrat (ES)." correct={true} />
+  <Option text="Il augmente le Km apparent et diminue la Vmax." correct={false} />
+  <Option text="Il ne modifie ni le Km ni la Vmax." correct={false} />
+</Question>
+ <Question q="Quelle est la principale caractéristique d'un inhibiteur irréversible ?" explanation="Les inhibiteurs irréversibles se lient généralement de manière covalente à l'enzyme, ou très fortement non-covalente, modifiant de façon permanente ou quasi-permanente la structure du site actif ou d'un site essentiel à la catalyse. Leur effet ne peut pas être annulé par dilution ou augmentation de la concentration du substrat.">
+  <Option text="Son effet peut être annulé par une augmentation de la concentration du substrat." correct={false} />
+  <Option text="Il se lie de manière covalente ou très stable à l'enzyme." correct={true} />
+  <Option text="Il diminue le Km apparent de l'enzyme." correct={false} />
+  <Option text="Il se lie à un site allostérique de l'enzyme." correct={false} />
+</Question>
+ <Question q="Comment l'inhibition mixte affecte-t-elle les paramètrès cinétiques (Km et Vmax) d'une enzyme ?" explanation="L'inhibition mixte est une forme d'inhibition non-compétitive où l'inhibiteur peut se lier à l'enzyme libre (E) et au complexe enzyme-substrat (ES), mais avec des affinités différentes. Elle entraîne toujours une diminution de la Vmax. L'effet sur le Km apparent dépend des affinités relatives de l'inhibiteur pour E et ES : si l'inhibiteur a une plus grande affinité pour E, le Km apparent augmente ; si l'affinité est plus grande pour ES, le Km apparent diminue. Si les affinités sont égales, c'est une inhibition non-compétitive pure (Km inchangé). Donc, la Vmax est toujours diminuée, et le Km peut être augmenté, diminué ou inchangé.">
+  <Option text="La Vmax est toujours diminuée, et le Km apparent peut être augmenté, diminué ou inchangé." correct={true} />
+  <Option text="La Vmax est inchangée, mais le Km apparent est toujours augmenté." correct={false} />
+  <Option text="La Vmax est toujours diminuée, et le Km apparent est toujours diminué." correct={false} />
+  <Option text="La Vmax et le Km apparent sont toujours augmentés." correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkNvbnN0YW50ZSBkJ2luaGliaXRpb24gKEtpKSIsImRlZmluaXRpb24iOiJNZXN1cmUgcXVhbnRpdGF0aXZlIGRlIGwnYWZmaW5pdMOpIGQndW4gaW5oaWJpdGV1ciBwb3VyIHVuZSBlbnp5bWUuIFVuZSB2YWxldXIgZGUgS2kgcGx1cyBmYWlibGUgaW5kaXF1ZSB1bmUgYWZmaW5pdMOpIHBsdXMgw6lsZXbDqWUgZGUgbCdpbmhpYml0ZXVyIHBvdXIgbCdlbnp5bWUuIn0seyJ0ZXJtIjoiQ29uc3RhbnRlIGRlIE1pY2hhZWxpcyAoS20pIiwiZGVmaW5pdGlvbiI6IkNvbmNlbnRyYXRpb24gZGUgc3Vic3RyYXQgw6AgbGFxdWVsbGUgbGEgdml0ZXNzZSBkZSByw6lhY3Rpb24gZW56eW1hdGlxdWUgYXR0ZWludCBsYSBtb2l0acOpIGRlIHNhIHZpdGVzc2UgbWF4aW1hbGUgKFZtYXgpLiBFbGxlIGVzdCB1bmUgbWVzdXJlIGludmVyc2UgZGUgbCdhZmZpbml0w6kgZGUgbCdlbnp5bWUgcG91ciBzb24gc3Vic3RyYXQuIn0seyJ0ZXJtIjoiRW56eW1lIiwiZGVmaW5pdGlvbiI6IlByb3TDqWluZSBjYXRhbHl0aXF1ZSBxdWkgYWNjw6lsw6hyZSBsYSB2aXRlc3NlIGRlcyByw6lhY3Rpb25zIGJpb2NoaW1pcXVlcyBzcMOpY2lmaXF1ZXMgc2FucyDDqnRyZSBjb25zb21tw6llIGF1IGNvdXJzIGR1IHByb2Nlc3N1cy4ifSx7InRlcm0iOiJJbmhpYml0ZXVyIGVuenltYXRpcXVlIiwiZGVmaW5pdGlvbiI6Ik1vbMOpY3VsZSBxdWkgc2UgbGllIMOgIHVuZSBlbnp5bWUgZXQgZGltaW51ZSBvdSBibG9xdWUgc29uIGFjdGl2aXTDqSBjYXRhbHl0aXF1ZSwgcmFsZW50aXNzYW50IG91IGFycsOqdGFudCBsYSByw6lhY3Rpb24gZW56eW1hdGlxdWUuIn0seyJ0ZXJtIjoiSW5oaWJpdGlvbiBjb21ww6l0aXRpdmUiLCJkZWZpbml0aW9uIjoiVHlwZSBkJ2luaGliaXRpb24gcsOpdmVyc2libGUgb8O5IGwnaW5oaWJpdGV1ciwgZGUgc3RydWN0dXJlIHNpbWlsYWlyZSBhdSBzdWJzdHJhdCwgc2UgbGllIGF1IHNpdGUgYWN0aWYgZGUgbCdlbnp5bWUsIGVtcMOqY2hhbnQgbGUgc3Vic3RyYXQgZGUgcyd5IGZpeGVyLiBFbGxlIGF1Z21lbnRlIGxlIEttIGFwcGFyZW50IHNhbnMgYWZmZWN0ZXIgbGEgVm1heC4ifSx7InRlcm0iOiJJbmhpYml0aW9uIGluY29tcMOpdGl0aXZlIiwiZGVmaW5pdGlvbiI6IlR5cGUgZCdpbmhpYml0aW9uIHLDqXZlcnNpYmxlIG/DuSBsJ2luaGliaXRldXIgc2UgbGllIHVuaXF1ZW1lbnQgYXUgY29tcGxleGUgZW56eW1lLXN1YnN0cmF0IChFUyksIGVtcMOqY2hhbnQgbGEgY29udmVyc2lvbiBkdSBzdWJzdHJhdCBlbiBwcm9kdWl0LiBFbGxlIGRpbWludWUgw6AgbGEgZm9pcyBsZSBLbSBhcHBhcmVudCBldCBsYSBWbWF4LiJ9LHsidGVybSI6IkluaGliaXRpb24gaXJyw6l2ZXJzaWJsZSIsImRlZmluaXRpb24iOiJUeXBlIGQnaW5oaWJpdGlvbiBvw7kgbCdpbmhpYml0ZXVyIGZvcm1lIHVuZSBsaWFpc29uIGNvdmFsZW50ZSBzdGFibGUgZXQgcGVybWFuZW50ZSBhdmVjIGwnZW56eW1lLCBlbnRyYcOubmFudCB1bmUgaW5hY3RpdmF0aW9uIGR1cmFibGUgZGUgc29uIGFjdGl2aXTDqSBjYXRhbHl0aXF1ZS4ifSx7InRlcm0iOiJJbmhpYml0aW9uIG5vbi1jb21ww6l0aXRpdmUgKG1peHRlKSIsImRlZmluaXRpb24iOiJUeXBlIGQnaW5oaWJpdGlvbiByw6l2ZXJzaWJsZSBvw7kgbCdpbmhpYml0ZXVyIHNlIGxpZSDDoCB1biBzaXRlIGFsbG9zdMOpcmlxdWUgZGUgbCdlbnp5bWUgKGRpZmbDqXJlbnQgZHUgc2l0ZSBhY3RpZiksIG1vZGlmaWFudCBsYSBjb25mb3JtYXRpb24gZGUgbCdlbnp5bWUgZXQgcsOpZHVpc2FudCBzb24gZWZmaWNhY2l0w6kgY2F0YWx5dGlxdWUuIEVsbGUgZGltaW51ZSBsYSBWbWF4IGV0IHBldXQgYWZmZWN0ZXIgbGUgS20uIn0seyJ0ZXJtIjoiU2l0ZSBhY3RpZiIsImRlZmluaXRpb24iOiJSw6lnaW9uIHNww6ljaWZpcXVlIGRlIGwnZW56eW1lLCBnw6luw6lyYWxlbWVudCB1bmUgcG9jaGUgb3UgdW5lIGZlbnRlLCBvw7kgbGUgc3Vic3RyYXQgc2UgbGllIGV0IG/DuSBsYSByw6lhY3Rpb24gY2F0YWx5dGlxdWUgYSBsaWV1LiJ9LHsidGVybSI6IlNpdGUgYWxsb3N0w6lyaXF1ZSIsImRlZmluaXRpb24iOiJTaXRlIGRlIGxpYWlzb24gc3VyIHVuZSBlbnp5bWUsIGRpc3RpbmN0IGR1IHNpdGUgYWN0aWYsIG/DuSBkZXMgbW9sw6ljdWxlcyByw6lndWxhdHJpY2VzIChlZmZlY3RldXJzIGFsbG9zdMOpcmlxdWVzKSBwZXV2ZW50IHNlIGxpZXIgcG91ciBtb2R1bGVyIGwnYWN0aXZpdMOpIGVuenltYXRpcXVlIGVuIGluZHVpc2FudCBkZXMgY2hhbmdlbWVudHMgZGUgY29uZm9ybWF0aW9uLiJ9LHsidGVybSI6IlN1YnN0cmF0IiwiZGVmaW5pdGlvbiI6Ik1vbMOpY3VsZSBzcMOpY2lmaXF1ZSBzdXIgbGFxdWVsbGUgYWdpdCB1bmUgZW56eW1lLCBzZSBsaWFudCDDoCBzb24gc2l0ZSBhY3RpZiBwb3VyIMOqdHJlIHRyYW5zZm9ybcOpZSBlbiBwcm9kdWl0LiJ9LHsidGVybSI6IlZpdGVzc2UgbWF4aW1hbGUgKFZtYXgpIiwiZGVmaW5pdGlvbiI6IlZpdGVzc2UgZGUgcsOpYWN0aW9uIGVuenltYXRpcXVlIG1heGltYWxlIGF0dGVpbnRlIGxvcnNxdWUgbCdlbnp5bWUgZXN0IHNhdHVyw6llIGVuIHN1YnN0cmF0LCBjJ2VzdC3DoC1kaXJlIGxvcnNxdWUgdG91cyBsZXMgc2l0ZXMgYWN0aWZzIHNvbnQgb2NjdXDDqXMuIn1d" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiTWF0dGhldyBGaXNoZXIgKDIwMDUpLiAqTGVobmluZ2VyIFByaW5jaXBsZXMgb2YgQmlvY2hlbWlzdHJ5LCAzcmQgZWRpdGlvbi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9TWF0dGhldyUyMEZpc2hlciUyMCUyMkxlaG5pbmdlciUyMFByaW5jaXBsZXMlMjBvZiUyMEJpb2NoZW1pc3RyeSUyMiUyMDIwMDUiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjIsInRleHQiOiJFLiBKLiBXb29kICgyMDA4KS4gKkZ1bmRhbWVudGFscyBvZiBiaW9jaGVtaXN0cnk6IExpZmUgYXQgdGhlIG1vbGVjdWxhciBsZXZlbCAoVGhpcmQgRWRpdGlvbi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9V29vZCUyMCUyMldvb2QlMjIlMjAyMDA4Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjozLCJ0ZXh0IjoiSmVyZW15IE0uIEJlcmcsIEpvaG4gTC4gVHltb2N6a28sIEdyZWdvcnkgSi4gR2F0dG8sIEx1YmVydCBTdHJ5ZXIgKDIwMTcpLiDCqyBTdHJ5ZXIgQmlvY2hlbWllIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNjYyLTU0NjIwLTgiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NCwidGV4dCI6IkdhcnJldHQsIFIuIEguLCAmYW1wOyBHcmlzaGFtLCBDLiBNLiAoMjAxNikuIEJpb2NoZW1pc3RyeSAoNmUgw6lkLikuIENlbmdhZ2UgTGVhcm5pbmcuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1HYXJyZXR0JTIwMjAxNiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo1LCJ0ZXh0IjoiQS4gRmVyc2h0LCDCqyBTdHJ1Y3R1cmUgYW5kIG1lY2hhbmlzbSBpbiBwcm90ZWluIHNjaWVuY2UuIEEgZ3VpZGUgdG8gZW56eW1lIGNhdGFseXNpcyBhbmQgcHJvdGVpbiBmb2xkaW5nIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1GZXJzaHQlMjAlMjJTdHJ1Y3R1cmUlMjBhbmQlMjBtZWNoYW5pc20lMjBpbiUyMHByb3RlaW4lMjBzY2llbmNlLiUyMEElMjBndWlkZSUyMHRvJTIwZW56eW0lMjIiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjYsInRleHQiOiJBdGhlbCBDb3JuaXNoLUJvd2RlbiAoMjAxNCkuIMKrIEludHJvZHVjdGlvbiB0byBlbnp5bWUga2luZXRpY3MgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9QXRoZWwlMjBDb3JuaXNoLUJvd2RlbiUyMCUyMkludHJvZHVjdGlvbiUyMHRvJTIwZW56eW1lJTIwa2luZXRpY3MlMjIlMjAyMDE0Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjcsInRleHQiOiJDYXJsIEl2YXIgQnJhbmRlbiwgSm9obiBUb296ZSAoMjAxOCkuIMKrIEludHJvZHVjdGlvbiB0byBQcm90ZWluIFN0cnVjdHVyZSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1DYXJsJTIwSXZhciUyMEJyYW5kZW4lMjAlMjJJbnRyb2R1Y3Rpb24lMjB0byUyMFByb3RlaW4lMjBTdHJ1Y3R1cmUlMjIlMjAyMDE4Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjgsInRleHQiOiJDcmVpZ2h0b24sIFQuIEUuICgxOTkzKS4gUHJvdGVpbnM6IFN0cnVjdHVyZXMgYW5kIE1vbGVjdWxhciBQcm9wZXJ0aWVzICgyZSDDqWQuKS4gVy4gSC4gRnJlZW1hbi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPUNyZWlnaHRvbiUyMCUyMlByb3RlaW5zJTIyJTIwMTk5MyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo5LCJ0ZXh0IjoiRnJhbsOnb2lzIEvDqXDDqHMgKDIwMjUpLiDCqyBDaGFwaXRyZSAyIDogRGUgbGEgY2hpbWllIGRlIHN5bnRow6hzZSDDoCBsYSBiaW9sb2dpZSBkZSBzeW50aMOoc2UgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9RnJhbiVDMyVBN29pcyUyMEslQzMlQTlwJUMzJUE4cyUyMCUyMkNoYXBpdHJlJTIwMiUyMiUyMDIwMjUiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MTAsInRleHQiOiJNaWNoYWVsIEogQmVubmV0dCAoMjAwNikuIMKrIFRleHRib29rIG9mIEJpb2NoZW1pc3RyeSB3aXRoIENsaW5pY2FsIENvcnJlbGF0aW9ucywgU2l4dGggRWRpdGlvbi4gVGhvbWFzIE0uIERldmxpbiwgZWQuIEhvYm9rZW4sIE5KOiBXaWxleS1MaXNzLCBKb2huIFdpbGV5ICZhbXA7IFNvbnMsIDIwMDYsIDEyMDggcHAuLCAkMTE1LjAwLCBIYXJkY292ZXIuIElTQk4gMC00NzEtNjc4MDgtMi4gwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9TWljaGFlbCUyMEJlbm5ldHQlMjAlMjJUZXh0Ym9vayUyMG9mJTIwQmlvY2hlbWlzdHJ5JTIwd2l0aCUyMENsaW5pY2FsJTIwQ29ycmVsYXRpb25zJTIyJTIwMjAwNiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxMSwidGV4dCI6IkF1dGV1ciBpbmNvbm51ICgyMDA5KS4gwqsgQW5hbHlzaXMgb2Ygbm9uLWh5cGVyYm9saWMgZW56eW1lIGtpbmV0aWNzIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9QXV0ZXVyJTIwaW5jb25udSUyMCUyMkFuYWx5c2lzJTIwb2YlMjBub24lMjIlMjAyMDA5Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxMiwidGV4dCI6IkFydGh1ciBNLiBMZXNrICgyMDIzKS4gwqsgSW50cm9kdWN0aW9uIHRvIFByb3RlaW4gU2NpZW5jZSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1BcnRodXIlMjBMZXNrJTIwJTIySW50cm9kdWN0aW9uJTIwdG8lMjBQcm90ZWluJTIwU2NpZW5jZSUyMiUyMDIwMjMiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MTMsInRleHQiOiJLaWxpYW4gRGlsbCAoMjAwOSkuIMKrIEJpb2NoZW1pc3RyeSAoTWF0aGV3cywgQ2hyaXN0b3BoZXIgSzsgdmFuIEhvbGRlLCBLLkUuKSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1LaWxpYW4lMjBEaWxsJTIwJTIyQmlvY2hlbWlzdHJ5JTIwTWF0aGV3cyUyMiUyMDIwMDkiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNCwidGV4dCI6IkRhdmlkIEwuIE5lbHNvbiwgTWljaGFlbCBNLiBDb3guIDIwMTcuIMKrIExlaG5pbmdlciBQcmluY2lwZXMgZGUgQmlvY2hpbWllIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9RGF2aWQlMjBOZWxzb24lMjAlMjJMZWhuaW5nZXIlMjBQcmluY2lwZXMlMjBkZSUyMEJpb2NoaW1pZSUyMiUyMDIwMTciLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNSwidGV4dCI6IkRvbmFsZCBWb2V0LCBKdWRpdGggRy4gVm9ldCwgQ2hhcmxvdHRlIFcuIFByYXR0LiAyMDE2LiDCqyBWb2V0ICZhbXA7IFZvZXQgQmlvY2hpbWllIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9RG9uYWxkJTIwVm9ldCUyMCUyMlZvZXQlMjAlMjZhbXAlMjIlMjAyMDE2Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTYsInRleHQiOiJKaWh1IERvbmcuIDIwMjYuIMKrIFBoeXNpb3BhdGhvbG9naWUgZGUgY2VsbHVsZXMgc291Y2hlcyBjYW5jw6lyZXVzZXMgaXNvbMOpZXMgZGUgZ2xpb2JsYXN0b21lcyBwcmltaXRpZnMgZXQgw6l2YWx1YXRpb24gcHLDqS1jbGluaXF1ZSBkZSBtb2zDqWN1bGVzIMKrIHTDqnRlIGRlIHPDqXJpZSDCuyBwYXIgdW5lIGFwcHJvY2hlIGRlIGJpb2xvZ2llIGV0IGRlIGNoaW1pZSBtw6lkaWNpbmFsZSDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjcwNjc1LzQ0NWRkZjQ3ejVmMDV6NDU1ZXphODljejU2MjgyZTBkMmQ0MSIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE3LCJ0ZXh0IjoiMyDigJMgSW50cm9kdWN0aW9uIMOAIGxhIENpbsOpdGlxdWUgRW56eW1hdGlxdWUgUsOpYWN0aW9ucyDDgCB1biBTdWJzdHJhdCBldCB1biBQcm9kdWl0LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTA1MS85NzgtMi04Njg4My03NDItNC5jMDA0Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfV0=" />
