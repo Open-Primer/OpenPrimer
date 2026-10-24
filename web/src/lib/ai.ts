@@ -129,11 +129,16 @@ export function saveDraftRevision(filename: string, content: string) {
     return;
   }
   try {
-    const dir = path.resolve(process.cwd(), 'drafts_revisions');
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    const targetDirs = [
+      path.resolve(process.cwd(), 'drafts_revisions'),
+      path.resolve(process.cwd(), 'web', 'drafts_revisions')
+    ];
+    for (const dir of targetDirs) {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(dir, filename), content, 'utf8');
     }
-    fs.writeFileSync(path.join(dir, filename), content, 'utf8');
 
     console.log(`[DRAFTS_REVISIONS] Successfully saved ${filename} to drafts_revisions`);
   } catch (err) {
@@ -2424,6 +2429,8 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
           props.description = await translateText(props.description, lang);
         }
       } else if (comp.componentType === "Image" || comp.componentType === "CustomFigure") {
+        delete props.year;
+        delete (comp as any).year;
         if (detectLanguageLeakage(props.description, lang)) {
           props.description = await translateText(props.description, lang);
         }
@@ -2506,6 +2513,8 @@ export async function validateAndFixWidgets(widgets: any, discipline?: string, l
           props.content = await translateText(props.content, lang);
         }
       } else if (comp.componentType === "SolvedExercise" || comp.componentType === "UnsolvedExercise") {
+        delete props.year;
+        delete (comp as any).year;
         if (detectLanguageLeakage(props.title, lang)) {
           props.title = await translateText(props.title, lang);
         }
@@ -3248,13 +3257,29 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       // [FIX A2] Use question/blanks props matching the component contract (not legacy sentence/answer).
       compStr = `<FillInBlanks question="${(props.question || props.sentence || '').replace(/"/g, '&quot;')}" blanks='${props.blanks ? JSON.stringify(props.blanks) : JSON.stringify([props.answer || ''])}' />`;
     } else if (comp.componentType === "SolvedExercise") {
-      compStr = `<SolvedExercise title="${(props.title || '').replace(/"/g, '&quot;')}" solution="${(props.solution || '').replace(/"/g, '&quot;')}">\n  ${props.problem || ''}\n</SolvedExercise>`;
+      const problem = (props.problem || '').trim();
+      const solution = (props.solution || '').trim();
+      if (problem.length >= 10 || solution.length >= 10) {
+        compStr = `<SolvedExercise title="${(props.title || '').replace(/"/g, '&quot;')}" solution="${solution.replace(/"/g, '&quot;')}">\n  ${problem}\n</SolvedExercise>`;
+      } else {
+        compStr = '';
+      }
     } else if (comp.componentType === "UnsolvedExercise") {
-      compStr = `<UnsolvedExercise title="${(props.title || '').replace(/"/g, '&quot;')}" correctAnswer="${(props.correctAnswer || '').replace(/"/g, '&quot;')}" explanation="${(props.explanation || '').replace(/"/g, '&quot;')}">\n  ${props.problem || ''}\n</UnsolvedExercise>`;
+      const problem = (props.problem || '').trim();
+      if (problem.length >= 10) {
+        compStr = `<UnsolvedExercise title="${(props.title || '').replace(/"/g, '&quot;')}" correctAnswer="${(props.correctAnswer || '').replace(/"/g, '&quot;')}" explanation="${(props.explanation || '').replace(/"/g, '&quot;')}">\n  ${problem}\n</UnsolvedExercise>`;
+      } else {
+        compStr = '';
+      }
     } else if (comp.componentType === "Mermaid") {
-      const mCaption = props.caption ? ` caption="${(props.caption || '').replace(/"/g, '&quot;')}"` : '';
-      const safeChart = (props.chart || '').replace(/`/g, '\\`').replace(/\${/g, '\\${');
-      compStr = `<Mermaid chart={\`${safeChart}\`}${mCaption} />`;
+      const chart = (props.chart || '').trim();
+      if (chart.length >= 15 && /graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|journey/i.test(chart)) {
+        const mCaption = props.caption ? ` caption="${(props.caption || '').replace(/"/g, '&quot;')}"` : '';
+        const safeChart = chart.replace(/`/g, '\\`').replace(/\${/g, '\\${');
+        compStr = `<Mermaid chart={\`${safeChart}\`}${mCaption} />`;
+      } else {
+        compStr = '';
+      }
     } else if (comp.componentType === "FunctionPlotter") {
       compStr = `<FunctionPlotter fn="${props.fn || 'x^2'}" domain={${JSON.stringify(props.domain || [-10, 10])}} />`;
     } else if (comp.componentType === "CodeSandbox") {
@@ -3303,16 +3328,20 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const bWiki = props.wikipediaUrl ? ` wikipediaUrl="${props.wikipediaUrl.replace(/"/g, '&quot;')}"` : '';
       compStr = `<Biography name="${bName}"${bDates} description="${bDesc}"${bWiki} />`;
     } else if (comp.componentType === "Image") {
-      const rawDesc = props.description || props.caption || props.alt || '';
-      const mDesc = (props.description || rawDesc).replace(/"/g, '&quot;');
-      const mAlt = ` alt="${(props.alt || rawDesc).replace(/"/g, '&quot;')}"`;
-      const mCap = ` caption="${(props.caption || rawDesc).replace(/"/g, '&quot;')}"`;
-      const mTitle = props.title ? ` title="${props.title.replace(/"/g, '&quot;')}"` : '';
-      const mSrc = props.src ? ` src="${props.src.replace(/"/g, '&quot;')}"` : '';
-      const mFallbackUrl = props.fallbackUrl ? ` fallbackUrl="${props.fallbackUrl.replace(/"/g, '&quot;')}"` : '';
-      const mUnresolved = props.unresolved !== undefined ? ` unresolved={${props.unresolved}}` : '';
-      const mIsIllustration = props.isIllustration !== undefined ? ` isIllustration={${props.isIllustration}}` : '';
-      compStr = `<Image description="${mDesc}"${mAlt}${mCap}${mTitle}${mSrc}${mFallbackUrl}${mUnresolved}${mIsIllustration} />`;
+      const src = (props.src || props.url || '').trim();
+      if (src && !props.unresolved) {
+        const rawDesc = props.description || props.caption || props.alt || '';
+        const mDesc = (props.description || rawDesc).replace(/"/g, '&quot;');
+        const mAlt = ` alt="${(props.alt || rawDesc).replace(/"/g, '&quot;')}"`;
+        const mCap = ` caption="${(props.caption || rawDesc).replace(/"/g, '&quot;')}"`;
+        const mTitle = props.title ? ` title="${props.title.replace(/"/g, '&quot;')}"` : '';
+        const mSrc = ` src="${src.replace(/"/g, '&quot;')}"`;
+        const mFallbackUrl = props.fallbackUrl ? ` fallbackUrl="${props.fallbackUrl.replace(/"/g, '&quot;')}"` : '';
+        const mIsIllustration = props.isIllustration !== undefined ? ` isIllustration={${props.isIllustration}}` : '';
+        compStr = `<Image description="${mDesc}"${mAlt}${mCap}${mTitle}${mSrc}${mFallbackUrl}${mIsIllustration} />`;
+      } else {
+        compStr = '';
+      }
     } else if (comp.componentType === "climate_impact_map" || comp.componentType === "ClimateImpactMap") {
       const mDesc = (props.description || '').replace(/"/g, '&quot;');
       const mAlt = props.alt ? ` alt="${props.alt.replace(/"/g, '&quot;')}"` : '';
@@ -3657,6 +3686,11 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
         if (captionMatch[3] !== undefined) matchedDelimiter = '{';
       }
       
+      // Decorative illustrations are excluded from figure numbering
+      if (attrsStr.includes('isIllustration="true"') || attrsStr.includes('isIllustration={true}')) {
+        return tagMatch;
+      }
+
       // If caption is empty/missing, look for description
       if (!captionText.trim()) {
         const descRegex = /\bdescription=(?:"([^"]*)"|'([^']*)'|\{([\s\S]*?)\})/i;
@@ -3670,6 +3704,11 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
       const prefixRegex = /^(?:figure|fig|illustration|abbildung|abb|image|custom\s*figure)\s*(?:\d+(?:\.\d+)*[a-z]?|\b(?![a-z]')([a-z])\b)?\s*(?:[:：\-–—]\s*)*/i;
       cleanCaption = cleanCaption.replace(prefixRegex, '').trim();
       
+      // Do not add figure prefix if caption is completely empty
+      if (!cleanCaption) {
+        return tagMatch;
+      }
+
       let prefix = `Figure ${counter} : `;
       if (lang === 'en') {
         prefix = `Figure ${counter}: `;
@@ -3822,7 +3861,7 @@ Rules:
     
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     if (apiKey) {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -4351,11 +4390,11 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
         }
 
         if (!attemptSuccess && apiKey) {
-          console.log(`[AI GENERATOR] Generating syllabus iteration #${syllabusIteration} for "${courseName}" via AI Studio fallback (gemini-3.7-flash)...`);
+          console.log(`[AI GENERATOR] Generating syllabus iteration #${syllabusIteration} for "${courseName}" via AI Studio fallback (gemini-3.5-flash-lite)...`);
           const startTime = Date.now();
           try {
             const compressedSyllabus = compressPromptText(currentSyllabusPrompt);
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent`, {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent`, {
               method: 'POST',
               headers: { 
                 'Content-Type': 'application/json',
@@ -4378,7 +4417,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
               const usage = jsonRes.usageMetadata || {};
               const promptTokens = usage.promptTokenCount || 0;
               const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-              await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedSyllabus);
+              await recordMetrics('course_generation', 'gemini-3.5-flash-lite', durationMs, promptTokens, candidatesTokens, compressedSyllabus);
             } else {
               const errText = await res.text();
               console.error(`[AI GENERATOR] AI Studio syllabus call failed (${res.status}):`, errText);
@@ -4451,7 +4490,7 @@ If the syllabus is approved, you MUST set approved: true, and critique: "". You 
 
         if (!critiqueSuccess && apiKey) {
           try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -4714,7 +4753,7 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
           temperature,
           maxOutputTokens: 8192
         };
-        if (frequencyPenalty !== undefined) {
+        if (frequencyPenalty !== undefined && !isVertexConfigured()) {
           generationConfig.frequencyPenalty = frequencyPenalty;
         }
         if (topP !== undefined) {
@@ -4723,7 +4762,7 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
         if (schema) {
           generationConfig.responseMimeType = "application/json";
           generationConfig.responseSchema = schema;
-        } else if (isJsonMode || promptText.toLowerCase().includes('json') || promptText.toLowerCase().includes('schema')) {
+        } else if (isJsonMode) {
           generationConfig.responseMimeType = "application/json";
         }
 
@@ -4759,7 +4798,9 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
                 await appendTaskLog(`[AI ENGINE - WARNING] Vertex AI response was TRUNCATED because it reached output limit (maxOutputTokens=8192).`);
               }
             } else {
-              lastError = res ? `HTTP ${res.status} ${res.statusText}` : 'Null Response';
+              const errBody = res ? await res.text().catch(() => '') : '';
+              lastError = res ? `HTTP ${res.status} ${res.statusText}: ${errBody.slice(0, 300)}` : 'Null Response';
+              console.warn(`[AI GENERATOR] Vertex AI returned error: ${lastError}`);
             }
           } catch (err: any) {
             lastError = err.message || String(err);
@@ -4767,7 +4808,7 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
           }
         }
 
-        if (!success && apiKey) {
+        if (!success && apiKey && apiKey.startsWith('AIzaSy')) {
           const startTime = Date.now();
           try {
             const compressedPrompt = compressPromptText(promptText);
@@ -4775,7 +4816,7 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
               contents: [{ parts: [{ text: compressedPrompt }] }],
               generationConfig
             };
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(bodyPayload)
@@ -4802,17 +4843,14 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
               const ratio = wordCount > 0 ? (candidateTokenCount / wordCount).toFixed(2) : '0';
 
               await appendTaskLog(`[AI ENGINE - STUDIO] Response status: finishReason="${finishReason}", characters=${charCount}, words=${wordCount}, tokens=${candidateTokenCount} (promptTokens=${promptTokenCount}). Tokens-to-Words ratio = ${ratio}.`);
-              // [FIX G12] Use globalDbWidgetCount for cross-lesson budget, lessonDbWidgetIds for intra-lesson list.
-              const remainingBudget = Math.max(0, 2 - globalDbWidgetCount);
-              const alreadyUsedList = lessonDbWidgetIds.size > 0 
-                ? Array.from(lessonDbWidgetIds).map(id => `"${id}"`).join(', ')
-                : 'None';
               if (finishReason === 'MAX_TOKENS') {
                 await appendTaskLog(`[AI ENGINE - WARNING] AI Studio response was TRUNCATED because it reached output limit.`);
               }
-              await recordMetrics(task, 'gemini-2.5-flash', durationMs, promptTokenCount, candidateTokenCount, compressedPrompt);
+              await recordMetrics(task, 'gemini-3.5-flash-lite', durationMs, promptTokenCount, candidateTokenCount, compressedPrompt);
             } else {
-              lastError = `HTTP ${res.status} ${res.statusText}`;
+              const errBody = await res.text().catch(() => '');
+              lastError = `HTTP ${res.status} ${res.statusText}: ${errBody.slice(0, 300)}`;
+              console.warn(`[AI GENERATOR] AI Studio error: ${lastError}`);
             }
           } catch (err: any) {
             lastError = err.message || String(err);
@@ -7023,7 +7061,7 @@ async function performSectionBasedTranslation(
       const startTime = Date.now();
       try {
         const compressedTitle = compressPromptText(promptTitle);
-        const resTitle = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        const resTitle = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -7042,7 +7080,7 @@ async function performSectionBasedTranslation(
             stats.tokenMetrics.promptTokens += promptTokens;
             stats.tokenMetrics.candidatesTokens += candidatesTokens;
           }
-          await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedTitle);
+          await recordMetrics('course_translation', 'gemini-3.5-flash-lite', durationMs, promptTokens, candidatesTokens, compressedTitle);
         }
       } catch (err) {
         console.error(`[AI GENERATOR] AI Studio title translation fetch exception:`, err);
@@ -7087,7 +7125,7 @@ async function performSectionBasedTranslation(
         const startTime = Date.now();
         try {
           const compressedModule = compressPromptText(promptModule);
-          const resModule = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          const resModule = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -7106,7 +7144,7 @@ async function performSectionBasedTranslation(
               stats.tokenMetrics.promptTokens += promptTokens;
               stats.tokenMetrics.candidatesTokens += candidatesTokens;
             }
-            await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedModule);
+            await recordMetrics('course_translation', 'gemini-3.5-flash-lite', durationMs, promptTokens, candidatesTokens, compressedModule);
           }
         } catch (err) {
           console.error(`[AI GENERATOR] AI Studio module translation fetch exception:`, err);
@@ -7178,7 +7216,7 @@ ${sectionToTranslate}`;
         const startTime = Date.now();
         try {
           const compressedPrompt = compressPromptText(promptTranslateSec);
-          const resSec = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          const resSec = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -7197,7 +7235,7 @@ ${sectionToTranslate}`;
               stats.tokenMetrics.promptTokens += promptTokens;
               stats.tokenMetrics.candidatesTokens += candidatesTokens;
             }
-            await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedPrompt);
+            await recordMetrics('course_translation', 'gemini-3.5-flash-lite', durationMs, promptTokens, candidatesTokens, compressedPrompt);
           }
         } catch (err) {
           console.error(`[AI GENERATOR] AI Studio translation section fetch exception:`, err);
@@ -7465,7 +7503,7 @@ let criticResText = '';
               if (!criticSuccess && apiKey) {
                 const startTime = Date.now();
                 try {
-                  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -7488,7 +7526,7 @@ let criticResText = '';
                       translationStats.tokenMetrics.promptTokens += promptTokens;
                       translationStats.tokenMetrics.candidatesTokens += candidatesTokens;
                     }
-                    await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptCritic);
+                    await recordMetrics('course_generation', 'gemini-3.5-flash-lite', durationMs, promptTokens, candidatesTokens, promptCritic);
                   }
                 } catch (err) {
                   console.error("[AI GENERATOR - TRANSLATION CRITIC] AI Studio fallback critique call failed:", err);
@@ -7584,7 +7622,7 @@ if (process.env.DEBUG === 'true') {
                 if (!refineSuccess && apiKey) {
                   const startTime = Date.now();
                   try {
-                    const resRefine = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                    const resRefine = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
@@ -7604,7 +7642,7 @@ if (process.env.DEBUG === 'true') {
                         translationStats.tokenMetrics.promptTokens += promptTokens;
                         translationStats.tokenMetrics.candidatesTokens += candidatesTokens;
                       }
-                      await recordMetrics('course_translation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, promptRefine);
+                      await recordMetrics('course_translation', 'gemini-3.5-flash-lite', durationMs, promptTokens, candidatesTokens, promptRefine);
                     }
                   } catch (err) {
                     console.error("[AI GENERATOR - TRANSLATION CRITIC] AI Studio fallback translation refinement call failed:", err);
@@ -7761,7 +7799,7 @@ if (process.env.DEBUG === 'true') {
             }
           }
           if (!titleSuccess && apiKey) {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -7798,7 +7836,7 @@ if (process.env.DEBUG === 'true') {
             }
           }
           if (!descSuccess && apiKey) {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -7902,7 +7940,7 @@ export async function reviseCourseContent(courseSlug: string, revisionDetails: s
 
     if (apiKey) {
       try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -8070,7 +8108,7 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
 
   if (!identifySuccess && apiKey) {
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -8453,7 +8491,7 @@ You must output ONLY a valid JSON object matching the revisionAuditSchema:
 
       if (!criticSuccess && apiKey) {
         try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -8657,7 +8695,7 @@ INSTRUCTIONS:
 
             if (!repairSuccess && apiKey) {
               try {
-                const resRepair = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                const resRepair = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
@@ -8860,7 +8898,7 @@ Return ONLY the raw JSON object. Do not wrap it in markdown blockticks (\`\`\`).
 
   if (!analysisSuccess && apiKey) {
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -8927,7 +8965,7 @@ INSTRUCTIONS:
   let success = false;
 
   if (isVertexConfigured()) {
-    console.log(`[SELF-HEALING] Healing MDX content via Vertex AI (gemini-2.5-flash)...`);
+    console.log(`[SELF-HEALING] Healing MDX content via Vertex AI (gemini-3.5-flash-lite)...`);
     try {
       const res = await callVertexAI({
         task: 'course_generation',
@@ -8952,11 +8990,11 @@ INSTRUCTIONS:
   }
 
   if (!success && apiKey) {
-    console.log(`[SELF-HEALING] Healing MDX content via AI Studio fallback (gemini-2.5-flash)...`);
+    console.log(`[SELF-HEALING] Healing MDX content via AI Studio fallback (gemini-3.5-flash-lite)...`);
     try {
       const startTime = Date.now();
       const compressedHealer = compressPromptText(promptHealer);
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -8976,7 +9014,7 @@ INSTRUCTIONS:
             stats.tokenMetrics.promptTokens += promptTokens;
             stats.tokenMetrics.candidatesTokens += candidatesTokens;
           }
-          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedHealer);
+          await recordMetrics('course_generation', 'gemini-3.5-flash-lite', durationMs, promptTokens, candidatesTokens, compressedHealer);
         } else {
           console.warn("[SELF-HEALING] AI Studio healer returned empty content");
         }
@@ -9065,7 +9103,7 @@ If you cannot find any real audio, output: {}`;
           rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
         }
       } else if (apiKey) {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -10071,11 +10109,11 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
         rawJson = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
       }
     } else if (apiKey) {
-      console.log(`[AI CURRICULUM] Generating curriculum for "${curriculumName}" via AI Studio fallback (gemini-2.5-flash)...`);
+      console.log(`[AI CURRICULUM] Generating curriculum for "${curriculumName}" via AI Studio fallback (gemini-3.5-flash-lite)...`);
       const startTime = Date.now();
       try {
         const compressedCurriculum = compressPromptText(promptCurriculum);
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -10095,7 +10133,7 @@ Return ONLY a valid JSON object. Do not include markdown code block backticks ar
           const usage = jsonRes.usageMetadata || {};
           const promptTokens = usage.promptTokenCount || 0;
           const candidatesTokens = usage.candidatesTokenCount || usage.candidateTokenCount || 0;
-          await recordMetrics('course_generation', 'gemini-2.5-flash', durationMs, promptTokens, candidatesTokens, compressedCurriculum);
+          await recordMetrics('course_generation', 'gemini-3.5-flash-lite', durationMs, promptTokens, candidatesTokens, compressedCurriculum);
         }
       } catch (err) {
         console.error("[AI CURRICULUM] AI Studio curriculum generation fetch exception:", err);

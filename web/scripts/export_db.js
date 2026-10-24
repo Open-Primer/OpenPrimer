@@ -8,10 +8,13 @@ const fs = require('fs');
 const path = require('path');
 
 // Read environment variables
-try {
-  require('dotenv').config({ path: path.join(__dirname, '../.env.local') });
-} catch (e) {
-  // dotenv might not be installed, we can fall back to process.env directly
+const envPath = path.join(__dirname, '../.env.local');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf-8');
+  envContent.split(/\r?\n/).forEach(line => {
+    const match = line.match(/^\s*([\w_]+)\s*=\s*(.*)\s*$/);
+    if (match) process.env[match[1]] = match[2].trim().replace(/^["']|["']$/g, '');
+  });
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

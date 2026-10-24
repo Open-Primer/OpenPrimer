@@ -131,7 +131,7 @@ async function checkVertexPool(customKey?: string): Promise<ServiceResult & { de
           };
         }
 
-        const probeUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-2.5-flash:generateContent`;
+        const probeUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-3.5-flash-lite:generateContent`;
         const res = await fetch(probeUrl, {
           method: 'POST',
           headers: {

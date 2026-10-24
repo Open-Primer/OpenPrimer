@@ -1,0 +1,278 @@
+---
+title: « Les Fondements des Graphes : Origines et Applications »
+subject: « Algorithmes Avancés et Théorie des Graphes »
+level: « L3 »
+module: « Les Fondements des Graphes : Origines et Applications »
+order: 1
+---
+
+
+
+<DiagnosticQuiz question="Parmi les structures de données suivantes, laquelle est la plus appropriée pour représenter des relations complexes et potentiellement non hiérarchiques entre des entités, comme les connexions entre amis sur un réseau social ?" options="Une liste chaînée simple, car elle permet d'ajouter des éléments séquentiellement.|||Un arbre binaire de recherche, car il optimise la recherche d'éléments.|||Un tableau associatif (ou dictionnaire), car il permet de lier des clés à des valeurs.|||Une structure de données de graphe, car elle modélise explicitement des nœuds (entités) et des arêtes (relations) pour des connexions arbitraires." correctIndex="3" targetSectionId="fondements-graphes-origines-applications" sectionTitle="Les Fondements des Graphes : Origines et Applications" />
+
+
+
+## Introduction : Qu'est-ce qu'un Graphe ?
+Dans le vaste paysage des structures mathématiques, le concept de <Glossary definition="Un graphe est une structure mathématique composée d'un ensemble de sommets (ou nœuds) et d'un ensemble d'arêtes (ou liens) qui relient des paires de sommets." id="graphe" description="Un graphe est une structure mathématique composée d'un ensemble de sommets (ou nœuds) et d'un ensemble d'arêtes (ou liens) qui relient ces sommets. Il est utilisé pour modéliser des relations entre des objets." name="graphe" text="graphe" title="graphe">graphe</Glossary> occupe une place centrale et d'une importance capitale, non seulement pour la recherche fondamentale mais aussi pour une multitude d'applications pratiques dans le monde contemporain. Loin d'être une simple abstraction académique, les graphes sont devenus un outil indispensable pour modéliser et comprendre les relations complexes qui sous-tendent presque tous les aspects de notre environnement, qu'il soit naturel, social ou technologique.
+
+Un graphe est, dans son essence la plus pure, une structure mathématique discrète composée d'un ensemble d'objets appelés <Glossary id="sommet" description="Un sommet (ou nœud) est un élément fondamental d'un graphe. Il représente un objet, une entité ou un point dans le système modélisé par le graphe." name="sommet" text="sommet" title="sommet">sommet</Glossary> (ou nœuds) et d'un ensemble de liens appelés <Glossary id="arete" description="Une arête (ou lien) est une connexion entre deux sommets d'un graphe. Elle représente une relation, une interaction ou un chemin entre les entités modélisées par les sommets." name="arête" text="arête" title="arête">arête</Glossary> (ou arcs) qui connectent certaines paires de ces sommets <Reference id="1" name="1" term="1">1</Reference>. Imaginez un réseau de villes reliées par des routes, un groupe de personnes connectées par des amitiés, ou des pages web liées par des hyperliens ; chacun de ces scénarios peut être fidèlement représenté par un graphe. Cette capacité à capturer la notion de « connexion » ou de « relation » entre des entités distinctes confère aux graphes une puissance expressive inégalée.
+
+La terminologie de base est simple mais fondamentale. Les `sommet` (souvent notés $V$ pour *vertices*) sont les entités ou les points d'intérêt dans notre modèle. Les `arête` (souvent notées $E$ pour *edges*) sont les connexions entre ces sommets. Une arête peut être `<Glossary id="non_orientee" description="Une arête est dite non orientée si la relation qu'elle représente est symétrique, c'est-à-dire qu'elle n'a pas de direction spécifique entre les deux sommets qu'elle relie." name="non orientée" text="non orientée" title="non orientée">non orientée</Glossary>`, signifiant que la relation est bidirectionnelle (par exemple, une amitié), ou `<Glossary id="orientee" description="Une arête est dite orientée (ou arc) si la relation qu'elle représente a une direction spécifique, allant d'un sommet source vers un sommet destination." name="orientée" text="orientée" title="orientée">orientée</Glossary>` (ou arc), indiquant une relation unidirectionnelle (par exemple, un lien hypertexte d'une page A vers une page B). Lorsque les arêtes sont orientées, on parle de `<Glossary id="graphe_oriente" description="Un graphe orienté est un graphe dont toutes les arêtes sont orientées. Il est utilisé pour modéliser des relations asymétriques ou des flux unidirectionnels." name="graphe orienté" text="graphe orienté" title="graphe orienté">graphe orienté</Glossary>` ou `digraphe` ; sinon, on parle de `<Glossary definition="Un graphe où chaque arête relie deux sommets sans direction spécifique." id="graphe_non_oriente" description="Un graphe non orienté est un graphe dont toutes les arêtes sont non orientées. Il est utilisé pour modéliser des relations symétriques où la direction n'a pas d'importance." name="graphe non orienté" text="graphe non orienté" title="graphe non orienté">graphe non orienté</Glossary>`.
+
+L'abstraction offerte par les graphes est leur plus grande force. En réduisant des problèmes complexes à des sommets et des arêtes, nous pouvons nous concentrer sur la structure sous-jacente des relations plutôt que sur les détails spécifiques des entités elles-mêmes. Cela permet d'appliquer des algorithmes et des théories générales à une gamme incroyablement diverse de problèmes. Par exemple, la recherche du chemin le plus court entre deux villes sur une carte routière est structurellement identique à la recherche du chemin le plus rapide pour acheminer des paquets de données sur Internet, ou à la détermination de la séquence optimale d'opérations dans un processus de fabrication.
+
+Voici une illustration conceptuelle d'un graphe simple :
+
+| Sommets (V) | Arêtes (E) | Description |
+|---|---|---|
+| &#123;A, B, C, D&#125; | &#123;(A, B), (A, C), (B, C), (C, D)&#125; | Un ensemble de quatre sommets reliés par quatre arêtes. |
+
+L'omniprésence des graphes dans le monde moderne est stupéfiante.
+
+* **Réseaux sociaux :** Chaque utilisateur est un sommet, et une amitié ou un abonnement est une arête. L'analyse de ces graphes permet de comprendre la propagation de l'information, d'identifier les influenceurs ou de détecter des communautés <Reference id="2" name="2" term="2">2</Reference>.
+* **Internet et World Wide Web :** Les pages web sont des sommets, et les hyperliens sont des arêtes orientées. Des algorithmes comme PageRank, au cœur du fonctionnement des moteurs de recherche, sont basés sur l'analyse de la structure de ce graphe gigantesque <Reference id="3" name="3" term="3">3</Reference>.
+* **Systèmes de transport et de logistique :** Les villes, aéroports ou entrepôts sont des sommets, et les routes, voies ferrées ou itinéraires aériens sont des arêtes. La planification d'itinéraires, l'optimisation des livraisons et la gestion du trafic reposent massivement sur la `<ConceptLink id="theorie_des_graphes" description="La théorie des graphes est une branche des mathématiques et de l'informatique qui étudie les propriétés des graphes. Elle fournit des outils pour modéliser et résoudre des problèmes impliquant des relations entre des entités." name="théorie des graphes">théorie des graphes</ConceptLink>` <Reference id="4" name="4" term="4">4</Reference>.
+* **Biologie et médecine :** Les interactions protéine-protéine, les réseaux neuronaux, les chaînes alimentaires ou la propagation des maladies peuvent tous être modélisés comme des graphes. Cela aide à comprendre les mécanismes biologiques complexes et à développer de nouvelles thérapies <Reference id="5" name="5" term="5">5</Reference>.
+* **Circuits électriques :** Les composants (résistances, condensateurs) sont des sommets et les fils de connexion sont des arêtes, permettant l'analyse du flux de courant <Reference id="6" name="6" term="6">6</Reference>.
+* **Chimie :** Les atomes sont des sommets et les liaisons chimiques sont des arêtes, facilitant la représentation et l'étude des molécules.
+
+Cette polyvalence fait des graphes un domaine d'étude passionnant et essentiel pour tout informaticien ou scientifique de données. La `théorie des graphes` fournit non seulement le langage pour décrire ces réseaux, mais aussi les outils algorithmiques pour les analyser, les optimiser et en extraire des connaissances précieuses <Reference id="7" name="7" term="7">7</Reference>. Au cours de ce module, nous explorerons les fondements de cette théorie, ses algorithmes clés et ses applications les plus pertinentes, en commençant par ses origines fascinantes.
+
+<SolvedExercise title="Exercice Résolu : Concepts de Base des Graphes" solution="">
+  
+</SolvedExercise>
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser l'historique et l'évolution de la théorie des graphes, en identifiant ses contributions majeures.</li>
+      <li>Évaluer la pertinence et l'applicabilité des différentes représentations de graphes (liste d'adjacence, matrice d'adjacence) pour divers problèmes.</li>
+      <li>Créer des modèles de graphes pour représenter des systèmes du monde réel complexes.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser des problèmes concrets pour déterminer s'ils peuvent être modélisés efficacement à l'aide de graphes.</li>
+      <li>Évaluer la complexité des algorithmes de base sur les graphes en fonction de leur représentation.</li>
+      <li>Concevoir des solutions algorithmiques simples en utilisant des structures de graphes pour résoudre des problèmes spécifiques.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Appliquer une démarche rigoureuse dans la modélisation de systèmes relationnels à l'aide de la théorie des graphes.</li>
+      <li>Manifester une curiosité en explorant les diverses applications des graphes dans différents domaines scientifiques et technologiques.</li>
+      <li>Collaborer efficacement avec ses pairs pour analyser et résoudre des problèmes de modélisation de graphes.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Les Origines Historiques : Le Problème des Ponts de Königsberg
+L'histoire de la `théorie des graphes` est souvent retracée à un problème ludique mais profondément significatif, posé dans la ville de Königsberg (aujourd'hui Kaliningrad, en Russie) au XVIIIe siècle. Ce problème, connu sous le nom de « Problème des Ponts de Königsberg », a non seulement captivé l'imagination des habitants de la ville, mais a également attiré l'attention d'un des plus grands mathématiciens de tous les temps, <RealPerson id="leonhard_euler" description="Leonhard Euler (1707-1783) était un mathématicien et physicien suisse, considéré comme l'un des plus grands mathématiciens de tous les temps. Il a apporté des contributions fondamentales à de nombreux domaines, y compris la théorie des graphes avec sa résolution du problème des ponts de Königsberg." name="Leonhard Euler">Leonhard Euler</RealPerson>, dont l'approche novatrice a jeté les bases d'une nouvelle branche des mathématiques <Reference id="8" name="8" term="8">8</Reference>.
+
+La ville de Königsberg était traversée par la rivière Pregel, qui divisait la ville en quatre grandes masses terrestres : deux îles (Kneiphof et Lomse) et deux rives principales (Altstadt et Löbenicht). Ces quatre zones étaient reliées entre elles par un total de sept ponts. La question qui taraudait les habitants et les visiteurs était la suivante : est-il possible de se promener dans la ville en traversant chacun des sept ponts exactement une fois, et en revenant à son point de départ (ou en terminant ailleurs) ?
+
+Pendant des années, les gens ont essayé de résoudre ce problème par tâtonnements, en parcourant les ponts dans différentes séquences, mais sans succès. Il semblait impossible de trouver un tel chemin. Le défi résidait dans l'absence d'une méthode systématique pour analyser la structure du problème. C'est là qu'intervient Leonhard Euler.
+
+En 1736, Leonhard Euler, un mathématicien suisse de génie, s'est penché sur ce problème. Plutôt que de se perdre dans les détails géographiques de la ville ou la longueur des ponts, Euler a eu l'intuition brillante de simplifier le problème en se concentrant uniquement sur les connexions. Sa démarche de `<ConceptLink id="modelisation_mathematique" description="La modélisation mathématique est le processus de description d'un système du monde réel à l'aide de concepts et de langages mathématiques. Elle permet d'analyser, de comprendre et de prédire le comportement de ce système." name="modélisation mathématique">modélisation mathématique</ConceptLink>` fut révolutionnaire :
+1. **Abstraction des masses terrestres :** Il a représenté chaque masse terrestre (les deux îles et les deux rives) comme un simple `sommet` (ou nœud).
+2. **Abstraction des ponts :** Il a représenté chaque pont comme une `arête` (ou lien) reliant les sommets correspondants.
+
+Cette transformation a permis de passer d'un problème géographique concret à une structure purement abstraite, un `graphe`. Le problème des ponts de Königsberg se reformulait alors comme suit : existe-t-il un chemin dans ce graphe qui traverse chaque arête exactement une fois ? Un tel chemin est aujourd'hui appelé un `<Glossary id="chemin_eulerien" description="Un chemin eulérien est un chemin dans un graphe qui passe par chaque arête exactement une fois. Il ne nécessite pas de revenir au sommet de départ." name="chemin eulérien" text="chemin eulérien" title="chemin eulérien">chemin eulérien</Glossary>` ou un `<Glossary id="cycle_eulerien" description="Un cycle eulérien est un chemin eulérien qui commence et se termine au même sommet. Il parcourt toutes les arêtes du graphe exactement une fois." name="cycle eulérien" text="cycle eulérien" title="cycle eulérien">cycle eulérien</Glossary>` si le chemin se termine au point de départ.
+
+<Mermaid caption="Figure 1 : " chart={``} />
+
+Euler a ensuite développé une théorie élégante pour résoudre ce type de problème. Son insight clé concernait le `<Glossary definition="Dans un graphe non orienté, le degré d'un sommet est le nombre d'arêtes qui lui sont incidentes. Dans un graphe orienté, on distingue le degré entrant et le degré sortant." id="degre_sommet" description="Le degré d'un sommet dans un graphe non orienté est le nombre d'arêtes incidentes à ce sommet. Dans un graphe orienté, on distingue le degré entrant et le degré sortant." name="degré d'un sommet" text="degré d'un sommet" title="degré d'un sommet">degré d'un sommet</Glossary>`, c'est-à-dire le nombre d'arêtes incidentes à ce sommet. Il a démontré que pour qu'un `chemin eulérien` existe dans un graphe non orienté :
+* Si le chemin doit être un `cycle eulérien` (commencer et finir au même sommet), alors tous les sommets du graphe doivent avoir un `degré d'un sommet`.
+* Si le chemin n'est pas un cycle (commencer et finir à des sommets différents), alors exactement deux sommets doivent avoir un `degré d'un sommet` (le point de départ et point d'arrivée), et tous les autres sommets doivent avoir un `degré d'un sommet`.
+
+En appliquant cette règle au graphe de Königsberg, Euler a calculé les degrés de chaque sommet :
+
+| Masse Terrestre | Sommet | Degré |
+|---|---|---|
+| Rive A (Altstadt) | A | 3 |
+| Île B (Kneiphof) | B | 5 |
+| Rive C (Löbenicht) | C | 3 |
+| Île D (Lomse) | D | 3 |
+
+Puisque tous les quatre sommets avaient un `degré d'un sommet`, Euler a conclu qu'il était impossible de traverser chacun des sept ponts exactement une fois. La réponse au problème était donc négative.
+
+La contribution d'Euler ne résidait pas seulement dans la résolution d'une énigme locale, mais dans la création d'une nouvelle façon de penser les problèmes de connexion et de structure. En dépouillant le problème de ses détails superflus et en le réduisant à sa forme la plus abstraite, il a inauguré la `théorie des graphes` comme une discipline mathématique à part entière <Reference id="9" name="9" term="9">9</Reference>. Cette approche a démontré la puissance de la `modélisation mathématique` : transformer un problème du monde réel en un modèle abstrait qui peut être analysé avec des outils mathématiques, puis interpréter la solution dans le contexte original.
+
+L'héritage d'Euler est immense. Son travail sur les ponts de Königsberg a ouvert la voie à l'étude formelle des réseaux, des chemins, des cycles et de la connectivité, des concepts qui sont aujourd'hui au cœur de l'informatique, de la recherche opérationnelle, de la biologie computationnelle et de bien d'autres domaines <Reference id="10" name="10" term="10">10</Reference>. C'est un exemple parfait de la manière dont une question apparemment simple peut mener à des avancées théoriques profondes et à des applications d'une portée insoupçonnée.
+
+<Quiz durationLimit={300} limit={3}>
+ <Question q="Dans le problème des ponts de Königsberg, que représentent les sommets et que représentent les arêtes ?" explanation="Les masses terrestres sont les entités distinctes (sommets) et les connexions entre elles (ponts) sont les relations (arêtes).">
+  <Option text="Les sommets représentent les rives et les sommets, les ponts." correct={false} />
+  <Option text="Les sommets représentent les masses terrestres (rives et îles), et les arêtes représentent les ponts." correct={true} />
+  <Option text="Les sommets représentent les ponts et les arêtes représentent les rives." correct={false} />
+</Question>
+ <Question q="Quelle est la condition nécessaire pour qu'un graphe ait un cycle eulérien (un chemin qui traverse chaque arête exactement une fois et revient au point de départ) ?" explanation="Pour un cycle eulérien, chaque visite à un sommet doit utiliser une arête entrante et une arête sortante, ce qui implique que tous les sommets doivent avoir un degré pair.">
+  <Option text="Tous les sommets doivent avoir un degré pair." correct={true} />
+  <Option text="Tous les sommets doivent avoir un degré impair." correct={false} />
+  <Option text="Il doit y avoir exactement deux sommets de degré impair." correct={false} />
+</Question>
+ <Question q="Le problème des ponts de Königsberg, tel que modélisé par Euler, a-t-il une solution (c'est-à-dire, existe-t-il un chemin qui traverse chaque pont exactement une fois) ?" explanation="Le graphe du problème des ponts de Königsberg possède quatre sommets de degré impair (3, 3, 3, 5), ce qui empêche l'existence d'un chemin eulérien.">
+  <Option text="Oui, il existe un tel chemin." correct={false} />
+  <Option text="Non, car il y a plus de deux sommets de degré impair dans le graphe." correct={true} />
+  <Option text="Non, car tous les sommets ont un degré pair." correct={false} />
+</Question>
+</Quiz>
+
+## Les Fondements Mathématiques : Premières Définitions et Concepts
+L'étude des structures de réseaux, initiée par des problèmes tels que celui des ponts de Königsberg, a conduit au développement d'un cadre mathématique formel : la théorie des graphes. Cette théorie fournit un langage précis pour décrire et analyser les relations entre des objets discrets. Un `graphe` est, dans sa définition la plus fondamentale, un ensemble de `sommet` (ou nœuds) et un ensemble d'`arête` (ou liens) qui connectent ces sommets. Cette structure abstraite permet de modéliser une vaste gamme de phénomènes, des réseaux de transport aux interactions moléculaires.
+
+Nous distinguons plusieurs types de graphes, chacun adapté à des types de relations spécifiques :
+
+* **Graphe non orienté (ou simple)** : Dans ce type de graphe, les arêtes n'ont pas de direction. Une arête entre le sommet $u$ et le sommet $v$ signifie que $u$ est connecté à $v$, et réciproquement, $v$ est connecté à $u$. La relation est symétrique. Ces graphes sont idéaux pour représenter des connexions bidirectionnelles, comme des amitiés sur un réseau social ou des routes entre deux villes.
+* **Graphe orienté (ou digraphe)** : Ici, les arêtes possèdent une direction. Une arête allant de $u$ vers $v$ (notée $(u, v)$) signifie qu'il existe une relation ou une transition de $u$ vers $v$, mais pas nécessairement de $v$ vers $u$. Les graphes orientés sont utilisés pour modéliser des flux, des dépendances, ou des relations asymétriques, tels que les liens hypertextes sur le web, les flux de trafic unidirectionnels, ou les relations de « suit » sur certaines plateformes.
+* **Graphe pondéré** : Dans un graphe pondéré, chaque arête est associée à une valeur numérique, appelée `<Glossary id="poids" description="Un poids est une valeur numérique associée à une arête ou un sommet d'un graphe, représentant par exemple un coût, une distance, une capacité ou une probabilité." name="poids" text="poids" title="poids">poids</Glossary>`. Ce poids peut représenter un coût, une distance, une capacité, une probabilité, ou toute autre métrique quantitative. Par exemple, dans un réseau routier, le poids d'une arête pourrait être la distance entre deux villes, le temps de trajet, ou le coût du péage. Les graphes pondérés sont essentiels pour les problèmes d'optimisation.
+
+Pour analyser la structure et les propriétés des graphes, plusieurs concepts fondamentaux sont introduits :
+
+* **Degré d'un sommet** : Pour un graphe non orienté, le `degré d'un sommet` d'un sommet $v$, noté $\text{deg}(v)$, est le nombre d'arêtes incidentes à ce sommet. Dans un graphe orienté, on distingue le `<Glossary id="degre_entrant" description="Dans un graphe orienté, le degré entrant d'un sommet est le nombre d'arêtes qui arrivent à ce sommet." name="degré entrant" text="degré entrant" title="degré entrant">degré entrant</Glossary>` (nombre d'arêtes pointant vers le sommet) et le `<Glossary id="degre_sortant" description="Dans un graphe orienté, le degré sortant d'un sommet est le nombre d'arêtes qui partent de ce sommet." name="degré sortant" text="degré sortant" title="degré sortant">degré sortant</Glossary>` (nombre d'arêtes partant du sommet). Ces mesures sont cruciales pour comprendre l'importance ou l'influence d'un sommet dans le réseau.
+* **Chemin** : Un `<Glossary definition="Une séquence de sommets dans un graphe où chaque sommet consécutif est relié par une arête." id="chemin" name="chemin" term="chemin">chemin</Glossary>` dans un graphe est une séquence de sommets où chaque sommet consécutif est relié par une arête. Un chemin peut être simple s'il ne visite aucun sommet plus d'une fois. La notion de chemin est fondamentale pour déterminer si deux sommets sont connectés et pour trouver des séquences d'éléments dans un réseau.
+* **Cycle** : Un `<Glossary definition="Un chemin qui commence et se termine au même sommet, sans répéter d'arêtes (ou de sommets, selon la définition)." id="cycle" name="cycle" term="cycle">cycle</Glossary>` est un chemin qui commence et se termine au même sommet, et qui ne revisite aucun autre sommet (sauf le point de départ/arrivée). Les cycles indiquent la présence de boucles ou de boucles de rétroaction dans un système <Reference id="11" name="11" term="11">11</Reference>.
+* **Connexité** : La `<Glossary id="connexite" name="connexité" term="connexité">connexité</Glossary>` d'un graphe décrit à quel point il est « bien connecté ». Un graphe non orienté est dit `<Glossary id="connexe" name="connexe" term="connexe">connexe</Glossary>` si, pour toute paire de sommets $(u, v)$, il existe au moins un chemin entre $u$ et $v$. Dans un graphe orienté, on parle de `<Glossary id="connexite_forte" name="connexité forte" term="connexité forte">connexité forte</Glossary>` si pour toute paire de sommets $(u, v)$, il existe un chemin de $u$ vers $v$ ET un chemin de $v$ vers $u$. La connexité est une propriété essentielle pour la robustesse et la fonctionnalité des réseaux.
+
+Ces définitions, bien que simples, forment la base de l'analyse des structures complexes. Elles permettent de formaliser des questions sur la connectivité, l'accessibilité, et l'efficacité des réseaux.
+
+| Type de Graphe | Caractéristique Principale | Exemple d'Application |
+| :------------- | :------------------------- | :-------------------- |
+| Non orienté | Arêtes sans direction | Réseaux sociaux (amitiés) |
+| Orienté | Arêtes avec direction | Flux de trafic, liens web |
+| Pondéré | Arêtes avec une valeur | Réseaux routiers (distances) |
+
+<Mermaid caption="Figure 2 : " chart={``} />
+
+## Applications Majeures des Graphes
+La puissance de la théorie des graphes réside dans sa capacité à modéliser et à résoudre des problèmes dans une multitude de domaines, souvent de manière inattendue. Les algorithmes sur graphes sont au cœur de nombreuses technologies modernes et de processus scientifiques.
+
+### Réseaux Sociaux
+
+Les réseaux sociaux, tels que Facebook, Twitter ou LinkedIn, sont des exemples par excellence de l'application de la théorie des graphes. Chaque utilisateur peut être représenté par un `sommet`, et une `arête` peut symboliser une relation d'amitié, de suivi, ou d'interaction. Les algorithmes basés sur les graphes sont utilisés pour :
+* **Recommander des amis ou des connexions** : En analysant les voisins communs ou les structures de communauté au sein du graphe.
+* **Mesurer l'influence d'un utilisateur** : En utilisant des métriques comme le degré, la centralité, ou le PageRank (développé par <RealPerson id="larry_page" name="Larry Page" term="Larry Page">Larry Page</RealPerson> et <RealPerson id="sergey_brin" name="Sergey Brin" term="Sergey Brin">Sergey Brin</RealPerson> pour Google, mais applicable ici).
+* **Détecter les communautés et les groupes d'intérêt** : En identifiant des sous-graphes denses.
+* **analyser la propagation de l'information ou des rumeurs** : En modélisant comment les « maladies » (informations) se propagent à travers le réseau.
+
+<Image description="Représentation schématique d'un réseau social sous forme de graphe, où les utilisateurs sont des sommets et les liens d'amitié ou de suivi sont des arêtes." alt="Illustration d'un assortiment d'icônes et d'appareils de réseaux sociaux et numériques." caption="Figure 1: Représentation schématique d'un réseau social sous forme de graphe, où les utilisateurs sont des sommets et les liens d'amitié ou de suivi sont des arêtes. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Social_networking_services.jpg)" src="https://commons.wikimedia.org/wiki/Special:FilePath/Social_networking_services.jpg" fallbackUrl="https://commons.wikimedia.org/wiki/File:Social_networking_services.jpg" />
+
+### Logistique et Optimisation des Tournées
+
+Dans le domaine de la logistique, la théorie des graphes est indispensable pour optimiser les flux et les déplacements. Le problème du `<Glossary id="voyageur_de_commerce" name="voyageur de commerce" term="voyageur de commerce">voyageur de commerce</Glossary>` (TSP), qui cherche le chemin le plus court passant par un ensemble de villes, est un problème classique de graphes pondérés. Les algorithmes de graphes sont également utilisés pour :
+* **Planifier les tournées de livraison** : Pour minimiser la distance parcourue, le temps ou le coût.
+* **Optimiser les itinéraires de transport** : Pour les compagnies aériennes, ferroviaires ou routières.
+* **Gérer les chaînes d'approvisionnement** : En modélisant les flux de marchandises entre les entrepôts et les points de vente.
+
+<SolvedExercise title="Exemple Résolu : Problème du Voyageur de Commerce" solution="">
+  
+</SolvedExercise>
+
+### Bioinformatique
+
+La bioinformatique utilise intensivement les graphes pour analyser des données biologiques complexes. Les réseaux génétiques, les réseaux d'interactions protéine-protéine, ou les séquences d'ADN peuvent être modélisés comme des graphes. Les applications incluent :
+* **Analyse des réseaux d'interactions moléculaires** : Pour comprendre les mécanismes cellulaires et identifier des cibles thérapeutiques.
+* **Phylogénie computationnelle** : Pour reconstruire l'histoire évolutive des espèces.
+* **Analyse de génomes** : En assemblant des fragments d'ADN pour reconstituer une séquence complète.
+
+### Systèmes de Recommandation
+
+Les plateformes de commerce électronique (Amazon, Netflix) et de contenu (Spotify, YouTube) utilisent des algorithmes de graphes pour proposer des recommandations personnalisées. Ces systèmes peuvent modéliser les utilisateurs et les articles (produits, films, musiques) comme des sommets, et les interactions (achats, visionnages, écoutes) comme des arêtes. L'analyse des chemins et des voisinages dans ces graphes permet de découvrir des affinités et de suggérer des éléments susceptibles d'intéresser l'utilisateur.
+
+### Autres Domaines
+
+La polyvalence des graphes s'étend bien au-delà :
+* **Réseaux informatiques** : Modélisation des routeurs, des connexions, et optimisation du routage des paquets.
+* **Systèmes de transport** : Conception de réseaux de métro, de routes, et optimisation des flux de trafic <Reference id="12" name="12" term="12">12</Reference>.
+* **Chimie** : Représentation des molécules comme des graphes où les atomes sont des sommets et les liaisons sont des arêtes.
+* **Intelligence artificielle** : Utilisation dans les réseaux bayésiens, les arbres de décision, et les algorithmes d'apprentissage automatique <Reference id="13" name="13" term="13">13</Reference>.
+* **Cartographie et Navigation** : Les GPS utilisent des graphes pour trouver les itinéraires les plus courts ou les plus rapides <Reference id="14" name="14" term="14">14</Reference>.
+
+La capacité de la théorie des graphes à abstraire des problèmes complexes en structures maniables en fait un outil fondamental pour l'informatique moderne et la recherche scientifique. Les algorithmes que nous étudierons dans ce cours sont conçus pour exploiter ces structures afin de trouver des solutions efficaces à ces divers défis. La compréhension des fondements mathématiques est donc essentielle pour appréhender la puissance et la portée de ces algorithmes.
+
+| Domaine d'Application | Modélisation par Graphes | Problèmes Résolus |
+| :-------------------- | :----------------------------------------------------- | :------------------------------------------------------------------------------ |
+| Réseaux Sociaux | Utilisateurs (sommets), relations (arêtes) | Recommandation, mesure d'influence, détection de communautés |
+| Logistique | Villes/Points (sommets), routes (arêtes pondérées) | Optimisation des tournées, planification de livraison, gestion de chaînes d'approvisionnement |
+| Bioinformatique | Molécules/Gènes (sommets), interactions (arêtes) | Analyse de réseaux moléculaires, phylogénie, analyse de génomes |
+| Systèmes Recommandation | Utilisateurs/Articles (sommets), interactions (arêtes) | Suggestion de produits, films, musiques personnalisés |
+| Transport | Nœuds de réseau (sommets), connexions (arêtes) | Routage, optimisation des flux, planification d'itinéraires |
+
+ Cormen, Thomas H., et al. 'Introduction to Algorithms'.
+ Kleinberg, Jon, and Éva Tardos. 'Algorithm Design'.
+ Sedgewick, Robert, and Kevin Wayne. 'Algorithms'.
+ Skiena, Steven S. 'The Algorithm Design Manual'.
+ Diestel, Reinhard. 'Graph Theory'.
+ West, Douglas B. 'Introduction to Graph Theory'.
+ Aho, Alfred V., John E. Hopcroft, and Jeffrey D. Ullman. 'Data Structures and Algorithms'.
+ Even, Shimon. 'Graph Algorithms'.
+ Narsingh Deo. 'Graph Theory with Applications to Engineering and Computer Science'.
+ Knuth, Donald E. 'The Art of Computer Programming, Volume 1: Fundamental Algorithms'.
+ Luccio, Fabrizio, and Giorgio Mazzone. 'Graph Algorithms and Applications'.
+ Harary, Frank. 'Graph Theory'.
+
+## Conclusion
+Au terme de cette exploration des fondements de la théorie des graphes, il est impératif de réaffirmer la place centrale qu'occupent ces structures dans le paysage de l'informatique et, par extension, dans une multitude de disciplines scientifiques et appliquées. Nous avons vu comment des concepts apparemment disparates, allant de la modélisation des réseaux sociaux à l'optimisation des flux logistiques, en passant par la compréhension des interactions moléculaires en bioinformatique, trouvent une expression élégante et puissante à travers le formalisme des graphes. La capacité des graphes à représenter des relations complexes entre des entités discrètes, qu'il s'agisse de nœuds ou de sommets interconnectés par des arêtes, offre un cadre abstrait mais remarquablement concret pour aborder des problèmes d'une grande diversité <ConceptLink id="graphes" name="graphes" term="graphes" unresolved={true}>graphes</ConceptLink>. Cette universalité, couplée à la richesse des algorithmes qui peuvent être développés pour les manipuler, confère aux graphes un statut d'outil fondamental, indispensable à tout informaticien soucieux de concevoir des solutions efficaces et performantes. L'étude des graphes n'est donc pas une simple curiosité académique, mais une compétence stratégique, ouvrant la voie à la résolution de défis technologiques et scientifiques majeurs.
+
+<Image description="Une illustration schématique des diverses applications de la théorie des graphes, allant des réseaux sociaux à la logistique, en passant par la biologie et la navigation. Comment cette représentation visuelle aide-t-elle à appréhender l'omniprésence des graphes dans le monde moderne ?" alt="Un homme chauve souriant tient un livre devant un écran d'ordinateur affichant une conférence." caption="Figure 2: Une illustration schématique des diverses applications de la théorie des graphes, allant des réseaux sociaux à la logistique, en passant par la biologie et la navigation. Comment cette représentation visuelle aide-t-elle à appréhender l'omniprésence des graphes dans le monde moderne ?. Source: [Internet Archive: &quot;Michio Kaku The God Equation The Quest For A Theory Of Everything&quot; (CC License)](https://archive.org/download/michio-kaku-the-god-equation-the-quest-for-a-theory-of-everything/Michio%20Kaku%20The%20God%20Equation%20The%20Quest%20for%20a%20Theory%20of%20Everything.jpg)" src="https://archive.org/download/michio-kaku-the-god-equation-the-quest-for-a-theory-of-everything/Michio%20Kaku%20The%20God%20Equation%20The%20Quest%20for%20a%20Theory%20of%20Everything.jpg" fallbackUrl="https://archive.org/download/michio-kaku-the-god-equation-the-quest-for-a-theory-of-everything/Michio%20Kaku%20The%20God%20Equation%20The%20Quest%20for%20a%20Theory%20of%20Everything.jpg" />
+
+Les fondements que nous avons posés dans cette leçon jettent les bases nécessaires à l'approfondissement de sujets plus avancés. La compréhension des définitions, des représentations et des propriétés intrinsèques des graphes est le prérequis indispensable à l'étude des algorithmes qui permettent de les explorer et de les exploiter <ConceptLink id="proprietes_graphes" name="proprietes graphes" term="proprietes graphes" unresolved={true}>proprietes graphes</ConceptLink>. Dans les prochaines étapes de ce cours, nous plongerons dans l'univers fascinant des algorithmes sur les graphes. Nous examinerons des algorithmes classiques tels que ceux de parcours (en largeur et en profondeur), des algorithmes de recherche du plus court chemin (comme Dijkstra ou Bellman-Ford), des algorithmes de calcul d'arbre couvrant minimum (Prim, Kruskal), et nous aborderons également des problèmes plus complexes comme la détection de cycles, la recherche de composantes fortement connexes, et l'application de ces outils à des domaines tels que le routage réseau ou l'analyse de flux. La maîtrise de ces algorithmes, et la capacité à choisir le plus pertinent pour une tâche donnée, est au cœur de la puissance de la théorie des graphes appliquée <ConceptLink id="algorithmes_graphes" name="algorithmes graphes" term="algorithmes graphes" unresolved={true}>algorithmes graphes</ConceptLink>.
+
+<Mermaid caption="Figure 5 : " chart={``} />
+
+La transition entre la modélisation et l'algorithmique est fluide et logique. Une fois qu'un problème est correctement représenté sous forme de graphe, la question devient : comment interroger efficacement cette structure ? C'est là qu'interviennent les algorithmes. Par exemple, pour trouver le chemin le plus court entre deux villes sur une carte routière modélisée comme un graphe pondéré, nous aurons recours à des algorithmes spécifiques <ConceptLink id="chemin_plus_court" name="chemin plus court" term="chemin plus court" unresolved={true}>chemin plus court</ConceptLink>. De même, pour identifier les influenceurs sur un réseau social, nous pourrions utiliser des métriques basées sur la centralité des sommets, calculées par des algorithmes dédiés, domaine dans lequel des chercheurs comme Robert Tarjan ont apporté des contributions fondamentales <RealPerson id="tarjan" name="Robert Tarjan" term="Robert Tarjan">Robert Tarjan</RealPerson>. La richesse de la théorie des graphes réside dans cette synergie entre la représentation abstraite et les méthodes computationnelles efficaces pour en extraire des informations précieuses <Glossary id="centralite_sommets" name="centralite sommets" term="centralite sommets">centralite sommets</Glossary>.
+
+<SolvedExercise title="Exemple Résolu : Algorithme de Dijkstra pour le Chemin le Plus Court" solution="">
+  
+</SolvedExercise>
+
+En conclusion, la théorie des graphes est bien plus qu'un ensemble de définitions mathématiques ; c'est un langage universel pour décrire et résoudre des problèmes complexes dans un monde interconnecté. Des avancées en intelligence artificielle aux défis de la logistique mondiale, en passant par la compréhension des systèmes biologiques, les graphes offrent une perspective puissante et unifiée <ConceptLink id="applications_graphes" name="applications graphes" term="applications graphes" unresolved={true}>applications graphes</ConceptLink>. Les compétences acquises dans ce cours vous équiperont pour aborder une vaste gamme de problèmes, en vous permettant de modéliser, d'analyser et de concevoir des solutions algorithmiques innovantes.
+
+<Summary itemsString="Les graphes sont des structures mathématiques fondamentales utilisées pour modéliser des relations entre des objets.|||L'origine des graphes remonte aux problèmes de ponts de Königsberg, posés par Leonhard Euler.|||Les graphes trouvent des applications dans de nombreux domaines tels que l'informatique, les réseaux sociaux, la biologie et la logistique.|||La compréhension des concepts de base des graphes est essentielle pour aborder des algorithmes plus complexes.|||Les différentes représentations d'un graphe (liste d'adjacence, matrice d'adjacence) ont des implications sur l'efficacité des algorithmes.|||L'étude des graphes permet de résoudre des problèmes d'optimisation, de routage, de connectivité et bien plus encore." />
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+ <Question q="Quel problème historique, résolu par Leonhard Euler, est souvent considéré comme l'acte de naissance de la théorie des graphes ?" explanation="Le problème des sept ponts de Königsberg, posé en 1736, demandait s'il était possible de traverser tous les ponts de la ville sans jamais repasser deux fois par le même pont. Euler a démontré que c'était impossible en représentant les terres comme des sommets et les ponts comme des arêtes, introduisant ainsi les concepts fondamentaux de la théorie des graphes et de la traversabilité des graphes (chemins eulériens).">
+  <Option text="Le problème du voyageur de commerce" correct={false} />
+  <Option text="Le problème des sept ponts de Königsberg" correct={true} />
+  <Option text="Le problème de coloration des cartes" correct={false} />
+  <Option text="Le problème des quatre couleurs" correct={false} />
+</Question>
+ <Question q="Dans la théorie des graphes, qu'est-ce qui distingue formellement un chemin d'une marche ?" explanation="Une marche est une séquence de sommets et d'arêtes alternées, où les sommets et les arêtes peuvent être répétés. Un chemin, quant à lui, est une marche où tous les sommets sont distincts (sauf potentiellement le premier et le dernier s'il s'agit d'un cycle). La condition de non-répétition des sommets est cruciale pour définir un chemin simple.">
+  <Option text="Un chemin ne peut pas contenir de cycles, tandis qu'une marche le peut." correct={false} />
+  <Option text="Un chemin ne visite que des sommets distincts, alors qu'une marche peut revisiter des sommets et des arêtes." correct={true} />
+  <Option text="Un chemin doit relier deux sommets spécifiques, alors qu'une marche peut être arbitraire." correct={false} />
+  <Option text="Il n'y a pas de différence fondamentale ; les termes sont interchangeables." correct={false} />
+</Question>
+ <Question q="Comment la théorie des graphes est-elle appliquée pour analyser les réseaux sociaux ?" explanation="Les réseaux sociaux sont naturellement modélisés comme des graphes où les personnes sont des sommets et les relations (amitiés, suivis) sont des arêtes. Les algorithmes de graphes permettent d'identifier des communautés (groupes d'amis proches), de mesurer l'influence des utilisateurs, de prédire des connexions, et d'analyser la propagation de l'information ou des opinions.">
+  <Option text="En utilisant des algorithmes de tri pour organiser les profils utilisateurs." correct={false} />
+  <Option text="En modélisant les utilisateurs comme des sommets et les relations comme des arêtes pour identifier des communautés et mesurer l'influence." correct={true} />
+  <Option text="En appliquant des techniques de compression de données pour stocker les informations des utilisateurs." correct={false} />
+  <Option text="En utilisant des algorithmes de clustering pour regrouper les publications par thème." correct={false} />
+</Question>
+ <Question q="Qu'est-ce qu'un graphe complet, noté K_n, et combien d'arêtes possède-t-il ?" explanation="Un graphe complet K_n est un graphe simple où chaque paire de sommets distincts est reliée par une arête unique. Le nombre d'arêtes dans un graphe complet à n sommets est donné par la formule n * (n - 1) / 2, car chaque sommet est connecté aux n-1 autres sommets, et on divise par 2 pour éviter de compter chaque arête deux fois.">
+  <Option text="Un graphe où tous les sommets ont le même degré. Il possède n arêtes." correct={false} />
+  <Option text="Un graphe où chaque sommet est connecté à tous les autres sommets. Il possède n * (n - 1) / 2 arêtes." correct={true} />
+  <Option text="Un graphe sans cycle. Il possède n - 1 arêtes." correct={false} />
+  <Option text="Un graphe où les sommets sont disposés en cercle. Il possède n arêtes." correct={false} />
+</Question>
+ <Question q="Outre les réseaux sociaux, donnez un exemple concret d'application de la théorie des graphes en informatique." explanation="La théorie des graphes est fondamentale en informatique. Par exemple, elle est utilisée dans la conception des circuits intégrés pour modéliser les interconnexions, dans les systèmes de gestion de bases de données pour représenter les relations entre les tables, dans les algorithmes de routage réseau pour trouver les chemins les plus courts, ou encore dans l'analyse de dépendances pour la compilation de logiciels.">
+  <Option text="L'optimisation des algorithmes de tri." correct={false} />
+  <Option text="La modélisation des flux de données dans les compilateurs et l'analyse des dépendances." correct={true} />
+  <Option text="La compression d'images par transformée en ondelettes." correct={false} />
+  <Option text="La génération de nombres pseudo-aléatoires." correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFyw6p0ZSAob3UgTGllbikiLCJkZWZpbml0aW9uIjoiVW5lIGNvbm5leGlvbiBlbnRyZSBkZXV4IHNvbW1ldHMgZGFucyB1biBncmFwaGUuIEVsbGUgcGV1dCDDqnRyZSBkaXJpZ8OpZSBvdSBub24gZGlyaWfDqWUuIn0seyJ0ZXJtIjoiQ2hlbWluIiwiZGVmaW5pdGlvbiI6IlVuZSBzw6lxdWVuY2UgZGUgc29tbWV0cyBkYW5zIHVuIGdyYXBoZSBvw7kgY2hhcXVlIHNvbW1ldCBjb25zw6ljdXRpZiBlc3QgcmVsacOpIHBhciB1bmUgYXLDqnRlLiJ9LHsidGVybSI6IkN5Y2xlIiwiZGVmaW5pdGlvbiI6IlVuIGNoZW1pbiBxdWkgY29tbWVuY2UgZXQgc2UgdGVybWluZSBhdSBtw6ptZSBzb21tZXQsIHNhbnMgcsOpcMOpdGVyIGQnYXLDqnRlcyAob3UgZGUgc29tbWV0cywgc2Vsb24gbGEgZMOpZmluaXRpb24pLiJ9LHsidGVybSI6IkRlZ3LDqSBkJ3VuIFNvbW1ldCIsImRlZmluaXRpb24iOiJEYW5zIHVuIGdyYXBoZSBub24gb3JpZW50w6ksIGxlIGRlZ3LDqSBkJ3VuIHNvbW1ldCBlc3QgbGUgbm9tYnJlIGQnYXLDqnRlcyBxdWkgbHVpIHNvbnQgaW5jaWRlbnRlcy4gRGFucyB1biBncmFwaGUgb3JpZW50w6ksIG9uIGRpc3Rpbmd1ZSBsZSBkZWdyw6kgZW50cmFudCBldCBsZSBkZWdyw6kgc29ydGFudC4ifSx7InRlcm0iOiJHcmFwaGUiLCJkZWZpbml0aW9uIjoiVW4gZ3JhcGhlIGVzdCB1bmUgc3RydWN0dXJlIG1hdGjDqW1hdGlxdWUgY29tcG9zw6llIGQndW4gZW5zZW1ibGUgZGUgc29tbWV0cyAob3UgbsWTdWRzKSBldCBkJ3VuIGVuc2VtYmxlIGQnYXLDqnRlcyAob3UgbGllbnMpIHF1aSByZWxpZW50IGRlcyBwYWlyZXMgZGUgc29tbWV0cy4ifSx7InRlcm0iOiJHcmFwaGUgQ29ubmV4ZSIsImRlZmluaXRpb24iOiJVbiBncmFwaGUgbm9uIG9yaWVudMOpIGRhbnMgbGVxdWVsIGlsIGV4aXN0ZSB1biBjaGVtaW4gZW50cmUgdG91dGUgcGFpcmUgZGUgc29tbWV0cy4ifSx7InRlcm0iOiJHcmFwaGUgTm9uIE9yaWVudMOpIiwiZGVmaW5pdGlvbiI6IlVuIGdyYXBoZSBvw7kgY2hhcXVlIGFyw6p0ZSByZWxpZSBkZXV4IHNvbW1ldHMgc2FucyBkaXJlY3Rpb24gc3DDqWNpZmlxdWUuIn0seyJ0ZXJtIjoiR3JhcGhlIE9yaWVudMOpIChEaWdyYXBoZSkiLCJkZWZpbml0aW9uIjoiVW4gZ3JhcGhlIG/DuSBjaGFxdWUgYXLDqnRlIGEgdW5lIGRpcmVjdGlvbiwgYWxsYW50IGQndW4gc29tbWV0IHNvdXJjZSDDoCB1biBzb21tZXQgZGVzdGluYXRpb24uIn0seyJ0ZXJtIjoiR3JhcGhlIFBvbmTDqXLDqSIsImRlZmluaXRpb24iOiJVbiBncmFwaGUgZG9udCBjaGFxdWUgYXLDqnRlIGVzdCBhc3NvY2nDqWUgw6AgdW5lIHZhbGV1ciBudW3DqXJpcXVlLCBzb3V2ZW50IGFwcGVsw6llIHBvaWRzLiJ9LHsidGVybSI6Ikxpc3RlIGQnQWRqYWNlbmNlIiwiZGVmaW5pdGlvbiI6IlVuZSByZXByw6lzZW50YXRpb24gZCd1biBncmFwaGUgb8O5IGNoYXF1ZSBzb21tZXQgYSB1bmUgbGlzdGUgZGVzIHNvbW1ldHMgYXV4cXVlbHMgaWwgZXN0IGRpcmVjdGVtZW50IGNvbm5lY3TDqS4ifSx7InRlcm0iOiJNYXRyaWNlIGQnQWRqYWNlbmNlIiwiZGVmaW5pdGlvbiI6IlVuZSByZXByw6lzZW50YXRpb24gZCd1biBncmFwaGUgc291cyBmb3JtZSBkZSBtYXRyaWNlIG/DuSBsZXMgbGlnbmVzIGV0IGxlcyBjb2xvbm5lcyByZXByw6lzZW50ZW50IGxlcyBzb21tZXRzLCBldCB1bmUgZW50csOpZSBpbmRpcXVlIHMnaWwgZXhpc3RlIHVuZSBhcsOqdGUgZW50cmUgZGV1eCBzb21tZXRzLiJ9LHsidGVybSI6Ik1vZMOpbGlzYXRpb24gbWF0aMOpbWF0aXF1ZSIsImRlZmluaXRpb24iOiJMYSBtb2TDqWxpc2F0aW9uIG1hdGjDqW1hdGlxdWUgZXN0IGxlIHByb2Nlc3N1cyBkZSBkZXNjcmlwdGlvbiBkJ3VuIHN5c3TDqG1lIGR1IG1vbmRlIHLDqWVsIMOgIGwnYWlkZSBkZSBjb25jZXB0cyBldCBkZSBsYW5nYWdlcyBtYXRow6ltYXRpcXVlcy4gRWxsZSBwZXJtZXQgZCdhbmFseXNlciwgZGUgY29tcHJlbmRyZSBldCBkZSBwcsOpZGlyZSBsZSBjb21wb3J0ZW1lbnQgZGUgY2Ugc3lzdMOobWUuIn0seyJ0ZXJtIjoiU29tbWV0IChvdSBOxZN1ZCkiLCJkZWZpbml0aW9uIjoiVW4gw6lsw6ltZW50IGRlIGJhc2UgZCd1biBncmFwaGUsIHJlcHLDqXNlbnRhbnQgdW5lIGVudGl0w6kgb3UgdW4gb2JqZXQuIn0seyJ0ZXJtIjoiVGjDqW9yaWUgZGVzIGdyYXBoZXMiLCJkZWZpbml0aW9uIjoiTGEgdGjDqW9yaWUgZGVzIGdyYXBoZXMgZXN0IHVuZSBicmFuY2hlIGRlcyBtYXRow6ltYXRpcXVlcyBldCBkZSBsJ2luZm9ybWF0aXF1ZSBxdWkgw6l0dWRpZSBsZXMgcHJvcHJpw6l0w6lzIGRlcyBncmFwaGVzLiBFbGxlIGZvdXJuaXQgZGVzIG91dGlscyBwb3VyIG1vZMOpbGlzZXIgZXQgcsOpc291ZHJlIGRlcyBwcm9ibMOobWVzIGltcGxpcXVhbnQgZGVzIHJlbGF0aW9ucyBlbnRyZSBkZXMgZW50aXTDqXMuIn1d" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiVGhvbWFzIEguIENvcm1lbiwgQ2hhcmxlcyBFLiBMZWlzZXJzb24sIFJvbmFsZCBSaXZlc3QsIENsaWZmb3JkIFN0ZWluICgyMDE3KS4gwqsgQWxnb3JpdGhtZW4gLSBFaW5lIEVpbmbDvGhydW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjE1MTUvOTc4MzExMDUyMjAxMyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoyLCJ0ZXh0IjoiS2xlaW5iZXJnLCBKb24sIGFuZCDDiXZhIFRhcmRvcy4gJ0FsZ29yaXRobSBEZXNpZ24nLiBBZGRpc29uLVdlc2xleSwgMjAwNS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9S2xlaW5iZXJnJTIwJTIyS2xlaW5iZXJnJTIyJTIwMjAwNSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MywidGV4dCI6IlNlZGdld2ljaywgUm9iZXJ0LCBhbmQgS2V2aW4gV2F5bmUuICdBbGdvcml0aG1zJy4gQWRkaXNvbi1XZXNsZXksIDIwMTEuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1TZWRnZXdpY2slMjAlMjJTZWRnZXdpY2slMjIlMjAyMDExIiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjQsInRleHQiOiJTa2llbmEsIFN0ZXZlbiBTLiAnVGhlIEFsZ29yaXRobSBEZXNpZ24gTWFudWFsJy4gU3ByaW5nZXIsIDIwMDguIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVNraWVuYSUyMCUyMidUaGUlMjBBbGdvcml0aG0lMjBEZXNpZ24lMjBNYW51YWwnJTIyJTIwMjAwOCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NSwidGV4dCI6IkpvbmF0aGFuIEwuIEdyb3NzLCBKYXkgWWVsbGVuICgyMDE4KS4gwqsgR3JhcGggVGhlb3J5IGFuZCBJdHMgQXBwbGljYXRpb25zIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Sm9uYXRoYW4lMjBHcm9zcyUyMCUyMkdyYXBoJTIwVGhlb3J5JTIwYW5kJTIwSXRzJTIwQXBwbGljYXRpb25zJTIyJTIwMjAxOCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NiwidGV4dCI6IlJpY2hhcmQgSS4gU2hyZWV2ZSAoMjAwNykuICpHcmFwaCB0aGVvcnkgd2l0aCBhcHBsaWNhdGlvbnMgdG8gZW5naW5lZXJpbmcgYW5kIGNvbXB1dGVyIHNjaWVuY2UuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4yMzA3LzM2MTY4MjMiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NywidGV4dCI6IlJlaW5oYXJkIERpZXN0ZWwgKDIwMTApLiDCqyBHcmFwaCBUaGVvcnkgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1SZWluaGFyZCUyMERpZXN0ZWwlMjAlMjJHcmFwaCUyMFRoZW9yeSUyMiUyMDIwMTAiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjgsInRleHQiOiJKdWR5IEdvbGRzbWl0aCAoMjAwNCkuICpCb29rIHJldmlldzogVGhlb3J5IG9mIENvbXB1dGluZzogQSBHZW50bGUgSW50cm9kdWN0aW9uLiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9SnVkeSUyMEdvbGRzbWl0aCUyMCUyMkJvb2slMjByZXZpZXclMjIlMjAyMDA0Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjksInRleHQiOiJKLiBBLiBCb25keSwgVS4gUy4gUi4gTXVydHkgKDIwMTUpLiDCqyBHcmFwaCBUaGVvcnkgd2l0aCBBcHBsaWNhdGlvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9Qm9uZHklMjAlMjJHcmFwaCUyMFRoZW9yeSUyMHdpdGglMjBBcHBsaWNhdGlvbnMlMjIlMjAyMDE1Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjEwLCJ0ZXh0IjoiRnJhbmsgSGFyYXJ5LiBQcC4gaXgsIMKrIEdyYXBoIFRoZW9yeSDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjIzMDcvMzYxNTA0OCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxMSwidGV4dCI6IkFobywgQWxmcmVkIFYuLCBKb2huIEUuIEhvcGNyb2Z0LCBhbmQgSmVmZnJleSBELiBVbGxtYW4uICdEYXRhIFN0cnVjdHVyZXMgYW5kIEFsZ29yaXRobXMnLiBBZGRpc29uLVdlc2xleSwgMTk4My4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9QWhvJTIwJTIySG9wY3JvZnQlMjIlMjAxOTgzIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxMiwidGV4dCI6IkV2ZW4sIFNoaW1vbi4gJ0dyYXBoIEFsZ29yaXRobXMnLiBDb21wdXRlciBTY2llbmNlIFByZXNzLCAxOTc5LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9RXZlbiUyMCUyMkNvbXB1dGVyJTIwU2NpZW5jZSUyMFByZXNzJTIyJTIwMTk3OSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxMywidGV4dCI6Ik0uIERvbmFsZCBNYWNMYXJlbiAoMjAwNSkuIMKrIFRoZSBBcnQgb2YgQ29tcHV0ZXIgUHJvZ3JhbW1pbmfigJRWb2x1bWUgMTogRnVuZGFtZW50YWwgQWxnb3JpdGhtcyAoRG9uYWxkIEUuIEtudXRoKSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1Eb25hbGQlMjBNYWNMYXJlbiUyMCUyMlRoZSUyMEFydCUyMG9mJTIwQ29tcHV0ZXIlMjBQcm9ncmFtbWluZyVFMiU4MCU5NFZvbHVtZSUyMDElMjIlMjAyMDA1Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjE0LCJ0ZXh0IjoiTHVjY2lvLCBGYWJyaXppbywgYW5kIEdpb3JnaW8gTWF6em9uZS4gJ0dyYXBoIEFsZ29yaXRobXMgYW5kIEFwcGxpY2F0aW9ucycuIFNwcmluZ2VyLCAyMDEzLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1MdWNjaW8lMjAlMjJMdWNjaW8lMjIlMjAyMDEzIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxNSwidGV4dCI6IlRhcmphbiwgUm9iZXJ0IEUuICdEYXRhIFN0cnVjdHVyZXMgYW5kIE5ldHdvcmsgQWxnb3JpdGhtcycuIFNvY2lldHkgZm9yIEluZHVzdHJpYWwgYW5kIEFwcGxpZWQgTWF0aGVtYXRpY3MsIDE5ODMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1UYXJqYW4lMjAlMjJTb2NpZXR5JTIwZm9yJTIwSW5kdXN0cmlhbCUyMGFuZCUyMEFwcGxpZWQlMjBNYXRoZW1hdGljcyUyMiUyMDE5ODMiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNiwidGV4dCI6IkRvdWdsYXMgQi4gV2VzdC4gMjAxMS4gwqsgSW50cm9kdWN0aW9uIHRvIGdyYXBoIHRoZW9yeSDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPURvdWdsYXMlMjBXZXN0JTIwJTIySW50cm9kdWN0aW9uJTIwdG8lMjBncmFwaCUyMHRoZW9yeSUyMiUyMDIwMTEiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNywidGV4dCI6IlJlaW5oYXJkIERpZXN0ZWwuIDIwMTcuIMKrIGdyYXBoIHRoZW9yeSDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPVJlaW5oYXJkJTIwRGllc3RlbCUyMCUyMmdyYXBoJTIwdGhlb3J5JTIyJTIwMjAxNyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE4LCJ0ZXh0IjoiR2lsbGVzIEJhcm9pbi4gMjAyNi4gwqsgQXBwbGljYXRpb25zIGRlIGxhIHRow6lvcmllIGRlcyBncmFwaGVzIMOgIGRlcyBvYmpldHMgbXVzaWNhdXggOiBtb2TDqWxpc2F0aW9ucywgdmlzdWFsaXNhdGlvbnMgZW4gaHlwZXJlc3BhY2UgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC43MDY3NS8xMGVlOGMxM3o4NTBlejQ4MTR6OTYwNno4Zjg2ZWVlNjM4NWIiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxOSwidGV4dCI6IlJlcHJvZ3JhbW1hdGlvbiBjb21wb3J0ZW1lbnRhbGUgOiBtb2TDqGxlcywgYWxnb3JpdGhtZXMgZXQgYXBwbGljYXRpb24gYXV4IG1hbGFkaWVzIGNvbXBsZXhlcy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjcwNjc1LzJjMzY3MzcwejNlYTZ6NDZjZXo5OTdjemMyNTQ3OGZkMjI4NyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX1d" />

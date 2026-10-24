@@ -2063,6 +2063,27 @@ const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { children
   );
 };
 
+const isStructuredEvalChild = (child: React.ReactNode): boolean => {
+  if (!React.isValidElement(child)) return false;
+  const type = child.type;
+  const typeName = typeof type === 'string' ? type : ((type as any)?.displayName || (type as any)?.name || '');
+  const props = (child.props as any) || {};
+  return (
+    type === Quiz ||
+    typeName === 'Quiz' ||
+    typeName.includes('Quiz') ||
+    type === EssayEvaluation ||
+    typeName === 'EssayEvaluation' ||
+    typeName.includes('EssayEvaluation') ||
+    type === OralEvaluation ||
+    typeName === 'OralEvaluation' ||
+    typeName === 'EvaluationOrale' ||
+    typeName.includes('OralEvaluation') ||
+    Array.isArray(props.questions) ||
+    props.isFinal !== undefined
+  );
+};
+
 const SummativeEvaluation = ({ children, durationLimit }: { children: React.ReactNode; durationLimit?: number }) => {
   const { language } = useLanguage();
   const t = SUMMATIVE_STRINGS[language.toUpperCase() as keyof typeof SUMMATIVE_STRINGS] || SUMMATIVE_STRINGS.EN;
@@ -2072,25 +2093,11 @@ const SummativeEvaluation = ({ children, durationLimit }: { children: React.Reac
   const childrenArray = React.Children.toArray(children);
   
   // Check if children contain any structured evaluation component
-  const hasStructuredComponent = childrenArray.some(
-    child => React.isValidElement(child) && (
-      child.type === Quiz || (child.type as any)?.name === 'Quiz' ||
-      child.type === EssayEvaluation || (child.type as any)?.name === 'EssayEvaluation' ||
-      child.type === OralEvaluation || (child.type as any)?.name === 'OralEvaluation' || (child.type as any)?.name === 'EvaluationOrale'
-    )
-  );
+  const hasStructuredComponent = childrenArray.some(isStructuredEvalChild);
 
   const finalChildren = React.Children.map(children, child => {
-    if (React.isValidElement(child)) {
-      const type = child.type;
-      const typeName = typeof type === 'string' ? type : (type as any)?.name;
-      if (
-        type === Quiz || typeName === 'Quiz' || 
-        type === EssayEvaluation || typeName === 'EssayEvaluation' ||
-        type === OralEvaluation || typeName === 'OralEvaluation' || typeName === 'EvaluationOrale'
-      ) {
-        return React.cloneElement(child, { isFinal: true } as any);
-      }
+    if (React.isValidElement(child) && isStructuredEvalChild(child)) {
+      return React.cloneElement(child, { isFinal: true } as any);
     }
     return child;
   });
@@ -2125,16 +2132,8 @@ const FormativeEvaluation = ({ children }: { children: React.ReactNode }) => {
   if (isChildrenEmpty(children)) return null;
 
   const finalChildren = React.Children.map(children, child => {
-    if (React.isValidElement(child)) {
-      const type = child.type;
-      const typeName = typeof type === 'string' ? type : (type as any)?.name;
-      if (
-        type === Quiz || typeName === 'Quiz' || 
-        type === EssayEvaluation || typeName === 'EssayEvaluation' ||
-        type === OralEvaluation || typeName === 'OralEvaluation' || typeName === 'EvaluationOrale'
-      ) {
-        return React.cloneElement(child, { isFinal: false } as any);
-      }
+    if (React.isValidElement(child) && isStructuredEvalChild(child)) {
+      return React.cloneElement(child, { isFinal: false } as any);
     }
     return child;
   });

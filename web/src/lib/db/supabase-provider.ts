@@ -340,9 +340,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
 
   saveLesson: async (lesson: { course_slug: string, lesson_slug: string, lang: string, title: string, content: string, order?: number }) => {
     try {
-      if (lesson.title && lesson.title.length > 80) {
-        throw new Error(`Lesson title cannot exceed 80 characters (provided title has ${lesson.title.length} characters).`);
-      }
+      const sanitizedTitle = (lesson.title || '').trim().substring(0, 130);
       let cleanedContent = (lesson.content || '').trim();
       if (cleanedContent.startsWith('```') && cleanedContent.endsWith('```')) {
         cleanedContent = cleanedContent.replace(/^```[a-zA-Z0-9_-]*\r?\n/, '');
@@ -358,7 +356,7 @@ export const supabaseDatabaseProvider: DatabaseService = {
             course_slug: cleanCourseSlug,
             lesson_slug: cleanLessonSlug,
             lang: lesson.lang.toLowerCase(),
-            title: lesson.title,
+            title: sanitizedTitle,
             content: cleanedContent,
             order: lesson.order
           },

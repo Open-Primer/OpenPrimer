@@ -249,7 +249,7 @@ export async function POST(request: Request) {
           stream: true
         };
       } else if (provider === 'gemini') {
-        const geminiModel = model || 'gemini-2.5-flash';
+        const geminiModel = model || 'gemini-3.5-flash-lite';
         url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:streamGenerateContent?alt=sse&key=${apiKey}`;
         body = {
           contents: messages.map((m: any) => ({
@@ -394,9 +394,9 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     if (apiKey) {
-      console.log(`[TUTOR CHAT] Vertex AI failed/unavailable. Dispatching to AI Studio fallback (gemini-2.5-flash) for persona "${persona}"...`);
+      console.log(`[TUTOR CHAT] Vertex AI failed/unavailable. Dispatching to AI Studio fallback (gemini-3.5-flash-lite) for persona "${persona}"...`);
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:streamGenerateContent?alt=sse&key=${apiKey}`;
         const compressedContents = contents.map((c: any) => ({
           ...c,
           parts: c.parts.map((p: any) => {

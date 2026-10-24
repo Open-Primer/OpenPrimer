@@ -61,33 +61,18 @@ const INTER_LESSON_DELAY_MS = Number(process.env.INTER_LESSON_DELAY_MS ?? 2000);
  * imposés automatiquement par le Syllabus Critic Agent.
  */
 const COURSE_PIPELINE: CourseTask[] = [
-  // ── Cours actuellement en cours de génération (Finance — ne pas toucher) ──
-  // { name: "Finance quantitative et modélisation stochastique", level: "M1", lang: "fr" },
-
-  // ── RETRY : Sociologie (échoué HTTP 401 lors du précédent run) ──
   {
-    name: "Sociologie des organisations et management stratégique",
-    level: "M1",
+    name: "Mécanique quantique et physique ondulatoire",
+    level: "L3",
     lang: "fr",
-    subject: "Sociologie",
+    subject: "Physique",
   },
-
-  // ── Macroéconomie : TERMINÉ avec 13 leçons ✅ (ne pas relancer) ──
-  // { name: "Macroéconomie avancée et politique économique", level: "M1", lang: "fr", subject: "Économie" },
-
-  // ── Lot 2 : Sciences exactes L3 ──
-  // {
-  //   name: "Mécanique quantique — cours fondamental",
-  //   level: "L3",
-  //   lang: "fr",
-  //   subject: "Physique",
-  // },
-  // {
-  //   name: "Biochimie structurale et enzymologie",
-  //   level: "L3",
-  //   lang: "fr",
-  //   subject: "Biologie",
-  // },
+  {
+    name: "Biochimie structurale et enzymologie",
+    level: "L3",
+    lang: "fr",
+    subject: "Biologie",
+  },
 ];
 
 // ─── 4. TYPES ─────────────────────────────────────────────────────────────────

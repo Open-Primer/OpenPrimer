@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       : "No student search queries recorded yet.";
 
     if (isVertexConfigured()) {
-      console.log(`[ANALYTICS AGENT] Dispatching logs analysis to Vertex AI (gemini-2.0-flash-lite)...`);
+      console.log(`[ANALYTICS AGENT] Dispatching logs analysis to Vertex AI (gemini-3.5-flash-lite)...`);
       
       const systemInstruction = `You are an elite academic analytics agent for OpenPrimer. 
 Analyze the provided student search logs to extract:

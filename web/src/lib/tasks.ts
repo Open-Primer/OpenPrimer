@@ -2,6 +2,7 @@ import { supabaseAdmin as supabase } from './supabase';
 import { dbService } from './db';
 import { generateCourseContent, translateCourseContent, safeResponseJson, correctCourseTitle } from './ai';
 import { cleanPathSegment } from './translations';
+import { TASK_MODELS, ModelId } from './ai-config';
 
 const MAX_ATTEMPTS_DEFAULT = 3;
 
@@ -23,8 +24,8 @@ export async function cleanupStuckTasks() {
       return;
     }
 
-    // Cloud Run containers timeout after 20-30 min. Mark tasks stuck for > 25 min as zombie.
-    const twentyFiveMinsAgo = new Date(Date.now() - 25 * 60 * 1000);
+    // Cloud tasks timeout safeguard. Mark tasks stuck for > 90 min as zombie.
+    const ninetyMinsAgo = new Date(Date.now() - 90 * 60 * 1000);
 
     for (const task of activeTasks) {
       let lastActiveTime = new Date(task.created_at);
@@ -48,7 +49,7 @@ export async function cleanupStuckTasks() {
         }
       }
 
-      if (lastActiveTime < twentyFiveMinsAgo) {
+      if (lastActiveTime < ninetyMinsAgo) {
         console.log(`[CLEANUP] Task "${task.name}" (ID: ${task.id}) was stuck since ${lastActiveTime.toISOString()}. Re-queuing for worker retry.`);
         
         let extra: any = {};
@@ -56,7 +57,7 @@ export async function cleanupStuckTasks() {
           extra = JSON.parse(task.description || '{}');
         } catch (e) {}
 
-        extra.last_error = "Task container timed out or process disconnected (inactive > 25 min).";
+        extra.last_error = "Task container timed out or process disconnected (inactive > 90 min).";
 
         await supabase
           .from('task_queue')
@@ -305,6 +306,13 @@ CRITICAL RULES:
         nextTask.name = correctedName;
       }
 
+      if (extra.model) {
+        logs.push(`[GENERATOR] Using task-specific Gemini model: ${extra.model}`);
+        TASK_MODELS.course_generation = extra.model as ModelId;
+        TASK_MODELS.widget_placement = extra.model as ModelId;
+        process.env.GEMINI_GENERATION_MODEL = extra.model;
+      }
+
       logs.push(`[GENERATOR] Starting AI course content generation for "${nextTask.name}" (${level}, ${targetLang})...`);
       
       const slug = cleanPathSegment(nextTask.name);
@@ -362,8 +370,8 @@ CRITICAL RULES:
     }
   })();
 
-  // Native timeout handling matching Cloud Run's 60-min container limit (55 min timeout = 3300000 ms)
-  const timeoutMs = 3300000;
+  // Native timeout handling allowing up to 2 hours for deep university-grade 13-chapter generation
+  const timeoutMs = 7200000;
 
   const timeoutPromise = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error(`Task execution timed out (took > ${timeoutMs / 1000} seconds).`)), timeoutMs)

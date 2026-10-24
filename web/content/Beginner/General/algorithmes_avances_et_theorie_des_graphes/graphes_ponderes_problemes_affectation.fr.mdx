@@ -1,0 +1,288 @@
+---
+title: « Graphes Pondérés et Problèmes d'Affectation »
+subject: « Algorithmes Avancés et Théorie des Graphes »
+level: « L3 »
+module: « Graphes Pondérés et Problèmes d'Affectation »
+order: 7
+---
+
+
+
+<DiagnosticQuiz question="Considérant un graphe biparti pondéré où les nœuds d'un ensemble représentent des travailleurs et ceux de l'autre ensemble représentent des tâches, avec les poids des arêtes indiquant le coût d'affectation d'un travailleur à une tâche. Quel algorithme est spécifiquement conçu pour trouver une affectation de coût minimum (ou de profit maximum) où chaque travailleur est affecté à au plus une tâche et chaque tâche est assignée à au plus un travailleur ?" options="Algorithme de Dijkstra|||Algorithme de Bellman-Ford|||Algorithme Hongrois|||Algorithme de Prim" correctIndex="2" targetSectionId="weighted-bipartite-matching" sectionTitle="Graphes Pondérés et Problèmes d'Affectation" />
+
+
+
+## Introduction aux Graphes Pondérés et Problèmes d'Affectation
+Bienvenue dans ce module consacré aux **graphes pondérés** et aux **problèmes d'affectation**. Ces structures et ces problèmes sont au cœur de nombreuses applications en informatique, en recherche opérationnelle et en optimisation. Un graphe, dans sa définition la plus simple, est un ensemble de sommets reliés par des arêtes. Lorsqu'à ces arêtes sont associées des valeurs numériques, que nous appelons **poids**, le graphe devient « pondéré ». Ces poids peuvent représenter des coûts, des distances, des capacités, des temps, ou toute autre mesure quantitative pertinente pour le problème modélisé <Reference id="1" name="1" term="1">1</Reference>.
+
+Les graphes pondérés sont particulièrement utiles pour modéliser des situations où les relations entre les entités ne sont pas uniformes. Par exemple, dans un réseau routier, les arêtes représentent les routes et les poids peuvent indiquer la distance, le temps de parcours ou le coût du péage entre deux villes. Dans un réseau de communication, les poids pourraient représenter la bande passante ou la latence <Reference id="2" name="2" term="2">2</Reference>.
+
+Au sein de cette vaste catégorie, les **problèmes d'affectation** occupent une place de choix. Ils consistent généralement à trouver la meilleure manière d'attribuer des ressources à des tâches, ou de faire correspondre des éléments d'un ensemble à des éléments d'un autre ensemble, en minimisant (ou maximisant) un coût total <Reference id="3" name="3" term="3">3</Reference>. Ces problèmes sont omniprésents : affectation d'ouvriers à des postes de travail, planification de tâches sur des machines, correspondance entre des requêtes et des serveurs, ou encore, comme nous allons le voir, optimisation de trajets.
+
+Deux exemples emblématiques de problèmes d'affectation, qui seront au centre de notre étude, sont le **Problème du Voyageur de Commerce (TSP)** et le **Problème d'Affectation Linéaire (LAP)**. Le TSP, souvent cité pour sa difficulté, cherche le chemin le plus court passant par un ensemble de villes et revenant au point de départ. Le LAP, quant à lui, vise à trouver une correspondance parfaite entre deux ensembles de taille égale, minimisant le coût total de la correspondance <Reference id="4" name="4" term="4">4</Reference>.
+
+Comprendre ces problèmes et les algorithmes qui permettent de les résoudre, ou de s'en approcher, est fondamental pour quiconque souhaite aborder des défis d'optimisation complexes.
+
+| Caractéristique Clé | Graphe Pondéré | Problème d'Affectation |
+| :------------------------- | :--------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Définition** | Graphe où chaque arête possède une valeur numérique (poids). | Problème consistant à associer des éléments d'un ensemble à des éléments d'un autre ensemble, souvent pour minimiser un coût total. |
+| **Application Typique** | Modélisation de réseaux (routiers, de communication), calcul de chemins les plus courts. | Affectation de ressources (personnes, machines) à des tâches, planification, optimisation de correspondances. |
+| **Exemples Connus** | Algorithme de Dijkstra, Algorithme de Bellman-Ford. | Problème du Voyageur de Commerce (TSP), Problème d'Affectation Linéaire (LAP), Problème de l'Emploi du Temps. |
+| **Complexité Potentielle** | Dépend de l'algorithme utilisé pour traverser ou analyser le graphe (ex: $O(E \log V)$ pour Dijkstra). | Souvent NP-difficile ou NP-complet pour les versions générales (ex: TSP). Des cas spécifiques peuvent être résolus en temps polynomial (ex: LAP). |
+
+<Mermaid caption="Figure 1 : weighted_graphs_assignments:Diagramme conceptuel illustrant les graphes pondérés et les problèmes d'affectation, avec leurs liens et exemples." id="id" description="weighted_graphs_assignments:Diagramme conceptuel illustrant les graphes pondérés et les problèmes d'affectation, avec leurs liens et exemples." />
+
+Ce diagramme met en évidence la relation entre les graphes pondérés et les problèmes d'affectation, ainsi que des exemples concrets de leur application.
+
+<Glossary id="id" name="graphe_pondere:graphe pondéré" term="graphe_pondere:graphe pondéré">graphe_pondere:graphe pondéré</Glossary>
+<Glossary id="id" name="probleme_affectation:problème d'affectation" term="probleme_affectation:problème d'affectation">probleme_affectation:problème d'affectation</Glossary>
+<ConceptLink id="id" name="tsp:Problème du Voyageur de Commerce" term="tsp:Problème du Voyageur de Commerce" unresolved={true}>tsp:Problème du Voyageur de Commerce</ConceptLink>
+<ConceptLink id="id" name="lap:Problème d'Affectation Linéaire" term="lap:Problème d'Affectation Linéaire" unresolved={true}>lap:Problème d'Affectation Linéaire</ConceptLink>
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser la structure des problèmes d'affectation dans le contexte des graphes pondérés et bipartis.</li>
+      <li>Évaluer l'applicabilité de différents algorithmes pour résoudre des problèmes d'affectation spécifiques.</li>
+      <li>Créer des modèles de graphes pour représenter des problèmes d'affectation complexes.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Appliquer l'algorithme Hongrois pour résoudre des problèmes d'affectation de coût minimum.</li>
+      <li>analyser la complexité temporelle et spatiale des algorithmes de résolution de problèmes d'affectation.</li>
+      <li>Comparer et contraster les solutions algorithmiques pour différents types de problèmes d'affectation (coût minimum vs profit maximum).</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Adopter une approche systématique pour modéliser et résoudre des problèmes d'optimisation combinatoire.</li>
+      <li>Évaluer de manière critique l'efficacité et la pertinence des algorithmes choisis pour des scénarios pratiques.</li>
+      <li>Collaborer pour concevoir des solutions algorithmiques robustes à des problèmes d'affectation du monde réel.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Le Problème du Voyageur de Commerce (TSP)
+
+Le **Problème du Voyageur de Commerce (TSP)**, également connu sous le nom de problème du commis voyageur, est un problème d'optimisation combinatoire classique. Il peut être formulé comme suit : étant donné une liste de villes et les distances entre chaque paire de villes, quel est le chemin le plus court qui visite chaque ville exactement une fois et retourne à la ville d'origine ?
+
+Formellement, considérons un graphe complet $G = (V, E)$ où $V$ est l'ensemble des villes et $E$ est l'ensemble des arêtes reliant chaque paire de villes. Chaque arête $(u, v) \in E$ est associée à un poids $w(u, v)$, représentant la distance ou le coût pour voyager de la ville $u$ à la ville $v$. Le TSP consiste à trouver un cycle Hamiltonien (un cycle qui visite chaque sommet exactement une fois) de poids total minimum. Si le graphe n'est pas complet, on peut le rendre complet en ajoutant des arêtes avec des poids infinis (ou très grands) pour représenter les trajets impossibles.
+
+La difficulté du TSP réside dans sa complexité computationnelle. Il est prouvé que le TSP est un problème **NP-complet** <ConceptLink id="id" name="np_complet:NP-complet" term="np_complet:NP-complet" unresolved={true}>np_complet:NP-complet</ConceptLink>. Cela signifie qu'il n'existe probablement pas d'algorithme capable de trouver la solution optimale en temps polynomial par rapport au nombre de villes. Pour un ensemble de $n$ villes, il y a $(n-1)! / 2$ cycles Hamiltoniens possibles à considérer, un nombre qui croît extrêmement rapidement avec $n$. Par exemple, pour seulement 20 villes, ce nombre dépasse $10^{17}$.
+
+Face à cette complexité, deux grandes familles d'approches se distinguent : les **approches exactes** et les **approches d'approximation**.
+
+### Approches Exactes
+
+Les approches exactes visent à trouver la solution optimale garantie, mais elles sont généralement coûteuses en temps de calcul et ne sont pratiques que pour des instances de petite taille.
+
+1. **Programmation Dynamique (Algorithme d'Held-Karp)** : Cet algorithme utilise la programmation dynamique pour résoudre le TSP en temps $O(n^2 2^n)$. Il est basé sur le principe de sous-problèmes optimaux. Pour un sous-ensemble de villes $S$ et une ville de départ $s \in S$, on calcule le chemin le plus court partant de $s$, visitant tous les sommets dans $S \setminus \{s\}$ exactement une fois, et se terminant en un sommet $v \in S \setminus \{s\}$. La solution globale est ensuite trouvée en combinant ces sous-solutions. Bien que polynomial en $n$ pour la puissance de 2, il reste exponentiel. <RealPerson id="id" name="held:Richard M. Karp" term="held:Richard M. Karp" unresolved={true}>held:Richard M. Karp</RealPerson> et <RealPerson id="id" name="karp:Michael Held" term="karp:Michael Held" unresolved={true}>karp:Michael Held</RealPerson> sont reconnus pour leurs contributions dans ce domaine.
+
+2. **Énumération et Branch and Bound** : L'énumération exhaustive de tous les cycles est impraticable. Cependant, des techniques comme le **Branch and Bound** (ou séparation et évaluation) peuvent améliorer l'efficacité. Ces méthodes explorent l'arbre des solutions possibles, élaguant les branches qui ne peuvent pas mener à une solution meilleure que la meilleure trouvée jusqu'à présent, grâce à des bornes inférieures calculées sur le coût des solutions partielles.
+
+<Image description="tsp_example:Illustration schématique du Problème du Voyageur de Commerce avec 5 villes et un cycle possible." alt="tsp_example:Illustration schématique du Problème du Voyageur de Commerce avec 5 villes et un cycle possible." caption="Figure 1: tsp_example:Illustration schématique du Problème du Voyageur de Commerce avec 5 villes et un cycle possible. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:TSP_Deutschland_3.png)" src="https://commons.wikimedia.org/wiki/Special:FilePath/TSP_Deutschland_3.png" fallbackUrl="https://commons.wikimedia.org/wiki/File:TSP_Deutschland_3.png" />
+
+Comment ce schéma du TSP permet-il de visualiser concrètement la notion de cycle Hamiltonien et l'objectif de minimisation de la distance totale parcourue ?
+
+### Approches d'Approximation
+
+Pour les instances de grande taille où une solution exacte est infaisable, on se tourne vers des algorithmes d'approximation qui garantissent de trouver une solution proche de l'optimum en temps polynomial.
+
+1. **Algorithme du Plus Proche Voisin (Nearest Neighbor)** : C'est une heuristique simple et rapide. On commence à une ville arbitraire, puis on se déplace à la ville non visitée la plus proche. On répète ce processus jusqu'à ce que toutes les villes soient visitées, puis on retourne à la ville de départ. Bien que rapide ($O(n^2)$), cet algorithme ne garantit pas une bonne approximation ; son ratio d'approximation peut être arbitrairement mauvais dans le cas général.
+
+2. **Algorithme basé sur l'Arbre Couvrant Minimum (Minimum Spanning Tree - MST)** : Pour les cas où les distances satisfont l'inégalité triangulaire (c'est-à-dire que la distance directe entre deux villes est toujours inférieure ou égale à la distance passant par une troisième ville), on peut obtenir une approximation garantie. L'algorithme consiste à construire un arbre couvrant minimum (MST) du graphe, puis à effectuer un parcours en profondeur (DFS) de cet arbre pour obtenir une séquence de visites. En omettant les visites répétées de villes, on obtient un cycle Hamiltonien. Cet algorithme garantit une solution dont le coût est au plus deux fois le coût optimal. Des algorithmes comme ceux de Prim ou Kruskal peuvent être utilisés pour trouver le MST en temps polynomial. <ConceptLink id="id" name="mst:Arbre Couvrant Minimum" term="mst:Arbre Couvrant Minimum" unresolved={true}>mst:Arbre Couvrant Minimum</ConceptLink>
+
+3. **Heuristiques plus avancées** : D'autres heuristiques, telles que les algorithmes de « 2-opt » ou « 3-opt », qui consistent à échanger des arêtes dans un cycle existant pour le raccourcir, ou des algorithmes basés sur la recherche locale et les algorithmes génétiques, peuvent donner de très bons résultats pratiques, bien que sans garantie théorique stricte sur le ratio d'approximation.
+
+Le TSP est un problème fondamental qui illustre parfaitement les défis posés par les problèmes NP-complets et la nécessité de développer des stratégies d'approximation efficaces.
+
+<Mermaid caption="Figure 3 : tsp_complexity:Diagramme illustrant la complexité du TSP et les différentes familles d'algorithmes." id="id" description="tsp_complexity:Diagramme illustrant la complexité du TSP et les différentes familles d'algorithmes." />
+
+Quel est le rôle de la complexité NP-complète dans le choix entre une approche exacte et une approche d'approximation pour résoudre le TSP ?
+
+<SolvedExercise id="id" name="tsp_nn_example:Exemple résolu de l'algorithme du plus proche voisin pour un petit ensemble de villes." term="tsp_nn_example:Exemple résolu de l'algorithme du plus proche voisin pour un petit ensemble de villes.">tsp_nn_example:Exemple résolu de l'algorithme du plus proche voisin pour un petit ensemble de villes.</SolvedExercise>
+
+Cet exercice résolu montre comment appliquer l'algorithme du plus proche voisin. Analysez les étapes et déterminez si le chemin obtenu est optimal dans ce cas précis.
+
+## Le Problème d'Affectation Linéaire (LAP)
+
+Le Problème d'Affectation Linéaire (LAP), également connu sous le nom de problème d'affectation, est un problème fondamental en optimisation combinatoire. Il peut être formulé comme suit : étant donné un ensemble de $n$ tâches et un ensemble de $n$ agents, où chaque agent $i$ peut effectuer chaque tâche $j$ avec un coût $c_{ij}$, le problème consiste à trouver une affectation de chaque agent à une tâche unique, de telle sorte que le coût total de l'affectation soit minimisé. Formellement, nous cherchons à trouver une permutation $\sigma$ de $\{1, 2, \dots, n\}$ qui minimise la somme $\sum_{i=1}^{n} c_{i, \sigma(i)}$.
+
+Ce problème est intrinsèquement lié aux **graphes bipartis pondérés**. Considérons un graphe biparti $G = (U \cup V, E)$, où $U$ représente l'ensemble des agents et $V$ représente l'ensemble des tâches. Chaque arête $(u, v)$ avec $u \in U$ et $v \in V$ est pondérée par le coût $c_{uv}$ de l'agent $u$ effectuant la tâche $v$. Le LAP consiste alors à trouver un **couplage parfait** dans ce graphe biparti tel que la somme des poids des arêtes du couplage soit minimale. Un couplage parfait est un ensemble d'arêtes où chaque sommet est incident à exactement une arête. Si $|U| \neq |V|$, le problème peut être adapté en ajoutant des sommets factices et des arêtes de coût nul ou très élevé.
+
+L'algorithme le plus célèbre et le plus efficace pour résoudre le LAP de manière exacte est l'**algorithme hongrois**, développé par <RealPerson id="id" name="kuhn:Harold Kuhn" term="kuhn:Harold Kuhn" unresolved={true}>kuhn:Harold Kuhn</RealPerson> et basé sur les travaux antérieurs de <RealPerson id="id" name="könig:Dénes Kőnig" term="könig:Dénes Kőnig" unresolved={true}>könig:Dénes Kőnig</RealPerson> et <RealPerson id="id" name="egervary:Jeno Egervary" term="egervary:Jeno Egervary" unresolved={true}>egervary:Jeno Egervary</RealPerson>. Cet algorithme garantit de trouver la solution optimale en temps polynomial. La complexité de l'algorithme hongrois est généralement $O(n^3)$, bien que des variantes plus sophistiquées puissent atteindre $O(n^2 \log n)$ ou même $O(n^2)$ dans certains cas. L'algorithme fonctionne en manipulant une matrice de coûts pour identifier des zéros qui correspondent à des affectations optimales, en utilisant des concepts tels que les « lignes couvertes » et les « lignes non couvertes » pour guider la recherche de la solution.
+
+<Image description="hungarian_algorithm_matrix:Représentation schématique d'une matrice de coûts pour le LAP et l'application de l'algorithme hongrois." alt="Des symboles verts tombent en cascade sur un fond noir, évoquant le code informatique." caption="Figure 2: hungarian_algorithm_matrix:Représentation schématique d'une matrice de coûts pour le LAP et l'application de l'algorithme hongrois. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:The.Matrix.glmatrix.1.png)" src="https://commons.wikimedia.org/wiki/Special:FilePath/The.Matrix.glmatrix.1.png" fallbackUrl="https://commons.wikimedia.org/wiki/File:The.Matrix.glmatrix.1.png" />
+
+Comment la réduction de la matrice de coûts dans l'algorithme hongrois permet-elle de révéler des affectations optimales potentielles ?
+
+Le LAP est un problème important car il apparaît dans de nombreuses applications, telles que l'affectation de personnel à des postes, la planification de la production, l'optimisation des flux logistiques, et même dans des domaines comme la vision par ordinateur pour l'alignement d'images. Sa résolution exacte est cruciale lorsque la précision est primordiale.
+
+## Algorithmes d'Approximation et Heuristiques pour le TSP
+
+Comme mentionné précédemment, le Problème du Voyageur de Commerce (TSP) est NP-difficile, ce qui signifie qu'il n'existe probablement pas d'algorithme en temps polynomial capable de trouver la solution optimale pour toutes les instances. Pour les cas de grande taille, il est donc nécessaire de recourir à des **algorithmes d'approximation** ou à des **heuristiques**.
+
+Les algorithmes d'approximation visent à trouver une solution qui est garantie d'être « proche » de la solution optimale. Le « ratio d'approximation » d'un algorithme est le supremum du rapport entre le coût de la solution trouvée par l'algorithme et le coût de la solution optimale, sur toutes les instances possibles. Un ratio d'approximation de $\alpha$ signifie que le coût de la solution trouvée est au plus $\alpha$ fois le coût optimal.
+
+Pour le TSP, des garanties d'approximation existent sous certaines conditions. Par exemple, si les distances satisfont l'**inégalité triangulaire** (c'est-à-dire que pour trois villes $A, B, C$, la distance $d(A, C) \le d(A, B) + d(B, C)$), alors l'algorithme basé sur l'Arbre Couvrant Minimum (MST) mentionné précédemment offre un ratio d'approximation de 2. Cet algorithme construit un MST, puis effectue un parcours en profondeur pour générer un cycle Hamiltonien. Une autre approche, le « doublement du MST », consiste à doubler chaque arête du MST pour obtenir un graphe eulérien, puis à en extraire un cycle Hamiltonien.
+
+<Mermaid caption="Figure 5 : tsp_approximation_strategies:Diagramme comparant les stratégies d'approximation pour le TSP avec leurs garanties." id="id" description="tsp_approximation_strategies:Diagramme comparant les stratégies d'approximation pour le TSP avec leurs garanties." />
+
+Dans quel contexte l'inégalité triangulaire est-elle une condition nécessaire pour obtenir des garanties d'approximation solides pour le TSP ?
+
+Au-delà des algorithmes d'approximation avec garanties théoriques, il existe de nombreuses **heuristiques** qui, bien que ne fournissant pas de garantie formelle sur le ratio d'approximation, donnent souvent d'excellents résultats en pratique et sont plus rapides. Parmi les heuristiques courantes, on trouve :
+
+* **Recherche Locale** : Ces algorithmes commencent avec une solution initiale (souvent générée par une heuristique simple comme le plus proche voisin) et tentent de l'améliorer itérativement en effectuant de petites modifications.
+* **2-opt** : Une heuristique de recherche locale populaire pour le TSP. Elle consiste à sélectionner deux arêtes non adjacentes dans le cycle courant, à les supprimer, puis à reconnecter les quatre extrémités de manière différente pour former un nouveau cycle. Si le nouveau cycle est plus court, il remplace l'ancien. Ce processus est répété jusqu'à ce qu'aucune amélioration ne puisse être trouvée. Le 2-opt peut améliorer significativement une solution initiale, mais peut rester bloqué dans des optima locaux.
+* **3-opt** : Une extension du 2-opt qui considère la suppression et la reconnexion de trois arêtes. Cela offre plus de flexibilité pour explorer l'espace des solutions et peut potentiellement trouver de meilleures solutions, mais au prix d'une complexité computationnelle accrue.
+* **Heuristiques basées sur des algorithmes génétiques ou des colonies de fourmis** : Ces approches s'inspirent de processus naturels pour explorer l'espace des solutions de manière stochastique et trouver des solutions d'haute qualité pour des instances de grande taille.
+
+La performance pratique de ces heuristiques est souvent excellente, trouvant des solutions très proches de l'optimum dans un temps raisonnable, ce qui les rend indispensables pour de nombreuses applications réelles du TSP. Le choix entre un algorithme d'approximation avec garantie et une heuristique dépendra des contraintes spécifiques du problème, notamment la taille de l'instance, la nécessité d'une garantie de qualité, et le temps de calcul disponible.
+
+<SolvedExercise id="id" name="tsp_2opt_example:Exemple illustrant l'application de l'heuristique 2-opt sur une solution TSP existante." term="tsp_2opt_example:Exemple illustrant l'application de l'heuristique 2-opt sur une solution TSP existante.">tsp_2opt_example:Exemple illustrant l'application de l'heuristique 2-opt sur une solution TSP existante.</SolvedExercise>
+
+Comment l'application de l'heuristique 2-opt sur la solution initiale du TSP peut-elle potentiellement réduire la distance totale parcourue ?
+
+
+
+Testez votre compréhension des garanties d'approximation et des principes des heuristiques pour le TSP.
+
+<SolvedExercise title="Exemple résolu : Algorithme du plus proche voisin pour le TSP" solution="">
+  
+</SolvedExercise>
+
+<Mermaid caption="Figure 6 : " chart={``} />
+
+<SolvedExercise title="Exemple illustré : Heuristique 2-opt pour le TSP" solution="">
+  
+</SolvedExercise>
+
+<Quiz durationLimit={300} limit={3}>
+ <Question q="Quel type d'algorithme garantit de trouver la solution optimale pour le TSP, même si cela peut prendre un temps exponentiel ?" explanation="Les algorithmes exacts visent à trouver la solution optimale garantie, mais leur complexité peut être prohibitive pour de grandes instances.">
+  <Option text="Algorithme d'approximation" correct={false} />
+  <Option text="Heuristique" correct={false} />
+  <Option text="Algorithme exact" correct={true} />
+  <Option text="Algorithme glouton" correct={false} />
+</Question>
+ <Question q="L'heuristique du plus proche voisin est un exemple de :" explanation="L'heuristique du plus proche voisin prend des décisions localement optimales à chaque étape sans garantie globale, ce qui la classe comme une heuristique gloutonne.">
+  <Option text="Algorithme exact" correct={false} />
+  <Option text="Algorithme d'approximation avec garantie polynomiale" correct={false} />
+  <Option text="Heuristique gloutonne" correct={true} />
+  <Option text="Algorithme de programmation dynamique" correct={false} />
+</Question>
+ <Question q="Quelle est la principale différence entre un algorithme d'approximation et une heuristique pour le TSP ?" explanation="La caractéristique clé des algorithmes d'approximation est leur garantie formelle sur la proximité de la solution trouvée par rapport à la solution optimale, ce qui manque aux heuristiques.">
+  <Option text="Les algorithmes d'approximation sont toujours plus rapides." correct={false} />
+  <Option text="Les algorithmes d'approximation fournissent une garantie sur la qualité de la solution par rapport à l'optimum, tandis que les heuristiques n'en fournissent pas." correct={true} />
+  <Option text="Les heuristiques trouvent toujours la solution optimale." correct={false} />
+  <Option text="Il n'y a pas de différence significative." correct={false} />
+</Question>
+</Quiz>
+
+
+## Applications Pratiques et Extensions
+Le Problème du Voyageur de Commerce (TSP) et le Problème d'Affectation Linéaire (LAP) ne sont pas de simples exercices académiques ; ils trouvent des applications concrètes et souvent critiques dans une multitude de domaines. Dans le domaine de la **logistique et du transport**, le TSP est fondamental pour optimiser les tournées de livraison, la collecte de déchets, ou encore la planification des itinéraires pour les véhicules de maintenance. Par exemple, une entreprise de livraison doit déterminer le chemin le plus court pour livrer des colis à un ensemble de clients dispersés géographiquement. Le LAP, quant à lui, est utilisé pour assigner des chauffeurs à des itinéraires spécifiques, des tâches à des employés, ou des ressources à des projets, en minimisant les coûts ou en maximisant l'efficacité.
+
+En **planification et ordonnancement**, le TSP peut modéliser la séquence optimale d'opérations dans un processus de fabrication ou la visite de différents sites par une équipe d'intervention. Le LAP est également pertinent pour l'allocation de machines à des tâches de production ou l'assignation de personnel à des postes de travail en fonction de leurs compétences et de la disponibilité <Reference id="5" name="5" term="5">5</Reference>. La **bioinformatique** bénéficie également de ces modèles : le TSP peut être utilisé pour ordonnancer la séquence de lecture d'un génome, tandis que le LAP trouve des applications dans l'alignement de séquences d'ADN ou de protéines, ou encore dans l'assignation de fonctions à des gènes identifiés <Reference id="6" name="6" term="6">6</Reference>. D'autres domaines incluent la **robotique** (planification de trajectoires pour des robots), la **microélectronique** (routage de fils sur des circuits imprimés), et même la **planification de voyages personnels** <Reference id="7" name="7" term="7">7</Reference>.
+
+Il est important de noter que les problèmes TSP et LAP classiques sont souvent des simplifications de réalités plus complexes. C'est pourquoi diverses **extensions et variantes** ont été développées pour mieux modéliser ces situations. Pour le TSP, on rencontre le **TSP multiple** (où plusieurs voyageurs doivent couvrir l'ensemble des villes), le **Problème de Tournées de Véhicules (VRP)**, qui est une généralisation du TSP où les véhicules ont des capacités limitées, des fenêtrès temporelles pour les livraisons, et où il peut y avoir plusieurs départs et arrivées. Le VRP est d'une importance capitale pour la gestion des flottes de transport modernes <Reference id="8" name="8" term="8">8</Reference>. Pour le LAP, des extensions comme le **Problème d'Affectation Non Linéaire** ou le **Problème d'Affectation avec Contraintes** apparaissent lorsque les coûts ou les bénéfices ne sont pas simplement additifs ou lorsque des restrictions supplémentaires doivent être prises en compte <Reference id="9" name="9" term="9">9</Reference>. Ces variantes, bien que souvent plus difficiles à résoudre, permettent une modélisation plus fidèle des défis du monde réel.
+
+| Caractéristique | Problème du Voyageur de Commerce (TSP) | Problème de Tournées de Véhicules (VRP) |
+|---|---|---|
+| Nombre de voyageurs | Un seul | Plusieurs |
+| Capacité des véhicules | Illimitée (implicite) | Limitée |
+| Fenêtrès temporelles | Non | Oui (souvent) |
+| Points de départ/arrivée | Un seul | Potentiellement multiples |
+| Complexité | NP-difficile | NP-difficile (plus complexe que TSP) |
+
+<Image description="tsp_logistics_example:Illustration schématique d'une tournée de livraison optimisée par le TSP." alt="tsp_logistics_example:Illustration schématique d'une tournée de livraison optimisée par le TSP." caption="Figure 3: tsp_logistics_example:Illustration schématique d'une tournée de livraison optimisée par le TSP. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:TSP_Deutschland_3.png)" src="https://commons.wikimedia.org/wiki/Special:FilePath/TSP_Deutschland_3.png" fallbackUrl="https://commons.wikimedia.org/wiki/File:TSP_Deutschland_3.png" />
+
+Comment la représentation d'une tournée de livraison comme un graphe pondéré permet-elle de visualiser les compromis entre distance et temps ?
+
+<Mermaid caption="Figure 8 : tsp_vrp_comparison:Diagramme comparant les caractéristiques du TSP et du VRP." id="id" description="tsp_vrp_comparison:Diagramme comparant les caractéristiques du TSP et du VRP." />
+
+Quelles sont les contraintes supplémentaires introduites par le VRP par rapport au TSP qui le rendent plus adapté aux problématiques de logistique de flotte ?
+
+## Conclusion
+Au cours de cette leçon, nous avons exploré les fondements des **graphes pondérés** et leur rôle crucial dans la modélisation de problèmes d'optimisation complexes. Nous avons disséqué le **Problème du Voyageur de Commerce (TSP)**, un problème NP-difficile emblématique, en examinant ses différentes facettes, des algorithmes exacts pour de petites instances aux algorithmes d'approximation et aux heuristiques performantes pour les cas de grande taille. Nous avons également abordé le **Problème d'Affectation Linéaire (LAP)**, un problème polynomialement solvable grâce à des algorithmes comme celui de **Kuhn-Munkres** (ou algorithme hongrois), et son importance dans l'allocation optimale de ressources <Reference id="10" name="10" term="10">10</Reference>. La compréhension de ces problèmes et des techniques pour les résoudre est fondamentale en informatique théorique et appliquée, car ils sous-tendent de nombreuses décisions algorithmiques dans des domaines variés.
+
+L'importance des graphes pondérés et des problèmes d'affectation ne cesse de croître avec l'augmentation de la complexité des systèmes que nous cherchons à optimiser. Des algorithmes de routage dans les réseaux de communication à la planification de tâches dans les systèmes distribués, en passant par l'optimisation des chaînes d'approvisionnement et l'analyse de données massives, ces modèles fournissent un cadre puissant pour la prise de décision rationnelle <Reference id="11" name="11" term="11">11</Reference>. Les recherches actuelles continuent de pousser les limites, notamment en développant des algorithmes plus rapides et plus efficaces pour les problèmes NP-difficiles, en explorant des variantes dynamiques où les poids ou la structure du graphe changent avec le temps, et en intégrant des considérations de robustesse et d'incertitude dans les modèles d'optimisation <Reference id="12" name="12" term="12">12</Reference>.
+
+Les défis ouverts incluent la conception d'algorithmes d'approximation avec de meilleures garanties pour des variantes plus complexes du TSP et du VRP, ainsi que le développement de méthodes pour résoudre efficacement des problèmes d'affectation à très grande échelle qui dépassent les capacités des algorithmes polynomiaux actuels. L'intégration de l'apprentissage automatique pour guider la recherche de solutions ou pour prédire des coûts dans des graphes dynamiques est également un axe de recherche prometteur <Reference id="13" name="13" term="13">13</Reference>. En somme, le domaine des graphes pondérés et des problèmes d'optimisation associés demeure un champ de recherche fertile, essentiel au progrès technologique et à la résolution des défis complexes de notre monde interconnecté <Reference id="14" name="14" term="14">14</Reference>, <Reference id="15" name="15" term="15">15</Reference>.
+
+<Glossary definition="Un graphe dont les arêtes sont associées à des valeurs numériques appelées poids. Ces poids peuvent représenter des coûts, des distances, des capacités, etc." id="graphe_pondere" text="graphe pondéré" title="Graphe Pondéré">Graphe Pondéré</Glossary>
+
+<Glossary definition="Un problème d'optimisation combinatoire qui vise à trouver une correspondance optimale (par exemple, de coût minimum ou de profit maximum) entre deux ensembles d'éléments de taille égale." id="probleme_affectation" text="problème d'affectation" title="Problème d'Affectation">Problème d'Affectation</Glossary>
+
+<ConceptLink id="tsp" name="Problème du Voyageur de Commerce" text="The Traveling Salesperson Problem (TSP) is a classic combinatorial optimization problem. Given a list of cities and the distances between each pair of cities, the problem is to find the shortest possible route that visits each city exactly once and returns to the origin city." unresolved={true}>Problème du Voyageur de Commerce</ConceptLink>
+
+<ConceptLink id="lap" name="Problème d'Affectation Linéaire" text="The Linear Assignment Problem (LAP) is an algorithm that solves the assignment problem in polynomial time. It is a special case of the minimum cost maximum flow problem, and also a special case of the transportation problem. It can be solved by algorithms that are more efficient than général algorithms for minimum cost maximum flow." unresolved={true}>Problème d'Affectation Linéaire</ConceptLink>
+
+<ConceptLink id="np_complet" name="NP-complet" text="NP-complete (or NP-C) is a complexity class of computational problems. A problem is NP-complete if it is NP-hard and is also in NP. Informally, NP-complete problems are the 'hardest' problems in NP, meaning that any problem in NP can be reduced to an NP-complete problem.">NP-complet</ConceptLink>
+
+<RealPerson id="held" name="Michael Held" text="Michael Held is an American computer scientist known for his work on the Traveling Salesperson Problem and other combinatorial optimization problems. He co-authored a seminal paper in 1962 that introduced a lower bound for the TSP, which was later improved by Karp." unresolved={true}>Michael Held</RealPerson>
+
+<ConceptLink id="mst" name="Arbre Couvrant Minimum" text="A Minimum Spanning Tree (MST) is a subset of the edges of a connected, edge-weighted undirected graph that connects all the vertices together, without any cycles and with the minimum possible total edge weight." unresolved={true}>Arbre Couvrant Minimum</ConceptLink>
+
+<RealPerson id="kuhn" name="Harold Kuhn" text="Harold W. Kuhn is an American mathematician known for his work in operations research and optimization. He is credited with developing the Kuhn-Tucker conditions for constrained optimization and also contributed to the development of the Hungarian algorithm for the assignment problem.">Harold Kuhn</RealPerson>
+
+<RealPerson id="könig" name="Dénes Kőnig" text="Dénes Kőnig was a Hungarian mathematician who made significant contributions to graph theory and combinatorics. He is known for Kőnig's theorem, which relates the size of a maximum matching to the size of a minimum vertex cover in bipartite graphs.">Dénes Kőnig</RealPerson>
+
+<RealPerson id="egervary" name="Jeno Egervary" text="Jeno Egervary was a Hungarian mathematician who worked in the fields of graph theory and linear algebra. He is known for his contributions to the theory of matrices and for his work on the assignment problem, which led to the development of the Hungarian algorithm.">Jeno Egervary</RealPerson>
+
+<Mermaid caption="Figure 9 : " chart={``} />
+
+<Mermaid caption="Figure 10 : " chart={``} />
+
+<Image description="Représentation schématique d'une matrice de coûts utilisée dans le cadre du Problème d'Affectation Linéaire (LAP). La matrice montre les coûts associés à l'affectation de tâches à des agents. Le diagramme illustre également les étapes clés de l'application de l'algorithme hongrois pour trouver une affectation optimale minimisant le coût total." alt="L'image montre des équations mathématiques décrivant les fonctions x(t) et y(t) en termes de cosinus et de sinus." caption="Figure 11 : Représentation schématique d'une matrice de coûts utilisée dans le cadre du Problème d'Affectation Linéaire (LAP). La matrice montre les coûts associés à l'affectation de tâches à des agents. Le diagramme illustre également les étapes clés de l'application de l'algorithme hongrois pour trouver une affectation optimale minimisant le coût total. Source: Photo by [Bozhin Karaivanov](https://unsplash.com/@bkaraivanov?utm_source=OpenPrimer&utm_medium=referral) on [Unsplash](https://unsplash.com/?utm_source=OpenPrimer&utm_medium=referral)" title="Matrice de coûts pour l'algorithme hongrois" src="https://images.unsplash.com/photo-1754304342447-82dabf632a8b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5ODcyMjJ8MHwxfHNlYXJjaHwxfHxDb3N0JTIwbWF0cml4fGVufDB8fHx8MTc5MTM5MzI4NXww&ixlib=rb-4.1.0&q=80&w=1080" fallbackUrl="https://images.unsplash.com/photo-1754304342447-82dabf632a8b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5ODcyMjJ8MHwxfHNlYXJjaHwxfHxDb3N0JTIwbWF0cml4fGVufDB8fHx8MTc5MTM5MzI4NXww&ixlib=rb-4.1.0&q=80&w=1080" isIllustration={true} />
+
+<Mermaid caption="Figure 12 : " chart={``} />
+
+<Summary itemsString="Les graphes pondérés attribuent des valeurs numériques (poids) aux arêtes, représentant des coûts, distances ou capacités.|||Le problème du plus court chemin trouve la séquence d'arêtes de poids minimal entre deux sommets.|||L'algorithme de Dijkstra résout le problème du plus court chemin pour des poids non négatifs.|||L'algorithme de Bellman-Ford gère les poids négatifs et détecte les cycles négatifs.|||Le problème d'affectation vise à trouver une correspondance optimale entre deux ensembles d'éléments, souvent modélisé comme un problème de flot maximum ou de coût minimum.|||Les algorithmes hongrois et les méthodes de flot sont couramment utilisés pour résoudre les problèmes d'affectation.|||Les applications des graphes pondérés et des problèmes d'affectation sont vastes, incluant la logistique, la planification et l'allocation de ressources." />
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+ <Question q="Quel algorithme est couramment utilisé pour trouver le chemin le plus court dans un graphe pondéré avec des poids d'arête non négatifs ?" explanation="L'algorithme de Dijkstra est spécifiquement conçu pour trouver le chemin le plus court à partir d'un nœud source unique vers tous les autres nœuds dans un graphe pondéré où tous les poids d'arête sont non négatifs.">
+  <Option text="Algorithme de Bellman-Ford" correct={false} />
+  <Option text="Algorithme de Dijkstra" correct={true} />
+  <Option text="Algorithme de Floyd-Warshall" correct={false} />
+  <Option text="Algorithme de Prim" correct={false} />
+</Question>
+ <Question q="Dans le contexte des problèmes d'affectation, qu'est-ce que le problème du voyageur de commerce (TSP) cherche à minimiser ?" explanation="Le problème du voyageur de commerce (TSP) vise à trouver le chemin le plus court possible qui visite chaque ville exactement une fois et retourne à la ville d'origine. Il s'agit donc de minimiser la distance totale parcourue.">
+  <Option text="Le nombre de villes visitées" correct={false} />
+  <Option text="Le nombre d'arêtes utilisées" correct={false} />
+  <Option text="La distance totale parcourue" correct={true} />
+  <Option text="Le coût de chaque arête individuellement" correct={false} />
+</Question>
+ <Question q="Quel algorithme peut résoudre le problème d'affectation en trouvant une correspondance de poids maximum dans un graphe biparti ?" explanation="L'algorithme hongrois est une méthode efficace pour résoudre le problème d'affectation, qui peut être formulé comme la recherche d'une correspondance de poids maximum dans un graphe biparti.">
+  <Option text="Algorithme de Kruskal" correct={false} />
+  <Option text="Algorithme de Prim" correct={false} />
+  <Option text="Algorithme hongrois" correct={true} />
+  <Option text="Algorithme de Ford-Fulkerson" correct={false} />
+</Question>
+ <Question q="Considérez un graphe pondéré où toutes les arêtes ont des poids négatifs. Quel algorithme est approprié pour trouver le chemin le plus court à partir d'une source unique ?" explanation="L'algorithme de Bellman-Ford est capable de gérer les poids d'arête négatifs et peut détecter les cycles de poids négatif, ce qui le rend approprié pour trouver les chemins les plus courts dans de tels graphes, contrairement à Dijkstra.">
+  <Option text="Algorithme de Dijkstra" correct={false} />
+  <Option text="Algorithme de Bellman-Ford" correct={true} />
+  <Option text="Algorithme de Kruskal" correct={false} />
+  <Option text="Algorithme de Prim" correct={false} />
+</Question>
+ <Question q="Dans le problème d'affectation, si nous avons N travailleurs et N tâches, et que chaque travailleur peut effectuer chaque tâche avec un coût différent, qu'est-ce que l'objectif principal ?" explanation="Le problème d'affectation vise à attribuer chaque travailleur à une tâche unique de telle sorte que le coût total de toutes les affectations soit minimisé.">
+  <Option text="Maximiser le nombre de tâches effectuées" correct={false} />
+  <Option text="Minimiser le coût total des affectations" correct={true} />
+  <Option text="Attribuer chaque travailleur à plusieurs tâches" correct={false} />
+  <Option text="Minimiser le coût de la tâche la plus chère" correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFsZ29yaXRobWUgZGUgQmVsbG1hbi1Gb3JkIiwiZGVmaW5pdGlvbiI6IlVuIGFsZ29yaXRobWUgcXVpIHRyb3V2ZSBsZSBwbHVzIGNvdXJ0IGNoZW1pbiBkJ3VuIHNvbW1ldCBzb3VyY2UgdW5pcXVlIHZlcnMgdG91cyBsZXMgYXV0cmVzIHNvbW1ldHMgZGFucyB1biBncmFwaGUgcG9uZMOpcsOpLCBtw6ptZSBzaSBjZXJ0YWlucyBwb2lkcyBkJ2Fyw6p0ZXMgc29udCBuw6lnYXRpZnMuIElsIHBldXQgw6lnYWxlbWVudCBkw6l0ZWN0ZXIgbGVzIGN5Y2xlcyBkZSBwb2lkcyBuw6lnYXRpZi4ifSx7InRlcm0iOiJBbGdvcml0aG1lIGRlIERpamtzdHJhIiwiZGVmaW5pdGlvbiI6IlVuIGFsZ29yaXRobWUgZ2xvdXRvbiBxdWkgdHJvdXZlIGxlIHBsdXMgY291cnQgY2hlbWluIGQndW4gc29tbWV0IHNvdXJjZSB1bmlxdWUgdmVycyB0b3VzIGxlcyBhdXRyZXMgc29tbWV0cyBkYW5zIHVuIGdyYXBoZSBwb25kw6lyw6kgYXZlYyBkZXMgcG9pZHMgZCdhcsOqdGVzIG5vbiBuw6lnYXRpZnMuIn0seyJ0ZXJtIjoiQWxnb3JpdGhtZSBIb25ncm9pcyIsImRlZmluaXRpb24iOiJVbiBhbGdvcml0aG1lIHBvbHlub21pYWwgdXRpbGlzw6kgcG91ciByw6lzb3VkcmUgbGUgcHJvYmzDqG1lIGQnYWZmZWN0YXRpb24uIElsIGZvbmN0aW9ubmUgZW4gdHJvdXZhbnQgdW5lIGFmZmVjdGF0aW9uIGRlIGNvw7t0IG1pbmltdW0gZGFucyB1bmUgbWF0cmljZSBkZSBjb8O7dHMuIn0seyJ0ZXJtIjoiQXJicmUgQ291dnJhbnQgTWluaW11bSAoTVNUKSIsImRlZmluaXRpb24iOiJVbiBzb3VzLWVuc2VtYmxlIGQnYXLDqnRlcyBkJ3VuIGdyYXBoZSBwb25kw6lyw6kgbm9uIG9yaWVudMOpIHF1aSBjb25uZWN0ZSB0b3VzIGxlcyBzb21tZXRzLCBzYW5zIGZvcm1lciBkZSBjeWNsZSwgZXQgYXZlYyBsYSBzb21tZSBtaW5pbWFsZSBkZXMgcG9pZHMgZGVzIGFyw6p0ZXMuIn0seyJ0ZXJtIjoiQ291cGUgZCd1biBSw6lzZWF1IiwiZGVmaW5pdGlvbiI6IlVuZSBwYXJ0aXRpb24gZGVzIHNvbW1ldHMgZCd1biByw6lzZWF1IGVuIGRldXggZW5zZW1ibGVzLCBTIGV0IFQsIHRlbHMgcXVlIGxhIHNvdXJjZSBlc3QgZGFucyBTIGV0IGxlIHB1aXRzIGVzdCBkYW5zIFQuIExhIGNhcGFjaXTDqSBkJ3VuZSBjb3VwZSBlc3QgbGEgc29tbWUgZGVzIGNhcGFjaXTDqXMgZGVzIGFyw6p0ZXMgYWxsYW50IGRlIFMgw6AgVC4ifSx7InRlcm0iOiJDeWNsZSBkZSBQb2lkcyBOw6lnYXRpZiIsImRlZmluaXRpb24iOiJVbiBjeWNsZSBkYW5zIHVuIGdyYXBoZSBwb25kw6lyw6kgZG9udCBsYSBzb21tZSBkZXMgcG9pZHMgZGVzIGFyw6p0ZXMgZXN0IG7DqWdhdGl2ZS4gTGEgcHLDqXNlbmNlIGQndW4gdGVsIGN5Y2xlIHJlbmQgbGUgcHJvYmzDqG1lIGR1IHBsdXMgY291cnQgY2hlbWluIGluZMOpZmluaSBwb3VyIGxlcyBzb21tZXRzIGFjY2Vzc2libGVzIGRlcHVpcyBjZSBjeWNsZS4ifSx7InRlcm0iOiJGbG90IE1heGltdW0iLCJkZWZpbml0aW9uIjoiRGFucyB1biByw6lzZWF1IGRlIGZsb3QsIGxhIHF1YW50aXTDqSBtYXhpbWFsZSBkZSAnZmxvdCcgcXVpIHBldXQgw6p0cmUgZW52b3nDqWUgZGUgbGEgc291cmNlIGF1IHB1aXRzLCByZXNwZWN0YW50IGxlcyBjYXBhY2l0w6lzIGRlcyBhcsOqdGVzLiJ9LHsidGVybSI6IkdyYXBoZSBQb25kw6lyw6kiLCJkZWZpbml0aW9uIjoiVW4gZ3JhcGhlIGRvbnQgbGVzIGFyw6p0ZXMgc29udCBhc3NvY2nDqWVzIMOgIGRlcyB2YWxldXJzIG51bcOpcmlxdWVzIGFwcGVsw6llcyBwb2lkcy4gQ2VzIHBvaWRzIHBldXZlbnQgcmVwcsOpc2VudGVyIGRlcyBjb8O7dHMsIGRlcyBkaXN0YW5jZXMsIGRlcyBjYXBhY2l0w6lzLCBldGMuIn0seyJ0ZXJtIjoiUGx1cyBDb3VydCBDaGVtaW4iLCJkZWZpbml0aW9uIjoiRGFucyB1biBncmFwaGUgcG9uZMOpcsOpLCBsZSBjaGVtaW4gZW50cmUgZGV1eCBzb21tZXRzIGRvbnQgbGEgc29tbWUgZGVzIHBvaWRzIGRlcyBhcsOqdGVzIGVzdCBtaW5pbWFsZS4ifSx7InRlcm0iOiJQcm9ibMOobWUgZCdBZmZlY3RhdGlvbiIsImRlZmluaXRpb24iOiJVbiBwcm9ibMOobWUgZCdvcHRpbWlzYXRpb24gY29tYmluYXRvaXJlIHF1aSB2aXNlIMOgIHRyb3V2ZXIgdW5lIGNvcnJlc3BvbmRhbmNlIG9wdGltYWxlIChwYXIgZXhlbXBsZSwgZGUgY2/Du3QgbWluaW11bSBvdSBkZSBwcm9maXQgbWF4aW11bSkgZW50cmUgZGV1eCBlbnNlbWJsZXMgZCfDqWzDqW1lbnRzIGRlIHRhaWxsZSDDqWdhbGUuIn0seyJ0ZXJtIjoiUHJvYmzDqG1lIGR1IFZveWFnZXVyIGRlIENvbW1lcmNlIChUU1ApIiwiZGVmaW5pdGlvbiI6IlVuIHByb2Jsw6htZSBkJ29wdGltaXNhdGlvbiBxdWkgY2hlcmNoZSBsZSBwbHVzIGNvdXJ0IGNoZW1pbiBwb3NzaWJsZSBwYXNzYW50IHBhciB1bmUgbGlzdGUgZG9ubsOpZSBkZSB2aWxsZXMgZXQgcmV2ZW5hbnQgw6AgbGEgdmlsbGUgZCdvcmlnaW5lLiBDJ2VzdCB1biBwcm9ibMOobWUgTlAtZGlmZmljaWxlIHNvdXZlbnQgYWJvcmTDqSBhdmVjIGRlcyBoZXVyaXN0aXF1ZXMuIn0seyJ0ZXJtIjoiVGjDqW9yw6htZSBkZSBGbG90IE1heGltdW0gLSBDb3VwZSBNaW5pbWFsZSIsImRlZmluaXRpb24iOiJVbiB0aMOpb3LDqG1lIGZvbmRhbWVudGFsIHN0aXB1bGFudCBxdWUgbGEgdmFsZXVyIGR1IGZsb3QgbWF4aW11bSBkYW5zIHVuIHLDqXNlYXUgZXN0IMOpZ2FsZSDDoCBsYSBjYXBhY2l0w6kgZGUgbGEgY291cGUgbWluaW1hbGUuIn1d" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiVGhvbWFzIEguIENvcm1lbiwgQ2hhcmxlcyBFLiBMZWlzZXJzb24sIFJvbmFsZCBSaXZlc3QsIENsaWZmb3JkIFN0ZWluICgyMDE3KS4gwqsgQWxnb3JpdGhtZW4gLSBFaW5lIEVpbmbDvGhydW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjE1MTUvOTc4MzExMDUyMjAxMyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoyLCJ0ZXh0IjoiUmVpbmhhcmQgRGllc3RlbCAoMjAxMCkuIMKrIEdyYXBoIFRoZW9yeSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVJlaW5oYXJkJTIwRGllc3RlbCUyMCUyMkdyYXBoJTIwVGhlb3J5JTIyJTIwMjAxMCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MywidGV4dCI6IktsZWluYmVyZywgSm9uLCBhbmQgw4l2YSBUYXJkb3MuICdBbGdvcml0aG0gRGVzaWduJy4gQWRkaXNvbi1XZXNsZXksIDIwMDUuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1LbGVpbmJlcmclMjAlMjJLbGVpbmJlcmclMjIlMjAyMDA1Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjQsInRleHQiOiJKdWR5IEdvbGRzbWl0aCAoMjAwNCkuICpCb29rIHJldmlldzogVGhlb3J5IG9mIENvbXB1dGluZzogQSBHZW50bGUgSW50cm9kdWN0aW9uLiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9SnVkeSUyMEdvbGRzbWl0aCUyMCUyMkJvb2slMjByZXZpZXclMjIlMjAyMDA0Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjUsInRleHQiOiJTZWRnZXdpY2ssIFJvYmVydCwgYW5kIEtldmluIFdheW5lLiAnQWxnb3JpdGhtcycuIEFkZGlzb24tV2VzbGV5LCAyMDExLiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9U2VkZ2V3aWNrJTIwJTIyU2VkZ2V3aWNrJTIyJTIwMjAxMSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo2LCJ0ZXh0IjoiU2tpZW5hLCBTdGV2ZW4gUy4gJ1RoZSBBbGdvcml0aG0gRGVzaWduIE1hbnVhbCcuIFNwcmluZ2VyLCAyMDA4LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMS04NDgwMC0wNzAtNCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo3LCJ0ZXh0IjoiTHVjY2lvLCBGYWJyaXppbywgYW5kIEdpb3JnaW8gTWF6em9uZS4gJ0dyYXBoIEFsZ29yaXRobXMgYW5kIEFwcGxpY2F0aW9ucycuIFNwcmluZ2VyLCAyMDEzLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1MdWNjaW8lMjAlMjJMdWNjaW8lMjIlMjAyMDEzIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo4LCJ0ZXh0IjoiUmljaGFyZCBJLiBTaHJlZXZlICgyMDA3KS4gKkdyYXBoIHRoZW9yeSB3aXRoIGFwcGxpY2F0aW9ucyB0byBlbmdpbmVlcmluZyBhbmQgY29tcHV0ZXIgc2NpZW5jZS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9UmljaGFyZCUyMFNocmVldmUlMjAlMjJHcmFwaCUyMHRoZW9yeSUyMHdpdGglMjBhcHBsaWNhdGlvbnMlMjB0byUyMGVuZ2luZWVyaW5nJTIwYW5kJTIwY29tcHV0ZXIlMjBzJTIyJTIwMjAwNyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6OSwidGV4dCI6IkV2ZW4sIFNoaW1vbi4gJ0dyYXBoIEFsZ29yaXRobXMnLiBDb21wdXRlciBTY2llbmNlIFByZXNzLCAxOTc5LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9RXZlbiUyMCUyMkNvbXB1dGVyJTIwU2NpZW5jZSUyMFByZXNzJTIyJTIwMTk3OSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxMCwidGV4dCI6IkFITywgQS5WLiwgSi4gRS4gSE9QQ1JPRlQsIEouIEQuIFVMTE1BTjogRGF0YSBTdHJ1Y3R1cmVzIGFuZCBBbGdvcml0aG1zLiBBZGRpc29u4oCQV2VzbGV5IEFtc3RlcmRhbSAxOTgzLiA0MzYgUy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9QUhPJTIwJTIyQUhPJTIyJTIwMTk4MyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MTEsInRleHQiOiJUYXJqYW4sIFJvYmVydCBFLiAnRGF0YSBTdHJ1Y3R1cmVzIGFuZCBOZXR3b3JrIEFsZ29yaXRobXMnLiBTb2NpZXR5IGZvciBJbmR1c3RyaWFsIGFuZCBBcHBsaWVkIE1hdGhlbWF0aWNzLCAxOTgzLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1UYXJqYW4lMjAlMjJTb2NpZXR5JTIwZm9yJTIwSW5kdXN0cmlhbCUyMGFuZCUyMEFwcGxpZWQlMjBNYXRoZW1hdGljcyUyMiUyMDE5ODMiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjEyLCJ0ZXh0IjoiTS4gRG9uYWxkIE1hY0xhcmVuICgyMDA1KS4gwqsgVGhlIEFydCBvZiBDb21wdXRlciBQcm9ncmFtbWluZ+KAlFZvbHVtZSAxOiBGdW5kYW1lbnRhbCBBbGdvcml0aG1zIChEb25hbGQgRS4gS251dGgpIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPURvbmFsZCUyME1hY0xhcmVuJTIwJTIyVGhlJTIwQXJ0JTIwb2YlMjBDb21wdXRlciUyMFByb2dyYW1taW5nJUUyJTgwJTk0Vm9sdW1lJTIwMSUyMiUyMDIwMDUiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MTMsInRleHQiOiJKb25hdGhhbiBMLiBHcm9zcywgSmF5IFllbGxlbiAoMjAxOCkuIMKrIEdyYXBoIFRoZW9yeSBhbmQgSXRzIEFwcGxpY2F0aW9ucyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUpvbmF0aGFuJTIwR3Jvc3MlMjAlMjJHcmFwaCUyMFRoZW9yeSUyMGFuZCUyMEl0cyUyMEFwcGxpY2F0aW9ucyUyMiUyMDIwMTgiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjE0LCJ0ZXh0IjoiSi4gQS4gQm9uZHksIFUuIFMuIFIuIE11cnR5ICgyMDE1KS4gwqsgR3JhcGggVGhlb3J5IHdpdGggQXBwbGljYXRpb25zIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Qm9uZHklMjAlMjJHcmFwaCUyMFRoZW9yeSUyMHdpdGglMjBBcHBsaWNhdGlvbnMlMjIlMjAyMDE1Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxNSwidGV4dCI6IkhhcmFyeSwgRnJhbmsuICdHcmFwaCBUaGVvcnknLiBBZGRpc29uLVdlc2xleSwgMTk2OS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPUhhcmFyeSUyMCUyMkFkZGlzb24lMjIlMjAxOTY5Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjE2LCJ0ZXh0IjoiUmVwcm9ncmFtbWF0aW9uIGNvbXBvcnRlbWVudGFsZSA6IG1vZMOobGVzLCBhbGdvcml0aG1lcyBldCBhcHBsaWNhdGlvbiBhdXggbWFsYWRpZXMgY29tcGxleGVzLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuNzA2NzUvMmMzNjczNzB6M2VhNno0NmNlejk5N2N6YzI1NDc4ZmQyMjg3Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTcsInRleHQiOiJBYmR1bCBCYXJpLiAyMDEzLiDCqyBMJ2FsZ29yaXRobWUgZGUgRGlqa3N0cmEgZXhwbGlxdcOpIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuNjk3NzcvMzY2ODU1Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTgsInRleHQiOiLCqyBBbGdvcml0aG1lIGRlIEJlbGxtYW4tRm9yZCDCuyAoMjAyMykuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPSUyMkFsZ29yaXRobWUlMjBkZSUyMEJlbGxtYW4lMjIlMjAyMDIzIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE5LCJ0ZXh0IjoiTWF0dGhldyBIZWFkLiAyMDE4LiDCqyBTdHlsZSBob25ncm9pcyDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9TWF0dGhldyUyMEhlYWQlMjAlMjJTdHlsZSUyMGhvbmdyb2lzJTIyJTIwMjAxOCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMCwidGV4dCI6IlRhcmRvcywgwqsgQSBzdHJvbmdseSBwb2x5bm9taWFsIG1pbmltdW0gY29zdCBjaXJjdWxhdGlvbiBhbGdvcml0aG0gwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3L2JmMDI1NzkzNjkiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoyMSwidGV4dCI6IlJlaW5oYXJkIERpZXN0ZWwuIDIwMTcuIMKrIGdyYXBoIHRoZW9yeSDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPVJlaW5oYXJkJTIwRGllc3RlbCUyMCUyMmdyYXBoJTIwdGhlb3J5JTIyJTIwMjAxNyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjIyLCJ0ZXh0IjoiwqsgQWxnb3JpdGhtZSBob25ncm9pcyDCuyAoMjAyMykuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT0lMjJBbGdvcml0aG1lJTIwaG9uZ3JvaXMlMjIlMjAyMDIzIiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjp0cnVlfV0=" />

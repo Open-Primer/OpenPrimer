@@ -1,0 +1,26 @@
+# Standard gcloudignore rules
+.gcloudignore
+.git/
+.gitignore
+
+# Ignore build artifacts and caches
+node_modules/
+.next/
+playwright-report/
+test-results/
+.codex/
+.cursor/
+.vscode/
+.zed/
+
+# Protect sensitive secrets
+secrets/
+*.json.key
+*-service-account*.json
+openprimer-free*.json
+*serviceaccount*.json
+
+# Ignore local content cache folder
+content/
+! .env.production
+! secrets/openprimer-sa-key.json

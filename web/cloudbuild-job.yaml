@@ -1,0 +1,6 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/ether-509812/openprimer-generator-worker:latest', '-f', 'Dockerfile.job', '.']
+images:
+  - 'gcr.io/ether-509812/openprimer-generator-worker:latest'
+timeout: 1200s

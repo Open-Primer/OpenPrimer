@@ -1768,7 +1768,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                                     setTestStatus('idle');
                                     if (prov === 'openai') setPersonalTutorModel('gpt-4o-mini');
                                     if (prov === 'anthropic') setPersonalTutorModel('claude-3-5-haiku-20241022');
-                                    if (prov === 'gemini') setPersonalTutorModel('gemini-2.5-flash');
+                                    if (prov === 'gemini') setPersonalTutorModel('gemini-3.5-flash-lite');
                                   }}
                                   className={`py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer ${personalTutorProvider === prov ? 'bg-blue-600/10 border-blue-500 text-blue-400' : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'}`}
                                 >
@@ -1805,8 +1805,8 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                               )}
                               {personalTutorProvider === 'gemini' && (
                                 <>
-                                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (Équilibré)</option>
-                                  <option value="gemini-2.5-pro">Gemini 2.5 Pro (Raisonnement poussé)</option>
+                                  <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Recommandé - Économique)</option>
+                                  <option value="gemini-3.5-flash">Gemini 3.5 Flash (Raisonnement poussé)</option>
                                 </>
                               )}
                             </select>

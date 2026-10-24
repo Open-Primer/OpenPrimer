@@ -178,7 +178,7 @@ async function main() {
 
     const estInputTokens = lessonCount * 6000 + 3000;
     const estOutputTokens = lessonCount * 12000 + 4000;
-    const taskCostUSD = estimateCost('gemini-2.5-flash', estInputTokens, estOutputTokens);
+    const taskCostUSD = estimateCost('gemini-3.5-flash-lite', estInputTokens, estOutputTokens);
 
     grandTotalEstInputTokens += estInputTokens;
     grandTotalEstOutputTokens += estOutputTokens;

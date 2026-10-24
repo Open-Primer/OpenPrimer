@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     }
 
     if (provider === 'gemini') {
-      const geminiModel = model || 'gemini-2.5-flash';
+      const geminiModel = model || 'gemini-3.5-flash-lite';
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {

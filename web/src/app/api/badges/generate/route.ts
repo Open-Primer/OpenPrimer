@@ -32,7 +32,7 @@ Output ONLY the expanded English image prompt in a single sentence or short para
 
     if (isVertexConfigured()) {
       try {
-        console.log(`[BADGE-GEN] Expanding prompt with Vertex AI (gemini-2.0-flash-lite) for badge: "${name}"...`);
+        console.log(`[BADGE-GEN] Expanding prompt with Vertex AI (gemini-3.5-flash-lite) for badge: "${name}"...`);
         const res = await callVertexAI({
           task: 'badge_expand',
           contents: [{ role: 'user', parts: [{ text: geminiPrompt }] }],
@@ -55,10 +55,10 @@ Output ONLY the expanded English image prompt in a single sentence or short para
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     if (!success && apiKey) {
-      console.log(`[BADGE-GEN] Expanding prompt via AI Studio fallback (gemini-2.0-flash-lite)...`);
+      console.log(`[BADGE-GEN] Expanding prompt via AI Studio fallback (gemini-3.5-flash-lite)...`);
       try {
         const compressedPrompt = compressPromptText(geminiPrompt);
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

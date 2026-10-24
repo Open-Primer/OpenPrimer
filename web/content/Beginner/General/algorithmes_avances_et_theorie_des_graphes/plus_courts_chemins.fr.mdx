@@ -1,0 +1,190 @@
+---
+title: « Plus Courts Chemins : De Dijkstra à Bellman-Ford »
+subject: « Algorithmes Avancés et Théorie des Graphes »
+level: « L3 »
+module: « Plus Courts Chemins : De Dijkstra à Bellman-Ford »
+order: 5
+---
+
+<DiagnosticQuiz question="Quel algorithme est le plus approprié pour trouver le chemin le plus court dans un graphe non pondéré et sans cycles ?" options="Algorithme de Dijkstra|||Algorithme de Bellman-Ford|||Parcours en largeur (BFS)|||Algorithme de Prim" correctIndex="2" targetSectionId="introduction-plus-courts-chemins" sectionTitle="Introduction aux Plus Courts Chemins" />
+
+
+
+## Introduction aux Problèmes de Plus Courts Chemins
+Le domaine de la théorie des graphes, et plus particulièrement l'étude des algorithmes sur les graphes, est fondamental en informatique. Parmi les problèmes les plus étudiés et les plus appliqués, celui de la recherche du plus court chemin occupe une place prépondérante. Ce problème trouve sa pertinence dans une multitude de scénarios du monde réel, allant de la navigation GPS à la planification logistique, en passant par le routage de paquets dans les réseaux informatiques et l'analyse des réseaux sociaux.
+
+Un graphe est une structure mathématique composée d'un ensemble de sommets (ou nœuds) et d'un ensemble d'arêtes qui relient ces sommets. Dans le contexte des problèmes de plus courts chemins, nous nous intéressons souvent aux **graphes pondérés**. Dans un graphe pondéré, chaque arête se voit attribuer une valeur numérique, appelée poids. Ce poids peut représenter diverses métriques, telles que la distance, le coût, le temps, ou encore la capacité. Le problème fondamental consiste alors à trouver un chemin entre deux sommets donnés, disons un sommet source $s$ et un sommet destination $t$, tel que la somme des poids des arêtes constituant ce chemin soit minimale. Ce chemin est qualifié de « plus court chemin ».
+
+Il est crucial de distinguer les différents types de poids que peuvent porter les arêtes d'un graphe :
+
+* **Poids positifs :** Dans de nombreux cas pratiques, les poids des arêtes sont strictement positifs. Par exemple, la distance entre deux villes ne peut être négative <Reference id="1" name="1" term="1">1</Reference>.
+* **Poids négatifs :** Il est également possible que des arêtes aient des poids négatifs. Cela peut modéliser des situations où un déplacement « rapporte » quelque chose, comme une subvention ou un gain. Cependant, la présence de poids négatifs introduit des complexités supplémentaires <Reference id="2" name="2" term="2">2</Reference>.
+* **Cycles négatifs :** Un cycle est un chemin qui commence et se termine au même sommet. Si un graphe contient un cycle dont la somme des poids des arêtes est négative, alors il est possible de parcourir ce cycle un nombre arbitraire de fois pour réduire indéfiniment la longueur du chemin. Dans un tel cas, le concept de « plus court chemin » devient mal défini, car il n'existe pas de chemin le plus court au sens strict. La détection de tels cycles est donc une préoccupation majeure dans certains algorithmes <Reference id="3" name="3" term="3">3</Reference>.
+
+La notation standard pour un graphe est $G = (V, E)$, où $V$ est l'ensemble des sommets et $E$ est l'ensemble des arêtes. Pour un graphe pondéré, on peut noter $w(u, v)$ le poids de l'arête allant du sommet $u$ au sommet $v$. Le problème de plus court chemin peut être formulé comme suit : étant donné un graphe pondéré $G=(V, E)$, un sommet source $s \in V$, et un sommet destination $t \in V$, trouver un chemin $P = (v_0, v_1, \dots, v_k)$ tel que $v_0 = s$, $v_k = t$, et $\sum_{i=0}^{k-1} w(v_i, v_{i+1})$ est minimisé.
+
+L'importance de ce problème est immense. Dans le domaine des réseaux informatiques, les algorithmes de routage comme OSPF (Open Shortest Path First) utilisent des variantes de ces algorithmes pour déterminer le chemin le plus efficace pour acheminer les paquets de données <Reference id="4" name="4" term="4">4</Reference>. En logistique, trouver le trajet le plus court pour une flotte de véhicules est essentiel pour minimiser les coûts et les délais. Dans les systèmes de navigation (GPS), l'algorithme calcule le chemin le plus rapide ou le plus court entre deux points. Même dans des domaines comme la biologie moléculaire, pour l'alignement de séquences, ou en intelligence artificielle pour la planification, les concepts de plus courts chemins sont omniprésents <Reference id="5" name="5" term="5">5</Reference>.
+
+Plusieurs algorithmes ont été développés pour résoudre ce problème, chacun avec ses forces et ses faiblesses en fonction des caractéristiques du graphe (présence de poids négatifs, cycles négatifs, etc.). Parmi les plus célèbres, on trouve l'algorithme de Dijkstra, l'algorithme de Bellman-Ford, et les algorithmes basés sur la programmation dynamique comme Floyd-Warshall pour les plus courts chemins entre toutes les paires de sommets. Dans cette leçon, nous allons explorer en détail l'algorithme de Dijkstra, puis nous aborderons l'algorithme de Bellman-Ford pour comprendre comment il gère les poids négatifs.
+
+Voici une comparaison des applications typiques des problèmes de plus courts chemins :
+
+| Domaine d'application | Métrique représentée par le poids | Objectif principal | Algorithme pertinent (souvent) |
+| :-------------------------- | :-------------------------------- | :------------------------------------------------------------------------------ | :---------------------------- |
+| Réseaux informatiques | Latence, bande passante, coût | Acheminement optimal des paquets, routage dynamique | Dijkstra, Bellman-Ford |
+| Systèmes de navigation (GPS) | Temps de trajet, distance | Calcul du trajet le plus rapide ou le plus court entre deux points | Dijkstra |
+| Logistique et transport | Temps, coût, distance | Planification d'itinéraires pour les livraisons, optimisation des tournées | Dijkstra, TSP (variante) |
+| Réseaux sociaux | Degré de connexion, influence | Trouver les chemins les plus courts entre des utilisateurs pour la diffusion d'infos | Dijkstra |
+| Biologie moléculaire | Similitude, coût d'alignement | Alignement de séquences, analyse de voies métaboliques | Programmation dynamique |
+| Intelligence artificielle | Coût d'action, distance | Planification de tâches, recherche de chemins dans des espaces d'états | Dijkstra, A* |
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser les principes fondamentaux des algorithmes de plus courts chemins.</li>
+      <li>Évaluer la complexité temporelle et spatiale des algorithmes de Dijkstra et Bellman-Ford.</li>
+      <li>Créer des exemples de graphes illustrant les cas d'application et les limitations de chaque algorithme.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Appliquer l'algorithme de Dijkstra pour résoudre des problèmes de plus courts chemins dans des graphes à poids positifs.</li>
+      <li>Implémenter l'algorithme de Bellman-Ford pour détecter les cycles négatifs et trouver les plus courts chemins.</li>
+      <li>Comparer et contraster les performances et les domaines d'application des algorithmes de Dijkstra et Bellman-Ford.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Adopter une approche critique lors de la sélection de l'algorithme de plus court chemin le plus adapté à un problème donné.</li>
+      <li>Développer une rigueur mathématique dans la preuve de correction des algorithmes.</li>
+      <li>Collaborer efficacement pour résoudre des problèmes complexes de routage et de planification impliquant des graphes.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Algorithme de Dijkstra : Principe et Implémentation
+L'algorithme de Dijkstra, nommé d'après le scientifique informatique néerlandais Edsger W. Dijkstra, est un algorithme glouton (ou vorace) qui trouve les plus courts chemins d'un sommet source unique vers tous les autres sommets dans un graphe pondéré dont les poids des arêtes sont **non négatifs**. Son élégance réside dans sa simplicité conceptuelle et son efficacité lorsqu'il est appliqué dans des conditions appropriées.
+
+Le principe fondamental de l'algorithme de Dijkstra est de construire progressivement l'ensemble des plus courts chemins à partir du sommet source. Il maintient, pour chaque sommet, une estimation de la distance la plus courte connue depuis la source jusqu'à ce sommet. Initialement, la distance au sommet source est fixée à zéro, et toutes les autres distances sont considérées comme infinies. L'algorithme sélectionne itérativement le sommet non encore traité dont la distance estimée est la plus petite, et « relaxe » ses arêtes adjacentes. La relaxation d'une arête $(u, v)$ avec poids $w(u, v)$ consiste à vérifier si le chemin passant par $u$ jusqu'à $v$ est plus court que la distance actuellement connue pour atteindre $v$. Si c'est le cas, la distance estimée pour $v$ est mise à jour.
+
+Pour implémenter efficacement cette sélection du sommet non traité avec la distance minimale, une file de priorité est essentielle <Glossary id="file_priorite" text="A priority queue is an abstract data type that operates like a regular queue or stack but assigns a priority to each of its éléments. éléments with higher priority are served before éléments with lower priority. If two éléments have the same priority, they are served according to their order in the queue. Priority queues are commonly used in algorithms like Dijkstra's algorithm and Huffman coding.">file_priorite</Glossary>. La file de priorité stocke les sommets à traiter, ordonnés par leur distance estimée depuis la source. Les opérations clés sur cette file de priorité sont :
+1. **`Insert(sommet, distance)` :** Ajoute un sommet avec sa distance estimée.
+2. **`Extract-Min()` :** Retire et retourne le sommet ayant la plus petite distance estimée parmi ceux qui ne sont pas encore définitivement traités.
+3. **`Decrease-Key(sommet, nouvelle_distance)` :** Met à jour la distance d'un sommet déjà présent dans la file de priorité si une meilleure distance est trouvée.
+
+Les étapes de l'algorithme de Dijkstra peuvent être décrites comme suit :
+
+1. **Initialisation :**
+ * Pour chaque sommet $v \in V$, initialiser une distance estimée $d[v] = \infty$ et un prédécesseur $\pi[v] = \text{nil}$.
+ * Fixer la distance du sommet source $s$ à $d[s] = 0$.
+ * Créer une file de priorité $Q$ contenant tous les sommets de $V$.
+
+2. **Boucle principale :**
+ * Tant que $Q$ n'est pas vide :
+ * Extraire de $Q$ le sommet $u$ tel que $d[u]$ est minimum (c'est le sommet le plus proche de la source parmi ceux encore dans $Q$).
+ * Pour chaque voisin $v$ de $u$ :
+ * Si $d[u] + w(u, v) < d[v]$ (c'est l'étape de relaxation) :
+ * Mettre à jour $d[v] = d[u] + w(u, v)$.
+ * Mettre à jour $\pi[v] = u$.
+ * Si $v$ est dans $Q$, mettre à jour sa priorité dans $Q$ avec la nouvelle distance $d[v]$ (opération `Decrease-Key`). Si $v$ n'est pas encore dans $Q$ (ce cas survient si on utilise une implémentation où les sommets sont ajoutés à la file de priorité uniquement lorsqu'ils sont découverts pour la première fois), alors l'ajouter.
+
+3. **Résultat :** Une fois la boucle terminée, $d[v]$ contient la longueur du plus court chemin de $s$ à $v$ pour tout $v \in V$, et $\pi$ permet de reconstruire ces chemins.
+
+<Mermaid caption="Figure 1 : Diagramme de flux illustrant les étapes de l'algorithme de Dijkstra, depuis l'initialisation jusqu'à la boucle principale et la relaxation des arêtes." id="dijkstra_flowchart" description="Diagramme de flux illustrant les étapes de l'algorithme de Dijkstra, depuis l'initialisation jusqu'à la boucle principale et la relaxation des arêtes." />
+
+L'efficacité de l'algorithme de Dijkstra dépend fortement de la structure de données utilisée pour la file de priorité.
+
+* **Avec un tableau simple ou une liste chaînée :** L'opération `Extract-Min` nécessite de parcourir tous les éléments pour trouver le minimum, ce qui prend $O(|V|)$ temps. L'opération `Decrease-Key` peut également prendre $O(|V|)$ temps dans le pire cas. Si le graphe a $|V|$ sommets et $|E|$ arêtes, la complexité temporelle totale est de $O(|V|^2 + |E|)$, qui se simplifie en $O(|V|^2)$ car $|E| \le |V|^2$. Cette complexité est acceptable pour des graphes denses.
+
+* **Avec un tas binaire (Binary Heap) :** L'opération `Insert` prend $O(\log |V|)$ temps. L'opération `Extract-Min` prend $O(\log |V|)$ temps. L'opération `Decrease-Key` peut être implémentée en $O(\log |V|)$ temps. Dans ce cas, chaque sommet est extrait une fois ($|V|$ fois), et chaque arête peut potentiellement déclencher une opération `Decrease-Key` ($|E|$ fois). La complexité temporelle totale devient donc $O(|V| \log |V| + |E| \log |V|)$. Si le graphe est creux ($|E|$ est proportionnel à $|V|$), cela se simplifie en $O(|E| \log |V|)$. C'est l'implémentation la plus courante et souvent la plus performante pour les graphes de taille modérée.
+
+* **Avec un tas de Fibonacci (Fibonacci Heap) :** Le tas de Fibonacci offre des performances théoriques supérieures pour l'opération `Decrease-Key`, qui prend en moyenne un temps amorti de $O(1)$. Les opérations `Insert` et `Extract-Min` prennent un temps amorti de $O(\log |V|)$. L'application de Dijkstra avec un tas de Fibonacci conduit à une complexité temporelle de $O(|V| \log |V| + |E|)$. Cette complexité est asymptotiquement la meilleure possible, mais les tas de Fibonacci ont une constante cachée plus élevée, ce qui les rend souvent moins performants en pratique que les tas binaires pour des tailles de graphes courantes <Reference id="6" name="6" term="6">6</Reference>.
+
+Il est important de noter que l'algorithme de Dijkstra ne fonctionne pas correctement en présence d'arêtes à poids négatif. Si un poids négatif est rencontré, l'hypothèse que la distance estimée d'un sommet ne peut qu'augmenter lors de l'ajout de nouveaux sommets à l'ensemble des sommets traités est violée. Dans de tels cas, un autre algorithme, comme celui de Bellman-Ford, doit être utilisé.
+
+Considérons un exemple simple pour illustrer le fonctionnement de Dijkstra. Soit un graphe avec 4 sommets &#123;A, B, C, D&#125; et les arêtes suivantes : (A, B) avec poids 1, (A, C) avec poids 4, (B, C) avec poids 2, (B, D) avec poids 5, (C, D) avec poids 1. Nous cherchons les plus courts chemins depuis A.
+
+1. **Initialisation :** $d[A]=0, d[B]=\infty, d[C]=\infty, d[D]=\infty$. $Q = \{A, B, C, D\}$.
+2. **Itération 1 :** `Extract-Min()` retourne A.
+ * Relaxer (A, B) : $d[A] + w(A, B) = 0 + 1 = 1 < d[B]$. Donc $d[B]=1, \pi[B]=A$.
+ * Relaxer (A, C) : $d[A] + w(A, C) = 0 + 4 = 4 < d[C]$. Donc $d[C]=4, \pi[C]=A$.
+ * $Q = \{B, C, D\}$.
+3. **Itération 2 :** `Extract-Min()` retourne B (car $d[B]=1$ est le minimum).
+ * Relaxer (B, C) : $d[B] + w(B, C) = 1 + 2 = 3 < d[C]$ (qui est 4). Donc $d[C]=3, \pi[C]=B$.
+ * Relaxer (B, D) : $d[B] + w(B, D) = 1 + 5 = 6 < d[D]$. Donc $d[D]=6, \pi[D]=B$.
+ * $Q = \{C, D\}$.
+4. **Itération 3 :** `Extract-Min()` retourne C (car $d[C]=3$ est le minimum).
+ * Relaxer (C, D) : $d[C] + w(C, D) = 3 + 1 = 4 < d[D]$ (qui est 6). Donc $d[D]=4, \pi[D]=C$.
+ * $Q = \{D\}$.
+5. **Itération 4 :** `Extract-Min()` retourne D. Il n'a pas de voisins non traités.
+ * $Q$ est vide. L'algorithme se termine.
+
+Les plus courts chemins depuis A sont :
+* A à A : 0
+* A à B : 1 (chemin A -> B)
+* A à C : 3 (chemin A -> B -> C)
+* A à D : 4 (chemin A -> B -> C -> D)
+
+## Algorithme de Bellman-Ford : Gestion des Poids Négatifs et Détection de Cycles
+L'algorithme de Bellman-Ford est un algorithme de recherche de plus courts chemins qui, contrairement à Dijkstra, est capable de gérer des graphes contenant des arêtes à poids négatif. De plus, il possède une fonctionnalité essentielle : la détection de cycles négatifs. Si un tel cycle est présent et accessible depuis la source, le concept de plus court chemin devient indéfini, car on pourrait parcourir le cycle indéfiniment pour obtenir un chemin de longueur arbitrairement petite.
+
+Le principe de Bellman-Ford repose sur la relaxation répétée de toutes les arêtes du graphe. L'algorithme effectue $|V|-1$ passes sur toutes les arêtes. Dans chaque passe, il tente de relaxer chaque arête $(u, v)$ avec poids $w(u, v)$. La relaxation consiste à vérifier si le chemin passant par $u$ jusqu'à $v$ est plus court que la distance actuellement connue pour atteindre $v$. Si $d[u] + w(u, v) < d[v]$, alors $d[v]$ est mis à jour à $d[u] + w(u, v)$ et le prédécesseur de $v$ est mis à jour à $u$.
+
+Pourquoi $|V|-1$ passes ? Dans un graphe sans cycle négatif, le plus court chemin entre deux sommets peut contenir au maximum $|V|-1$ arêtes (car un chemin simple ne peut pas visiter un sommet plus d'une fois). Après la première passe, l'algorithme garantit avoir trouvé les plus courts chemins de longueur au plus 1. Après la deuxième passe, il garantit avoir trouvé les plus courts chemins de longueur au plus 2, et ainsi de suite. Après $|V|-1$ passes, il est assuré d'avoir trouvé les plus courts chemins de longueur au plus $|V|-1$, ce qui couvre tous les chemins simples possibles.
+
+### Détection de Cycles Négatifs
+
+Après avoir effectué $|V|-1$ passes, l'algorithme effectue une $|V|$-ième passe sur toutes les arêtes. Si, lors de cette $|V|$-ième passe, une arête $(u, v)$ peut encore être relaxée (c'est-à-dire si $d[u] + w(u, v) < d[v]$), cela signifie qu'il existe un chemin plus court vers $v$ qui n'était pas possible d'obtenir avec $|V|-1$ arêtes. Cette situation ne peut se produire que s'il existe un cycle négatif accessible depuis la source, et que ce cycle fait partie du chemin vers $v$. Dans ce cas, l'algorithme signale la présence d'un cycle négatif.
+
+### Algorithme de Bellman-Ford : Étapes
+
+1. **Initialisation :**
+ * Pour chaque sommet $v \in V$, initialiser une distance estimée $d[v] = \infty$ et un prédécesseur $\pi[v] = \text{nil}$.
+ * Fixer la distance du sommet source $s$ à $d[s] = 0$.
+
+2. **Relaxation des arêtes :**
+ * Répéter $|V|-1$ fois :
+ * Pour chaque arête $(u, v) \in E$ :
+ * Si $d[u] \neq \infty$ et $d[u] + w(u, v) < d[v]$ :
+ * $d[v] = d[u] + w(u, v)$
+ * $\pi[v] = u$
+
+3. **Détection de cycles négatifs :**
+ * Pour chaque arête $(u, v) \in E$ :
+ * Si $d[u] \neq \infty$ et $d[u] + w(u, v) < d[v]$ :
+ * Retourner « Le graphe contient un cycle négatif accessible depuis la source. »
+
+4. **Résultat :**
+ * Si aucun cycle négatif n'est détecté, $d[v]$ contient la longueur du plus court chemin de $s$ à $v$ pour tout $v \in V$, et $\pi$ permet de reconstruire ces chemins.
+
+<Mermaid caption="Figure 2 : Diagramme de flux illustrant les étapes de l'algorithme de Bellman-Ford, incluant les passes de relaxation et la détection de cycles négatifs." id="bellman_ford_flowchart" description="Diagramme de flux illustrant les étapes de l'algorithme de Bellman-Ford, incluant les passes de relaxation et la détection de cycles négatifs." />
+
+### Complexité de Bellman-Ford
+
+L'algorithme de Bellman-Ford effectue $|V|-1$ passes, et dans chaque passe, il itère sur toutes les $|E|$ arêtes. L'opération de relaxation prend un temps constant. Par conséquent, la complexité temporelle de l'algorithme est de $O(|V| \cdot |E|)$. La détection de cycles négatifs ajoute une passe supplémentaire, ce qui ne change pas la complexité asymptotique. La complexité spatiale est de $O(|V|)$ pour stocker les distances et les prédécesseurs.
+
+Bien que moins efficace que Dijkstra pour les graphes sans poids négatifs (qui a une complexité typique de $O(|E| \log |V|)$ avec un tas binaire), Bellman-Ford est indispensable lorsque des poids négatifs sont présents.
+
+### Comparaison avec Dijkstra
+
+| Caractéristique | Algorithme de Dijkstra | Algorithme de Bellman-Ford |
+| :---------------- | :--------------------- | :------------------------- |
+| Poids des arêtes | Non négatifs uniquement | Peut gérer des poids négatifs |
+| Détection de cycles négatifs | Non | Oui |
+| Complexité temporelle (typique) | $O(|E| \log |V|)$ (avec tas binaire) | $O(|V| \cdot |E|)$ |
+| Complexité temporelle (graphes denses) | $O(|V|^2)$ | $O(|V|^3)$ |
+| Approche | Glouton (priorise le sommet le plus proche) | Dynamique (relaxation systématique) |
+| Utilisation | Graphes sans poids négatifs (réseaux routiers, etc.) | Graphes avec poids négatifs (certains problèmes de flux, détection de fraude) |
+
+<revised_section heading="Détection de Cycles Négatifs et Comparaison">
+L'algorithme de Bellman-Ford, grâce à sa structure itérative et à sa capacité à effectuer des passes multiples sur toutes les arêtes, offre un mécanisme intrinsèque pour la détection de cycles négatifs. Comme nous l'avons vu, après avoir effectué $|V|-1$ passes, une $|V|$-ième passe permet de confirmer ou d'infirmer la présence d'un cycle négatif accessible depuis la source. Si une arête $(u, v)$ peut encore être relaxée, cela implique qu'un chemin plus court a été trouvé en empruntant un cycle dont la somme des poids est négative. Cette propriété distingue fondamentalement Bellman-Ford de Dijkstra, qui ne peut pas opérer en présence de tels cycles et ne détecte pas leur existence.
+</revised_section>
+
+## Conclusion
+Le choix entre l'algorithme de Dijkstra et l'algorithme de Bellman-Ford dépendra crucialement des caractéristiques du graphe que vous analysez.
+
+* Si votre graphe est garanti d'avoir des poids d'arêtes non négatifs, l'algorithme de Dijkstra est généralement le choix le plus efficace, offrant une meilleure complexité temporelle. Il est largement utilisé dans des applications comme la navigation GPS ou le routage réseau où les distances ou les temps de trajet sont intrinsèquement positifs.
+
+* Cependant, si votre graphe peut contenir des poids d'arêtes négatifs, ou si vous avez besoin de détecter la présence de cycles négatifs (qui rendent le problème de plus court chemin mal défini), l'algorithme de Bellman-Ford est la seule option viable. Bien que moins performant en termes de complexité temporelle, sa capacité à gérer ces cas complexes le rend indispensable dans certaines analyses financières, de détection de fraude, ou dans des contextes où des « gains » (représentés par des poids négatifs) sont possibles.
+
+Comprendre les forces et les faiblesses de chaque algorithme est essentiel pour résoudre efficacement les problèmes de plus courts chemins dans divers domaines de l'informatique et au-delà.

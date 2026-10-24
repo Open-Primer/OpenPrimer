@@ -1496,25 +1496,59 @@ async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<
     const pageTitle = searchResults[0].title;
     console.log(`[WIKIPEDIA-SEARCH] Found matching article page: "${pageTitle}" for query "${cleanTitle}"`);
     
-    // Step C: Retrieve original image from page title
+    // Step C: Retrieve lead image from page title
     const pageImgUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=original&titles=${encodeURIComponent(pageTitle)}&format=json&origin=*`;
     const imgRes = await fetchWithTimeout(pageImgUrl, {}, 4000);
-    if (!imgRes.ok) return null;
-    const imgJson = await safeResponseJson(imgRes, 'Wikipedia pageimage fetch');
-    const pages = imgJson.query?.pages;
-    if (!pages) return null;
-    
-    const pageId = Object.keys(pages)[0];
-    if (pageId === '-1') return null;
-    
-    const sourceUrl = pages[pageId]?.original?.source || pages[pageId]?.thumbnail?.source;
-    if (!sourceUrl) return null;
-    const fallbackUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/\s/g, '_'))}`;
-    return {
-      url: sourceUrl,
-      fallbackUrl: fallbackUrl,
-      pageTitle: pageTitle
-    };
+    if (imgRes.ok) {
+      const imgJson = await safeResponseJson(imgRes, 'Wikipedia pageimage fetch');
+      const pages = imgJson.query?.pages;
+      if (pages) {
+        const pageId = Object.keys(pages)[0];
+        if (pageId !== '-1') {
+          const leadSourceUrl = pages[pageId]?.original?.source || pages[pageId]?.thumbnail?.source;
+          // Filter out obvious icon/flag names
+          const isGenericIcon = leadSourceUrl && /(?:flag_of|symbol_|crystal_clear|disambig|question_mark|wiki_letter|ambox)/i.test(leadSourceUrl);
+          if (leadSourceUrl && !isGenericIcon) {
+            const fallbackUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/\s/g, '_'))}`;
+            return {
+              url: leadSourceUrl,
+              fallbackUrl: fallbackUrl,
+              pageTitle: pageTitle
+            };
+          }
+        }
+      }
+    }
+
+    // Step D: If no valid lead image, scan article images from prop=images
+    const articleImagesUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=images&imlimit=15&titles=${encodeURIComponent(pageTitle)}&format=json&origin=*`;
+    const artRes = await fetchWithTimeout(articleImagesUrl, {}, 4000);
+    if (artRes.ok) {
+      const artJson = await safeResponseJson(artRes, 'Wikipedia article images fetch');
+      const artPages = artJson.query?.pages;
+      if (artPages) {
+        const pId = Object.keys(artPages)[0];
+        const imagesList = artPages[pId]?.images || [];
+        for (const imgObj of imagesList) {
+          const imgTitle = imgObj.title || '';
+          if (/(?:flag_of|symbol_|crystal_clear|disambig|question_mark|wiki_letter|ambox|p_vip|portal-|stub|icon|logo)/i.test(imgTitle)) continue;
+          if (!imgTitle.match(/\.(jpe?g|png|svg|webp)$/i)) continue;
+
+          // Resolve direct URL of this commons file
+          const commonsFileName = imgTitle.replace(/^File:/i, '').replace(/^Fichier:/i, '');
+          const fileUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(commonsFileName.replace(/\s/g, '_'))}`;
+          const fallbackUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/\s/g, '_'))}`;
+          console.log(`[WIKIPEDIA-ARTICLE-MEDIA] Extracted article image "${imgTitle}" from page "${pageTitle}": ${fileUrl}`);
+          return {
+            url: fileUrl,
+            fallbackUrl: fallbackUrl,
+            pageTitle: pageTitle
+          };
+        }
+      }
+    }
+
+    return null;
   } catch (err) {
     console.warn(`[MEDIA-RESOLVER] fetchWikipediaImage failed for "${title}":`, err);
     return null;
@@ -2493,9 +2527,17 @@ export async function resolveAndPersistMedia(
             currentAttrs.alt = altText || description || caption || '';
           }
           
-          // Always keep original caption/legend explaining academic relevance and append source
+          // Use authentic image description if caption is missing or resembles a generation/search prompt
           const rawCap = (caption || description || altText || '').trim();
-          const cleanCap = rawCap.split(/\s*(?:—|--|-)?\s*Source\s*:/i)[0].trim();
+          const isPromptLike = /^(?:recherche|trouver|search|find|illustration\s*de|sch[eé]ma\s*de|portrait\s*de|photo\s*de|image\s*de|dessin\s*de|croquis\s*de|figure\s*montrant|un\s*sch[eé]ma|une\s*gravure)/i.test(rawCap);
+          
+          let cleanCap = '';
+          if (resolved.description && (isPromptLike || !caption || caption.length < 5)) {
+            cleanCap = resolved.description.trim();
+          } else {
+            cleanCap = rawCap.split(/\s*(?:—|--|-)?\s*Source\s*:/i)[0].trim();
+          }
+
           if (cleanCap) {
             let capText = cleanCap;
             if (!capText.endsWith('.')) capText += '.';

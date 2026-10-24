@@ -118,11 +118,11 @@ Threshold: "${threshold || ''}"`;
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     if (!success && apiKey) {
-      console.log(`[BADGE-COMPILE] Calling AI Studio fallback (gemini-2.0-flash-lite) for: "${name}"...`);
+      console.log(`[BADGE-COMPILE] Calling AI Studio fallback (gemini-3.5-flash-lite) for: "${name}"...`);
       try {
         const compressedPrompt = compressPromptText(userPrompt);
         const compressedInstruction = compressPromptText(systemInstruction);
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

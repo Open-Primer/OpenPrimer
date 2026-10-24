@@ -1,0 +1,25 @@
+# OpenPrimer Generation Worker - Cloud Run Jobs Dockerfile
+FROM node:22-slim
+
+WORKDIR /app
+
+# Install build essentials for native packages if needed
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package descriptors
+COPY package*.json ./
+
+# Install all dependencies (including devDependencies for tsx and typescript execution)
+RUN npm ci --include=dev
+
+# Copy source code and scripts
+COPY . .
+
+# Set production environment
+ENV NODE_ENV=production
+
+# The container executes the queue worker and terminates when queue is empty (exit code 0)
+ENTRYPOINT ["npx", "tsx", "scratch/run_queue_worker.ts"]

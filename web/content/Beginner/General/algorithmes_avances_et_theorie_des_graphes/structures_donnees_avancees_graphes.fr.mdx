@@ -1,0 +1,269 @@
+---
+title: « Structures de Données Avancées pour Graphes »
+subject: « Algorithmes Avancés et Théorie des Graphes »
+level: « L3 »
+module: « Structures de Données Avancées pour Graphes »
+order: 10
+---
+
+
+
+<DiagnosticQuiz question="Considérant un graphe dynamique où des opérations d'ajout/suppression d'arêtes et de requêtes de connectivité sont fréquentes, quelle structure de données avancée, basée sur des arbres, est la plus appropriée pour maintenir une efficacité logarithmique amortie pour ces opérations ?" options="Arbres de segments pour représenter les chemins|||Structures de données de type Union-Find avec optimisation par rang|||Arbres binaires de recherche équilibrés pour chaque composante connexe|||Arbres Link-Cut" correctIndex="3" targetSectionId="structures-avancees-graphes" sectionTitle="Structures de Données Avancées pour Graphes" />
+
+
+
+## Introduction aux Structures de Données Avancées pour Graphes
+Bienvenue dans cette leçon consacrée aux « Structures de Données Avancées pour Graphes » dans le cadre de notre cours d'« Algorithmes Avancés et Théorie des Graphes ». Les graphes, en tant que modèles fondamentaux pour représenter des relations complexes, sont omniprésents dans de nombreux domaines de l'informatique, des réseaux sociaux à la biologie computationnelle, en passant par la logistique et la conception de circuits. Si les algorithmes de base sur les graphes, tels que la recherche en largeur (BFS) ou en profondeur (DFS), la détermination des plus courts chemins (Dijkstra, Bellman-Ford) ou la recherche d'arbres couvrants minimaux (Prim, Kruskal), sont bien établis <Reference id="1" name="1" term="1">1</Reference>, l'efficacité de leur mise en œuvre et la capacité à répondre à des requêtes plus sophistiquées dépendent crucialement du choix des structures de données sous-jacentes.
+
+Dans cette leçon, nous allons explorer comment des structures de données avancées, souvent inspirées de domaines tels que les arbres ou les tableaux, peuvent être adaptées et utilisées pour optimiser les performances des algorithmes sur les graphes. L'objectif principal est de réduire la complexité temporelle et spatiale des opérations courantes, permettant ainsi de traiter des graphes de taille beaucoup plus importante ou de répondre à des requêtes dynamiques et complexes en un temps raisonnable. Nous nous concentrerons sur des techniques qui permettent des requêtes efficaces sur des chemins spécifiques, des sous-graphes, ou qui facilitent la maintenance de propriétés du graphe sous des modifications. Des figures emblématiques de ce domaine incluent <RealPerson id="Robert Tarjan" name="Robert Tarjan" text="Robert Tarjan is an American computer scientist, best known for his work on algorithms, particularly in graph theory and data structures. He developed several fundamental algorithms, including Tarjan's algorithm for finding strongly connected components in a directed graph and algorithms for maintaining dynamic trees. His research has had a significant impact on the fields of theoretical computer science and algorithm design.">Robert Tarjan</RealPerson> et <RealPerson id="John Hopcroft" name="John Hopcroft" text="John Hopcroft is an American computer scientist and a recipient of the Turing Award. He is known for his foundational work in the design and analysis of algorithms, particularly in areas such as graph theory, automata theory, and computational geometry. He co-authored the influential book 'Introduction to Automata Theory, Languages, and Computation'.">John Hopcroft</RealPerson>, dont les travaux ont jeté les bases de nombreuses structures de données efficaces pour les graphes <Reference id="2" name="2" term="2">2</Reference>.
+
+Les objectifs d'apprentissage de cette leçon sont multiples :
+1. Comprendre les limitations des structures de données naïves pour certaines opérations sur les graphes.
+2. Maîtriser le fonctionnement et la construction des <ConceptLink id="Arbre de Segment" name="Arbre de Segment" text="A segment tree is a tree data structure used for storing information about intervals, or segments. It allows querying which segments contain a given point, or which points are contained in a given segment. It is particularly useful for range queries and range updates on an array." unresolved={true}>Arbre de Segment</ConceptLink> et leurs applications directes aux problèmes sur les graphes.
+3. Découvrir d'autres structures de données avancées pertinentes pour les graphes, comme les arbres de Fenwick (ou BIT) et les arbres de LCT (Link-Cut Trees), et leurs cas d'usage.
+4. analyser l'impact de ces structures sur la complexité algorithmique.
+
+Cette exploration nous permettra de passer d'une compréhension basique des graphes à une maîtrise des outils nécessaires pour concevoir des algorithmes performants et évolutifs face à des défis computationnels complexes.
+
+<Image description="Vue d'ensemble des structures de données avancées couramment utilisées dans les algorithmes de graphes, y compris les arbres de segment, les arbres de Fenwick et les structures Union-Find. Cette image sert d'introduction visuelle aux concepts qui seront explorés plus en détail dans la leçon." alt="Multimètre numérique VOLTCRAFT M-3850 affichant 0.385V, avec sondes rouge et noire." caption="Figure 1: Une étiquette bleue avec des flèches rouges et jaunes encadrant un appareil de mesure affichant des graphiques. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Digital_Multimeter_Aka.jpg)" title="Vue d'ensemble des structures de données pour graphes" src="https://commons.wikimedia.org/wiki/Special:FilePath/Digital_Multimeter_Aka.jpg" fallbackUrl="https://commons.wikimedia.org/wiki/File:Digital_Multimeter_Aka.jpg" />
+
+<Mermaid caption="Figure 2 : " chart={``} />
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser la complexité temporelle des algorithmes de connectivité dynamique utilisant les arbres Link-Cut.</li>
+      <li>Distinguer les cas d'usage des différentes structures de données avancées pour graphes (ex: arbres Link-Cut, arbres de Fibonacci pour les files de priorité dans Dijkstra).</li>
+      <li>Comprendre les principes fondamentaux des arbres dynamiques et leur application aux problèmes de graphes.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Implémenter des opérations de base sur les arbres Link-Cut (link, cut, find-root, path-query).</li>
+      <li>Comparer les performances des algorithmes de graphes statiques et dynamiques en utilisant des structures de données avancées.</li>
+      <li>Appliquer des structures de données avancées pour résoudre des problèmes spécifiques de graphes dynamiques (ex: maintenance de forêt, détection de cycles).</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Évaluer l'importance de choisir la bonne structure de données pour optimiser la performance des algorithmes sur graphes dynamiques.</li>
+      <li>Adopter une approche critique lors de la conception d'algorithmes pour des graphes soumis à des modifications fréquentes.</li>
+      <li>Collaborer pour explorer et comparer différentes solutions algorithmiques pour des problèmes de graphes complexes.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+<ConceptLink id="fenwick_tree_2" name="Arbres de Fenwick" text="Fenwick trees, or Binary Indexed Trees (BIT), are specialized data structures designed for efficient computation of prefix sums and updates on arrays. Their logarithmic time complexity for these operations makes them a powerful tool in various algorithmic applications." unresolved={true}>Arbres de Fenwick</ConceptLink>
+
+<ConceptLink id="union_find_2" name="Union-Find" text="The Union-Find data structure is fundamental for problems involving partitioning éléments into disjoint sets. It provides efficient methods for merging sets and identifying the set an élément belongs to, commonly used in algorithms like Kruskal's for Minimum Spanning Tree.">Union-Find</ConceptLink>
+
+## Arbres de Segment et Applications aux Graphes
+
+Les arbres de segment, également connus sous le nom de « segment trees » en anglais, sont des structures de données arborescentes qui permettent de stocker des informations sur des intervalles ou des segments. Initialement conçus pour des tableaux unidimensionnels, ils excellent dans la gestion de requêtes de type « somme sur un intervalle », « minimum sur un intervalle », ou « mise à jour d'un élément » en temps logarithmique. Leur puissance réside dans leur capacité à agréger des informations de manière hiérarchique.
+
+### Construction d'un Arbre de Segment
+
+Un arbre de segment est généralement construit sur un tableau d'origine de taille $N$. Il s'agit d'un arbre binaire où chaque nœud représente un intervalle de ce tableau. La racine représente l'intervalle complet $[0, N-1]$. Pour un nœud représentant l'intervalle $[L, R]$, ses enfants représentent les intervalles $[L, M]$ et $[M+1, R]$, où $M = \lfloor (L+R)/2 \rfloor$. Les feuilles de l'arbre correspondent aux éléments individuels du tableau d'origine.
+
+La construction d'un arbre de segment prend généralement un temps $O(N)$, car chaque élément du tableau est traité une fois lors de la descente de l'arbre, et chaque nœud de l'arbre (qui est au nombre de $O(N)$) est visité une fois. L'information stockée dans chaque nœud est une agrégation des informations de ses enfants. Par exemple, si l'on souhaite calculer la somme des éléments d'un intervalle, chaque nœud stockera la somme des éléments de l'intervalle qu'il représente.
+
+### Opérations sur un Arbre de Segment
+
+Les deux opérations fondamentales sur un arbre de segment sont les requêtes et les mises à jour.
+
+1. **Requêtes (Query)** : Pour répondre à une requête sur un intervalle $[qL, qR]$, on parcourt l'arbre. Si l'intervalle représenté par un nœud est entièrement contenu dans $[qL, qR]$, on utilise l'information stockée dans ce nœud. Si l'intervalle du nœud chevauche partiellement $[qL, qR]$, on descend récursivement dans ses enfants. Si l'intervalle du nœud est disjoint de $[qL, qR]$, on l'ignore. Cette approche garantit que chaque requête est traitée en temps $O(\log N)$.
+
+2. **Mises à jour (Update)** : Pour mettre à jour un élément à
+
+l'indice `i` dans le tableau d'origine, on parcourt l'arbre depuis la racine jusqu'à la feuille correspondant à cet indice. À chaque nœud visité, on met à jour la valeur agrégée. Ensuite, on remonte vers la racine en recalculant les valeurs agrégées des nœuds parents. Cette opération prend également $O(\log N)$ temps.
+
+### Application aux Graphes
+
+Bien que les arbres de segment soient intrinsèquement conçus pour des structures linéaires, ils trouvent des applications ingénieuses dans le domaine des graphes, notamment pour des problèmes sur des arbres ou des chemins.
+
+* **Arbres et chemins pondérés** : Sur un arbre, on peut souvent linéariser les chemins ou les sous-arbres pour appliquer des arbres de segment. Par exemple, pour calculer la somme des poids sur le chemin entre deux nœuds $u$ et $v$, on peut utiliser des techniques comme la décomposition en chemins (path decomposition) ou la décomposition en heavy-light (heavy-light decomposition) pour transformer le problème en requêtes sur des intervalles dans une structure linéaire, où un arbre de segment peut ensuite être appliqué efficacement. Ceci est particulièrement utile pour des requêtes dynamiques où les poids des arêtes peuvent changer.
+* **Propriétés sur les chemins** : De manière similaire, pour des problèmes nécessitant de calculer des propriétés agrégées (comme le nombre d'arêtes d'une certaine couleur, ou la somme de valeurs associées aux nœuds) sur des chemins dans un arbre, les arbres de segment, combinés à des techniques de linéarisation, permettent d'obtenir des solutions efficaces. La complexité typique pour de telles opérations devient $O(\log N)$ par requête après une pré-computation qui peut varier.
+
+Les arbres de segment sont un excellent exemple de la manière dont des structures de données conçues pour des problèmes unidimensionnels peuvent être adaptées pour résoudre des problèmes plus complexes sur des structures multidimensionnelles comme les graphes, à condition de trouver une représentation linéaire adéquate. <ConceptLink id="segment_tree" name="Arbres de segment" text="Segment trees are versatile data structures that efficiently handle range queries and updates on arrays. They partition an array into segments, allowing logarithmic time complexity for operations like sum, minimum, or maximum queries over specified ranges." unresolved={true}>Arbres de segment</ConceptLink> sont une pierre angulaire de la programmation compétitive et des algorithmes avancés pour leur efficacité dans la gestion de données agrégées.
+
+<Image description="Schéma illustrant la construction récursive d'un arbre de segment à partir d'un tableau, montrant comment les intervalles sont divisés et les valeurs agrégées." alt="Arbre généalogique peint à la main avec des noms et des dates de naissance, datant du XVIIIe siècle." caption="Figure 2: Schéma illustrant la construction récursive d'un arbre de segment à partir d'un tableau, montrant comment les intervalles sont divisés et les valeurs agrégées. Source: Smithsonian Open Access (CC0)" src="https://ids.si.edu/ids/deliveryService?id=NMAH-AHB2014q063206-000001" />
+
+## Arbres de Fenwick (BIT) et leur Utilisation
+
+Les <Glossary id="fenwick_tree" name="Arbres de Fenwick" text="Fenwick trees, also known as Binary Indexed Trees (BIT), are data structures that can efficiently update élément values and calculate prefix sums in a table of numbers. They achieve this with logarithmic time complexity for both operations, making them suitable for problems involving frequent updates and range sum queries.">Arbres de Fenwick</Glossary>, également connus sous le nom de <Glossary id="binary_indexed_tree" name="Binary Indexed Trees (BIT)" text="Binary Indexed Trees (BIT), or Fenwick trees, are efficient data structures for maintaining cumulative frequencies. They allow for rapid updates of individual élément values and calculation of prefix sums, both in logarithmic time complexity. This makes them highly effective for problems requiring dynamic range queries.">Binary Indexed Trees (BIT)</Glossary>, sont une autre structure de données arborescente qui excelle dans les opérations de mise à jour et de requête de sommes préfixes (ou de toute opération associative et inversible) sur un tableau. Ils sont particulièrement appréciés pour leur simplicité d'implémentation et leur efficacité, offrant une complexité temporelle de $O(\log N)$ pour les deux opérations principales : la mise à jour d'un élément et le calcul d'une somme préfixe.
+
+### Fonctionnement des Arbres de Fenwick
+
+Un arbre de Fenwick est généralement implémenté à l'aide d'un tableau, disons `BIT`, de même taille que le tableau d'origine (ou légèrement plus grand pour simplifier l'indexation). Chaque élément `BIT[i]` ne stocke pas directement une valeur, mais plutôt la somme d'un sous-intervalle spécifique du tableau d'origine. La clé du fonctionnement réside dans la manière dont ces sous-intervalles sont définis, en utilisant la représentation binaire des indices.
+
+L'opération fondamentale pour déterminer l'intervalle couvert par `BIT[i]` est de trouver le bit de poids faible (Least Significant Bit - LSB) de `i`. Si `lsb(i)` est la valeur du bit de poids faible de `i` (par exemple, pour `i=12` (binaire `1100`), `lsb(12)=4` (binaire `0100`)), alors `BIT[i]` stocke la somme des éléments du tableau d'origine dans l'intervalle `[i - lsb(i) + 1, i]`.
+
+* **Mise à jour (Update)** : Lorsqu'un élément à l'indice `i` du tableau d'origine est mis à jour, il faut propager cette modification aux éléments du BIT qui incluent cet indice dans leur intervalle de somme. Pour ce faire, on commence par l'indice `i` dans le BIT. On ajoute la différence de la mise à jour à `BIT[i]`. Ensuite, on passe à l'indice suivant qui « couvre » `i`, qui est obtenu en ajoutant le LSB de l'indice courant à cet indice : `i = i + lsb(i)`. On répète ce processus jusqu'à dépasser la taille du tableau. Cette opération prend $O(\log N)$ temps car le nombre d'indices à mettre à jour est proportionnel au nombre de bits dans la représentation binaire de $N$.
+
+* **Somme préfixe (Prefix Sum Query)** : Pour calculer la somme des éléments du tableau d'origine de l'indice 1 à `i`, on parcourt le BIT. On commence par `BIT[i]`, puis on se déplace vers l'indice précédent qui contribue à la somme préfixe, obtenu en soustrayant le LSB de l'indice courant : `i = i - lsb(i)`. On additionne les valeurs de `BIT` rencontrées jusqu'à atteindre l'indice 0. Cette opération prend également $O(\log N)$ temps.
+
+La fonction `lsb(i)` peut être calculée efficacement en utilisant l'opération bitwise `i & -i`.
+
+<RealPerson id="fenwick_pitt" name="Peter Fenwick" text="Peter Fenwick is credited with the invention of the Fenwick tree, also known as the Binary Indexed Tree (BIT). This data structure is widely used in competitive programming and algorithm design for its efficiency in handling prefix sum queries and point updates.">Peter Fenwick</RealPerson> est crédité pour cette structure de données élégante.
+
+<Mermaid caption="Figure 4 : " chart={``} />
+
+### Avantages et Complexité
+
+Les arbres de Fenwick offrent plusieurs avantages :
+
+* **Simplicité d'implémentation** : Comparés aux arbres de segment, les arbres de Fenwick sont souvent plus courts à coder et plus faciles à comprendre une fois le concept du LSB maîtrisé.
+* **Efficacité** : Les complexités $O(\log N)$ pour les mises à jour et les requêtes sont excellentes pour de nombreux problèmes.
+* **Faible empreinte mémoire** : Ils utilisent un tableau de taille $N$, ce qui est optimal.
+
+La principale limitation est qu'ils sont principalement conçus pour des opérations associatives et inversibles (comme l'addition et la soustraction). Pour des opérations comme le minimum ou le maximum, les arbres de segment sont plus adaptés.
+
+### Application dans des Problèmes de Graphes
+
+Les arbres de Fenwick, bien que basés sur des tableaux, peuvent être appliqués à des problèmes de graphes, en particulier lorsqu'une forme de linéarisation ou de parcours ordonné est possible.
+
+* **Calcul de distances ou de propriétés sur des chemins** : Sur un arbre, on peut utiliser des techniques comme l'Euler tour (parcours en profondeur qui visite chaque arête deux fois, une à l'entrée et une à la sortie d'un sous-arbre) pour transformer les chemins et les sous-arbres en intervalles dans un tableau linéaire. Par exemple, le chemin entre deux nœuds $u$ et $v$ peut être représenté par la somme de deux chemins allant de la racine à $u$ et de la racine à $v$, moins deux fois le chemin de la racine au plus proche ancêtre commun (LCA). Si les propriétés sur les chemins sont calculables via des sommes préfixes (par exemple, la somme des poids des nœuds sur le chemin), un arbre de Fenwick peut être utilisé sur le tableau résultant de l'Euler tour. La mise à jour d'un poids de nœud ou d'arête se traduit alors par une mise à jour dans le BIT, et une requête de somme sur un chemin se traduit par une combinaison de requêtes de somme préfixe sur le BIT. La complexité pour trouver le LCA peut être pré-calculée en $O(N \log N)$ ou $O(N)$ et les requêtes en $O(1)$ ou $O(\log N)$. Les requêtes sur les chemins deviennent alors $O(\log N)$.
+
+* **Problèmes de comptage sur des arbres** : Dans des scénarios où l'on doit compter le nombre d'éléments satisfaisant une certaine propriété dans un sous-arbre, une approche similaire utilisant l'Euler tour et un arbre de Fenwick peut être employée. Chaque nœud est marqué avec son temps d'entrée et de sortie dans le parcours. Un sous-arbre correspond alors à un intervalle dans le tableau linéaire.
+
+Les arbres de Fenwick sont une structure de données puissante pour des requêtes dynamiques sur des données agrégées, et leur application aux graphes, bien que nécessitant une étape de transformation, ouvre la voie à des solutions algorithmiques efficaces. Arbres de Fenwick sont un outil essentiel pour tout informaticien sérieux dans la résolution de problèmes algorithmiques.
+
+<SolvedExercise title="Exemple : Somme d'intervalle avec un arbre de Fenwick" solution="">
+  
+</SolvedExercise>
+
+## Structures de Disjoint-Set (Union-Find)
+
+Les <Glossary id="disjoint_set_union" name="Structures de Disjoint-Set" text="Disjoint-set data structures, also known as the union-find data structure, keep track of a set of éléments partitioned into a number of disjoint (non-overlapping) subsets. They support two primary operations: finding the set that a particular élément belongs to, and merging two sets together.">Structures de Disjoint-Set</Glossary>, également connues sous le nom d'ou <Glossary id="disjoint_set_forest" name="Forêt d'ensembles disjoints" text="A disjoint-set forest is a common implementation of the disjoint-set data structure. It represents each set as a tree, where each node points to its parent. The root of a tree serves as the representative of its set. Operations like 'find' and 'union' are performed by traversing these trees.">Forêt d'ensembles disjoints</Glossary>, sont une structure de données conçue pour maintenir une collection d'ensembles disjoints (c'est-à-dire des ensembles qui n'ont aucun élément en commun). Elles supportent principalement deux opérations :
+
+1. **`Find(x)`** : Détermine à quel ensemble appartient un élément `x`. Cette opération renvoie un représentant unique de l'ensemble.
+2. **`Union(x, y)`** : Fusionne les deux ensembles contenant les éléments `x` et `y`. Si `x` et `y` sont déjà dans le même ensemble, cette opération ne fait rien.
+
+Ces structures sont extrêmement utiles dans de nombreux algorithmes, notamment pour la gestion de composantes connexes dans des graphes, la détection de cycles, et la construction d'arbres couvrants minimums.
+
+### Implémentation et Optimisations
+
+Une implémentation naïve des ensembles disjoints pourrait utiliser des listes chaînées pour chaque ensemble, mais cela rendrait l'opération `Union` coûteuse (potentiellement $O(N)$ si l'on doit parcourir une liste pour trouver l'autre). Une approche plus efficace consiste à représenter chaque ensemble comme un arbre, où la racine de l'arbre est le représentant de l'ensemble. Chaque élément est un nœud, et chaque nœud pointe vers son parent. La racine pointe vers elle-même (ou un pointeur spécial).
+
+* **Mise en tas (Union by Rank/Size)** : Pour optimiser l'opération `Union`, on peut utiliser une heuristique appelée « mise en tas » (union by rank ou union by size). Au lieu de simplement attacher la racine d'un arbre à la racine de l'autre de manière arbitraire, on attache l'arbre le plus petit (en termes d'hauteur, appelé « rank », ou en termes de nombre de nœuds, appelé « size ») à la racine de l'arbre le plus grand. Cela permet de maintenir l'hauteur des arbres relativement faible, ce qui accélère l'opération `Find`. Si l'on utilise le « rank », chaque nœud a un rang associé, initialisé à 0. Lors d'une union, si les rangs des deux racines sont différents, la racine de rang inférieur est attachée à celle de rang supérieur. Si les rangs sont égaux, l'une est attachée à l'autre, et le rang de la nouvelle racine est incrémenté.
+
+* **Compression de chemin (Path Compression)** : L'autre optimisation majeure est la « compression de chemin ». Lors d'une opération `Find(x)`, après avoir trouvé la racine de l'ensemble de `x`, on peut reconfigurer l'arbre en faisant pointer tous les nœuds sur le chemin de `x` à la racine directement vers la racine. Cela aplatit l'arbre de manière significative, rendant les futures opérations `Find` sur ces nœuds (et leurs descendants) beaucoup plus rapides, idéalement $O(1)$ en amorti.
+
+Avec ces deux optimisations combinées (union by rank/size et path compression), la complexité amortie pour une séquence de $M$ opérations `Find` et `Union` sur $N$ éléments est extrêmement proche de $O(M \alpha(N))$, où $\alpha$ est la fonction d'Ackermann inverse, qui croît extrêmement lentement et est pratiquement constante pour toutes les tailles de $N$ rencontrées en pratique. Cela rend les structures Union-Find incroyablement efficaces.
+
+Robert Tarjan a joué un rôle crucial dans l'analyse de la complexité des structures Union-Find et dans le développement d'algorithmes liés aux graphes.
+
+<Image description="Illustration montrant l'effet de la compression de chemin dans une structure Union-Find, où les nœuds intermédiaires sont directement reliés à la racine après une opération Find." alt="Illustration montrant l'effet de la compression de chemin dans une structure Union-Find, où les nœuds intermédiaires sont directement reliés à la racine après une opération Find." caption="Figure 3: montrant l'effet de la compression de chemin dans une structure Union-Find, où les nœuds intermédiaires sont directement reliés à la racine après une opération Find. Source: [Wikimedia Commons](https://fr.wikipedia.org/wiki/Union-find)" src="https://commons.wikimedia.org/wiki/Special:FilePath/Dsu_disjoint_sets_final.svg" fallbackUrl="https://fr.wikipedia.org/wiki/Union-find" />
+
+### Utilité dans des Algorithmes de Graphes
+
+Les structures Union-Find sont fondamentales pour plusieurs algorithmes de graphes :
+
+* **Algorithme de Kruskal pour trouver un arbre couvrant minimum (MST)** : L'algorithme de Kruskal construit un MST en considérant les arêtes du graphe par ordre croissant de poids. Pour chaque arête $(u, v)$ de poids $w$, on vérifie si `Find(u)` est différent de `Find(v)`. Si c'est le cas, cela signifie que `u` et `v` appartiennent à des composantes connexes différentes, et l'ajout de l'arête $(u, v)$ ne créera pas de cycle. On ajoute alors l'arête au MST et on effectue `Union(u, v)` pour fusionner les deux composantes. Si `Find(u)` est égal à `Find(v)`, l'ajout de l'arête créerait un cycle, et elle est donc ignorée. L'utilisation de structures Union-Find avec optimisations permet à l'algorithme de Kruskal d'avoir une complexité de $O(E \log E)$ ou $O(E \log V)$ (où $E$ est le nombre d'arêtes et $V$ le nombre de sommets), principalement dominée par le tri des arêtes.
+
+* **Détection de cycles** : L'algorithme de Kruskal utilise implicitement la détection de cycles. Plus généralement, pour un graphe donné, on peut initialiser une structure Union-Find avec $V$ ensembles, un pour chaque sommet. On itère ensuite sur toutes les arêtes $(u, v)$. Si `Find(u)` est égal à `Find(v)`, cela indique que `u` et `v` sont déjà connectés par un chemin, et donc que l'arête $(u, v)$ forme un cycle. Si `Find(u)` est différent de `Find(v)`, on effectue `Union(u, v)`. Cette méthode permet de détecter des cycles dans un graphe non orienté en temps $O(E \alpha(V))$.
+
+* **Composantes Connexes** : Les structures Union-Find sont la méthode la plus efficace pour trouver et maintenir les composantes connexes d'un graphe, surtout dans un contexte dynamique où des arêtes peuvent être ajoutées. Après avoir traité toutes les arêtes pertinentes, les sommets partageant le même représentant dans la structure Union-Find appartiennent à la même composante connexe.
+
+Les structures Union-Find sont un exemple paradigmatique de l'efficacité atteinte par des structures de données bien conçues avec des optimisations astucieuses. Elles sont un outil indispensable pour quiconque travaille avec des algorithmes sur les graphes. est un concept clé en algorithmique.
+
+<Quiz durationLimit={300} limit={3}>
+ <Question q="Quelle opération dans une structure Union-Find permet de déterminer à quel ensemble un élément appartient ?" explanation="L'opération 'Find' est utilisée pour retrouver le représentant (la racine) de l'ensemble auquel appartient un élément.">
+  <Option text="Union" correct={false} />
+  <Option text="Find" correct={true} />
+  <Option text="MakeSet" correct={false} />
+</Question>
+ <Question q="Parmi les optimisations suivantes pour la structure Union-Find, laquelle vise à réduire l'hauteur des arbres en attachant l'arbre plus petit à la racine de l'arbre plus grand lors d'une opération Union ?" explanation="Union by Size et Union by Rank sont deux stratégies d'optimisation distinctes qui visent à maintenir les arbres aussi plats que possible lors des opérations d'union. Path Compression est une autre optimisation appliquée lors des opérations Find.">
+  <Option text="Path Compression" correct={false} />
+  <Option text="Union by Size" correct={true} />
+  <Option text="Union by Rank" correct={false} />
+</Question>
+ <Question q="Quelle est la complexité temporelle amortie approximative d'une opération 'Find' ou 'Union' dans une structure Union-Find avec les optimisations de compression de chemin et d'union par rang/taille ?" explanation="Avec les deux optimisations, la complexité temporelle amortie est quasi constante, représentée par la fonction inverse d'Ackermann, α(n).">
+  <Option text="O(n)" correct={false} />
+  <Option text="O(log n)" correct={false} />
+  <Option text="O(α(n))" correct={true} />
+</Question>
+</Quiz>
+
+## Comparaison et Choix des Structures
+Après avoir exploré les arbres de segment, les arbres de Fenwick (ou BIT - Binary Indexed Trees) et les structures Union-Find, il est essentiel de dresser un bilan comparatif pour guider le choix de la structure la plus appropriée à un problème donné. Chaque structure excelle dans des scénarios spécifiques, dictés par leurs complexités temporelles et spatiales, ainsi que par les types d'opérations qu'elles supportent efficacement.
+
+Les **arbres de segment** sont remarquablement polyvalents pour les requêtes sur des intervalles et les mises à jour ponctuelles ou sur des intervalles. Ils permettent des opérations telles que la somme, le minimum, le maximum ou toute autre opération associative sur un intervalle donné en temps $O(\log N)$, où $N$ est la taille du domaine. Les mises à jour ponctuelles sont également réalisées en $O(\log N)$. Leur complexité spatiale est de $O(N)$, car ils nécessitent généralement quatre fois le nombre d'éléments d'origine pour stocker la structure complète. Les arbres de segment sont particulièrement adaptés aux problèmes où les requêtes portent sur des plages continues de données et où des modifications fréquentes sont nécessaires. Par exemple, dans la gestion de données temporelles ou de tableaux dynamiques où l'on doit fréquemment interroger des sous-ensembles.
+
+Les **arbres de Fenwick** offrent une alternative plus légère et souvent plus rapide pour des opérations spécifiques : les sommes préfixes et les mises à jour ponctuelles. Ils atteignent une complexité temporelle de $O(\log N)$ pour ces deux opérations, mais avec des constantes cachées généralement plus faibles que celles des arbres de segment <Reference id="3" name="3" term="3">3</Reference>. Leur avantage majeur réside dans leur complexité spatiale, qui est de $O(N)$, mais avec un facteur de stockage plus proche de celui d'un tableau simple, car ils n'utilisent qu'un tableau de taille $N$. Les arbres de Fenwick sont idéaux lorsque les requêtes se limitent aux sommes (ou opérations similaires) sur des préfixes et que les mises à jour sont ponctuelles. Ils sont souvent préférés dans les compétitions de programmation pour leur simplicité d'implémentation et leur efficacité dans les scénarios de comptage ou de sommation.
+
+Les structures **Union-Find** (ou Disjoint-Set Union - DSU) sont spécifiquement conçues pour gérer des collections d'ensembles disjoints. Leurs opérations principales, `Find` (trouver le représentant d'un ensemble) et `Union` (fusionner deux ensembles), sont extrêmement rapides lorsqu'elles sont optimisées avec la compression de chemin et la fusion par rang ou par taille. La complexité amortie par opération est quasi constante, souvent notée $O(\alpha(N))$, où $\alpha$ est la fonction d'Ackermann inverse, qui croît extrêmement lentement et est donc pratiquement constante pour toutes les tailles de $N$ rencontrées <Reference id="4" name="4" term="4">4</Reference>. Leur complexité spatiale est de $O(N)$ pour stocker les pointeurs parentaux et les informations de rang/taille. Les structures Union-Find brillent dans les problèmes impliquant la connectivité, la détection de cycles, la construction d'arbres couvrants minimaux (comme avec l'algorithme de Kruskal) et la gestion de composantes connexes <Reference id="5" name="5" term="5">5</Reference>.
+
+Le choix entre ces structures dépend donc intrinsèquement de la nature des opérations requises :
+
+* **Requêtes sur intervalles et mises à jour complexes (intervalles ou ponctuelles)** : Les arbres de segment sont souvent le choix par défaut.
+* **Sommes préfixes et mises à jour ponctuelles** : Les arbres de Fenwick sont généralement plus efficaces et plus simples à implémenter.
+* **Connectivité, détection de cycles, gestion de composantes connexes** : Les structures Union-Find sont inégalées.
+
+Il est également crucial de considérer les contraintes de mémoire. Bien que toutes trois aient une complexité spatiale linéaire, les arbres de Fenwick et Union-Find ont des facteurs constants plus faibles que les arbres de segment.
+
+<Mermaid caption="Figure 6 : " chart={``} />
+
+| Structure | Opérations Principales | Complexité Temporelle (Amortie) | Complexité Spatiale | Cas d'Usage Typique |
+| :------------- | :----------------------------------------------------- | :------------------------------ | :------------------ | :------------------------------------------------------------------------------ |
+| Arbre de Segment | Requêtes sur intervalle, Mises à jour ponctuelle/intervalle | $O(\log N)$ | $O(N)$ | Requêtes sur plages, mises à jour dynamiques de tableaux, problèmes géométriques. |
+| Arbre de Fenwick | Sommes préfixes, Mises à jour ponctuelles | $O(\log N)$ | $O(N)$ | Comptage, sommation sur préfixes, problèmes de rang. |
+| Union-Find | `Find`, `Union` | $O(\alpha(N))$ | $O(N)$ | Connectivité, détection de cycles, MST (Kruskal), composantes connexes. |
+
+<Image description="Ce graphique compare les performances temporelles des arbres de segment, des arbres de Fenwick et des structures Union-Find sur différentes tailles de données et pour diverses opérations typiques (par exemple, requêtes de plage, mises à jour ponctuelles, opérations d'union/find). Il illustre visuellement les avantages théoriques et pratiques de chaque structure dans des scénarios variés." alt="Arbre généalogique peint sur papier, représentant des noms et des dates de naissance, avec des ornements floraux et des cœurs." caption="Figure 4: Ce graphique compare les performances temporelles des arbres de segment, des arbres de Fenwick et des structures Union-Find sur différentes tailles de données et pour diverses opérations typiques (par exemple, requêtes de plage, mises à jour ponctuelles, opérations d'union/find). Il illustre visuellement les avantages théoriques et pratiques de chaque structure dans des scénarios variés. Source: Smithsonian Open Access (CC0)" title="Comparaison des performances des structures de données" src="https://ids.si.edu/ids/deliveryService?id=NMAH-AHB2014q063206-000001" />
+
+## Conclusion
+Au cours de cette leçon, nous avons exploré des structures de données avancées qui transcendent les tableaux et listes chaînées classiques pour adresser des problèmes algorithmiques complexes, particulièrement dans le domaine des graphes. Nous avons disséqué les arbres de segment, les arbres de Fenwick et les structures Union-Find, en analysant leurs mécanismes internes, leurs complexités temporelles et spatiales, ainsi que leurs applications fondamentales. Les arbres de segment se sont révélés être des outils puissants pour les requêtes sur intervalles et les mises à jour, offrant une flexibilité remarquable. Les arbres de Fenwick ont démontré leur efficacité pour les opérations de sommation préfixée et de mise à jour ponctuelle, souvent avec une empreinte mémoire réduite et des constantes d'exécution plus favorables. Enfin, les structures Union-Find ont été présentées comme la solution de choix pour la gestion de la connectivité et des ensembles disjoints, avec une performance quasi constante grâce à des optimisations astucieuses. La maîtrise de ces structures est essentielle pour aborder efficacement une vaste gamme d'algorithmes, allant de la construction d'arbres couvrants minimaux à la résolution de problèmes de détection de cycles et de requêtes sur des données dynamiques.
+
+Cependant, il est important de reconnaître les limites inhérentes à ces structures. Les arbres de segment, bien que polyvalents, peuvent être coûteux en mémoire et en temps d'implémentation pour des opérations très spécifiques. Les arbres de Fenwick sont limités à des opérations associatives sur des préfixes, ne gérant pas nativement les requêtes sur des intervalles arbitraires sans adaptations. Les structures Union-Find sont principalement axées sur la connectivité et ne sont pas conçues pour des requêtes de type « somme sur intervalle » ou « minimum sur intervalle » sans extensions significatives. De plus, la performance de ces structures dépend fortement de la nature des données et des opérations effectuées. Pour des graphes très denses, des structures spécifiques aux graphes comme les matrices d'adjacence ou les listes d'adjacence peuvent être plus appropriées, bien que les structures de données avancées puissent être utilisées pour optimiser des algorithmes opérant sur ces représentations <Reference id="6" name="6" term="6">6</Reference>.
+
+L'étude des structures de données avancées ne s'arrête pas là. Des structures encore plus sophistiquées existent pour des problèmes encore plus spécialisés. Par exemple, les **arbres de suffixe** et les **arbres de préfixe (trie)** sont fondamentaux pour la manipulation de chaînes de caractères et la recherche de motifs <Reference id="7" name="7" term="7">7</Reference>. Les **arbres de K-d** et les **arbres R** sont utilisés pour la recherche d'informations dans des espaces multidimensionnels <Reference id="8" name="8" term="8">8</Reference>. Dans le contexte des graphes, les **arbres de Fibonacci** et les **tas de binomial** sont des structures de files de priorité qui améliorent la complexité de certains algorithmes de graphes comme l'algorithme de Dijkstra ou de Prim. L'exploration de ces structures ouvre la voie à la résolution de problèmes encore plus complexes et à l'optimisation de performances dans des domaines variés comme la bio-informatique, la robotique, les systèmes d'information géographique et l'analyse de réseaux à grande échelle. La compréhension des principes sous-jacents à ces structures, tels que la division et la conquête, la gestion dynamique des données et les optimisations algorithmiques, est une compétence fondamentale pour tout informaticien aspirant à concevoir des solutions efficaces et performantes.
+
+<Summary itemsString="Les structures de données avancées pour graphes, telles que les listes d'adjacence et les matrices d'adjacence, sont essentielles pour représenter efficacement les relations entre les nœuds.|||Les algorithmes de parcours de graphes, comme la recherche en largeur (BFS) et la recherche en profondeur (DFS), permettent d'explorer systématiquement les nœuds et les arêtes d'un graphe.|||Les algorithmes de plus court chemin, tels que Dijkstra et Bellman-Ford, sont cruciaux pour trouver le chemin le moins coûteux entre deux nœuds dans un graphe pondéré.|||Les algorithmes de spanning tree minimum (MST), comme Prim et Kruskal, visent à trouver un sous-ensemble d'arêtes qui connecte tous les nœuds avec un poids total minimal.|||La compréhension de ces structures et algorithmes est fondamentale pour résoudre une large gamme de problèmes en informatique, en science des données et en ingénierie.|||Les structures de données spécifiques comme les arbres de segment ou les arbres de Fenwick peuvent être adaptées pour optimiser certaines opérations sur les graphes, notamment dans des contextes dynamiques." />
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+ <Question q="Quelle structure de données est la plus appropriée pour représenter efficacement un graphe très creux (sparse graph) ?" explanation="Les matrices d'adjacence consomment O(V^2) espace, ce qui est inefficace pour les graphes creux. Les listes d'adjacence ne stockent que les arêtes existantes, ce qui est O(V+E), idéal pour les graphes creux.">
+  <Option text="Matrice d'adjacence" correct={false} />
+  <Option text="Liste d'adjacence" correct={true} />
+  <Option text="Tableau d'hachage" correct={false} />
+  <Option text="Arbre binaire de recherche" correct={false} />
+</Question>
+ <Question q="Dans le contexte des algorithmes de parcours de graphes, quel est l'avantage principal de l'utilisation d'une file (queue) pour un parcours en largeur (BFS) ?" explanation="Une file implémente le principe FIFO (First-In, First-Out), garantissant que les nœuds sont visités niveau par niveau, ce qui est la définition même du parcours en largeur.">
+  <Option text="Permet de visiter les nœuds les plus profonds en premier." correct={false} />
+  <Option text="Assure que les nœuds sont visités dans l'ordre alphabétique." correct={false} />
+  <Option text="Garantit que les nœuds sont visités par ordre de distance croissante depuis la source." correct={true} />
+  <Option text="Optimise la recherche de cycles." correct={false} />
+</Question>
+ <Question q="Quel type de structure de données est souvent utilisé pour implémenter l'algorithme de Dijkstra afin de trouver efficacement le nœud avec la plus petite distance ?" explanation="Un tas (heap), plus spécifiquement un tas min (min-heap), permet d'extraire le minimum (le nœud avec la plus petite distance) en temps O(log V) et de mettre à jour les distances en O(log V), ce qui est crucial pour l'efficacité de Dijkstra.">
+  <Option text="Pile (Stack)" correct={false} />
+  <Option text="File (Queue)" correct={false} />
+  <Option text="Tas (Heap)" correct={true} />
+  <Option text="Arbre équilibré" correct={false} />
+</Question>
+ <Question q="Pour un graphe pondéré sans cycles négatifs, quel algorithme utilise une structure de données de type 'tas' pour trouver le chemin le plus court depuis une source unique ?" explanation="L'algorithme de Dijkstra est spécifiquement conçu pour trouver les chemins les plus courts dans les graphes pondérés sans cycles négatifs, et il bénéficie grandement de l'utilisation d'un tas pour gérer les priorités des nœuds à visiter.">
+  <Option text="Algorithme de Bellman-Ford" correct={false} />
+  <Option text="Algorithme de Floyd-Warshall" correct={false} />
+  <Option text="Algorithme de Dijkstra" correct={true} />
+  <Option text="Algorithme de Prim" correct={false} />
+</Question>
+ <Question q="Quelle est la complexité temporelle typique de l'algorithme de parcours en profondeur (DFS) sur un graphe représenté par des listes d'adjacence ?" explanation="Chaque sommet et chaque arête est visité une seule fois. La visite d'un sommet prend O(1) (hors traitement des voisins), et l'exploration de ses voisins via la liste d'adjacence prend un temps proportionnel au degré du sommet. La somme des degrés est 2E. Donc, la complexité totale est O(V + E).">
+  <Option text="O(V^2)" correct={false} />
+  <Option text="O(E log V)" correct={false} />
+  <Option text="O(V + E)" correct={true} />
+  <Option text="O(V log V)" correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFsZ29yaXRobWUgZGUgQmVsbG1hbi1Gb3JkIiwiZGVmaW5pdGlvbiI6IlVuIGFsZ29yaXRobWUgcXVpIHRyb3V2ZSBsZSBwbHVzIGNvdXJ0IGNoZW1pbiBkJ3VuIG7Fk3VkIHNvdXJjZSB1bmlxdWUgw6AgdG91cyBsZXMgYXV0cmVzIG7Fk3VkcyBkYW5zIHVuIGdyYXBoZSBwb25kw6lyw6ksIGNhcGFibGUgZGUgZ8OpcmVyIGxlcyBwb2lkcyBkJ2Fyw6p0ZXMgbsOpZ2F0aWZzLiJ9LHsidGVybSI6IkFsZ29yaXRobWUgZGUgRGlqa3N0cmEiLCJkZWZpbml0aW9uIjoiVW4gYWxnb3JpdGhtZSBnbG91dG9uIHF1aSB0cm91dmUgbGUgcGx1cyBjb3VydCBjaGVtaW4gZCd1biBuxZN1ZCBzb3VyY2UgdW5pcXVlIMOgIHRvdXMgbGVzIGF1dHJlcyBuxZN1ZHMgZGFucyB1biBncmFwaGUgYXZlYyBkZXMgcG9pZHMgZCdhcsOqdGVzIG5vbiBuw6lnYXRpZnMuIn0seyJ0ZXJtIjoiQWxnb3JpdGhtZSBkZSBLcnVza2FsIiwiZGVmaW5pdGlvbiI6IlVuIGFsZ29yaXRobWUgZ2xvdXRvbiBwb3VyIHRyb3V2ZXIgdW4gYXJicmUgY291dnJhbnQgbWluaW11bSBkYW5zIHVuIGdyYXBoZSBwb25kw6lyw6kgY29ubmV4ZSwgZW4gdHJpYW50IGxlcyBhcsOqdGVzIHBhciBwb2lkcy4ifSx7InRlcm0iOiJBbGdvcml0aG1lIGRlIFByaW0iLCJkZWZpbml0aW9uIjoiVW4gYWxnb3JpdGhtZSBnbG91dG9uIHBvdXIgdHJvdXZlciB1biBhcmJyZSBjb3V2cmFudCBtaW5pbXVtIGRhbnMgdW4gZ3JhcGhlIHBvbmTDqXLDqSBjb25uZXhlLiJ9LHsidGVybSI6IkFyYnJlIGNvdXZyYW50IG1pbmltdW0gKEFDTSkiLCJkZWZpbml0aW9uIjoiVW4gc291cy1lbnNlbWJsZSBkJ2Fyw6p0ZXMgZCd1biBncmFwaGUgY29ubmV4ZSBwb25kw6lyw6kgcXVpIGNvbm5lY3RlIHRvdXMgbGVzIG7Fk3VkcyBlbnNlbWJsZSwgc2FucyBjeWNsZXMgZXQgYXZlYyBsZSBwb2lkcyB0b3RhbCBsZSBwbHVzIGZhaWJsZSBwb3NzaWJsZS4ifSx7InRlcm0iOiJHcmFwaGUiLCJkZWZpbml0aW9uIjoiVW5lIHN0cnVjdHVyZSBtYXRow6ltYXRpcXVlIGNvbXBvc8OpZSBkJ3VuIGVuc2VtYmxlIGRlIG7Fk3VkcyAob3Ugc29tbWV0cykgZXQgZCd1biBlbnNlbWJsZSBkJ2Fyw6p0ZXMgcmVsaWFudCBkZXMgcGFpcmVzIGRlIG7Fk3Vkcy4ifSx7InRlcm0iOiJHcmFwaGUgbm9uIG9yaWVudMOpIiwiZGVmaW5pdGlvbiI6IlVuIGdyYXBoZSBkb250IGxlcyBhcsOqdGVzIG4nb250IHBhcyBkZSBkaXJlY3Rpb24gOyB1bmUgYXLDqnRlIGVudHJlIGRldXggbsWTdWRzIGVzdCBiaWRpcmVjdGlvbm5lbGxlLiJ9LHsidGVybSI6IkdyYXBoZSBvcmllbnTDqSAoRGlncmFwaGUpIiwiZGVmaW5pdGlvbiI6IlVuIGdyYXBoZSBkb250IGxlcyBhcsOqdGVzIG9udCB1bmUgZGlyZWN0aW9uLCBhbGxhbnQgZCd1biBuxZN1ZCBzb3VyY2Ugw6AgdW4gbsWTdWQgZGVzdGluYXRpb24uIn0seyJ0ZXJtIjoiTGlzdGUgZCdhZGphY2VuY2UiLCJkZWZpbml0aW9uIjoiVW5lIHN0cnVjdHVyZSBkZSBkb25uw6llcyByZXByw6lzZW50YW50IHVuIGdyYXBoZSBjb21tZSB1bmUgY29sbGVjdGlvbiBkZSBsaXN0ZXMsIG/DuSBjaGFxdWUgbGlzdGUgY29udGllbnQgbGVzIHZvaXNpbnMgZCd1biBuxZN1ZCBkb25uw6kuIn0seyJ0ZXJtIjoiTWF0cmljZSBkJ2FkamFjZW5jZSIsImRlZmluaXRpb24iOiJVbmUgbWF0cmljZSBjYXJyw6llIG/DuSBsZXMgbGlnbmVzIGV0IGxlcyBjb2xvbm5lcyByZXByw6lzZW50ZW50IGxlcyBuxZN1ZHMsIGV0IHVuZSBlbnRyw6llIGluZGlxdWUgcydpbCBleGlzdGUgdW5lIGFyw6p0ZSBlbnRyZSBkZXV4IG7Fk3Vkcy4ifSx7InRlcm0iOiJSZWNoZXJjaGUgZW4gbGFyZ2V1ciAoQkZTKSIsImRlZmluaXRpb24iOiJVbiBhbGdvcml0aG1lIGRlIHBhcmNvdXJzIGRlIGdyYXBoZSBxdWkgZXhwbG9yZSBsZXMgdm9pc2lucyBkJ3VuIG7Fk3VkIGF2YW50IGRlIHBhc3NlciBhdXggdm9pc2lucyBkZSBzZXMgdm9pc2lucywgbml2ZWF1IHBhciBuaXZlYXUuIn0seyJ0ZXJtIjoiUmVjaGVyY2hlIGVuIHByb2ZvbmRldXIgKERGUykiLCJkZWZpbml0aW9uIjoiVW4gYWxnb3JpdGhtZSBkZSBwYXJjb3VycyBkZSBncmFwaGUgcXVpIGV4cGxvcmUgYXVzc2kgbG9pbiBxdWUgcG9zc2libGUgbGUgbG9uZyBkZSBjaGFxdWUgYnJhbmNoZSBhdmFudCBkZSByZXZlbmlyIGVuIGFycmnDqHJlLiJ9XQ==" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiVGhvbWFzIEguIENvcm1lbiwgQ2hhcmxlcyBFLiBMZWlzZXJzb24sIFJvbmFsZCBSaXZlc3QsIENsaWZmb3JkIFN0ZWluICgyMDE3KS4gwqsgQWxnb3JpdGhtZW4gLSBFaW5lIEVpbmbDvGhydW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjE1MTUvOTc4MzExMDUyMjAxMyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoyLCJ0ZXh0IjoiVGFyamFuLCBSb2JlcnQgRS4gJ0RhdGEgU3RydWN0dXJlcyBhbmQgTmV0d29yayBBbGdvcml0aG1zJy4gU29jaWV0eSBmb3IgSW5kdXN0cmlhbCBhbmQgQXBwbGllZCBNYXRoZW1hdGljcywgMTk4My4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPVRhcmphbiUyMCUyMlNvY2lldHklMjBmb3IlMjBJbmR1c3RyaWFsJTIwYW5kJTIwQXBwbGllZCUyME1hdGhlbWF0aWNzJTIyJTIwMTk4MyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjozLCJ0ZXh0IjoiU2VkZ2V3aWNrLCBSb2JlcnQsIGFuZCBLZXZpbiBXYXluZS4gJ0FsZ29yaXRobXMnLiBBZGRpc29uLVdlc2xleSwgMjAxMS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPVNlZGdld2ljayUyMCUyMlNlZGdld2ljayUyMiUyMDIwMTEiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NCwidGV4dCI6IkFobywgQWxmcmVkIFYuLCBKb2huIEUuIEhvcGNyb2Z0LCBhbmQgSmVmZnJleSBELiBVbGxtYW4uICdEYXRhIFN0cnVjdHVyZXMgYW5kIEFsZ29yaXRobXMnLiBBZGRpc29uLVdlc2xleSwgMTk4My4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPUFobyUyMCUyMkhvcGNyb2Z0JTIyJTIwMTk4MyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo1LCJ0ZXh0IjoiS2VtcGUsIMKrIEluZmx1ZW50aWFsIE5vZGVzIGluIGEgRGlmZnVzaW9uIE1vZGVsIGZvciBTb2NpYWwgTmV0d29ya3MgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3LzExNTIzNDY4XzkxIiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjYsInRleHQiOiJSZWluaGFyZCBEaWVzdGVsICgyMDEwKS4gwqsgR3JhcGggVGhlb3J5IMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9UmVpbmhhcmQlMjBEaWVzdGVsJTIwJTIyR3JhcGglMjBUaGVvcnklMjIlMjAyMDEwIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo3LCJ0ZXh0IjoiTS4gRG9uYWxkIE1hY0xhcmVuICgyMDA1KS4gwqsgVGhlIEFydCBvZiBDb21wdXRlciBQcm9ncmFtbWluZ+KAlFZvbHVtZSAxOiBGdW5kYW1lbnRhbCBBbGdvcml0aG1zIChEb25hbGQgRS4gS251dGgpIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPURvbmFsZCUyME1hY0xhcmVuJTIwJTIyVGhlJTIwQXJ0JTIwb2YlMjBDb21wdXRlciUyMFByb2dyYW1taW5nJUUyJTgwJTk0Vm9sdW1lJTIwMSUyMiUyMDIwMDUiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6OCwidGV4dCI6Ikx1Y2NpbywgRmFicml6aW8sIGFuZCBHaW9yZ2lvIE1henpvbmUuICdHcmFwaCBBbGdvcml0aG1zIGFuZCBBcHBsaWNhdGlvbnMnLiBTcHJpbmdlciwgMjAxMy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9THVjY2lvJTIwJTIyTHVjY2lvJTIyJTIwMjAxMyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6OSwidGV4dCI6Ikp1ZHkgR29sZHNtaXRoICgyMDA0KS4gKkJvb2sgcmV2aWV3OiBUaGVvcnkgb2YgQ29tcHV0aW5nOiBBIEdlbnRsZSBJbnRyb2R1Y3Rpb24uIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1KdWR5JTIwR29sZHNtaXRoJTIwJTIyQm9vayUyMHJldmlldyUyMiUyMDIwMDQiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxMCwidGV4dCI6IkV2ZW4sIFNoaW1vbi4gJ0dyYXBoIEFsZ29yaXRobXMnLiBDb21wdXRlciBTY2llbmNlIFByZXNzLCAxOTc5LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9RXZlbiUyMCUyMkNvbXB1dGVyJTIwU2NpZW5jZSUyMFByZXNzJTIyJTIwMTk3OSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjExLCJ0ZXh0IjoiSi4gQS4gQm9uZHksIFUuIFMuIFIuIE11cnR5ICgyMDE1KS4gwqsgR3JhcGggVGhlb3J5IHdpdGggQXBwbGljYXRpb25zIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPUJvbmR5JTIwJTIyR3JhcGglMjBUaGVvcnklMjB3aXRoJTIwQXBwbGljYXRpb25zJTIyJTIwMjAxNSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjEyLCJ0ZXh0IjoiU2tpZW5hLCBTdGV2ZW4gUy4gJ1RoZSBBbGdvcml0aG0gRGVzaWduIE1hbnVhbCcuIFNwcmluZ2VyLCAyMDA4LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMS04NDgwMC0wNzAtNCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjEzLCJ0ZXh0IjoiSm9uYXRoYW4gTC4gR3Jvc3MsIEpheSBZZWxsZW4gKDIwMTgpLiDCqyBHcmFwaCBUaGVvcnkgYW5kIEl0cyBBcHBsaWNhdGlvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Kb25hdGhhbiUyMEdyb3NzJTIwJTIyR3JhcGglMjBUaGVvcnklMjBhbmQlMjBJdHMlMjBBcHBsaWNhdGlvbnMlMjIlMjAyMDE4Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE0LCJ0ZXh0IjoiSGFyYXJ5LCBGcmFuay4gJ0dyYXBoIFRoZW9yeScuIEFkZGlzb24tV2VzbGV5LCAxOTY5LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9SGFyYXJ5JTIwJTIyQWRkaXNvbiUyMiUyMDE5NjkiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNSwidGV4dCI6IlJpY2hhcmQgSS4gU2hyZWV2ZSAoMjAwNykuICpHcmFwaCB0aGVvcnkgd2l0aCBhcHBsaWNhdGlvbnMgdG8gZW5naW5lZXJpbmcgYW5kIGNvbXB1dGVyIHNjaWVuY2UuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVJpY2hhcmQlMjBTaHJlZXZlJTIwJTIyR3JhcGglMjB0aGVvcnklMjB3aXRoJTIwYXBwbGljYXRpb25zJTIwdG8lMjBlbmdpbmVlcmluZyUyMGFuZCUyMGNvbXB1dGVyJTIwcyUyMiUyMDIwMDciLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTYsInRleHQiOiJUaG9tYXMgSC4gQ29ybWVuLCBDaGFybGVzIEUuIExlaXNlcnNvbiwgUm9uYWxkIEwuIFJpdmVzdCwgQ2xpZmZvcmQgU3RlaW4uIDIwMDkuIMKrIEludHJvZHVjdGlvbiBhdXggYWxnb3JpdGhtZXMgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVRob21hcyUyMENvcm1lbiUyMCUyMkludHJvZHVjdGlvbiUyMGF1eCUyMGFsZ29yaXRobWVzJTIyJTIwMjAwOSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNywidGV4dCI6IkRpZXN0ZWwsIMKrIEV4dHJlbWFsIEdyYXBoIFRoZW9yeSDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTMtNjYyLTUzNjIyLTNfNyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE4LCJ0ZXh0IjoiUm9iZXJ0IFNlZGdld2ljaywgS2V2aW4gV2F5bmUuIMKrIEFsZ29yaXRobXMgLSBQYXJ0IElJIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9Um9iZXJ0JTIwU2VkZ2V3aWNrJTIwJTIyQWxnb3JpdGhtcyUyMiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6dHJ1ZX1d" />

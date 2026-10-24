@@ -22,6 +22,7 @@ const configuredRegionsStr = process.env.VERTEX_REGIONS_POOL;
 const REGIONS_POOL = configuredRegionsStr 
   ? configuredRegionsStr.split(',').map(r => r.trim()).filter(Boolean)
   : [
+      'global',
       process.env.VERTEX_LOCATION || 'us-central1',
       'europe-west1',
       'us-east4',
@@ -30,7 +31,7 @@ const REGIONS_POOL = configuredRegionsStr
       'europe-west4',          // Netherlands
       'us-east1',              // South Carolina
       'asia-northeast1',       // Tokyo
-      'us-south1',             // Dallas (additional US capacity)
+      'us-south1',             // Dallas
       'northamerica-northeast1', // Montreal
       'europe-west2',          // London
       'europe-southwest1',     // Madrid
@@ -73,6 +74,7 @@ export interface ProjectRegionState {
 let accounts: VertexAccount[] = [];
 let endpointStates: ProjectRegionState[] = [];
 let isInitialized = false;
+const unsupportedModelRegions = new Set<string>();
 
 /**
  * Initialize/discover GCP Service Accounts from local secrets folder and environment variables.
@@ -331,25 +333,15 @@ export async function optimizeAccountQuotasInBackground(account: VertexAccount) 
           return dims.region === region;
         });
 
-        // 1. Try to find precise match for gemini-3.5-flash
-        let matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-3.5-flash');
+        // 1. Try to find precise match for gemini-3.5-flash-lite
+        let matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-3.5-flash-lite');
 
-        // 2. Fallback to gemini-2.5-flash
+        // 2. Fallback to gemini-3.5-flash
         if (!matchingDim) {
-          matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-2.5-flash');
+          matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-3.5-flash');
         }
 
-        // 3. Fallback to gemini-1.5-flash
-        if (!matchingDim) {
-          matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-1.5-flash');
-        }
-
-        // 4. Fallback to gemini-pro
-        if (!matchingDim) {
-          matchingDim = regionalDims.find((di: any) => di.dimensions?.base_model === 'gemini-pro');
-        }
-
-        // 5. Fallback to any regional dimension
+        // 3. Fallback to any regional dimension
         if (!matchingDim && regionalDims.length > 0) {
           matchingDim = regionalDims[0];
         }
@@ -479,7 +471,11 @@ const EU_COUNTRIES = new Set([
  * Acquire a healthy Project + Region endpoint before making an API call.
  * Uses smart load balancing across all configured accounts and locations.
  */
-async function acquireEndpointAndRateLimitSlot(estimatedTokens: number, userCountry?: string): Promise<{ account: VertexAccount; endpoint: ProjectRegionState }> {
+async function acquireEndpointAndRateLimitSlot(
+  estimatedTokens: number,
+  userCountry?: string,
+  model?: string
+): Promise<{ account: VertexAccount; endpoint: ProjectRegionState }> {
   const COOLDOWN_MS = 15000; // 15s cooldown on 429 errors
 
   await initializeAccounts();
@@ -493,8 +489,21 @@ async function acquireEndpointAndRateLimitSlot(estimatedTokens: number, userCoun
     const candidates: { account: VertexAccount; endpoint: ProjectRegionState }[] = [];
     const waitTimes: { endpoint: ProjectRegionState; waitMs: number }[] = [];
 
-    // Filter endpoints based on Geo-IP
+    // Filter endpoints based on model compatibility and Geo-IP
     let filteredEndpoints = endpointStates;
+
+    // 1. Exclude dynamically discovered 404 regions for this model
+    if (model) {
+      filteredEndpoints = filteredEndpoints.filter(e => !unsupportedModelRegions.has(`${model}::${e.regionName}`));
+      
+      // 2. Vertex AI Deployments: gemini-3.5 models are globally deployed on 'global' endpoint
+      if (model.includes('3.5') || model.includes('flash-lite')) {
+        const globalEndpoints = filteredEndpoints.filter(e => e.regionName === 'global');
+        if (globalEndpoints.length > 0) {
+          filteredEndpoints = globalEndpoints;
+        }
+      }
+    }
     
     // Resolve user country through the triple fallback strategy
     const contextCountry = userCountryStorage.getStore();
@@ -511,20 +520,22 @@ async function acquireEndpointAndRateLimitSlot(estimatedTokens: number, userCoun
     
     const resolvedCountry = userCountry || contextCountry || requestCountry;
 
-    if (resolvedCountry) {
+    if (resolvedCountry && (!model || (!model.includes('3.5') && !model.includes('flash-lite')))) {
       const upperCountry = resolvedCountry.trim().toUpperCase();
       if (EU_COUNTRIES.has(upperCountry)) {
-        filteredEndpoints = endpointStates.filter(e => e.regionName.startsWith('europe-'));
+        const regional = filteredEndpoints.filter(e => e.regionName.startsWith('europe-'));
+        if (regional.length > 0) filteredEndpoints = regional;
       } else if (['US', 'CA', 'MX'].includes(upperCountry)) {
-        filteredEndpoints = endpointStates.filter(e => e.regionName.startsWith('us-'));
+        const regional = filteredEndpoints.filter(e => e.regionName.startsWith('us-'));
+        if (regional.length > 0) filteredEndpoints = regional;
       } else if (['CN', 'JP', 'KR', 'SG', 'HK', 'TW', 'IN'].includes(upperCountry)) {
-        filteredEndpoints = endpointStates.filter(e => e.regionName.startsWith('asia-') || e.regionName.startsWith('australia-'));
+        const regional = filteredEndpoints.filter(e => e.regionName.startsWith('asia-') || e.regionName.startsWith('australia-'));
+        if (regional.length > 0) filteredEndpoints = regional;
       }
-      
-      // Fallback: if our filtered pool is empty, fallback to full pool
-      if (filteredEndpoints.length === 0) {
-        filteredEndpoints = endpointStates;
-      }
+    }
+
+    if (filteredEndpoints.length === 0) {
+      filteredEndpoints = endpointStates;
     }
 
     for (const endpoint of filteredEndpoints) {
@@ -659,7 +670,33 @@ export async function getAccessTokenForAccount(account: VertexAccount): Promise<
 
   account.tokenPromise = (async () => {
     try {
-      // 1. Try GCP Instance Metadata Server (Cloud Run / GCP Serverless environment)
+      // 1. If explicit Service Account credentials with private key are provided, ALWAYS use JWT exchange
+      if (account.credentials && account.credentials.private_key && account.credentials.client_email) {
+        const jwt = await createJWT(account.credentials);
+        const res = await fetch(account.credentials.token_uri || 'https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            assertion: jwt
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json() as any;
+          if (data.access_token) {
+            account.cachedToken = data.access_token;
+            account.tokenExpiry = Date.now() + ((data.expires_in || 3600) - 60) * 1000;
+            console.log(`[VERTEX-POOL] ✅ OAuth2 token acquired via Service Account JWT for project "${account.projectId}".`);
+            return account.cachedToken;
+          }
+        } else {
+          const err = await res.text();
+          console.warn(`[VERTEX-POOL] Failed to exchange JWT for token on project ${account.projectId}:`, err);
+        }
+      }
+
+      // 2. Try GCP Instance Metadata Server (Cloud Run / GCP Serverless environment)
       try {
         const metaRes = await fetch('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token', {
           headers: { 'Metadata-Flavor': 'Google' },
@@ -675,7 +712,7 @@ export async function getAccessTokenForAccount(account: VertexAccount): Promise<
           }
         }
       } catch (_) {
-        // Not running on GCP Instance Metadata Server, proceed to local SAs or gcloud CLI
+        // Not running on GCP Instance Metadata Server, proceed to gcloud CLI
       }
 
       if (account.credentials.type === 'gcloud_adc' || !account.credentials.private_key) {
@@ -901,28 +938,81 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
 
   const estimatedTokens = estimateRequestTokens(compressedReq);
 
+  const configuredModel = TASK_MODELS[compressedReq.task] || 'gemini-3.5-flash-lite';
+
   // Initialize and check pool
   await initializeAccounts();
-  if (accounts.length === 0) {
-    console.warn('[VERTEX-POOL] Cannot make Vertex AI call: no service accounts configured.');
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const useAiStudioDirect = Boolean(
+    (process.env.VERTEX_USE_AI_STUDIO === 'true' || process.env.AI_ENGINE === 'aistudio') &&
+    apiKey &&
+    (apiKey.startsWith('AIzaSy') || accounts.length === 0)
+  );
+
+  if (useAiStudioDirect && apiKey) {
+    const candidateModels = [configuredModel];
+
+    const body: Record<string, unknown> = { contents: compressedReq.contents };
+    if (compressedReq.systemInstruction) {
+      body.systemInstruction = { parts: [{ text: compressedReq.systemInstruction }] };
+    }
+    if (compressedReq.generationConfig) {
+      const sanitizedGenConfig = { ...compressedReq.generationConfig } as any;
+      delete sanitizedGenConfig.frequencyPenalty;
+      delete sanitizedGenConfig.presencePenalty;
+      body.generationConfig = sanitizedGenConfig;
+    }
+    if (compressedReq.safetySettings) {
+      body.safetySettings = compressedReq.safetySettings;
+    }
+
+    for (const model of candidateModels) {
+      for (let attempt = 1; attempt <= 5; attempt++) {
+        console.log(`[AI-STUDIO-DIRECT] Calling Google AI Studio (${model}, attempt ${attempt}/5)...`);
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey
+            },
+            body: JSON.stringify(body)
+          });
+          if (res.ok) {
+            return res;
+          }
+          const errStatus = res.status;
+          const errText = await res.text();
+          console.warn(`[AI-STUDIO-DIRECT] Model "${model}" returned HTTP ${errStatus}: ${errText.slice(0, 200)}`);
+          if (errStatus === 503 || errStatus === 429) {
+            if (attempt < 5) {
+              const backoff = errStatus === 429 ? (10000 * attempt) : (3000 * attempt);
+              console.log(`[AI-STUDIO-DIRECT] Rate limit / demand spike (${errStatus}). Retrying in ${backoff / 1000}s...`);
+              await new Promise(r => setTimeout(r, backoff));
+              continue;
+            }
+          } else {
+            break;
+          }
+        } catch (e) {
+          console.warn(`[AI-STUDIO-DIRECT] Network error for model "${model}":`, e);
+          if (attempt < 5) {
+            await new Promise(r => setTimeout(r, 4000));
+            continue;
+          }
+        }
+      }
+    }
     return null;
   }
 
-  const configuredModel = TASK_MODELS[compressedReq.task];
-  
-  // Decide candidate models to try
-  let modelsToTry: string[] = [configuredModel];
-  if (configuredModel === 'gemini-3.7-flash') {
-    modelsToTry = ['gemini-3.7-flash', 'gemini-2.5-flash'];
-  } else if (configuredModel === 'gemini-3.5-flash') {
-    modelsToTry = ['gemini-3.5-flash', 'gemini-2.5-flash'];
-  } else if (configuredModel === 'gemini-2.5-pro') {
-    modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-pro'];
-  } else if (configuredModel === 'gemini-2.0-flash-lite') {
-    modelsToTry = ['gemini-2.0-flash-lite', 'gemini-2.5-flash'];
-  } else {
-    modelsToTry = [configuredModel || 'gemini-3.7-flash', 'gemini-2.5-flash'];
+  if (accounts.length === 0 && !apiKey) {
+    console.warn('[VERTEX-POOL] Cannot make Vertex AI call: no service accounts configured and no GEMINI_API_KEY.');
+    return null;
   }
+  
+  // Decide candidate models to try (strictly gemini-3.5-flash-lite, zero fallback)
+  const modelsToTry: string[] = [configuredModel];
 
   const method = compressedReq.stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
   let response: Response | null = null;
@@ -934,7 +1024,10 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
       body.systemInstruction = { parts: [{ text: compressedReq.systemInstruction }] };
     }
     if (compressedReq.generationConfig) {
-      body.generationConfig = compressedReq.generationConfig;
+      const sanitizedGenConfig = { ...compressedReq.generationConfig } as any;
+      delete sanitizedGenConfig.frequencyPenalty;
+      delete sanitizedGenConfig.presencePenalty;
+      body.generationConfig = sanitizedGenConfig;
     }
     if (compressedReq.safetySettings) {
       body.safetySettings = compressedReq.safetySettings;
@@ -944,7 +1037,7 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       let selected;
       try {
-        selected = await acquireEndpointAndRateLimitSlot(estimatedTokens, compressedReq.userCountry);
+        selected = await acquireEndpointAndRateLimitSlot(estimatedTokens, compressedReq.userCountry, model);
       } catch (e) {
         console.error('[VERTEX-POOL] Failed to acquire endpoint:', e);
         return null;
@@ -959,7 +1052,8 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
 
       const currentLocation = endpoint.regionName;
       const currentProjectId = account.projectId;
-      const url = `https://${currentLocation}-aiplatform.googleapis.com/v1beta1/projects/${currentProjectId}/locations/${currentLocation}/publishers/google/models/${model}:${method}`;
+      const host = currentLocation === 'global' ? 'aiplatform.googleapis.com' : `${currentLocation}-aiplatform.googleapis.com`;
+      const url = `https://${host}/v1beta1/projects/${currentProjectId}/locations/${currentLocation}/publishers/google/models/${model}:${method}`;
 
       try {
         console.log(`[VERTEX-POOL] Attempting call with model "${model}" in region "${currentLocation}" using project "${currentProjectId}" (attempt ${attempt}/${maxRetries})...`);
@@ -1048,6 +1142,18 @@ export async function callVertexAI(req: VertexRequest): Promise<Response | null>
             await new Promise(resolve => setTimeout(resolve, jitterDelay));
             continue;
           }
+        } else if (response.status === 404) {
+          removeRequestFromEndpoint(endpoint);
+          unsupportedModelRegions.add(`${model}::${currentLocation}`);
+          const errText = await response.text();
+          lastError = `[VERTEX-POOL] Model "${model}" not found (404) in region "${currentLocation}" for project "${currentProjectId}". Excluded region from pool.`;
+          console.warn(lastError);
+          
+          if (attempt < maxRetries) {
+            // Try another region for this model
+            continue;
+          }
+          break; // Try next model candidate (e.g. gemini-3.5-flash)
         } else {
           removeRequestFromEndpoint(endpoint);
           const errText = await response.text();
@@ -1122,8 +1228,11 @@ export async function recordMetrics(
   }
 }
 
-/** Returns true if Vertex AI credentials are configured */
+/** Returns true if Vertex AI credentials or Google AI Studio key are configured */
 export function isVertexConfigured(): boolean {
+  if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) {
+    return true;
+  }
   if (process.env.VERTEX_SERVICE_ACCOUNT_BASE64 || process.env.VERTEX_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     return true;
   }

@@ -3,82 +3,48 @@
  * 
  * Single source of truth for:
  * - Which model is used for which task
- * - Vertex AI pricing per 1M tokens (USD) — June 2026
+ * - Vertex AI pricing per 1M tokens (USD)
  * - Cost estimation helpers for the admin dashboard
- * 
- * ⚠️  gemini-1.5-flash was retired June 1, 2026 — do NOT use it.
  * 
  * Vertex AI Pricing (generative AI, pay-as-you-go, non-cached):
  * https://cloud.google.com/vertex-ai/generative-ai/pricing
  */
 
 export type ModelId =
-  | 'gemini-3.7-flash'     // Latest Flash 3.7 generation
-  | 'gemini-3.5-flash'     // High-performance workhorse
-  | 'gemini-2.5-flash'     // Best cost/quality balance — primary workhorse
-  | 'gemini-2.5-pro'       // Highest quality — course chapter generation only
-  | 'gemini-2.0-flash-lite'; // Cheapest — simple tasks (badges, analytics)
+  | 'gemini-3.5-flash-lite' // Ultra-low-cost default for all tasks ($0.30 in / $2.50 out)
+  | 'gemini-3.5-flash';     // Standard flash for complex tasks
 
 /** Vertex AI pricing in USD per 1M tokens (input / output) */
 export const MODEL_PRICING: Record<ModelId, { inputPer1M: number; outputPer1M: number; label: string }> = {
-  'gemini-3.7-flash': {
-    inputPer1M:  0.075,  // $0.075 / 1M input tokens
-    outputPer1M: 0.30,   // $0.30  / 1M output tokens
-    label: 'Gemini 3.7 Flash'
+  'gemini-3.5-flash-lite': {
+    inputPer1M:  0.30,   // $0.30 / 1M input tokens
+    outputPer1M: 2.50,   // $2.50 / 1M output tokens
+    label: 'Gemini 3.5 Flash Lite'
   },
   'gemini-3.5-flash': {
     inputPer1M:  1.50,   // $1.50 / 1M input tokens
     outputPer1M: 9.00,   // $9.00 / 1M output tokens
     label: 'Gemini 3.5 Flash'
-  },
-  'gemini-2.5-flash': {
-    inputPer1M:  0.075,  // $0.075 / 1M input tokens
-    outputPer1M: 0.30,   // $0.30  / 1M output tokens
-    label: 'Gemini 2.5 Flash'
-  },
-  'gemini-2.5-pro': {
-    inputPer1M:  1.25,   // $1.25  / 1M input tokens (≤200k ctx)
-    outputPer1M: 10.00,  // $10.00 / 1M output tokens
-    label: 'Gemini 2.5 Pro'
-  },
-  'gemini-2.0-flash-lite': {
-    inputPer1M:  0.0375, // $0.0375 / 1M input tokens — cheapest
-    outputPer1M: 0.15,   // $0.15   / 1M output tokens
-    label: 'Gemini 2.0 Flash Lite'
   }
 };
 
 /**
  * Model assignment per task.
  *
- * ⚠️  MODEL ROUTING POLICY — STRICTLY ENFORCED:
- *
- * gemini-3.5-flash is RESERVED EXCLUSIVELY for the "Atelier des Widgets Pédagogiques"
- * (manual widget creation/modification from the Admin UI → `widgets_workshop` task).
- *
- * It MUST NOT be used for any automated pipeline step:
- *   - Course generation         → gemini-3.7-flash / gemini-2.5-flash  (course_generation)
- *   - Widget placement / 4B     → gemini-2.5-flash  (widget_placement)   [Stage 2 Architect + 4B Critic + Repair]
- *   - Translation               → gemini-2.5-flash  (course_translation)
- *   - Tutor chat                → gemini-2.5-flash  (tutor_chat)
- *   - Analytics / Badges        → gemini-2.0-flash-lite
- *
- * NAMING CONVENTION:
- *   widget_placement  = automated parameterization of STANDARD pedagogical widgets (Quiz, Image,
- *                       Citation, Biography, Video…) into lesson MDX — Stages 3B / 4B.
- *   widgets_workshop  = manual creation / modification of CUSTOM INTERACTIVE widgets from the
- *                       Admin Atelier UI (QuantumOrbitalExplorer, ChemicalStoichiometry…).
+ * ⚠️ MODEL ROUTING POLICY:
+ * All automated course generation, widgets placement, translation, tutor chat,
+ * analytics, and badges use the ultra-low-cost gemini-3.5-flash-lite ($0.30 in / $2.50 out).
  */
 export const TASK_MODELS: Record<string, ModelId> = {
-  course_generation:  (process.env.GEMINI_GENERATION_MODEL as ModelId) || 'gemini-3.7-flash',     // Automated pipeline: narrative gen, critique, revision
-  widget_placement:   'gemini-3.7-flash',     // Automated pipeline: Stage 3B param + 4B Critic + Repair (standard widgets)
-  widgets_workshop:   'gemini-3.7-flash',     // ⭐ Atelier des Widgets Pédagogiques (Admin UI only — manual creation & modification)
-  course_translation: 'gemini-3.7-flash',     // Automated pipeline: academic translation in 9 languages
-  tutor_chat:         'gemini-3.7-flash',     // Real-time tutor chat — fast & responsive
-  batch_translate:    'gemini-3.7-flash',     // Batch field translation
-  analytics:          'gemini-3.7-flash',     // Simple report generation
-  badge_expand:       'gemini-3.7-flash',     // Simple prompt expansion
-  badge_compile:      'gemini-2.0-flash-lite',// AI compiler for dynamic rules & localization
+  course_generation:  (process.env.GEMINI_GENERATION_MODEL as ModelId) || 'gemini-3.5-flash-lite',
+  widget_placement:   'gemini-3.5-flash-lite',
+  widgets_workshop:   'gemini-3.5-flash-lite',
+  course_translation: 'gemini-3.5-flash-lite',
+  tutor_chat:         'gemini-3.5-flash-lite',
+  batch_translate:    'gemini-3.5-flash-lite',
+  analytics:          'gemini-3.5-flash-lite',
+  badge_expand:       'gemini-3.5-flash-lite',
+  badge_compile:      'gemini-3.5-flash-lite',
 };
 
 /**

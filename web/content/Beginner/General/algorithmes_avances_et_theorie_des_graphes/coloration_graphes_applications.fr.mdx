@@ -1,0 +1,283 @@
+---
+title: « Coloration de Graphes et Applications »
+subject: « Algorithmes Avancés et Théorie des Graphes »
+level: « L3 »
+module: « Coloration de Graphes et Applications »
+order: 8
+---
+
+
+
+= 3, quelle est la conséquence la plus directe pour la recherche d'une solution exacte pour le nombre chromatique d'un graphe de grande taille ?«  options= »Il existe toujours un algorithme polynomial pour trouver le nombre chromatique exact.|||Il est possible de trouver le nombre chromatique exact en temps polynomial pour tous les graphes.|||Il est probable qu'aucun algorithme polynomial n'existe pour trouver le nombre chromatique exact de tous les graphes.|||La complexité du problème est indépendante de la taille du graphe.«  correctIndex= »2«  targetSectionId= »introduction-coloration«  sectionTitle= »Introduction à la Coloration de Graphes«  />
+
+
+## Introduction à la Coloration de Graphes
+La coloration de graphes est une branche fondamentale de la théorie des graphes qui trouve des applications dans une multitude de domaines informatiques, allant de l'ordonnancement des tâches à l'allocation de registres dans les compilateurs, en passant par la planification d'horaires et la résolution de problèmes de satisfaction de contraintes. L'idée centrale est d'attribuer des « couleurs » (souvent représentées par des entiers) aux éléments d'un graphe, sous certaines contraintes.
+
+Dans le contexte de la coloration de graphes, nous distinguons principalement deux variantes : la coloration de sommets et la coloration d'arêtes.
+
+La **coloration de sommets** consiste à attribuer une couleur à chaque sommet d'un graphe de telle sorte que deux sommets adjacents (reliés par une arête) ne possèdent jamais la même couleur. L'objectif est généralement de minimiser le nombre total de couleurs utilisées. Le nombre minimum de couleurs nécessaires pour colorier un graphe $G$ est appelé son **nombre chromatique**, noté $\chi(G)$. Ce concept est intimement lié à la notion de cliques dans un graphe, car une clique de taille $k$ nécessite au moins $k$ couleurs distinctes. La détermination du nombre chromatique est un problème NP-difficile en général, ce qui signifie qu'il n'existe pas d'algorithme polynomial connu pour le résoudre efficacement pour tous les graphes <Reference id="1" name="1" term="1">1</Reference>.
+
+La **coloration d'arêtes**, quant à elle, consiste à attribuer une couleur à chaque arête d'un graphe de telle sorte que deux arêtes incidentes au même sommet ne possèdent jamais la même couleur. Le nombre minimum de couleurs nécessaires pour colorier les arêtes d'un graphe $G$ est appelé son **indice chromatique**, noté $\chi'(G)$. Le théorème de Vizing établit une borne supérieure pour l'indice chromatique : pour tout graphe simple $G$, $\Delta(G) \le \chi'(G) \le \Delta(G) + 1$, où $\Delta(G)$ est le degré maximum du graphe <Reference id="2" name="2" term="2">2</Reference>.
+
+L'importance de ces concepts réside dans leur capacité à modéliser et résoudre des problèmes d'allocation de ressources où des entités (sommets ou arêtes) ne peuvent pas partager la même ressource (couleur) si elles sont en conflit. Par exemple, dans la planification de canaux de communication sans fil, les fréquences (couleurs) ne peuvent pas être attribuées à des stations (sommets) adjacentes si elles risquent d'interférer. De même, dans la compilation, les variables (sommets) qui sont actives simultanément (adjacentes) ne peuvent pas être stockées dans le même registre (couleur) <Reference id="3" name="3" term="3">3</Reference>.
+
+Pour illustrer la coloration de sommets, considérons un graphe simple représentant des tâches dépendantes. Si une arête relie deux tâches, cela signifie qu'elles ne peuvent pas être exécutées en parallèle. Attribuer des couleurs aux tâches revient à les regrouper en ensembles de tâches pouvant être exécutées simultanément. Le nombre chromatique minimum indique le nombre de « machines » ou de « ressources » parallèles nécessaires pour exécuter toutes les tâches dans le temps le plus court possible.
+
+<Image description="Exemple visuel d'une coloration de sommets sur un graphe simple. Chaque sommet est assigné à une couleur de telle sorte que deux sommets adjacents (reliés par une arête) ne partagent jamais la même couleur. Ce principe est fondamental pour résoudre des problèmes d'allocation de ressources où les conflits doivent être évités." alt="Exemple visuel d'une coloration de sommets sur un graphe simple. Chaque sommet est assigné à une couleur de telle sorte que deux sommets adjacents (reliés par une arête) ne partagent jamais la même couleur. Ce principe est fondamental pour résoudre des problèmes d'allocation de ressources où les conflits doivent être évités." caption="Figure 1: Exemple visuel d'une coloration de sommets sur un graphe simple. Chaque sommet est assigné à une couleur de telle sorte que deux sommets adjacents (reliés par une arête) ne partagent jamais la même couleur. Ce principe est fondamental pour résoudre des problèmes d'allocation de ressources où les conflits doivent être évités. Source: [Wikimedia Commons](https://fr.wikipedia.org/wiki/Coloration_de_graphe)" title="Exemple de coloration de sommets" src="https://upload.wikimedia.org/wikipedia/commons/9/90/Petersen_graph_3-coloring.svg?utm_source=fr.wikipedia.org&utm_campaign=api&utm_content=original" fallbackUrl="https://fr.wikipedia.org/wiki/Coloration_de_graphe" />
+
+La résolution de ces problèmes, notamment la recherche du nombre chromatique optimal, est souvent complexe. C'est pourquoi, en pratique, on se tourne souvent vers des algorithmes heuristiques et des algorithmes gloutons qui, bien qu'ils ne garantissent pas toujours la solution optimale, fournissent des colorations de bonne qualité dans un temps raisonnable.
+
+Voici une définition clé pour notre étude :
+<Glossary definition="Le nombre minimum de couleurs nécessaires pour colorier les sommets d'un graphe de telle sorte que deux sommets adjacents ne partagent jamais la même couleur. Il est souvent noté $\chi(G)$." id="nombre_chromatique" title="nombre_chromatique">nombre_chromatique</Glossary>
+
+Pour approfondir la compréhension de ces concepts, consultez les travaux pionniers de :
+<RealPerson id="brook" name="Arthur Brook" title="Arthur Brook">Arthur Brook</RealPerson> a apporté des contributions significatives à la théorie des graphes, notamment concernant la coloration de graphes.
+<RealPerson id="dinitz" name="Mikhail Dinitz" title="Mikhail Dinitz" unresolved={true}>Mikhail Dinitz</RealPerson> est connu pour ses travaux sur les algorithmes de coloration de graphes.
+
+Pour visualiser le processus de coloration, explorons un exemple interactif :
+<InteractiveDiagram id="graph_coloring_visualization" name="Visualisation interactive d'un graphe où les sommets sont colorés dynamiquement pour illustrer le concept de coloration de sommets." term="Visualisation interactive d'un graphe où les sommets sont colorés dynamiquement pour illustrer le concept de coloration de sommets.">Visualisation interactive d'un graphe où les sommets sont colorés dynamiquement pour illustrer le concept de coloration de sommets.</InteractiveDiagram>
+
+Le problème de la coloration de graphes est un exemple classique de problème NP-difficile, dont l'étude a été largement abordée par des chercheurs comme :
+ pour ses travaux fondamentaux sur la théorie de la complexité computationnelle et les problèmes NP-complets.
+
+En résumé, la coloration de graphes est un domaine riche avec des implications théoriques et pratiques profondes.
+<ConceptLink id="NP-difficulté" name="NP-difficulté" title="NP-difficulté" unresolved={true}>NP-difficulté</ConceptLink>
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser la complexité des algorithmes de coloration de graphes et distinguer les problèmes NP-complets des problèmes résolubles en temps polynomial.</li>
+      <li>Évaluer l'applicabilité de différents algorithmes de coloration (exacts et approchés) en fonction des propriétés du graphe et des contraintes de performance.</li>
+      <li>Synthétiser les concepts fondamentaux de la coloration de graphes, y compris le nombre chromatique et les bornes associées.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Appliquer des algorithmes de coloration gloutons et des algorithmes plus sophistiqués pour résoudre des problèmes pratiques.</li>
+      <li>Modéliser des problèmes concrets (ex: planification, allocation de ressources) comme des problèmes de coloration de graphes.</li>
+      <li>Implémenter et tester des algorithmes de coloration de graphes en utilisant un langage de programmation.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Adopter une démarche rigoureuse dans l'analyse de la complexité algorithmique.</li>
+      <li>Développer une pensée critique face aux limites des algorithmes exacts pour les problèmes NP-complets.</li>
+      <li>Apprécier l'élégance et la puissance des outils mathématiques pour résoudre des problèmes informatiques complexes.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Algorithmes Gloutons et Heuristiques
+Face à la difficulté computationnelle de trouver le nombre chromatique exact d'un graphe, les algorithmes gloutons (ou « greedy algorithms ») constituent une approche pragmatique pour obtenir une coloration de sommets. Le principe général est d'attribuer les couleurs aux sommets un par un, en faisant le choix « localement optimal » à chaque étape.
+
+### L'Algorithme Glouton Classique pour la Coloration de Sommets
+
+L'algorithme glouton le plus simple consiste à parcourir les sommets du graphe dans un ordre arbitraire. Pour chaque sommet, on lui attribue la plus petite couleur disponible qui n'est pas déjà utilisée par l'un de ses voisins déjà colorés.
+
+Voici les étapes :
+1. Choisir un ordre de parcours des sommets, par exemple, $v_1, v_2, \dots, v_n$.
+2. Pour chaque sommet $v_i$ dans cet ordre :
+ a. Examiner les couleurs déjà attribuées aux voisins de $v_i$ qui apparaissent avant $v_i$ dans l'ordre de parcours.
+ b. Attribuer à $v_i$ la plus petite couleur positive (par exemple, 1, 2, 3...) qui n'est pas parmi les couleurs des voisins.
+
+Cet algorithme est simple à implémenter et garantit une coloration valide. Cependant, la qualité de la coloration obtenue (c'est-à-dire le nombre de couleurs utilisées) dépend fortement de l'ordre dans lequel les sommets sont traités. Dans le pire des cas, cet algorithme peut utiliser jusqu'à $\Delta(G) + 1$ couleurs, ce qui est une borne supérieure générale, mais il peut être loin de l'optimum $\chi(G)$ <Reference id="4" name="4" term="4">4</Reference>.
+
+### L'Algorithme de Welsh-Powell
+
+Une amélioration courante de l'algorithme glouton classique est l'algorithme de Welsh-Powell. Cet algorithme tente d'améliorer la qualité de la coloration en traitant d'abord les sommets ayant le plus grand degré. L'intuition est que les sommets d'haut degré sont les plus contraignants, et en les colorant tôt, on peut potentiellement réduire le nombre total de couleurs nécessaires <Reference id="5" name="5" term="5">5</Reference>.
+
+Les étapes de l'algorithme de Welsh-Powell sont les suivantes :
+1. Calculer le degré de chaque sommet du graphe.
+2. Trier les sommets par ordre décroissant de leur degré.
+3. Parcourir la liste triée des sommets. Pour chaque sommet non encore coloré, lui attribuer la plus petite couleur disponible qui n'est pas utilisée par ses voisins déjà colorés.
+
+Bien que souvent plus performant que l'algorithme glouton simple, Welsh-Powell ne garantit pas non plus la solution optimale. L'ordre des sommets de même degré peut encore influencer le résultat.
+
+<Mermaid caption="Figure 2 : " chart={``} />
+
+### Limites des Algorithmes Gloutons et Stratégies d'Amélioration
+
+Les algorithmes gloutons, par leur nature « localement optimale », peuvent échouer à trouver la coloration minimale. Un choix de couleur apparemment bon à une étape peut contraindre les choix futurs, conduisant à l'utilisation de couleurs supplémentaires.
+
+Pour pallier ces limitations, plusieurs stratégies heuristiques plus avancées peuvent être employées :
+
+1. **Ordres de sommets sophistiqués** : Au lieu de simplement trier par degré, on peut utiliser des critères plus complexes pour ordonner les sommets. Par exemple, l'algorithme DSATUR (Degree of Saturation) attribue la couleur à un sommet non coloré qui a le plus grand nombre de couleurs distinctes parmi ses voisins (le « degré de saturation »). En cas d'égalité, on choisit le sommet avec le plus grand degré. Cette approche vise à colorier en priorité les sommets les plus « difficiles » à colorier <Reference id="6" name="6" term="6">6</Reference>.
+
+2. **Algorithmes de réordonnancement et de recherche locale** : Après avoir obtenu une coloration initiale avec un algorithme glouton, on peut tenter de l'améliorer en utilisant des techniques de recherche locale. Par exemple, on peut essayer de « décolorer » un sommet et de le recolorier avec une couleur existante, ou de « recolorier » un ensemble de sommets pour réduire le nombre total de couleurs. Des algorithmes comme le recuit simulé ou les algorithmes génétiques peuvent être appliqués pour explorer l'espace des solutions <Reference id="7" name="7" term="7">7</Reference>.
+
+3. **Approches basées sur la programmation entière ou la satisfaction de contraintes** : Pour des problèmes de coloration où une solution optimale est requise et où la taille du graphe le permet, des techniques issues de la programmation mathématique, comme la programmation entière, ou des solveurs de satisfaction de contraintes peuvent être utilisées. Ces méthodes sont généralement plus coûteuses en temps de calcul mais peuvent garantir l'optimalité <Reference id="8" name="8" term="8">8</Reference>.
+
+4. **Coloration d'arêtes** : Il est important de noter que les algorithmes gloutons pour la coloration d'arêtes suivent une logique similaire. On parcourt les arêtes et on leur attribue la plus petite couleur disponible qui n'est pas utilisée par une arête adjacente (qui partage un sommet). L'ordre de parcours des arêtes est également crucial <Reference id="9" name="9" term="9">9</Reference>.
+
+La recherche d'une coloration optimale est un problème NP-difficile, ce qui signifie que pour des graphes de grande taille, il est souvent nécessaire de se contenter de solutions approchées fournies par des heuristiques. Le choix de l'algorithme et de la stratégie dépendra des contraintes spécifiques du problème et des ressources computationnelles disponibles.
+
+Pour mieux appréhender l'application de ces algorithmes, examinons un exemple concret :
+
+<SolvedExercise title="Exemple d'application de l'algorithme glouton pour la coloration de sommets" solution="">
+  
+</SolvedExercise>
+
+Comprendre les nuances entre les différents algorithmes gloutons et leurs performances est essentiel pour choisir la méthode la plus appropriée.
+
+<DataChart title="Comparaison des performances : Algorithme Glouton vs Welsh-Powell" dataBase64="W10=" xKey="label" yKey="value" />
+
+Il est également pertinent de considérer les contributions de chercheurs comme :
+<RealPerson id="welsh" name="D. J. A. Welsh" title="D. J. A. Welsh" unresolved={true}>D. J. A. Welsh</RealPerson> et <RealPerson id="powell" name="M. B. Powell" title="M. B. Powell" unresolved={true}>M. B. Powell</RealPerson> pour leur algorithme éponyme qui a marqué un progrès dans les méthodes heuristiques de coloration.
+
+Enfin, pour une compréhension plus approfondie des heuristiques en général :
+<ConceptLink id="heuristiques_algorithmiques" name="heuristiques_algorithmiques" title="heuristiques_algorithmiques" unresolved={true}>heuristiques_algorithmiques</ConceptLink>
+
+## Coloration d'Arêtes et Théorème de Vizing
+
+Alors que la coloration de sommets vise à attribuer des couleurs aux nœuds d'un graphe de telle sorte que deux sommets adjacents n'aient pas la même couleur, la **coloration d'arêtes** s'intéresse à l'attribution de couleurs aux arêtes. L'objectif est de minimiser le nombre de couleurs utilisées, tout en s'assurant que deux arêtes incidentes au même sommet ne partagent pas la même couleur. Le nombre minimum de couleurs nécessaires pour colorier les arêtes d'un graphe $G$ est appelé son **indice chromatique**, noté $\chi'(G)$.
+
+Le lien entre le degré maximal d'un graphe et son indice chromatique est fondamental. Le degré maximal d'un graphe $G$, noté $\Delta(G)$, est le degré le plus élevé parmi tous ses sommets. Il est évident qu'au moins $\Delta(G)$ couleurs sont nécessaires pour colorer les arêtes d'un graphe, car un sommet de degré $\Delta(G)$ est incident à $\Delta(G)$ arêtes qui doivent toutes avoir des couleurs différentes.
+
+Le **théorème de Vizing** établit une relation précise entre l'indice chromatique et le degré maximal d'un graphe. Il stipule que pour tout graphe simple (sans boucle ni arêtes multiples), l'indice chromatique $\chi'(G)$ est soit $\Delta(G)$, soit $\Delta(G) + 1$. Les graphes pour lesquels $\chi'(G) = \Delta(G)$ sont dits de **classe 1**, tandis que ceux pour lesquels $\chi'(G) = \Delta(G) + 1$ sont de **classe 2**.
+
+<RealPerson id="vizing" name="Vizing" title="Vizing">Vizing</RealPerson> a démontré ce théorème en 1964. Il est important de noter que déterminer si un graphe est de classe 1 ou 2 est un problème NP-complet. Cependant, pour certaines classes de graphes, comme les graphes bipartis, il est connu que $\chi'(G) = \Delta(G)$ (théorème de König).
+
+Les algorithmes de coloration d'arêtes sont souvent basés sur des approches gloutonnes. Un algorithme glouton typique consiste à parcourir les arêtes du graphe dans un ordre arbitraire (ou un ordre spécifique pour tenter d'améliorer la performance) et à attribuer à chaque arête la plus petite couleur disponible qui n'est pas déjà utilisée par une arête adjacente (c'est-à-dire une arête partageant un sommet avec l'arête courante). Bien que ces algorithmes ne garantissent pas toujours l'optimalité (trouver une coloration avec $\Delta(G)$ couleurs), ils fournissent souvent une coloration avec $\Delta(G) + 1$ couleurs, ce qui est une borne supérieure raisonnable grâce au théorème de Vizing.
+
+La complexité des algorithmes de coloration d'arêtes dépend de l'approche. Les algorithmes gloutons peuvent être implémentés efficacement, souvent en temps polynomial. Par exemple, une implémentation naïve peut prendre $O(|E| \cdot \Delta(G))$ temps, où $|E|$ est le nombre d'arêtes. Des implémentations plus sophistiquées utilisant des structures de données appropriées pour gérer les couleurs disponibles aux sommets peuvent réduire cette complexité. La recherche d'une coloration optimale, comme mentionné, est difficile.
+
+Pour illustrer le concept, considérons un graphe simple et son degré maximal.
+
+<Mermaid caption="Figure 3 : " chart={``} />
+
+Il est crucial de comprendre que la distinction entre classe 1 et classe 2 n'est pas triviale et dépend de la structure intrinsèque du graphe. Des recherches continues visent à développer des algorithmes plus efficaces pour la coloration d'arêtes, en particulier pour les classes de graphes où le problème est plus complexe.
+
+<Quiz durationLimit={300} limit={3}>
+ <Question q="Selon le Théorème de Vizing, pour tout graphe simple G, l'indice chromatique χ'(G) est soit égal au degré maximal Δ(G), soit égal à Δ(G)+1. Vrai ou Faux ?" explanation="Le Théorème de Vizing établit précisément cette borne supérieure pour l'indice chromatique des graphes simples.">
+  <Option text="Vrai" correct={true} />
+  <Option text="Faux" correct={false} />
+</Question>
+ <Question q="Quel est l'indice chromatique χ'(G) d'un graphe où le degré maximal Δ(G) est 3, et le graphe est de classe 2 ?" explanation="Un graphe de classe 2 nécessite Δ(G)+1 couleurs pour une coloration d'arêtes optimale.">
+  <Option text="3" correct={false} />
+  <Option text="4" correct={true} />
+  <Option text="5" correct={false} />
+</Question>
+ <Question q="La coloration d'arêtes est-elle toujours plus simple à calculer que la coloration de sommets ?" explanation="Déterminer si un graphe est de classe 1 (χ'(G) = Δ(G)) ou de classe 2 (χ'(G) = Δ(G)+1) est un problème NP-complet en général.">
+  <Option text="Oui, car elle est toujours polynomiale." correct={false} />
+  <Option text="Non, car déterminer si χ'(G) = Δ(G) est NP-complet pour les graphes généraux." correct={true} />
+  <Option text="Cela dépend du nombre d'arêtes." correct={false} />
+</Question>
+</Quiz>
+
+## Applications de la Coloration de Graphes
+
+La coloration de graphes, qu'elle soit de sommets ou d'arêtes, est un outil puissant dont les applications pratiques abondent dans de nombreux domaines de l'informatique et au-delà. Ces applications exploitent la capacité de la coloration à modéliser et résoudre des problèmes d'allocation de ressources, d'ordonnancement, et de satisfaction de contraintes, où des entités (représentées par les sommets ou les arêtes) doivent être assignées à des « couleurs » (représentant des ressources, des temps, des fréquences, etc.) sans conflit.
+
+### Ordonnancement de Tâches et Planification
+
+L'une des applications les plus directes de la coloration de sommets est la **planification d'examens**. Dans ce scénario, chaque cours est représenté par un sommet dans un graphe. Une arête est tracée entre deux sommets si les cours correspondants ont au moins un étudiant en commun. L'objectif est d'attribuer des créneaux horaires (les « couleurs ») aux examens de manière à ce qu'aucun étudiant n'ait deux examens au même moment. Le nombre minimum de créneaux nécessaires correspond au nombre chromatique du graphe. Des algorithmes de coloration, souvent des heuristiques gloutonnes, sont utilisés pour trouver une planification réalisable.
+
+De manière similaire, la coloration de graphes peut être appliquée à l'**ordonnancement de tâches dans des systèmes parallèles**. Si des tâches ne peuvent pas être exécutées simultanément en raison de dépendances ou de ressources partagées, cela peut être modélisé par un graphe, et la coloration permet de déterminer les moments où chaque tâche peut être exécutée.
+
+### Allocation de Ressources
+
+La coloration d'arêtes trouve une application majeure dans l'**allocation de fréquences radio**. Dans les réseaux de communication sans fil, les stations de base ou les émetteurs peuvent être représentés par des sommets, et une arête entre deux sommets indique qu'ils sont suffisamment proches pour que leurs signaux interfèrent s'ils utilisent la même fréquence. L'attribution de fréquences (les « couleurs ») aux arêtes (les liens de communication) doit respecter cette contrainte d'interférence. Le nombre de fréquences nécessaires est lié à l'indice chromatique du graphe d'interférence <Reference id="10" name="10" term="10">10</Reference>.
+
+Dans le domaine des **processeurs**, la coloration de graphes est utilisée pour l'**allocation de registres**. Les compilateurs tentent de minimiser l'utilisation de la mémoire principale en stockant les variables fréquemment utilisées dans les registres du processeur. Si deux variables doivent être conservées simultanément, elles ne peuvent pas être assignées au même registre. Un graphe d'interférence est construit où les sommets représentent les variables, et une arête existe si deux variables sont « vivantes » (nécessaires) en même temps. La coloration de ce graphe permet d'attribuer les variables aux registres disponibles. Le problème de savoir si un graphe peut être coloré avec $k$ registres est NP-complet, mais des heuristiques efficaces existent.
+
+### Résolution de Problèmes de Satisfaction de Contraintes
+
+La coloration de graphes est intrinsèquement liée aux **problèmes de satisfaction de contraintes (CSP)**. Un CSP peut souvent être formulé comme un problème de coloration. Par exemple, le célèbre problème des **quatre couleurs** pour les cartes géographiques est un cas particulier de coloration de graphes planaires, où chaque région est un sommet et deux sommets sont connectés si les régions sont adjacentes. L'attribution de couleurs aux régions de manière à ce que les régions adjacentes aient des couleurs différentes est un problème de coloration de sommets <ConceptLink id="probleme_des_quatre_couleurs" name="probleme_des_quatre_couleurs" title="probleme_des_quatre_couleurs" unresolved={true}>probleme_des_quatre_couleurs</ConceptLink>.
+
+D'autres exemples incluent la **planification de projets** où certaines tâches ne peuvent pas être effectuées en parallèle, ou la **conception de circuits intégrés** où des composants doivent être placés de manière à minimiser les interférences ou la consommation d'espace. Dans tous ces cas, la modélisation sous forme de graphe et l'application d'algorithmes de coloration permettent de trouver des solutions efficaces et optimisées.
+
+<Image description="Schéma illustrant la planification d'examens à l'aide de la coloration de graphes, montrant comment les conflits entre étudiants sont représentés par des arêtes et comment les créneaux horaires sont attribués comme couleurs." alt="Schéma illustrant la planification d'examens à l'aide de la coloration de graphes, montrant comment les conflits entre étudiants sont représentés par des arêtes et comment les créneaux horaires sont attribués comme couleurs." caption="Figure 2: Schéma illustrant la planification d'examens à l'aide de la coloration de graphes, montrant comment les conflits entre étudiants sont représentés par des arêtes et comment les créneaux horaires sont attribués comme couleurs. Source: [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:List-edge_coloring_(cb).svg)" src="https://commons.wikimedia.org/wiki/Special:FilePath/List-edge_coloring_(cb).svg" fallbackUrl="https://commons.wikimedia.org/wiki/File:List-edge_coloring_(cb).svg" />
+
+La polyvalence de la coloration de graphes en fait un outil indispensable dans la boîte à outils de tout informaticien fondamental, offrant des solutions élégantes à des problèmes complexes du monde réel.
+
+<SolvedExercise title="Exercice résolu : Allocation de fréquences radio" solution="">
+  
+</SolvedExercise>
+
+## Complexité et Problèmes NP-Complets
+Bien que les algorithmes gloutons et d'autres méthodes heuristiques fournissent des solutions pratiques pour de nombreux problèmes de coloration, il est crucial de comprendre la complexité computationnelle inhérente à certains de ces problèmes. Le problème de la coloration de sommets, qui consiste à déterminer le nombre minimum de couleurs nécessaires pour colorier un graphe de telle sorte que deux sommets adjacents n'aient jamais la même couleur (c'est-à-dire trouver l'indice chromatique $\chi(G)$), est un exemple classique de problème NP-complet <ConceptLink id="NP-complet" name="NP-complet" title="NP-complet">NP-complet</ConceptLink>. Cela signifie qu'il n'existe actuellement aucun algorithme connu capable de résoudre ce problème en temps polynomial pour toutes les instances possibles. En d'autres termes, à mesure que la taille du graphe augmente, le temps nécessaire pour trouver la solution optimale peut croître de manière exponentielle, rendant la résolution exacte impraticable pour de grands graphes.
+
+La NP-complétude du problème de coloration de sommets a des implications profondes. Elle suggère que, sauf si P=NP (une hypothèse majeure non résolue en informatique théorique), nous ne pouvons pas espérer trouver un algorithme universellement efficace pour déterminer l'indice chromatique de n'importe quel graphe. Pour les applications où une solution optimale est requise, cela nous oblige à explorer des approches qui peuvent être coûteuses en temps de calcul, comme les algorithmes d'énumération exhaustive ou les méthodes de recherche locale sophistiquées. Cependant, dans de nombreux scénarios pratiques, une solution « suffisamment bonne » est acceptable. C'est là que les algorithmes heuristiques et d'approximation jouent un rôle essentiel. Des algorithmes comme celui de Welch-Powell, bien qu'il ne garantisse pas l'optimalité, fournissent souvent des colorations proches de l'optimum en un temps raisonnable. La recherche d'heuristiques performantes et de bornes d'approximation serrées reste un domaine de recherche actif.
+
+Il est important de noter que tous les problèmes de coloration ne sont pas NP-complets. Par exemple, la coloration d'arêtes est polynomiale pour les graphes bipartis, et la coloration de sommets est polynomiale pour les graphes bipartis (avec 2 couleurs) et pour les graphes planaires (avec 4 couleurs, comme prouvé par le théorème des quatre couleurs, bien que la preuve originale soit complexe et ait nécessité une assistance informatique <ConceptLink id="theoreme_des_quatre_couleurs" name="theoreme_des_quatre_couleurs" title="theoreme_des_quatre_couleurs" unresolved={true}>theoreme_des_quatre_couleurs</ConceptLink>). Cependant, pour la coloration de sommets en général, la difficulté demeure. La compréhension de la classe de complexité d'un problème de coloration spécifique est la première étape pour choisir la bonne stratégie algorithmique.
+
+Voici une comparaison des complexités de certains problèmes de coloration :
+
+| Problème de Coloration | Classe de Complexité | Notes |
+|---|---|---|
+| Coloration de sommets | NP-complet | Déterminer le nombre minimum de couleurs (indice chromatique). |
+| Coloration d'arêtes | P | Pour les graphes généraux, le problème est polynomial. |
+| Coloration de sommets sur graphes bipartis | P | Toujours possible avec 2 couleurs. |
+| Coloration de sommets sur graphes planaires | P | Possible avec 4 couleurs (Théorème des quatre couleurs). |
+
+<Mermaid caption="Figure 5 : " chart={``} />
+
+<Quiz durationLimit={300} limit={3}>
+ <Question q="La détermination du nombre minimum de couleurs nécessaires pour colorier un graphe général (problème de décision associé) est un problème de quelle classe de complexité ?" explanation="Le problème de décision associé à la coloration de sommets (savoir si un graphe est k-coloriable pour k ">
+= 3) est NP-complet. »>
+  <Option text="P (Polynomial)" correct={false} />
+  <Option text="NP-complet" correct={true} />
+  <Option text="EXPTIME-complet" correct={false} />
+</Question>
+ <Question q="Pour les graphes bipartis, le nombre chromatique χ(G) est toujours égal à :" explanation="Un graphe est bipartis si et seulement si son nombre chromatique est au plus 2. Si le graphe a au moins une arête, χ(G)=2.">
+  <Option text="1" correct={false} />
+  <Option text="2" correct={true} />
+  <Option text="Le degré maximal Δ(G)" correct={false} />
+</Question>
+ <Question q="Le problème de déterminer si un graphe simple peut être coloré avec Δ(G) couleurs pour ses arêtes est :" explanation="Alors que Vizing garantit que χ'(G) ≤ Δ(G)+1, déterminer si χ'(G) = Δ(G) (i.e., si le graphe est de classe 1) est NP-complet.">
+  <Option text="Toujours vrai selon le Théorème de Vizing." correct={false} />
+  <Option text="NP-complet en général." correct={true} />
+  <Option text="Toujours résoluble en temps polynomial." correct={false} />
+</Question>
+</Quiz>
+
+## Conclusion
+<Summary itemsString="La coloration de graphes est un problème fondamental en théorie des graphes avec des applications variées.|||Le nombre chromatique d'un graphe est le nombre minimum de couleurs nécessaires pour colorier ses sommets de telle sorte que deux sommets adjacents n'aient pas la même couleur.|||Le problème de détermination du nombre chromatique est NP-difficile en général.|||Des algorithmes gloutons et des algorithmes d'appel (backtracking) peuvent être utilisés pour trouver des colorations, bien que les algorithmes gloutons ne garantissent pas l'optimalité.|||Le théorème des quatre couleurs stipule que tout graphe planaire peut être coloré avec au plus quatre couleurs.|||Les applications de la coloration de graphes incluent l'ordonnancement, l'allocation de registres et la résolution de problèmes d'optimisation combinatoire.|||La coloration d'arêtes et la coloration totale sont des variantes importantes du problème de coloration de sommets." />
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+ <Question q="Quelle est la définition formelle du nombre chromatique d'un graphe G, noté χ(G) ?" explanation="Le nombre chromatique est le nombre minimum de couleurs nécessaires pour colorier les sommets d'un graphe de telle sorte que deux sommets adjacents n'aient jamais la même couleur.">
+  <Option text="Le nombre maximum de couleurs nécessaires pour colorier les sommets." correct={false} />
+  <Option text="Le nombre minimum de couleurs nécessaires pour colorier les sommets de manière valide." correct={true} />
+  <Option text="Le nombre de sommets du graphe." correct={false} />
+  <Option text="Le nombre d'arêtes du graphe." correct={false} />
+</Question>
+ <Question q="Quel théorème établit une borne supérieure pour le nombre chromatique d'un graphe G avec n sommets et de degré maximum Δ ?" explanation="Le théorème de Brooks stipule que pour un graphe connexe G qui n'est ni une clique ni un cycle impair, χ(G) ≤ Δ(G). Dans le cas général, on a toujours χ(G) ≤ Δ(G) + 1.">
+  <Option text="Le théorème des quatre couleurs." correct={false} />
+  <Option text="Le théorème de Brooks." correct={true} />
+  <Option text="Le lemme des tiroirs." correct={false} />
+  <Option text="Le théorème de Ramsey." correct={false} />
+</Question>
+ <Question q="Un graphe est dit k-colorable si son nombre chromatique est inférieur ou égal à k. Quel est le nombre chromatique d'un graphe biparti ?" explanation="Un graphe biparti peut être colorié avec au plus 2 couleurs. Si le graphe n'est pas vide, son nombre chromatique est exactement 2. S'il est vide, il est 1.">
+  <Option text="Toujours 1." correct={false} />
+  <Option text="Toujours 2." correct={true} />
+  <Option text="Dépend du nombre de sommets." correct={false} />
+  <Option text="Dépend du nombre d'arêtes." correct={false} />
+</Question>
+ <Question q="Dans le contexte de la coloration de graphes, qu'est-ce qu'un 'ensemble indépendant' ?" explanation="Un ensemble indépendant (ou stable) dans un graphe est un ensemble de sommets tel qu'aucun sommet de l'ensemble n'est adjacent à un autre sommet du même ensemble. Dans une coloration valide, tous les sommets d'une même couleur forment un ensemble indépendant.">
+  <Option text="Un ensemble de sommets tous connectés entre eux." correct={false} />
+  <Option text="Un ensemble de sommets où chaque paire est adjacente." correct={false} />
+  <Option text="Un ensemble de sommets où aucun sommet n'est adjacent à un autre dans l'ensemble." correct={true} />
+  <Option text="Un ensemble de sommets formant un cycle." correct={false} />
+</Question>
+ <Question q="Quelle est l'une des applications principales de la coloration de graphes dans le monde réel ?" explanation="La coloration de graphes a de nombreuses applications, notamment l'allocation de fréquences radio (chaque fréquence est une couleur et les stations adjacentes ne peuvent pas utiliser la même fréquence), la planification d'horaires, la résolution de problèmes d'optimisation, etc.">
+  <Option text="La recherche d'itinéraires dans un réseau routier." correct={false} />
+  <Option text="L'allocation de ressources limitées, comme les fréquences radio ou les salles de réunion." correct={true} />
+  <Option text="La compression d'images." correct={false} />
+  <Option text="Le calcul de la complexité algorithmique." correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFsZ29yaXRobWUgZCdBcHBlbCAoQmFja3RyYWNraW5nKSIsImRlZmluaXRpb24iOiJVbmUgYXBwcm9jaGUgYWxnb3JpdGhtaXF1ZSByw6ljdXJzaXZlIHBvdXIgcsOpc291ZHJlIGRlcyBwcm9ibMOobWVzIGRlIHNhdGlzZmFjdGlvbiBkZSBjb250cmFpbnRlcywgY29tbWUgbGEgY29sb3JhdGlvbiBkZSBncmFwaGVzLiBJbCBleHBsb3JlIHN5c3TDqW1hdGlxdWVtZW50IGxlcyBzb2x1dGlvbnMgcG9zc2libGVzIGVuIGNvbnN0cnVpc2FudCB1bmUgc29sdXRpb24gcGFydGllbGxlIMOpdGFwZSBwYXIgw6l0YXBlIGV0IGVuIGFiYW5kb25uYW50IChiYWNrdHJhY2tpbmcpIHVuZSBicmFuY2hlIGRlIHJlY2hlcmNoZSBkw6hzIHF1J2lsIGVzdCBkw6l0ZXJtaW7DqSBxdSdlbGxlIG5lIHBldXQgcGFzIGFib3V0aXIgw6AgdW5lIHNvbHV0aW9uIHZhbGlkZS4ifSx7InRlcm0iOiJBbGdvcml0aG1lIEdsb3V0b24gZGUgQ29sb3JhdGlvbiIsImRlZmluaXRpb24iOiJVbiBhbGdvcml0aG1lIHNpbXBsZSBxdWkgcGFyY291cnQgbGVzIHNvbW1ldHMgZHUgZ3JhcGhlIGRhbnMgdW4gb3JkcmUgcHLDqWTDqWZpbmkgZXQgYXR0cmlidWUgw6AgY2hhcXVlIHNvbW1ldCBsYSBwbHVzIHBldGl0ZSBjb3VsZXVyIGRpc3BvbmlibGUgcXVpIG4nZXN0IHBhcyB1dGlsaXPDqWUgcGFyIHNlcyB2b2lzaW5zIGTDqWrDoCBjb2xvcsOpcy4gSWwgbmUgZ2FyYW50aXQgcGFzIGwnb3B0aW1hbGl0w6kuIn0seyJ0ZXJtIjoiQ29sb3JhdGlvbiBkJ0Fyw6p0ZXMiLCJkZWZpbml0aW9uIjoiVW4gcHJvYmzDqG1lIGRlIGNvbG9yYXRpb24gb8O5IGwnb2JqZWN0aWYgZXN0IGQnYXNzaWduZXIgZGVzIGNvdWxldXJzIGF1eCBhcsOqdGVzIGQndW4gZ3JhcGhlIGRlIHRlbGxlIHNvcnRlIHF1ZSBkZXV4IGFyw6p0ZXMgaW5jaWRlbnRlcyBhdSBtw6ptZSBzb21tZXQgbidhaWVudCBwYXMgbGEgbcOqbWUgY291bGV1ci4gTGUgbm9tYnJlIG1pbmltdW0gZGUgY291bGV1cnMgcmVxdWlzIGVzdCBhcHBlbMOpIGwnaW5kaWNlIGNocm9tYXRpcXVlLiJ9LHsidGVybSI6IkNvbG9yYXRpb24gUHJvcHJlIiwiZGVmaW5pdGlvbiI6IlVuZSBjb2xvcmF0aW9uIGRlIGdyYXBoZXMgb8O5IGNoYXF1ZSBzb21tZXQgYWRqYWNlbnQgw6AgdW4gc29tbWV0IGRvbm7DqSBkb2l0IGF2b2lyIHVuZSBjb3VsZXVyIGRpZmbDqXJlbnRlIGRlIGNlbGxlIGRlIGNlIHNvbW1ldC4gQydlc3QgbGEgZMOpZmluaXRpb24gc3RhbmRhcmQgZGUgbGEgY29sb3JhdGlvbiBkZSBzb21tZXRzLiJ9LHsidGVybSI6IkNvbG9yYXRpb24gVG90YWxlIiwiZGVmaW5pdGlvbiI6IlVuZSBjb2xvcmF0aW9uIHF1aSBhc3NpZ25lIGRlcyBjb3VsZXVycyDDoCBsYSBmb2lzIGF1eCBzb21tZXRzIGV0IGF1eCBhcsOqdGVzIGQndW4gZ3JhcGhlLCBkZSB0ZWxsZSBzb3J0ZSBxdWUgZGV1eCBzb21tZXRzIGFkamFjZW50cywgZGV1eCBhcsOqdGVzIGluY2lkZW50ZXMgYXUgbcOqbWUgc29tbWV0LCBldCB1bmUgYXLDqnRlIGV0IHNlcyBkZXV4IHNvbW1ldHMgZXh0csOpbWl0w6lzIGFpZW50IHRvdXMgZGVzIGNvdWxldXJzIGRpZmbDqXJlbnRlcy4gTGUgbm9tYnJlIG1pbmltdW0gZGUgY291bGV1cnMgZXN0IGxlIG5vbWJyZSBjaHJvbWF0aXF1ZSB0b3RhbC4ifSx7InRlcm0iOiJHcmFwaGUgay1Db2xvcmFibGUiLCJkZWZpbml0aW9uIjoiVW4gZ3JhcGhlIGVzdCBkaXQgay1jb2xvcmFibGUgc2kgc2VzIHNvbW1ldHMgcGV1dmVudCDDqnRyZSBjb2xvcsOpcyBlbiB1dGlsaXNhbnQgYXUgcGx1cyBrIGNvdWxldXJzLCBkZSBtYW5pw6hyZSDDoCBjZSBxdWUgZGV1eCBzb21tZXRzIGFkamFjZW50cyBhaWVudCB0b3Vqb3VycyBkZXMgY291bGV1cnMgZGlmZsOpcmVudGVzLiBDZWxhIHNpZ25pZmllIHF1ZSBzb24gbm9tYnJlIGNocm9tYXRpcXVlICRcXGNoaShHKSQgZXN0IGluZsOpcmlldXIgb3Ugw6lnYWwgw6Agay4ifSx7InRlcm0iOiJHcmFwaGUgUGFyZmFpdCIsImRlZmluaXRpb24iOiJVbiBncmFwaGUgRyBlc3QgZGl0IHBhcmZhaXQgc2ksIHBvdXIgdG91dCBzb3VzLWdyYXBoZSBpbmR1aXQgSCBkZSBHLCBsZSBub21icmUgY2hyb21hdGlxdWUgZGUgSCBlc3Qgw6lnYWwgw6Agc29uIG5vbWJyZSBkZSBzdGFiaWxpdMOpIChsYSB0YWlsbGUgZHUgcGx1cyBncmFuZCBlbnNlbWJsZSBpbmTDqXBlbmRhbnQpLiBMZXMgZ3JhcGhlcyBwYXJmYWl0cyBvbnQgZGVzIHByb3ByacOpdMOpcyBkZSBjb2xvcmF0aW9uIHJlbWFycXVhYmxlcy4ifSx7InRlcm0iOiJIZXVyaXN0aXF1ZSBkZSBDb2xvcmF0aW9uIiwiZGVmaW5pdGlvbiI6IlVuZSBtw6l0aG9kZSBhbGdvcml0aG1pcXVlIHF1aSB2aXNlIMOgIHRyb3V2ZXIgdW5lIGNvbG9yYXRpb24gdmFsaWRlIHBvdXIgdW4gZ3JhcGhlLCBzYW5zIGdhcmFudGlyIHF1J2VsbGUgdXRpbGlzZSBsZSBub21icmUgbWluaW11bSBkZSBjb3VsZXVycyAobGUgbm9tYnJlIGNocm9tYXRpcXVlKS4gTGVzIGhldXJpc3RpcXVlcyBzb250IHNvdXZlbnQgdXRpbGlzw6llcyBjYXIgdHJvdXZlciBsZSBub21icmUgY2hyb21hdGlxdWUgZXhhY3QgZXN0IHVuIHByb2Jsw6htZSBkaWZmaWNpbGUuIn0seyJ0ZXJtIjoiTm9tYnJlIENocm9tYXRpcXVlIiwiZGVmaW5pdGlvbiI6IkxlIG5vbWJyZSBtaW5pbXVtIGRlIGNvdWxldXJzIG7DqWNlc3NhaXJlcyBwb3VyIGNvbG9yaWVyIGxlcyBzb21tZXRzIGQndW4gZ3JhcGhlIGRlIHRlbGxlIHNvcnRlIHF1ZSBkZXV4IHNvbW1ldHMgYWRqYWNlbnRzIG5lIHBhcnRhZ2VudCBqYW1haXMgbGEgbcOqbWUgY291bGV1ci4gSWwgZXN0IHNvdXZlbnQgbm90w6kgJFxcY2hpKEcpJC4ifSx7InRlcm0iOiJQb2x5bsO0bWUgQ2hyb21hdGlxdWUiLCJkZWZpbml0aW9uIjoiUG91ciB1biBncmFwaGUgRywgbGUgcG9seW7DtG1lIGNocm9tYXRpcXVlIFAoRywgaykgY29tcHRlIGxlIG5vbWJyZSBkZSBmYcOnb25zIGRlIGNvbG9yaWVyIGxlcyBzb21tZXRzIGRlIEcgZW4gdXRpbGlzYW50IGF1IHBsdXMgayBjb3VsZXVycy4gTGUgbm9tYnJlIGNocm9tYXRpcXVlICRcXGNoaShHKSQgZXN0IGxlIHBsdXMgcGV0aXQgZW50aWVyIGsgcG91ciBsZXF1ZWwgUChHLCBrKSA+IDAuIn0seyJ0ZXJtIjoiUHJvYmzDqG1lIE5QLUNvbXBsZXQiLCJkZWZpbml0aW9uIjoiVW5lIGNsYXNzZSBkZSBwcm9ibMOobWVzIGRlIGTDqWNpc2lvbiBwb3VyIGxlc3F1ZWxzIGlsIGVzdCBwb3NzaWJsZSBkZSB2w6lyaWZpZXIgcmFwaWRlbWVudCAoZW4gdGVtcHMgcG9seW5vbWlhbCkgc2kgdW5lIHLDqXBvbnNlIGRvbm7DqWUgZXN0IGNvcnJlY3RlLCBtYWlzIHBvdXIgbGVzcXVlbHMgYXVjdW4gYWxnb3JpdGhtZSBjb25udSBuZSBwZXV0IHRyb3V2ZXIgbGEgc29sdXRpb24gZW4gdGVtcHMgcG9seW5vbWlhbCBkYW5zIGxlIHBpcmUgZGVzIGNhcy4gTGUgcHJvYmzDqG1lIGRlIGTDqWNpc2lvbiBkZSBsYSBjb2xvcmF0aW9uIGRlIGdyYXBoZXMgKHNhdm9pciBzaSB1biBncmFwaGUgZXN0IGstY29sb3JhYmxlIHBvdXIgdW4gayBkb25uw6kpIGVzdCBOUC1jb21wbGV0IHBvdXIgayA+PSAzLiJ9LHsidGVybSI6IlRow6lvcsOobWUgZGVzIFF1YXRyZSBDb3VsZXVycyIsImRlZmluaXRpb24iOiJVbiB0aMOpb3LDqG1lIGPDqWzDqGJyZSBzdGlwdWxhbnQgcXVlIHRvdXQgZ3JhcGhlIHBsYW5haXJlIHBldXQgw6p0cmUgY29sb3LDqSBhdmVjIGF1IHBsdXMgcXVhdHJlIGNvdWxldXJzLCBkZSBzb3J0ZSBxdWUgZGV1eCByw6lnaW9ucyBhZGphY2VudGVzIHN1ciBsYSBjYXJ0ZSBhaWVudCBkZXMgY291bGV1cnMgZGlmZsOpcmVudGVzLiBJbCBhIMOpdMOpIHByb3V2w6kgw6AgbCdhaWRlIGQnb3JkaW5hdGV1cnMuIn1d" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiVGhvbWFzIEguIENvcm1lbiwgQ2hhcmxlcyBFLiBMZWlzZXJzb24sIFJvbmFsZCBSaXZlc3QsIENsaWZmb3JkIFN0ZWluICgyMDE3KS4gwqsgQWxnb3JpdGhtZW4gLSBFaW5lIEVpbmbDvGhydW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjE1MTUvOTc4MzExMDUyMjAxMyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoyLCJ0ZXh0IjoiUmVpbmhhcmQgRGllc3RlbCAoMjAxMCkuIMKrIEdyYXBoIFRoZW9yeSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVJlaW5oYXJkJTIwRGllc3RlbCUyMCUyMkdyYXBoJTIwVGhlb3J5JTIyJTIwMjAxMCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MywidGV4dCI6IktsZWluYmVyZywgSm9uLCBhbmQgw4l2YSBUYXJkb3MuICdBbGdvcml0aG0gRGVzaWduJy4gQWRkaXNvbi1XZXNsZXksIDIwMDUuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUtsZWluYmVyZyUyMCUyMktsZWluYmVyZyUyMiUyMDIwMDUiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjQsInRleHQiOiJKdWR5IEdvbGRzbWl0aCAoMjAwNCkuICpCb29rIHJldmlldzogVGhlb3J5IG9mIENvbXB1dGluZzogQSBHZW50bGUgSW50cm9kdWN0aW9uLiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9SnVkeSUyMEdvbGRzbWl0aCUyMCUyMkJvb2slMjByZXZpZXclMjIlMjAyMDA0Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjUsInRleHQiOiJSZXZpZXcgb2YgwqsgQWxnb3JpdGhtcyBpbiBDKyssIHRoaXJkIGVkaXRpb24uIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1SZXZpZXclMjBvZiUyMCUyMlJldmlldyUyMG9mJTIwJTIwQWxnb3JpdGhtcyUyMGluJTIwQyUyQiUyQiUyMiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo2LCJ0ZXh0IjoiQWhvLCBBbGZyZWQgVi4sIEpvaG4gRS4gSG9wY3JvZnQsIGFuZCBKZWZmcmV5IEQuIFVsbG1hbi4gJ0RhdGEgU3RydWN0dXJlcyBhbmQgQWxnb3JpdGhtcycuIEFkZGlzb24tV2VzbGV5LCAxOTgzLiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9QWhvJTIwJTIySG9wY3JvZnQlMjIlMjAxOTgzIiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjcsInRleHQiOiJUYXJqYW4sIFJvYmVydCBFLiAnRGF0YSBTdHJ1Y3R1cmVzIGFuZCBOZXR3b3JrIEFsZ29yaXRobXMnLiBTb2NpZXR5IGZvciBJbmR1c3RyaWFsIGFuZCBBcHBsaWVkIE1hdGhlbWF0aWNzLCAxOTgzLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1UYXJqYW4lMjAlMjJTb2NpZXR5JTIwZm9yJTIwSW5kdXN0cmlhbCUyMGFuZCUyMEFwcGxpZWQlMjBNYXRoZW1hdGljcyUyMiUyMDE5ODMiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjgsInRleHQiOiJFdmVuLCBTaGltb24uICdHcmFwaCBBbGdvcml0aG1zJy4gQ29tcHV0ZXIgU2NpZW5jZSBQcmVzcywgMTk3OS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9RXZlbiUyMCUyMkNvbXB1dGVyJTIwU2NpZW5jZSUyMFByZXNzJTIyJTIwMTk3OSIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6OSwidGV4dCI6IkouIEEuIEJvbmR5LCBVLiBTLiBSLiBNdXJ0eSAoMjAxNSkuIMKrIEdyYXBoIFRoZW9yeSB3aXRoIEFwcGxpY2F0aW9ucyDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1Cb25keSUyMCUyMkdyYXBoJTIwVGhlb3J5JTIwd2l0aCUyMEFwcGxpY2F0aW9ucyUyMiUyMDIwMTUiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MTAsInRleHQiOiJNLiBEb25hbGQgTWFjTGFyZW4gKDIwMDUpLiDCqyBUaGUgQXJ0IG9mIENvbXB1dGVyIFByb2dyYW1taW5n4oCUVm9sdW1lIDE6IEZ1bmRhbWVudGFsIEFsZ29yaXRobXMgKERvbmFsZCBFLiBLbnV0aCkgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Eb25hbGQlMjBNYWNMYXJlbiUyMCUyMlRoZSUyMEFydCUyMG9mJTIwQ29tcHV0ZXIlMjBQcm9ncmFtbWluZyVFMiU4MCU5NFZvbHVtZSUyMDElMjIlMjAyMDA1Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoxMSwidGV4dCI6IlNraWVuYSwgU3RldmVuIFMuICdUaGUgQWxnb3JpdGhtIERlc2lnbiBNYW51YWwnLiBTcHJpbmdlciwgMjAwOC4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTEtODQ4MDAtMDcwLTQiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxMiwidGV4dCI6Ikx1Y2NpbywgRmFicml6aW8sIGFuZCBHaW9yZ2lvIE1henpvbmUuICdHcmFwaCBBbGdvcml0aG1zIGFuZCBBcHBsaWNhdGlvbnMnLiBTcHJpbmdlciwgMjAxMy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9THVjY2lvJTIwJTIyTHVjY2lvJTIyJTIwMjAxMyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxMywidGV4dCI6IkpvbmF0aGFuIEwuIEdyb3NzLCBKYXkgWWVsbGVuICgyMDE4KS4gwqsgR3JhcGggVGhlb3J5IGFuZCBJdHMgQXBwbGljYXRpb25zIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9Sm9uYXRoYW4lMjBHcm9zcyUyMCUyMkdyYXBoJTIwVGhlb3J5JTIwYW5kJTIwSXRzJTIwQXBwbGljYXRpb25zJTIyJTIwMjAxOCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNCwidGV4dCI6IkZyYW5rIEhhcmFyeS4gUHAuIGl4LCDCqyBHcmFwaCBUaGVvcnkgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUZyYW5rJTIwSGFyYXJ5JTIwUHAlMjBpeCUyMCUyMkdyYXBoJTIwVGhlb3J5JTIyIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE1LCJ0ZXh0IjoiUmljaGFyZCBJLiBTaHJlZXZlICgyMDA3KS4gKkdyYXBoIHRoZW9yeSB3aXRoIGFwcGxpY2F0aW9ucyB0byBlbmdpbmVlcmluZyBhbmQgY29tcHV0ZXIgc2NpZW5jZS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9ib29rcy5nb29nbGUuY29tL2Jvb2tzP3E9UmljaGFyZCUyMFNocmVldmUlMjAlMjJHcmFwaCUyMHRoZW9yeSUyMHdpdGglMjBhcHBsaWNhdGlvbnMlMjB0byUyMGVuZ2luZWVyaW5nJTIwYW5kJTIwY29tcHV0ZXIlMjBzJTIyJTIwMjAwNyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNiwidGV4dCI6IkRvdWdsYXMgQi4gV2VzdC4gMjAxMS4gwqsgSW50cm9kdWN0aW9uIHRvIGdyYXBoIHRoZW9yeSDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPURvdWdsYXMlMjBXZXN0JTIwJTIySW50cm9kdWN0aW9uJTIwdG8lMjBncmFwaCUyMHRoZW9yeSUyMiUyMDIwMTEiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxNywidGV4dCI6IkdpYW5ub3MgU3RhbW91bGlzLiAyMDI2LiDCqyBMb2dpcXVlcyBldCBBbGdvcml0aG1lcyBwb3VyIGRlIG1pbmV1cnMgZGUgZ3JhcGhlcyDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjcwNjc1L2Q0OTIwMDkzejcwZWN6NGRhZHo5NTJlemVkOTY4NjViOGY5YyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE4LCJ0ZXh0IjoiTWFydGlub2QsIMKrIMOJdHVkZSBkZSBjb21wbGV4aXTDqSBhbGdvcml0aG1pcXVlIHBvdXIgZGVzIHByb2Jsw6htZXMgZGUgZG9taW5hdGlvbiBldCBkZSB0b3VybsOpZXMgZGFucyBsZXMgZ3JhcGhlcyBhdmVjIG9ibGlnYXRpb25zIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuNzA2NzUvMjU2NzVkNDF6NTA3ZXo0ZGNhejhmMWJ6ZTdlOGFiNTM2MWY5Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTksInRleHQiOiJQZXJmZWN0IEdyYXBocywgUGFydGl0aW9uYWJsZSBHcmFwaHMgYW5kIEN1dHNldHMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vZG9pLm9yZy8xMC4xMDA3L3MwMDQ5MzAyMDAwMDEiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOnRydWV9XQ==" />

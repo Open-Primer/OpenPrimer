@@ -2594,7 +2594,7 @@ export const cleanPathSegment = (text: string): string => {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // remove accents
     .replace(/[^a-zA-Z0-9_-]/g, "_") // replace non-alphanumeric/dash/underscore with underscore
-    .replace(/_+/g, "_")             // collapse multiple underscores
+    .replace(/[-_]+/g, "_")          // collapse multiple underscores and hyphens (e.g. _-_) into a single underscore
     .replace(/^_+|_+$/g, "")         // trim leading/trailing underscores
     .toLowerCase();
 };

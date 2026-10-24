@@ -1,0 +1,206 @@
+---
+title: « Flux Maximaux et Coupes Minimales : Théorème Fondamental »
+subject: « Algorithmes Avancés et Théorie des Graphes »
+level: « L3 »
+module: « Flux Maximaux et Coupes Minimales : Théorème Fondamental »
+order: 6
+---
+
+
+
+<DiagnosticQuiz question="Considérant un graphe orienté avec des capacités sur les arêtes, quelle affirmation décrit le mieux la relation entre un flot s-t et une coupe s-t ?" options="La valeur d'un flot s-t est toujours supérieure ou égale à la capacité de n'importe quelle coupe s-t.|||La valeur d'un flot s-t est toujours égale à la capacité de n'importe quelle coupe s-t.|||La valeur d'un flot s-t est toujours inférieure ou égale à la capacité de n'importe quelle coupe s-t.|||La valeur d'un flot s-t est toujours égale à la capacité de la coupe s-t minimale." correctIndex="2" targetSectionId="max-flow-min-cut-theorem" sectionTitle="Théorème Fondamental des Flux Maximaux et des Coupes Minimales" />
+
+
+
+## Introduction aux réseaux et aux flux
+
+Dans le domaine de la théorie des graphes et de l'informatique, un **réseau de flux** est un concept fondamental qui modélise le mouvement de biens, d'informations ou de toute autre quantité quantifiable à travers un réseau. Formellement, un réseau de flux est un graphe orienté $G = (V, E)$ où chaque arête $(u, v) \in E$ possède une **capacité** non négative, notée $c(u, v)$. Cette capacité représente la quantité maximale qui peut transiter par cette arête.
+
+Un **flux** $f$ dans un réseau est une fonction qui assigne une valeur à chaque arête, $f: E \to \mathbb{R}_{\ge 0}$, satisfaisant deux propriétés essentielles :
+1. **Conservation du flux :** Pour tout sommet $v \in V$ autre que la source et le puits, la somme des flux entrants est égale à la somme des flux sortants. Mathématiquement, pour tout $v \in V \setminus \{s, t\}$, on a $\sum_{(u,v) \in E} f(u,v) = \sum_{(v,w) \in E} f(v,w)$.
+2. **Capacité :** Pour chaque arête $(u, v) \in E$, le flux ne doit pas dépasser sa capacité : $0 \le f(u,v) \le c(u,v)$.
+
+Un flux est dit **valide** s'il respecte ces deux conditions. Le **total du flux** d'un réseau est la somme des flux sortant de la **source** $s$ (un sommet désigné d'où le flux émane) vers tous les autres sommets, ou, de manière équivalente, la somme des flux entrants dans le **puits** $t$ (un sommet désigné où le flux converge) depuis tous les autres sommets. L'objectif principal dans de nombreux problèmes de réseaux de flux est de **maximiser le flux** d'une source $s$ vers un puits $t$, c'est-à-dire de trouver un flux valide $f$ tel que sa valeur totale soit la plus grande possible. Ce problème est central dans des applications allant de la logistique et de la planification de la production à la gestion des réseaux de communication et à la résolution de problèmes d'affectation. La compréhension de ces concepts est cruciale et a été étudiée par de nombreux chercheurs, notamment dans les travaux pionniers sur la théorie des graphes et les algorithmes, comme ceux de <RealPerson id="leshter" name="Lester R. Ford Jr." title="Lester R. Ford Jr." unresolved={true}>Lester R. Ford Jr.</RealPerson> et qui ont développé des algorithmes fondamentaux pour résoudre ces problèmes <Reference id="1" name="1" term="1">1</Reference>.
+
+<Image description="Ce diagramme illustre un réseau de flux typique, composé d'une source (S) où le flux est généré, d'un puits (T) où le flux est consommé, et d'un ensemble de nœuds intermédiaires reliés par des arêtes. Chaque arête possède une capacité maximale, limitant la quantité de flux qui peut la traverser. La conservation du flux est visuellement représentée par l'équilibre des flux entrants et sortants à chaque nœud intermédiaire : le total du flux arrivant à un nœud doit être égal au total du flux quittant ce nœud, à l'exception de la source et du puits." alt="Réseau abstrait de points lumineux bleus connectés par des lignes sur fond sombre." caption="Figure 1 : Ce diagramme illustre un réseau de flux typique, composé d'une source (S) où le flux est généré, d'un puits (T) où le flux est consommé, et d'un ensemble de nœuds intermédiaires reliés par des arêtes. Chaque arête possède une capacité maximale, limitant la quantité de flux qui peut la traverser. La conservation du flux est visuellement représentée par l'équilibre des flux entrants et sortants à chaque nœud intermédiaire : le total du flux arrivant à un nœud doit être égal au total du flux quittant ce nœud, à l'exception de la source et du puits. Source: Photo by [Conny Schneider](https://unsplash.com/@choys_?utm_source=OpenPrimer&utm_medium=referral) on [Unsplash](https://unsplash.com/?utm_source=OpenPrimer&utm_medium=referral)" title="Diagramme de Réseau de Flux" src="https://images.unsplash.com/photo-1644088379091-d574269d422f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5ODcyMjJ8MHwxfHNlYXJjaHwxfHxGbG93JTIwbmV0d29ya3xlbnwwfHx8fDE3OTEzOTI1NDN8MA&ixlib=rb-4.1.0&q=80&w=1080" fallbackUrl="https://images.unsplash.com/photo-1644088379091-d574269d422f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5ODcyMjJ8MHwxfHNlYXJjaHwxfHxGbG93JTIwbmV0d29ya3xlbnwwfHx8fDE3OTEzOTI1NDN8MA&ixlib=rb-4.1.0&q=80&w=1080" isIllustration={true} />
+
+<Objectives>
+  <Knowledge>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>analyser la relation fondamentale entre les flux maximaux et les coupes minimales dans un réseau.</li>
+      <li>Évaluer la complexité des algorithmes de calcul de flux maximum (ex: Edmonds-Karp, Dinic).</li>
+      <li>Comprendre les preuves formelles du théorème de flot maximum-coupe minimum.</li>
+    </ul>
+  </Knowledge>
+  <Skills>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Modéliser des problèmes concrets (ex: affectation, routage) comme des problèmes de flot maximum.</li>
+      <li>Appliquer le théorème de flot maximum-coupe minimum pour résoudre des problèmes d'optimisation.</li>
+      <li>Implémenter des algorithmes de flot maximum pour trouver des solutions efficaces.</li>
+    </ul>
+  </Skills>
+  <Attitudes>
+    <ul className="list-disc pl-4 space-y-1">
+      <li>Adopter une approche rigoureuse pour prouver la correction des algorithmes de flot.</li>
+      <li>Développer une pensée critique pour identifier les applications du théorème flot max-coupe min dans divers domaines.</li>
+      <li>Collaborer pour analyser et résoudre des problèmes complexes de réseaux en utilisant les concepts de flot et de coupe.</li>
+    </ul>
+  </Attitudes>
+</Objectives>
+
+## Algorithme de Ford-Fulkerson
+
+L'algorithme de Ford-Fulkerson est une méthode générale et puissante pour résoudre le problème du flux maximum dans un réseau. Son principe repose sur l'idée itérative d'augmenter le flux existant le long de **chemins augmentants**. Un chemin augmentant est un chemin de la source $s$ au puits $t$ dans le **graphe résiduel** qui possède une capacité positive.
+
+Le **graphe résiduel** $G_f$ d'un réseau $G$ avec un flux $f$ est un graphe qui représente la capacité restante pour augmenter le flux. Pour chaque arête $(u, v) \in E$ dans le graphe original, le graphe résiduel contient :
+* Une arête $(u, v)$ avec une capacité résiduelle $c_f(u, v) = c(u, v) - f(u, v)$, représentant la capacité disponible pour augmenter le flux de $u$ à $v$.
+* Une arête $(v, u)$ avec une capacité résiduelle $c_f(v, u) = f(u, v)$, représentant la capacité de « réduire » le flux de $u$ à $v$ (ce qui revient à augmenter le flux de $v$ à $u$ dans le graphe résiduel).
+
+L'algorithme de Ford-Fulkerson fonctionne comme suit :
+1. Initialiser le flux $f$ à zéro sur toutes les arêtes.
+2. Tant qu'il existe un chemin augmentant de $s$ à $t$ dans le graphe résiduel $G_f$ :
+ a. Trouver un tel chemin augmentant $p$.
+ b. Déterminer la capacité résiduelle minimale le long de ce chemin, notée $c_f(p)$. C'est la quantité maximale de flux que l'on peut ajouter le long de $p$.
+ c. Augmenter le flux le long de $p$ de $c_f(p)$. Pour chaque arête $(u, v)$ sur le chemin $p$, mettre à jour $f(u, v) \leftarrow f(u, v) + c_f(p)$ et $f(v, u) \leftarrow f(v, u) - c_f(p)$ (en tenant compte des arêtes inverses dans le graphe résiduel).
+3. Lorsque plus aucun chemin augmentant ne peut être trouvé, le flux actuel est un flux maximum.
+
+La **convergence** de l'algorithme est garantie car à chaque itération, la valeur du flux total augmente d'une quantité positive. Le processus s'arrête lorsque le flux maximum est atteint. Cependant, la **complexité potentielle** de l'algorithme de Ford-Fulkerson dépend fortement de la manière dont le chemin augmentant est choisi à chaque étape. Si les capacités sont des entiers, l'algorithme termine toujours. Dans le pire des cas, si les chemins augmentants sont choisis de manière arbitraire, le nombre d'itérations peut être très grand, menant à une complexité pseudo-polynomiale. Par exemple, si les capacités sont des nombres réels, l'algorithme pourrait ne pas converger du tout. Des variantes spécifiques, comme l'algorithme d'Edmonds-Karp qui utilise une recherche en largeur (BFS) pour trouver le plus court chemin augmentant, garantissent une complexité polynomiale <Reference id="2" name="2" term="2">2</Reference>.
+
+<Mermaid caption="Figure 2 : " chart={``} />
+
+Pour illustrer le concept de chemin augmentant et de graphe résiduel, considérons un petit réseau. Supposons une source $s$, un puits $t$, et deux sommets intermédiaires $a$ et $b$. Les arêtes sont $(s, a)$ avec capacité 10, $(s, b)$ avec capacité 5, $(a, t)$ avec capacité 5, $(b, t)$ avec capacité 10, et $(a, b)$ avec capacité 5. Initialement, le flux est nul. Un premier chemin augmentant pourrait être $s \to a \to t$ avec une capacité de $\min(10, 5) = 5$. Le flux devient $f(s, a) = 5$, $f(a, t) = 5$. Le graphe résiduel aurait alors des capacités résiduelles de $c_f(s, a) = 5$, $c_f(a, t) = 0$, $c_f(a, s) = 5$, $c_f(t, a) = 5$. Un autre chemin augmentant pourrait être $s \to b \to t$ avec une capacité de $\min(5, 10) = 5$. Le flux devient $f(s, b) = 5$, $f(b, t) = 5$. Le flux total est maintenant de $5+5=10$. Le graphe résiduel est mis à jour. Si nous avions choisi le chemin $s \to a \to b \to t$ initialement, la capacité serait $\min(10, 5, 10) = 5$. Ce chemin augmentant montre comment le concept de graphe résiduel permet de réattribuer le flux, par exemple, en envoyant du flux de $a$ vers $b$ puis vers $t$, tout en potentiellement réduisant le flux sur une autre arête si nécessaire pour trouver un chemin plus efficace <Reference id="3" name="3" term="3">3</Reference>.
+
+<SolvedExercise title="Exemple d'Application de Ford-Fulkerson" solution="">
+  
+</SolvedExercise>
+
+## Algorithme d'Edmonds-Karp
+L'algorithme de Ford-Fulkerson, bien que fondamental, peut souffrir d'une complexité temporelle imprévisible si le choix des chemins augmentants n'est pas optimisé. Pour pallier cette limitation et garantir une complexité polynomiale, une implémentation spécifique de Ford-Fulkerson a été développée : l'algorithme d'Edmonds-Karp. Cette approche se distingue par sa méthode de sélection du chemin augmentant. Au lieu de choisir un chemin arbitraire dans le graphe résiduel, Edmonds-Karp utilise systématiquement la **recherche en largeur (BFS)** pour identifier le chemin augmentant le plus court, c'est-à-dire celui qui comporte le moins d'arêtes.
+
+Le choix du chemin le plus court par BFS est crucial pour plusieurs raisons. Premièrement, il assure que le flux est augmenté de manière « équilibrée » à travers le réseau, évitant ainsi de s'engager trop rapidement sur des chemins qui pourraient s'avérer sous-optimaux à long terme. Deuxièmement, et c'est là le point essentiel, cette stratégie garantit que le nombre d'augmentations de flux est borné, menant à une complexité temporelle polynomiale.
+
+L'algorithme d'Edmonds-Karp peut être vu comme une application concrète du concept d'<ConceptLink id="chemin_augmentant" name="Augmenting Path" title="Augmenting Path" unresolved={true}>Augmenting Path</ConceptLink> dans le cadre de la théorie des flux. Il est souvent comparé à l'algorithme de <ConceptLink id="Ford_Fulkerson" name="Ford-Fulkerson Algorithm" title="Ford-Fulkerson Algorithm" unresolved={true}>Ford-Fulkerson Algorithm</ConceptLink> lui-même, dont il est une spécialisation. L'idée centrale de trouver le chemin le plus court dans le graphe résiduel est une contribution majeure de <RealPerson id="Edmonds" name="Jack Edmonds" title="Jack Edmonds">Jack Edmonds</RealPerson> et <RealPerson id="Karp" name="Richard Karp" title="Richard Karp">Richard Karp</RealPerson>.
+
+Pour illustrer le fonctionnement de l'algorithme, considérons un réseau de flux typique.
+
+<Mermaid caption="Figure 3 : diagramme_edmonds_karp_fonctionnement" id="id" description="diagramme_edmonds_karp_fonctionnement" />
+
+Ce diagramme schématise les étapes clés : la recherche du chemin le plus court dans le graphe résiduel via BFS, la détermination de la capacité de ce chemin, et la mise à jour des flux et du graphe résiduel.
+
+Voici une comparaison des caractéristiques principales entre l'algorithme général de Ford-Fulkerson et sa spécialisation par Edmonds-Karp :
+
+| Caractéristique | Algorithme de Ford-Fulkerson (Général) | Algorithme d'Edmonds-Karp |
+| :----------------------- | :------------------------------------- | :------------------------ |
+| Sélection du chemin | Arbitraire | Chemin le plus court (BFS) |
+| Complexité Temporelle | Peut être exponentielle | Polynomiale (O(VE^2)) |
+| Garantie de convergence | Oui, si les capacités sont entières | Oui |
+| Facilité d'implémentation | Variable selon la stratégie de choix | Standardisée |
+| Références |, |, <Reference id="4" name="4" term="4">4</Reference> |
+
+L'implémentation de l'algorithme d'Edmonds-Karp repose sur la structure de données de <ConceptLink id="graphe_résiduel" name="Residual Graph" title="Residual Graph" unresolved={true}>Residual Graph</ConceptLink> et l'utilisation efficace d'un algorithme de parcours de graphe comme la recherche en largeur.
+
+<Image description="illustration_edmonds_karp" alt="Ruines d'une ancienne église avec une tour centrale imposante entourée d'arbres verdoyants." caption="Figure 4 : _edmonds_karp. Source: Photo by [Lex Noordhoff](https://unsplash.com/@a_photo_by_lex?utm_source=OpenPrimer&utm_medium=referral) on [Unsplash](https://unsplash.com/?utm_source=OpenPrimer&utm_medium=referral)" src="https://images.unsplash.com/photo-1740498635845-6f6b885c25f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5ODcyMjJ8MHwxfHNlYXJjaHwxfHxFZG1vbmRzfGVufDB8fHx8MTc5MTM5MjYxN3ww&ixlib=rb-4.1.0&q=80&w=1080" fallbackUrl="https://images.unsplash.com/photo-1740498635845-6f6b885c25f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5ODcyMjJ8MHwxfHNlYXJjaHwxfHxFZG1vbmRzfGVufDB8fHx8MTc5MTM5MjYxN3ww&ixlib=rb-4.1.0&q=80&w=1080" isIllustration={true} />
+
+Cette image représente un exemple visuel d'un réseau de flux et du calcul d'un chemin augmentant par Edmonds-Karp.
+
+Pour approfondir, vous pouvez consulter les travaux originaux d'et ainsi que les analyses détaillées dans des ouvrages de référence tels qu'et <Reference id="5" name="5" term="5">5</Reference>.
+
+## Théorème Fondamental : Flot Maximum - Coupe Minimum
+Le cœur de la théorie des flux dans les réseaux réside dans un résultat d'une élégance remarquable et d'une puissance pratique considérable : le théorème du flot maximum - coupe minimum. Ce théorème, dont les fondements remontent aux travaux pionniers en la matière et ont été formalisés par de nombreux chercheurs, stipule que la valeur maximale d'un flux d'une source $s$ à un puits $t$ dans un réseau est exactement égale à la capacité minimale d'une coupe $(S, T)$ séparant $s$ de $t$. Une coupe $(S, T)$ est une partition des sommets du graphe en deux ensembles disjoints $S$ et $T$ tels que $s \in S$ et $t \in T$. La capacité d'une coupe est la somme des capacités des arêtes allant de $S$ vers $T$.
+
+La démonstration de ce théorème repose sur deux implications principales :
+
+1. **Tout flot est borné par la capacité de toute coupe :** Pour tout flot $f$ et toute coupe $(S, T)$ séparant $s$ et $t$, la valeur du flot $v(f)$ est inférieure ou égale à la capacité de la coupe $c(S, T)$. Pour le prouver, on considère la différence entre la capacité de la coupe et la valeur du flot. La valeur du flot sortant de $S$ est $\sum_{u \in S, v \in T} f(u, v) - \sum_{u \in S, v \in T} f(v, u)$. La valeur totale du flot sortant de $S$ (et entrant dans $T$) est $v(f)$ si $s$ est le seul sommet d'où le flot est généré et $t$ est le seul où il est consommé. Plus formellement, la divergence nette de chaque sommet $u \in S \setminus \{s\}$ est nulle. La divergence nette de $s$ est $v(f)$. La somme des divergences nettes sur $S$ est donc $v(f)$. Cette somme peut aussi s'écrire comme la somme des flux nets sortant de $S$ vers $T$ moins la somme des flux nets entrant dans $S$ depuis $T$. En utilisant la définition de la capacité de la coupe, on obtient $v(f) \le c(S, T)$. Cette inégalité est fondamentale et montre que la capacité d'une coupe est une borne supérieure pour la valeur du flot.
+
+2. **Il existe un flot et une coupe ayant la même valeur :** La seconde partie de la démonstration consiste à montrer qu'il existe une coupe dont la capacité est égale à la valeur maximale du flot. Cette existence est souvent établie en utilisant le concept du. Après l'exécution d'un algorithme de flot maximum (comme Edmonds-Karp), on considère le graphe résiduel $G_f$. Soit $S$ l'ensemble de tous les sommets atteignables depuis la source $s$ dans le graphe résiduel $G_f$, et soit $T$ l'ensemble de tous les autres sommets ($T = V \setminus S$). Par construction, $s \in S$. Si $t$ était dans $S$, cela signifierait qu'il existe un chemin de $s$ à $t$ dans $G_f$ avec une capacité résiduelle positive, ce qui contredirait le fait que le flot $f$ est maximal (car on pourrait encore augmenter le flot le long de ce chemin). Donc, $t \in T$. La partition $(S, T)$ forme ainsi une coupe valide. De plus, dans le graphe résiduel $G_f$, il n'y a aucune arête allant de $S$ à $T$ avec une capacité résiduelle positive. Cela implique que pour toute arête $(u, v)$ avec $u \in S$ et $v \in T$, la capacité résiduelle $c_f(u, v) = c(u, v) - f(u, v)$ est nulle. Autrement dit, $f(u, v) = c(u, v)$ pour toutes les arêtes $(u, v)$ allant de $S$ à $T$. Par conséquent, la capacité de cette coupe $(S, T)$ est $\sum_{u \in S, v \in T} c(u, v) = \sum_{u \in S, v \in T} f(u, v)$. En considérant la divergence nette de $s$ dans le flot $f$, on peut montrer que cette somme est exactement égale à la valeur du flot $v(f)$. Ainsi, $v(f) = c(S, T)$.
+
+Ce théorème a des implications profondes. Il transforme le problème de trouver un flot maximum en un problème de trouver une coupe minimum. Cette dualité est extrêmement utile, car elle permet de valider la maximalité d'un flot : si l'on trouve une coupe dont la capacité est égale à la valeur d'un flot donné, alors ce flot est nécessairement un flot maximum. De plus, il fournit une base théorique solide pour le développement et l'analyse des algorithmes de flot maximum. La complexité de calcul d'un flot maximum est donc intrinsèquement liée à la complexité de trouver une coupe minimum, et vice-versa. Le théorème est une illustration classique du principe de dualité en optimisation combinatoire, un concept central dans des domaines comme la recherche opérationnelle et l'algorithmique. Les travaux de Lester R. Ford Jr. et ont largement contribué à la compréhension et à l'application de ce principe.
+
+<Image description="illustration_coupe_minimale" alt="Micrographie de sections transversales d'oolithes et de foraminifères dans une roche sédimentaire." caption="Figure 1: _coupe_minimale. Source: [Wikimedia Commons](https://fr.wikipedia.org/wiki/Coupe)" src="https://commons.wikimedia.org/wiki/Special:FilePath/CarmelOoids.jpg" fallbackUrl="https://fr.wikipedia.org/wiki/Coupe" />
+
+Comment la visualisation d'une coupe minimale dans un réseau de flux éclaire-t-elle la relation entre la capacité de cette coupe et le flot maximum ?
+
+La recherche d'une coupe minimum est également un problème algorithmique bien étudié. Par exemple, l'algorithme de <RealPerson id="Stoer_Wagner" name="Markus Stoer" title="Markus Stoer" unresolved={true}>Markus Stoer</RealPerson> peut trouver une coupe minimum dans un graphe non orienté, et des adaptations des algorithmes de flot maximum peuvent être utilisées pour les graphes orientés. La capacité d'une coupe minimum représente le « goulot d'étranglement » du réseau, c'est-à-dire la quantité maximale de « quelque chose » (information, matière, etc.) qui peut transiter du point d'origine au point de destination.
+
+<SolvedExercise id="id" name="exemple_theoreme_flot_coupe" term="exemple_theoreme_flot_coupe">exemple_theoreme_flot_coupe</SolvedExercise>
+
+Cet exercice résolu illustre concrètement comment le théorème du flot maximum - coupe minimum s'applique à un petit réseau de flux, en calculant à la fois le flot maximum et la capacité de la coupe minimale correspondante.
+
+Voici une comparaison des propriétés du flot maximum et de la coupe minimum :
+
+| Caractéristique | Flot Maximum | Coupe Minimum |
+| :--------------------- | :--------------------------------------------------------------------------- | :------------------------------------------------------------------------------- |
+| **Définition** | Valeur maximale d'un flux d'une source $s$ à un puits $t$. | Partition $(S, T)$ de $V$ avec $s \in S, t \in T$, minimisant la somme des capacités des arêtes de $S$ vers $T$. |
+| **Valeur** | $v(f_{max})$ | $c(S_{min}, T_{min})$ |
+| **Relation (Théorème)** | $v(f_{max}) = c(S_{min}, T_{min})$ | $c(S_{min}, T_{min}) = v(f_{max})$ |
+| **Algorithmique** | Algorithmes basés sur les chemins augmentants (Ford-Fulkerson, Edmonds-Karp). | Souvent résolu via des algorithmes de flot maximum ou des algorithmes dédiés (ex: Stoer-Wagner pour graphes non orientés). |
+| **Interprétation** | Quantité maximale de ressources pouvant être transférées. | Capacité limitante du réseau, le « goulot d'étranglement ». |
+| **Objectif** | Maximiser le transfert. | Identifier la contrainte la plus faible. |
+
+<Mermaid caption="Figure 6 : mermaid_flot_coupe_relation:Visualisation de la relation entre flot maximum et coupe minimum" id="id" description="mermaid_flot_coupe_relation:Visualisation de la relation entre flot maximum et coupe minimum" />
+
+## Conclusion
+<RealPerson id="fulkerson" name="Delbert Ray Fulkerson" title="Delbert Ray Fulkerson">Delbert Ray Fulkerson</RealPerson>
+
+<Mermaid caption="Figure 7 : " chart={``} />
+
+<SolvedExercise title="Exemple : Théorème du Flot Maximum et de la Coupe Minimum" solution="">
+  
+</SolvedExercise>
+
+<Mermaid caption="Figure 8 : " chart={``} />
+
+Au cours de cette leçon, nous avons exploré en profondeur le domaine fascinant des flux maximaux et des coupes minimales dans les réseaux. Nous avons débuté par la définition d'un réseau de flux, introduisant les concepts de source, de puits, de capacité des arêtes et de flot. Nous avons ensuite examiné des algorithmes clés pour calculer le flot maximum, notamment l'algorithme général de, en soulignant son principe de base d'augmentation itérative du flot le long de chemins augmentants. Nous avons particulièrement mis l'accent sur la spécialisation de cet algorithme par et, qui utilise la recherche en largeur (BFS) pour garantir la convergence polynomiale et une efficacité accrue. La notion de s'est avérée fondamentale pour comprendre le fonctionnement de ces algorithmes, car elle représente les capacités restantes pour augmenter le flot.
+
+Le point culminant de notre étude a été la démonstration et l'explication du **théorème fondamental du flot maximum - coupe minimum**. Ce théorème établit une équivalence profonde entre la valeur maximale d'un flot et la capacité minimale d'une coupe séparant la source du puits. Cette dualité n'est pas seulement un résultat théorique élégant, mais elle offre également une perspective puissante pour résoudre des problèmes complexes et pour valider les solutions obtenues. La capacité d'une coupe minimum représente la limite physique ou structurelle du transfert dans un réseau, tandis que le flot maximum représente le transfert effectif le plus élevé possible. La compréhension de cette relation est essentielle pour quiconque travaille avec des systèmes de réseaux. Les références de, et fournissent des analyses détaillées et des preuves rigoureuses de ces concepts.
+
+Les applications pratiques des flux maximaux et des coupes minimales sont vastes et touchent de nombreux domaines de l'informatique, de l'ingénierie et des sciences. Dans le domaine de la **logistique et du transport**, ils sont utilisés pour optimiser la distribution de biens, la planification des itinéraires et la gestion des capacités de transport <Reference id="6" name="6" term="6">6</Reference>. En **télécommunications**, ils permettent de déterminer la bande passante maximale d'un réseau, d'allouer des ressources de manière efficace et de concevoir des réseaux de communication robustes <Reference id="7" name="7" term="7">7</Reference>. Dans le domaine de la **vision par ordinateur**, le problème de la coupe minimum est fondamental pour des tâches telles que la segmentation d'images, où l'on cherche à diviser une image en régions significatives, souvent en minimisant une mesure de « coût » entre les pixels. Les **réseaux électriques** utilisent ces concepts pour gérer la distribution d'énergie et prévenir les surcharges <Reference id="8" name="8" term="8">8</Reference>. En **biologie computationnelle**, ils peuvent modéliser des processus métaboliques ou des interactions protéiques. Le problème de la **satisfiabilité booléenne 2-SAT** peut également être résolu en utilisant des techniques de flot maximum et de coupe minimum. Enfin, dans le domaine de la **théorie des jeux et de la conception de mécanismes**, ces concepts trouvent des applications dans l'allocation de ressources ou la résolution de conflits. La polyvalence de ces outils algorithmiques en fait des piliers de l'algorithmique avancée.
+
+<Summary itemsString="Le théorème fondamental relie les flux maximaux aux coupes minimales dans un réseau.|||La valeur d'un flux maximal dans un réseau est égale à la capacité d'une coupe minimale.|||Comprendre ce théorème est crucial pour résoudre efficacement de nombreux problèmes d'optimisation.|||Les algorithmes de flux maximal, tels que Ford-Fulkerson et Edmonds-Karp, sont des outils puissants pour trouver ces flux et coupes.|||Les coupes minimales fournissent une perspective géométrique et structurelle sur la capacité d'un réseau.|||Ce concept a des applications étendues dans divers domaines, de la logistique à la bio-informatique." />
+
+<WhatsNext itemsBase64="W10=" />
+## Auto-évaluation
+
+<Quiz durationLimit={1800}>
+ <Question q="Quel théorème établit le lien fondamental entre le problème du flux maximum dans un réseau et le problème de la coupe minimum ?" explanation="Le théorème du flux maximum-coupe minimum stipule que la valeur maximale d'un flux d'une source à un puits dans un réseau est égale à la capacité minimale d'une coupe séparant la source du puits. Les autres théorèmes mentionnés sont importants en théorie des graphes mais ne relient pas directement ces deux problèmes.">
+  <Option text="Le théorème de Menger" correct={false} />
+  <Option text="Le théorème du flux maximum-coupe minimum" correct={true} />
+  <Option text="Le théorème de Kuratowski" correct={false} />
+  <Option text="L'algorithme de Ford-Fulkerson" correct={false} />
+</Question>
+ <Question q="Dans le contexte du théorème du flux maximum-coupe minimum, qu'est-ce qu'une 'coupe' dans un réseau orienté (s, t) ?" explanation="Une coupe (S, T) est une partition de l'ensemble des sommets V en deux ensembles disjoints S et T tels que la source s appartient à S et le puits t appartient à T. La capacité d'une coupe est la somme des capacités des arêtes allant de S à T. Les autres options décrivent des concepts liés aux flux ou aux chemins, mais pas la définition d'une coupe.">
+  <Option text="Un chemin de la source s au puits t." correct={false} />
+  <Option text="Un ensemble d'arêtes qui, si retirées, déconnectent s de t." correct={false} />
+  <Option text="Une partition des sommets V en deux ensembles S et T tels que s ∈ S et t ∈ T." correct={true} />
+  <Option text="La quantité totale de flux pouvant traverser le réseau." correct={false} />
+</Question>
+ <Question q="Considérez un réseau avec une source s, un puits t, et des capacités d'arêtes positives. Si la valeur du flux maximum est V, quelle est la capacité minimale d'une coupe (S, T) séparant s de t ?" explanation="C'est l'énoncé direct du théorème du flux maximum-coupe minimum. La valeur maximale d'un flux d'une source à un puits est toujours égale à la capacité minimale d'une coupe qui sépare la source du puits. Par conséquent, si le flux maximum est V, la capacité minimale de la coupe est également V.">
+  <Option text="Inférieure à V" correct={false} />
+  <Option text="Supérieure à V" correct={false} />
+  <Option text="Égale à V" correct={true} />
+  <Option text="Indéterminée sans connaître les capacités spécifiques des arêtes." correct={false} />
+</Question>
+ <Question q="L'algorithme d'Edmonds-Karp est une implémentation de quel algorithme plus général pour trouver le flux maximum ?" explanation="L'algorithme d'Edmonds-Karp est une implémentation spécifique de l'algorithme de Ford-Fulkerson. Il utilise une recherche en largeur (BFS) pour trouver le chemin augmentant le plus court dans le graphe résiduel, garantissant ainsi la terminaison et une complexité polynomiale. Ford-Fulkerson est le cadre général, tandis qu'Edmonds-Karp est une méthode concrète pour choisir les chemins augmentants.">
+  <Option text="L'algorithme de Dijkstra" correct={false} />
+  <Option text="L'algorithme de Bellman-Ford" correct={false} />
+  <Option text="L'algorithme de Ford-Fulkerson" correct={true} />
+  <Option text="L'algorithme de Kruskal" correct={false} />
+</Question>
+ <Question q="Soit un réseau où toutes les capacités sont des entiers. Le théorème du flux maximum-coupe minimum implique que la valeur du flux maximum sera toujours :" explanation="Si toutes les capacités des arêtes sont des entiers, alors l'algorithme de Ford-Fulkerson (et ses variantes comme Edmonds-Karp) trouvera un flux maximum dont la valeur est un entier. Ceci est dû au fait que chaque augmentation de flux le long d'un chemin augmentant ajoute une quantité entière de flux (la capacité résiduelle minimale le long du chemin). Par conséquent, la valeur du flux maximum, qui est la somme de ces augmentations, sera également un entier. La capacité minimale de la coupe sera donc aussi un entier.">
+  <Option text="Un nombre rationnel" correct={false} />
+  <Option text="Un nombre réel quelconque" correct={false} />
+  <Option text="Un entier" correct={true} />
+  <Option text="Non nécessairement un entier si le nombre de sommets est grand" correct={false} />
+</Question>
+</Quiz>
+
+## Glossaire
+
+<GlossaryBlock itemsBase64="W3sidGVybSI6IkFsZ29yaXRobWUgZCdFZG1vbmRzLUthcnAiLCJkZWZpbml0aW9uIjoiVW5lIGltcGzDqW1lbnRhdGlvbiBzcMOpY2lmaXF1ZSBkZSBsJ2FsZ29yaXRobWUgZGUgRm9yZC1GdWxrZXJzb24gcXVpIHV0aWxpc2UgbGEgcmVjaGVyY2hlIGVuIGxhcmdldXIgKEJGUykgcG91ciB0cm91dmVyIGxlIHBsdXMgY291cnQgY2hlbWluIGQnYXVnbWVudGF0aW9uIGVuIHRlcm1lcyBkZSBub21icmUgZCdhcsOqdGVzLiJ9LHsidGVybSI6IkFsZ29yaXRobWUgZGUgRm9yZC1GdWxrZXJzb24iLCJkZWZpbml0aW9uIjoiVW5lIG3DqXRob2RlIGfDqW7DqXJhbGUgcG91ciB0cm91dmVyIGxlIGZsdXggbWF4aW1hbCBkYW5zIHVuIHLDqXNlYXUgZW4gYXVnbWVudGFudCBpdMOpcmF0aXZlbWVudCBsZSBmbHV4IGxlIGxvbmcgZGVzIGNoZW1pbnMgZCdhdWdtZW50YXRpb24uIn0seyJ0ZXJtIjoiQ2FwYWNpdMOpIGQndW5lIGFyw6p0ZSIsImRlZmluaXRpb24iOiJMYSBxdWFudGl0w6kgbWF4aW1hbGUgZGUgZmx1eCBxdWkgcGV1dCBwYXNzZXIgw6AgdHJhdmVycyB1bmUgYXLDqnRlIGRvbm7DqWUgZGFucyB1biByw6lzZWF1LiJ9LHsidGVybSI6IkNhcGFjaXTDqSBkJ3VuZSBjb3VwZSIsImRlZmluaXRpb24iOiJMYSBzb21tZSBkZXMgY2FwYWNpdMOpcyBkZXMgYXLDqnRlcyBhbGxhbnQgZCd1biBuxZN1ZCBkYW5zIFMgw6AgdW4gbsWTdWQgZGFucyBULiJ9LHsidGVybSI6IkNoZW1pbiBkJ2F1Z21lbnRhdGlvbiIsImRlZmluaXRpb24iOiJVbiBjaGVtaW4gZHUgbsWTdWQgc291cmNlIGF1IG7Fk3VkIHB1aXRzIGRhbnMgbGUgZ3JhcGhlIHLDqXNpZHVlbCBxdWkgYSB1bmUgY2FwYWNpdMOpIHBvc2l0aXZlLiJ9LHsidGVybSI6IkNvdXBlIGRhbnMgdW4gcsOpc2VhdSIsImRlZmluaXRpb24iOiJVbmUgcGFydGl0aW9uIGRlcyBuxZN1ZHMgZHUgZ3JhcGhlIGVuIGRldXggZW5zZW1ibGVzLCBTIGV0IFQsIHRlbHMgcXVlIGxhIHNvdXJjZSBzIGFwcGFydGllbnQgw6AgUyBldCBsZSBwdWl0cyB0IGFwcGFydGllbnQgw6AgVC4ifSx7InRlcm0iOiJDb3VwZSBtaW5pbWFsZSIsImRlZmluaXRpb24iOiJVbmUgY291cGUgZG9udCBsYSBjYXBhY2l0w6kgZXN0IGxhIHBsdXMgcGV0aXRlIHBvc3NpYmxlIHBhcm1pIHRvdXRlcyBsZXMgY291cGVzIHBvc3NpYmxlcyBkYW5zIGxlIHLDqXNlYXUuIn0seyJ0ZXJtIjoiRmx1eCBkYW5zIHVuIHLDqXNlYXUiLCJkZWZpbml0aW9uIjoiVW5lIGZvbmN0aW9uIGFzc2lnbmFudCB1bmUgdmFsZXVyIMOgIGNoYXF1ZSBhcsOqdGUsIHJlc3BlY3RhbnQgbGEgY2FwYWNpdMOpIGRlIGwnYXLDqnRlIGV0IGxhIGNvbnNlcnZhdGlvbiBkdSBmbHV4IChsZSBmbHV4IGVudHJhbnQgZXN0IMOpZ2FsIGF1IGZsdXggc29ydGFudCBwb3VyIGxlcyBuxZN1ZHMgaW50ZXJtw6lkaWFpcmVzKS4ifSx7InRlcm0iOiJGbHV4IG1heGltYWwiLCJkZWZpbml0aW9uIjoiVW4gZmx1eCBkYW5zIHVuIHLDqXNlYXUgZG9udCBsYSB2YWxldXIgKGZsdXggdG90YWwgc29ydGFudCBkZSBsYSBzb3VyY2UpIGVzdCBsYSBwbHVzIGdyYW5kZSBwb3NzaWJsZS4ifSx7InRlcm0iOiJHcmFwaGUgcsOpc2lkdWVsIiwiZGVmaW5pdGlvbiI6IlVuIGdyYXBoZSByZXByw6lzZW50YW50IGxhIGNhcGFjaXTDqSByZXN0YW50ZSBzdXIgbGVzIGFyw6p0ZXMgYXByw6hzIHF1J3VuIGNlcnRhaW4gZmx1eCBhIMOpdMOpIGVudm95w6kuIElsIGluY2x1dCBkZXMgYXLDqnRlcyBpbnZlcnNlcyBwb3VyIHBlcm1ldHRyZSBsYSAncsOpdHJhY3RhdGlvbicgZHUgZmx1eC4ifSx7InRlcm0iOiJSw6lzZWF1IGRlIGZsdXgiLCJkZWZpbml0aW9uIjoiVW4gZ3JhcGhlIG9yaWVudMOpIG/DuSBjaGFxdWUgYXLDqnRlIGEgdW5lIGNhcGFjaXTDqSBhc3NvY2nDqWUsIGF2ZWMgdW4gbsWTdWQgc291cmNlIChzKSBldCB1biBuxZN1ZCBwdWl0cyAodCkuIn0seyJ0ZXJtIjoiVGjDqW9yw6htZSBGb25kYW1lbnRhbCAoRmx1eCBNYXgtQ291cGUgTWluKSIsImRlZmluaXRpb24iOiJBZmZpcm1lIHF1ZSBsYSB2YWxldXIgbWF4aW1hbGUgZCd1biBmbHV4IGRhbnMgdW4gcsOpc2VhdSBlc3Qgw6lnYWxlIMOgIGxhIGNhcGFjaXTDqSBtaW5pbWFsZSBkJ3VuZSBjb3VwZSBkYW5zIGNlIHLDqXNlYXUuIn1d" />
+
+
+
+
+## Références
+
+<References itemsBase64="W3sibnVtIjoxLCJ0ZXh0IjoiVGhvbWFzIEguIENvcm1lbiwgQ2hhcmxlcyBFLiBMZWlzZXJzb24sIFJvbmFsZCBSaXZlc3QsIENsaWZmb3JkIFN0ZWluICgyMDE3KS4gwqsgQWxnb3JpdGhtZW4gLSBFaW5lIEVpbmbDvGhydW5nIMK7LiBVUkwgOi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjE1MTUvOTc4MzExMDUyMjAxMyIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjoyLCJ0ZXh0IjoiUmVpbmhhcmQgRGllc3RlbCAoMjAxMCkuIMKrIEdyYXBoIFRoZW9yeSDCuy4gVVJMIDouIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVJlaW5oYXJkJTIwRGllc3RlbCUyMCUyMkdyYXBoJTIwVGhlb3J5JTIyJTIwMjAxMCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6MywidGV4dCI6IktsZWluYmVyZywgSm9uLCBhbmQgw4l2YSBUYXJkb3MuICdBbGdvcml0aG0gRGVzaWduJy4gQWRkaXNvbi1XZXNsZXksIDIwMDUuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUtsZWluYmVyZyUyMCUyMktsZWluYmVyZyUyMiUyMDIwMDUiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjQsInRleHQiOiJFdmVuLCBTaGltb24uICdHcmFwaCBBbGdvcml0aG1zJy4gQ29tcHV0ZXIgU2NpZW5jZSBQcmVzcywgMTk3OS4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPUV2ZW4lMjAlMjJDb21wdXRlciUyMFNjaWVuY2UlMjBQcmVzcyUyMiUyMDE5NzkiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBTY2hvbGFyIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NSwidGV4dCI6IlRhcmphbiwgUm9iZXJ0IEUuICdEYXRhIFN0cnVjdHVyZXMgYW5kIE5ldHdvcmsgQWxnb3JpdGhtcycuIFNvY2lldHkgZm9yIEluZHVzdHJpYWwgYW5kIEFwcGxpZWQgTWF0aGVtYXRpY3MsIDE5ODMuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPVRhcmphbiUyMCUyMlNvY2lldHklMjBmb3IlMjBJbmR1c3RyaWFsJTIwYW5kJTIwQXBwbGllZCUyME1hdGhlbWF0aWNzJTIyJTIwMTk4MyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NiwidGV4dCI6IlNraWVuYSwgU3RldmVuIFMuICdUaGUgQWxnb3JpdGhtIERlc2lnbiBNYW51YWwnLiBTcHJpbmdlciwgMjAwOC4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjEwMDcvOTc4LTEtODQ4MDAtMDcwLTQiLCJzY2hvbGFyVGV4dCI6IlNpdGUgV2ViIiwiaXNVbnVzZWQiOmZhbHNlfSx7Im51bSI6NywidGV4dCI6IlNlZGdld2ljaywgUm9iZXJ0LCBhbmQgS2V2aW4gV2F5bmUuICdBbGdvcml0aG1zJy4gQWRkaXNvbi1XZXNsZXksIDIwMTEuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vc2Nob2xhci5nb29nbGUuY29tL3NjaG9sYXI/cT1TZWRnZXdpY2slMjAlMjJTZWRnZXdpY2slMjIlMjAyMDExIiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjpmYWxzZX0seyJudW0iOjgsInRleHQiOiJSaWNoYXJkIEkuIFNocmVldmUgKDIwMDcpLiAqR3JhcGggdGhlb3J5IHdpdGggYXBwbGljYXRpb25zIHRvIGVuZ2luZWVyaW5nIGFuZCBjb21wdXRlciBzY2llbmNlLiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9UmljaGFyZCUyMFNocmVldmUlMjAlMjJHcmFwaCUyMHRoZW9yeSUyMHdpdGglMjBhcHBsaWNhdGlvbnMlMjB0byUyMGVuZ2luZWVyaW5nJTIwYW5kJTIwY29tcHV0ZXIlMjBzJTIyJTIwMjAwNyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6ZmFsc2V9LHsibnVtIjo5LCJ0ZXh0IjoiSnVkeSBHb2xkc21pdGggKDIwMDQpLiAqQm9vayByZXZpZXc6IFRoZW9yeSBvZiBDb21wdXRpbmc6IEEgR2VudGxlIEludHJvZHVjdGlvbi4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZS5jb20vc2Nob2xhcj9xPUp1ZHklMjBHb2xkc21pdGglMjAlMjJCb29rJTIwcmV2aWV3JTIyJTIwMjAwNCIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjEwLCJ0ZXh0IjoiQWhvLCBBbGZyZWQgVi4sIEpvaG4gRS4gSG9wY3JvZnQsIGFuZCBKZWZmcmV5IEQuIFVsbG1hbi4gJ0RhdGEgU3RydWN0dXJlcyBhbmQgQWxnb3JpdGhtcycuIEFkZGlzb24tV2VzbGV5LCAxOTgzLiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9QWhvJTIwJTIySG9wY3JvZnQlMjIlMjAxOTgzIiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTEsInRleHQiOiJKLiBBLiBCb25keSwgVS4gUy4gUi4gTXVydHkgKDIwMTUpLiDCqyBHcmFwaCBUaGVvcnkgd2l0aCBBcHBsaWNhdGlvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9Qm9uZHklMjAlMjJHcmFwaCUyMFRoZW9yeSUyMHdpdGglMjBBcHBsaWNhdGlvbnMlMjIlMjAyMDE1Iiwic2Nob2xhclRleHQiOiJHb29nbGUgU2Nob2xhciIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTIsInRleHQiOiJNLiBEb25hbGQgTWFjTGFyZW4gKDIwMDUpLiDCqyBUaGUgQXJ0IG9mIENvbXB1dGVyIFByb2dyYW1taW5n4oCUVm9sdW1lIDE6IEZ1bmRhbWVudGFsIEFsZ29yaXRobXMgKERvbmFsZCBFLiBLbnV0aCkgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Eb25hbGQlMjBNYWNMYXJlbiUyMCUyMlRoZSUyMEFydCUyMG9mJTIwQ29tcHV0ZXIlMjBQcm9ncmFtbWluZyVFMiU4MCU5NFZvbHVtZSUyMDElMjIlMjAyMDA1Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjEzLCJ0ZXh0IjoiTHVjY2lvLCBGYWJyaXppbywgYW5kIEdpb3JnaW8gTWF6em9uZS4gJ0dyYXBoIEFsZ29yaXRobXMgYW5kIEFwcGxpY2F0aW9ucycuIFNwcmluZ2VyLCAyMDEzLiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1MdWNjaW8lMjAlMjJMdWNjaW8lMjIlMjAyMDEzIiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE0LCJ0ZXh0IjoiSm9uYXRoYW4gTC4gR3Jvc3MsIEpheSBZZWxsZW4gKDIwMTgpLiDCqyBHcmFwaCBUaGVvcnkgYW5kIEl0cyBBcHBsaWNhdGlvbnMgwrsuIFVSTCA6LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1Kb25hdGhhbiUyMEdyb3NzJTIwJTIyR3JhcGglMjBUaGVvcnklMjBhbmQlMjBJdHMlMjBBcHBsaWNhdGlvbnMlMjIlMjAyMDE4Iiwic2Nob2xhclRleHQiOiJHb29nbGUgQm9va3MiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE1LCJ0ZXh0IjoiRnJhbmsgSGFyYXJ5LiBQcC4gaXgsIMKrIEdyYXBoIFRoZW9yeSDCuy4iLCJzY2hvbGFyVXJsIjoiaHR0cHM6Ly9kb2kub3JnLzEwLjIzMDcvMzYxNTA0OCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE2LCJ0ZXh0IjoiVGhvbWFzIEguIENvcm1lbiwgQ2hhcmxlcyBFLiBMZWlzZXJzb24sIFJvbmFsZCBMLiBSaXZlc3QsIENsaWZmb3JkIFN0ZWluLiAyMDA5LiDCqyBJbnRyb2R1Y3Rpb24gYXV4IGFsZ29yaXRobWVzIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2Jvb2tzLmdvb2dsZS5jb20vYm9va3M/cT1UaG9tYXMlMjBDb3JtZW4lMjAlMjJJbnRyb2R1Y3Rpb24lMjBhdXglMjBhbGdvcml0aG1lcyUyMiUyMDIwMDkiLCJzY2hvbGFyVGV4dCI6Ikdvb2dsZSBCb29rcyIsImlzVW51c2VkIjp0cnVlfSx7Im51bSI6MTcsInRleHQiOiJSLiBLLiBBaHVqYSwgVC4gTWFnbmFudGksIEouIE9ybGluLiAxOTkzLiDCqyBBbGdvcml0aG1lcyBkZSBmbG90IGRlIHLDqXNlYXUgwrsuIiwic2Nob2xhclVybCI6Imh0dHBzOi8vYm9va3MuZ29vZ2xlLmNvbS9ib29rcz9xPUFodWphJTIwJTIyQWxnb3JpdGhtZXMlMjBkZSUyMGZsb3QlMjBkZSUyMHIlQzMlQTlzZWF1JTIyJTIwMTk5MyIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIEJvb2tzIiwiaXNVbnVzZWQiOnRydWV9LHsibnVtIjoxOCwidGV4dCI6IkFiZHVsIEJhcmkuIMKrIEFsZ29yaXRobWUgZGUgRm9yZC1GdWxrZXJzb24gZXhwbGlxdcOpIMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL3NjaG9sYXIuZ29vZ2xlLmNvbS9zY2hvbGFyP3E9QWJkdWwlMjBCYXJpJTIwJTIyQWxnb3JpdGhtZSUyMGRlJTIwRm9yZCUyMiIsInNjaG9sYXJUZXh0IjoiR29vZ2xlIFNjaG9sYXIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjE5LCJ0ZXh0IjoiTWlzaHJhLCDCqyBNYXhpbWFsIEVudHJvcHkgU29sdXRpb25zIGZvciBhIFNjYWxhciBDb25zZXJ2YXRpb24gTGF3IHdpdGggRGlzY29udGludW91cyBGbHV4IMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy01NDAtNzU3MTItMl83NCIsInNjaG9sYXJUZXh0IjoiU2l0ZSBXZWIiLCJpc1VudXNlZCI6dHJ1ZX0seyJudW0iOjIwLCJ0ZXh0IjoiRGllc3RlbCwgwqsgRXh0cmVtYWwgR3JhcGggVGhlb3J5IMK7LiIsInNjaG9sYXJVcmwiOiJodHRwczovL2RvaS5vcmcvMTAuMTAwNy85NzgtMy02NjItNTM2MjItM183Iiwic2Nob2xhclRleHQiOiJTaXRlIFdlYiIsImlzVW51c2VkIjp0cnVlfV0=" />

@@ -43,3 +43,7 @@ web/drafts_revisions/
 web/draft-revisions/
 web/failed_mdx*.md
 web/generation_*.txt
+# Archives
+*.tar.gz
+*.zip
+
