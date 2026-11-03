@@ -873,16 +873,18 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
         return tagMatch;
       }
 
-      let prefix = `Figure ${counter} : `;
-      if (lang === 'en') {
-        prefix = `Figure ${counter}: `;
-      } else if (lang === 'de') {
-        prefix = `Abbildung ${counter}: `;
-      } else if (lang === 'es') {
-        prefix = `Figura ${counter}: `;
-      } else if (lang === 'zh') {
-        prefix = `图 ${counter}: `;
-      }
+      const FIGURE_PREFIXES: Record<string, string> = {
+        FR: `Figure ${counter} : `,
+        EN: `Figure ${counter}: `,
+        DE: `Abbildung ${counter}: `,
+        ES: `Figura ${counter}: `,
+        ZH: `图 ${counter}: `,
+        PT: `Figura ${counter}: `,
+        AR: `الشكل ${counter}: `,
+        HI: `चित्र ${counter}: `,
+        UR: `تصویر ${counter}: `
+      };
+      const prefix = FIGURE_PREFIXES[lang.toUpperCase()] || `Figure ${counter}: `;
       
       const newCaptionText = `${prefix}${cleanCaption}`;
       counter++;
