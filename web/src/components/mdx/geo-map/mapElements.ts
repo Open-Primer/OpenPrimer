@@ -1,0 +1,267 @@
+export const getMapElements = () => {
+return return {
+      regions: [
+        {
+          id: "poly_north_america",
+          nameEN: "North America Block",
+          nameFR: "Bloc Amérique du Nord",
+          polygon: "60,40 180,40 240,110 200,180 120,180 70,110",
+          lat: "45.0° N",
+          lng: "95.0° W",
+          elevation: "820 m",
+          biome: langKey === 'FR' ? "Toundra, Taïga et Tempéré" : "Tundra, Taiga & Temperate",
+          country: langKey === 'FR' ? "Canada, États-Unis, Mexique" : "Canada, USA, Mexico",
+          capital: "Ottawa / Washington DC",
+          population: "375M",
+          color: "rgba(99, 102, 241, 0.15)",
+          hoverColor: "rgba(99, 102, 241, 0.3)",
+          stroke: "#6366f1"
+        },
+        {
+          id: "poly_south_america",
+          nameEN: "South America Block",
+          nameFR: "Bloc Amérique du Sud",
+          polygon: "190,200 250,200 280,270 230,380 180,310",
+          lat: "15.0° S",
+          lng: "60.0° W",
+          elevation: "590 m",
+          biome: langKey === 'FR' ? "Équatorial (Amazone), Savane" : "Equatorial Rain Forest, Savanna",
+          country: langKey === 'FR' ? "Brésil, Argentine, Colombie..." : "Brazil, Argentina, Colombia...",
+          capital: "Brasília / Buenos Aires",
+          population: "430M",
+          color: "rgba(16, 185, 129, 0.15)",
+          hoverColor: "rgba(16, 185, 129, 0.3)",
+          stroke: "#10b981",
+          weatherStationId: "manaus"
+        },
+        {
+          id: "poly_france",
+          nameEN: "Republic of France",
+          nameFR: "République Française",
+          polygon: "360,110 385,110 385,130 360,130",
+          lat: "46.2° N",
+          lng: "2.2° E",
+          elevation: "375 m",
+          biome: langKey === 'FR' ? "Tempéré Océanique" : "Temperate Oceanic",
+          country: langKey === 'FR' ? "France" : "France",
+          capital: "Paris",
+          population: "68M",
+          color: "rgba(59, 130, 246, 0.25)",
+          hoverColor: "rgba(59, 130, 246, 0.45)",
+          stroke: "#3b82f6",
+          weatherStationId: "paris"
+        },
+        {
+          id: "poly_europe",
+          nameEN: "European Continent",
+          nameFR: "Continent Européen",
+          polygon: "340,60 440,65 460,130 390,140 330,120",
+          lat: "54.0° N",
+          lng: "15.0° E",
+          elevation: "340 m",
+          biome: langKey === 'FR' ? "Tempéré, Méditerranéen, Boreal" : "Temperate, Mediterranean & Boreal",
+          country: langKey === 'FR' ? "Allemagne, France, Italie, Pologne..." : "Germany, France, Italy, Poland...",
+          capital: "Bruxelles (UE)",
+          population: "746M",
+          color: "rgba(139, 92, 246, 0.15)",
+          hoverColor: "rgba(139, 92, 246, 0.3)",
+          stroke: "#8b5cf6",
+          weatherStationId: "rome"
+        },
+        {
+          id: "poly_africa",
+          nameEN: "African Continent",
+          nameFR: "Continent Africain",
+          polygon: "330,160 450,150 490,220 440,350 390,320 340,230",
+          lat: "1.0° S",
+          lng: "17.0° E",
+          elevation: "650 m",
+          biome: langKey === 'FR' ? "Désertique, Savane, Forêt Équatoriale" : "Arid Desert, Savanna, Equatorial",
+          country: langKey === 'FR' ? "Égypte, Nigeria, Afrique du Sud..." : "Egypt, Nigeria, South Africa...",
+          capital: "Le Caire / Abuja / Pretoria",
+          population: "1.4B",
+          color: "rgba(245, 158, 11, 0.15)",
+          hoverColor: "rgba(245, 158, 11, 0.3)",
+          stroke: "#f59e0b",
+          weatherStationId: "le_caire"
+        },
+        {
+          id: "poly_asia",
+          nameEN: "Eurasian Asia Block",
+          nameFR: "Continent Asiatique",
+          polygon: "460,50 710,50 750,180 640,240 480,160",
+          lat: "34.0° N",
+          lng: "100.0° E",
+          elevation: "960 m",
+          biome: langKey === 'FR' ? "Continental Subarctique, Steppe, Mousson" : "Subarctic, Steppe, Tropical Monsoon",
+          country: langKey === 'FR' ? "Chine, Inde, Russie, Japon..." : "China, India, Russia, Japan...",
+          capital: "Pékin / New Delhi / Moscou",
+          population: "4.7B",
+          color: "rgba(236, 72, 153, 0.15)",
+          hoverColor: "rgba(236, 72, 153, 0.3)",
+          stroke: "#ec4899",
+          weatherStationId: "iakoutsk"
+        },
+        {
+          id: "poly_australia",
+          nameEN: "Oceania & Australia",
+          nameFR: "Océanie & Australie",
+          polygon: "600,260 700,260 720,330 600,320",
+          lat: "25.0° S",
+          lng: "133.0° E",
+          elevation: "330 m",
+          biome: langKey === 'FR' ? "Désertique chaud, Savane, Tempéré" : "Hot Desert, Savanna & Temperate",
+          country: langKey === 'FR' ? "Australie, Nouvelle-Zélande..." : "Australia, New Zealand...",
+          capital: "Canberra / Wellington",
+          population: "43M",
+          color: "rgba(20, 184, 166, 0.15)",
+          hoverColor: "rgba(20, 184, 166, 0.3)",
+          stroke: "#14b8a6"
+        }
+      ],
+      physical: [
+        {
+          id: "phys_himalaya",
+          nameEN: "Himalayan Mountain Range",
+          nameFR: "Chaîne de l'Himalaya",
+          points: "560,150 575,152 590,155",
+          lat: "27.9° N",
+          lng: "86.9° E",
+          elevation: "8,848 m (Mont Everest)",
+          biome: langKey === 'FR' ? "Alpin / Haute Altitude" : "Alpine / High-Altitude Tundra",
+          descEN: "The highest mountain range on Earth, formed by the collision of the Indian and Eurasian tectonic plates.",
+          descFR: "La plus haute chaîne de montagnes sur Terre, issue de la collision entre les plaques tectoniques indienne et eurasienne."
+        },
+        {
+          id: "phys_andes",
+          nameEN: "Andes Cordillera",
+          nameFR: "Cordillère des Andes",
+          points: "198,220 215,280 200,350",
+          lat: "32.6° S",
+          lng: "70.0° W",
+          elevation: "6,961 m (Mont Aconcagua)",
+          biome: langKey === 'FR' ? "Alpin / Glaciaire" : "Alpine / Glacial Highlands",
+          descEN: "The longest continental mountain range in the world, running along the western coast of South America.",
+          descFR: "La plus longue chaîne de montagnes continentale au monde, bordant la côte ouest de l'Amérique du Sud."
+        },
+        {
+          id: "phys_sahara",
+          nameEN: "Sahara Desert",
+          nameFR: "Désert du Sahara",
+          x: 380,
+          y: 190,
+          r: 30,
+          lat: "23.0° N",
+          lng: "12.0° E",
+          elevation: "250 m",
+          biome: langKey === 'FR' ? "Aride Chaud / Hyper-aride" : "Hyper-Arid / Hot Desert",
+          descEN: "The largest hot desert on Earth, shaping global atmospheric sand currents and local biomes.",
+          descFR: "Le plus grand désert chaud de la planète, influençant les vents de sable mondiaux et les biomes locaux."
+        },
+        {
+          id: "phys_amazon",
+          nameEN: "Amazon River Channel",
+          nameFR: "Le Fleuve Amazone",
+          path: "M 205,225 Q 230,230 260,225 T 280,225",
+          lat: "2.1° S",
+          lng: "55.1° W",
+          elevation: "44 m",
+          biome: langKey === 'FR' ? "Forêt Tropicale Équatoriale" : "Tropical Equatorial Rain Forest",
+          descEN: "The largest river basin in the world by water discharge, essential for global oxygen and carbon cycle balance.",
+          descFR: "Le plus grand bassin fluvial au monde en débit d'eau, primordial pour l'équilibre de l'oxygène et du carbone."
+        }
+      ],
+      demographics: [
+        {
+          id: "demo_east_asia",
+          nameEN: "East Asia Demographic Corridor",
+          nameFR: "Foyer de population - Asie de l'Est",
+          x: 630, y: 130, r: 25,
+          density: "140 hab/km²",
+          lat: "35.0° N",
+          lng: "115.0° E",
+          elevation: "80 m",
+          biome: langKey === 'FR' ? "Tempéré Humide et Mousson" : "Temperate Wet & Monsoon",
+          descEN: "Home to over 1.6 billion people. High density driven by fertile alluvial river plains and historical agricultural centers.",
+          descFR: "Regroupe plus de 1,6 milliard d'habitants. Forte densité liée aux plaines d'alluvions fertiles et à l'histoire agricole."
+        },
+        {
+          id: "demo_south_asia",
+          nameEN: "South Asia Demographic Corridor",
+          nameFR: "Foyer de population - Asie du Sud",
+          x: 550, y: 175, r: 22,
+          density: "390 hab/km²",
+          lat: "22.0° N",
+          lng: "78.0° E",
+          elevation: "180 m",
+          biome: langKey === 'FR' ? "Mousson Tropicale, Subtropical" : "Tropical Monsoon, Subtropical",
+          descEN: "One of the absolute largest human concentrations on Earth, centered along the Indus and Ganges river valleys.",
+          descFR: "L'une des concentrations humaines les plus denses de la planète, centrée sur les plaines de l'Indus et du Gange."
+        },
+        {
+          id: "demo_europe",
+          nameEN: "Central-Western Europe Megalopolis",
+          nameFR: "Foyer de population - Europe Centrale & Ouest",
+          x: 390, y: 105, r: 18,
+          density: "115 hab/km²",
+          lat: "50.0° N",
+          lng: "10.0° E",
+          elevation: "110 m",
+          biome: langKey === 'FR' ? "Tempéré Océanique / Continental" : "Temperate Oceanic / Continental",
+          descEN: "Densely settled urban belt spanning from London to Milan (the 'Blue Banana'), driven by historic industrialization.",
+          descFR: "Axe urbain dense s'étendant de Londres à Milan (la 'banane bleue'), issu de l'histoire industrielle européenne."
+        }
+      ],
+      economic: [
+        {
+          id: "econ_suez",
+          nameEN: "Suez Canal Trade Passage",
+          nameFR: "Canal de Suez",
+          x: 442, y: 168,
+          flow: "12% of Global Trade",
+          lat: "29.9° N",
+          lng: "32.5° E",
+          elevation: "2 m",
+          biome: langKey === 'FR' ? "Aride Canalise" : "Arid / Maritime Canal",
+          descEN: "Artificial sea-level waterway in Egypt. Reduces global shipping travel time from Asia to Europe by up to 10 days.",
+          descFR: "Voie navigable artificielle en Égypte. Réduit le trajet maritime Asie-Europe de près de 10 jours de navigation."
+        },
+        {
+          id: "econ_panama",
+          nameEN: "Panama Canal Trade Passage",
+          nameFR: "Canal de Panama",
+          x: 162, y: 200,
+          flow: "6% of Global Trade",
+          lat: "9.1° N",
+          lng: "79.8° W",
+          elevation: "26 m (Système d'écluses)",
+          biome: langKey === 'FR' ? "Humide Tropical" : "Humid Tropical / Lock Canal",
+          descEN: "Key lock canal system cutting through Central America to link the Atlantic and Pacific oceans, vital for trade.",
+          descFR: "Canal à écluses traversant l'Amérique Centrale pour relier l'Atlantique et le Pacifique, vital pour les flux mondiaux."
+        },
+        {
+          id: "econ_malacca",
+          nameEN: "Strait of Malacca Passage",
+          nameFR: "Détroit de Malacca",
+          x: 622, y: 228,
+          flow: "25% of Maritime Oil Flows",
+          lat: "1.4° N",
+          lng: "102.9° E",
+          elevation: "0 m",
+          biome: langKey === 'FR' ? "Équatorial Maritime" : "Equatorial Maritime Pass",
+          descEN: "A narrow choke point between Sumatra and the Malay Peninsula, critical for global oil and consumer shipping.",
+          descFR: "Un passage étroit entre Sumatra et la péninsule malaise, crucial pour l'approvisionnement pétrolier et industriel."
+        }
+      ],
+      stations: [
+        { id: "station_paris", name: "Paris", x: 375, y: 110, dataKey: "paris" },
+        { id: "station_manaus", name: "Manaus", x: 235, y: 230, dataKey: "manaus" },
+        { id: "station_le_caire", name: "Le Caire", x: 442, y: 175, dataKey: "le_caire" },
+        { id: "station_rome", name: "Rome", x: 395, y: 125, dataKey: "rome" },
+        { id: "station_iakoutsk", name: "Iakoutsk", x: 640, y: 80, dataKey: "iakoutsk" }
+      ]
+    };
+  }, [langKey]);
+
+  // Click handler on map elements;
+};

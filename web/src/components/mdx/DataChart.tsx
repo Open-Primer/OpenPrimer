@@ -1,1390 +1,228 @@
-"use client";
-
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart3, PieChart, TrendingUp, Table, ChevronDown, CircleDot } from 'lucide-react';
-import { useLanguage } from '@/context/LanguageContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { BarChart3, PieChart, LineChart as LineChartIcon, Table as TableIcon, Activity } from 'lucide-react';
+import { ChartDataItem, DataChartProps, CHART_STRINGS, PRESET_GRADIENTS, LINE_COLORS } from './data-chart/typesAndConstants';
+import { normalizeChartData } from './data-chart/dataNormalizer';
+import { BarChartRender } from './data-chart/BarChartRender';
+import { DonutChartRender } from './data-chart/DonutChartRender';
+import { LineChartRender } from './data-chart/LineChartRender';
+import { TableModeRender } from './data-chart/TableModeRender';
+import { ScatterChartRender } from './data-chart/ScatterChartRender';
 
-interface ChartDataItem {
-  label: string;
-  value: number;
-  color?: string; // Optional custom color hex or name
-}
+export { CHART_STRINGS, PRESET_GRADIENTS, LINE_COLORS };
+export type { ChartDataItem, DataChartProps };
 
-interface DataChartProps {
-  title?: string;
-  type?: 'bar' | 'pie' | 'donut' | 'line' | 'scatter';
-  data?: any; // Can be array or JSON-serialized string from MDX
-  dataBase64?: string;
-  xAxisLabel?: string;
-  yAxisLabel?: string;
-  unit?: string;
-  gradeLevel?: 'middle_school' | 'high_school' | 'university';
-}
-
-const PRESET_GRADIENTS = [
-  { id: 'grad-blue-purple', start: '#3b82f6', end: '#8b5cf6' },
-  { id: 'grad-emerald-teal', start: '#10b981', end: '#14b8a6' },
-  { id: 'grad-rose-orange', start: '#f43f5e', end: '#f97316' },
-  { id: 'grad-amber-yellow', start: '#f59e0b', end: '#eab308' },
-  { id: 'grad-cyan-indigo', start: '#06b6d4', end: '#6366f1' },
-];
-
-const LINE_COLORS = ['#3b82f6', '#f43f5e', '#10b981', '#f59e0b', '#a855f7'];
-
-export const DataChart = ({
+export const DataChart: React.FC<DataChartProps> = ({
   title,
-  type = 'bar',
-  data: rawData,
-  dataBase64,
-  xAxisLabel,
-  yAxisLabel,
+  description,
+  data = [],
+  type: defaultType = 'bar',
   unit = '',
-  gradeLevel
-}: DataChartProps) => {
+  className = '',
+  allowToggleType = true
+}) => {
   const { language } = useLanguage();
   const langKey = (language?.toUpperCase() || 'EN') as 'EN' | 'FR' | 'ES' | 'DE' | 'ZH' | 'PT' | 'AR' | 'HI' | 'UR';
+  const t = (CHART_STRINGS as any)[langKey] || CHART_STRINGS.EN;
 
-  const CHART_STRINGS = {
-    EN: {
-      bar: "Bar",
-      donut: "Donut",
-      line: "Line",
-      table: "Table",
-      total: "Total",
-      series: "Series",
-      value: "Value",
-      percentage: "Percentage",
-      category: "Category",
-      xAxis: "X-Axis",
-      segments: "segments",
-      percentOfTotal: "of total",
-      selectSeries: "Select series",
-      values: "Values",
-      scatter: "Scatter"
-    },
-    FR: {
-      bar: "Barres",
-      donut: "Beignet",
-      line: "Courbe",
-      table: "Tableau",
-      total: "Total",
-      series: "Série",
-      value: "Valeur",
-      percentage: "Pourcentage",
-      category: "Catégorie",
-      xAxis: "Axe X",
-      segments: "segments",
-      percentOfTotal: "du total",
-      selectSeries: "Choisir la série",
-      values: "Valeurs",
-      scatter: "Nuage"
-    },
-    ES: {
-      bar: "Barras",
-      donut: "Rosca",
-      line: "Línea",
-      table: "Tabla",
-      total: "Total",
-      series: "Serie",
-      value: "Valor",
-      percentage: "Porcentaje",
-      category: "Categoría",
-      xAxis: "Eje X",
-      segments: "segmentos",
-      percentOfTotal: "del total",
-      selectSeries: "Seleccionar serie",
-      values: "Valores",
-      scatter: "Dispersión"
-    },
-    DE: {
-      bar: "Balken",
-      donut: "Donut",
-      line: "Linie",
-      table: "Tabelle",
-      total: "Gesamt",
-      series: "Serie",
-      value: "Wert",
-      percentage: "Prozentsatz",
-      category: "Kategorie",
-      xAxis: "X-Achse",
-      segments: "Segmente",
-      percentOfTotal: "vom Ganzen",
-      selectSeries: "Serie auswählen",
-      values: "Werte",
-      scatter: "Streuung"
-    },
-    ZH: {
-      bar: "条形图",
-      donut: "环形图",
-      line: "折线图",
-      table: "表格",
-      total: "总计",
-      series: "系列",
-      value: "数值",
-      percentage: "百分比",
-      category: "类别",
-      xAxis: "X轴",
-      segments: "分段",
-      percentOfTotal: "占总计",
-      selectSeries: "选择系列",
-      values: "数值",
-      scatter: "散点图"
-    },
-    PT: {
-      bar: "Barras",
-      donut: "Rosca",
-      line: "Linha",
-      table: "Tabela",
-      total: "Total",
-      series: "Série",
-      value: "Valor",
-      percentage: "Porcentagem",
-      category: "Categoria",
-      xAxis: "Eixo X",
-      segments: "segmentos",
-      percentOfTotal: "do total",
-      selectSeries: "Selecionar série",
-      values: "Valores",
-      scatter: "Dispersão"
-    },
-    AR: {
-      bar: "شريط",
-      donut: "دونات",
-      line: "خط",
-      table: "جدول",
-      total: "الإجمالي",
-      series: "السلسلة",
-      value: "القيمة",
-      percentage: "النسبة المئوية",
-      category: "الفئة",
-      xAxis: "محور X",
-      segments: "أقسام",
-      percentOfTotal: "من الإجمالي",
-      selectSeries: "تحديد السلسلة",
-      values: "القيم",
-      scatter: "مبعثر"
-    },
-    HI: {
-      bar: "बार",
-      donut: "डोनट",
-      line: "रेखा",
-      table: "तालिका",
-      total: "कुल",
-      series: "श्रृंखला",
-      value: "मान",
-      percentage: "प्रतिशत",
-      category: "श्रेणी",
-      xAxis: "एक्स-अक्ष",
-      segments: "खंड",
-      percentOfTotal: "कुल का",
-      selectSeries: "श्रृंखला चुनें",
-      values: "मान",
-      scatter: "प्रकीर्ण"
-    },
-    UR: {
-      bar: "بار",
-      donut: "ڈونٹ",
-      line: "لائن",
-      table: "ٹیبل",
-      total: "کل",
-      series: "سلسلہ",
-      value: "قیمت",
-      percentage: "فیصد",
-      category: "زمرہ",
-      xAxis: "ایکس محور",
-      segments: "حصے",
-      percentOfTotal: "کل کا",
-      selectSeries: "سلسلہ منتخب کریں",
-      values: "قیمتیں",
-      scatter: "مبعثر"
-    },
-  };
-
-  const labels = CHART_STRINGS[langKey] || CHART_STRINGS.EN;
-
-  // Switch representation state
-  const [activeRep, setActiveRep] = useState<'bar' | 'donut' | 'line' | 'table' | 'scatter'>(
-    type === 'pie' ? 'donut' : (type as any)
-  );
-
-  // Multi-series donut selector state
+  const [activeType, setActiveType] = useState<'bar' | 'donut' | 'line' | 'table' | 'scatter'>(defaultType);
+  const [hoveredItem, setHoveredItem] = useState<any>(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [selectedSeriesIdx, setSelectedSeriesIdx] = useState<number>(0);
-  const [showSeriesDropdown, setShowSeriesDropdown] = useState<boolean>(false);
+  const [hoveredScatterIdx, setHoveredScatterIdx] = useState<number | null>(null);
 
-  // Parse data if it is a JSON string or Base64 from MDX
-  const parsedData = React.useMemo(() => {
-    let resolvedData = rawData;
-    if (dataBase64) {
-      try {
-        const decoded = typeof window !== 'undefined'
-          ? decodeURIComponent(escape(window.atob(dataBase64)))
-          : Buffer.from(dataBase64, 'base64').toString('utf-8');
-        resolvedData = JSON.parse(decoded);
-      } catch (e) {
-        console.error("Failed to decode dataBase64 in DataChart:", e);
-      }
-    }
+  const normalized = normalizeChartData(data, defaultType);
+  const totalSum = normalized.isMultiSeries
+    ? normalized.seriesData.reduce((acc, s) => acc + s.values.reduce((sum, v) => sum + v.y, 0), 0)
+    : normalized.simpleData.reduce((acc, item) => acc + item.value, 0);
 
-    if (typeof resolvedData === 'string') {
-      try {
-        return JSON.parse(resolvedData);
-      } catch (e) {
-        console.error("Failed to parse DataChart JSON data:", e);
-        return [];
-      }
-    }
-    return (resolvedData as any) || [];
-  }, [rawData, dataBase64]);
-
-  // Data Normalization Layer
-  const normalized = React.useMemo(() => {
-    if (!parsedData || parsedData.length === 0) return null;
-
-    const isMultiSeries = parsedData[0] && Array.isArray((parsedData[0] as any).values);
-
-    if (isMultiSeries) {
-      const seriesData = parsedData as { label: string; values: { x: number; y: number }[] }[];
-      // Retrieve unique sorted numeric X values
-      const allX = Array.from(new Set(seriesData.flatMap(s => s.values.map(v => v.x)))).sort((a, b) => a - b);
-      
-      // Map simpleData using the sums across all series for donut/bar fallbacks
-      const simpleData = allX.map(x => {
-        const sum = seriesData.reduce((acc, s) => {
-          const pt = s.values.find(v => v.x === x);
-          return acc + (pt ? pt.y : 0);
-        }, 0);
-        return { label: String(x), value: sum };
-      });
-
-      return {
-        isMultiSeries: true,
-        simpleData,
-        seriesData,
-        xValues: allX
-      };
-    } else {
-      const simpleData = parsedData as { label: string; value: number; color?: string }[];
-      const seriesData = [
-        {
-          label: title || labels.values,
-          values: simpleData.map((d, idx) => ({ x: idx, y: d.value }))
-        }
-      ];
-      return {
-        isMultiSeries: false,
-        simpleData,
-        seriesData,
-        xValues: simpleData.map(d => d.label)
-      };
-    }
-  }, [parsedData, title, labels.values]);
-
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const [hoveredXIdx, setHoveredXIdx] = useState<number | null>(null);
-
-  // Skip rendering silently when data is invalid
-  if (!normalized) {
-    return null;
-  }
-
-  const maxValue = normalized.isMultiSeries
-    ? Math.max(...normalized.seriesData.flatMap(s => s.values.map(v => v.y || 0)), 1)
-    : Math.max(...normalized.simpleData.map(d => d.value || 0), 1);
-
-  const totalValue = normalized.isMultiSeries
-    ? normalized.seriesData[selectedSeriesIdx]?.values.reduce((acc, v) => acc + (v.y || 0), 0) || 1
-    : normalized.simpleData.reduce((acc, curr) => acc + (curr.value || 0), 0) || 1;
-
-  // Constants for vertical chart SVG layout
-  const width = 500;
+  const width = 600;
   const height = 300;
-  const paddingLeft = 55;
-  const paddingRight = 20;
-  const paddingTop = 30;
-  const paddingBottom = 55; // Increased to give room for rotated labels
-
+  const paddingLeft = 50;
+  const paddingRight = 30;
+  const paddingTop = 40;
+  const paddingBottom = 40;
   const chartWidth = width - paddingLeft - paddingRight;
   const chartHeight = height - paddingTop - paddingBottom;
 
-  // Helper coordinate getters
-  const getXCoord = (val: any, idx: number) => {
-    if (normalized.isMultiSeries) {
-      const allX = normalized.xValues as number[];
-      const minX = Math.min(...allX);
-      const maxX = Math.max(...allX);
-      const rangeX = maxX - minX || 1;
-      return paddingLeft + (((val as number) - minX) / rangeX) * chartWidth;
-    } else {
-      const totalPoints = normalized.simpleData.length;
-      if (totalPoints <= 1) return paddingLeft + chartWidth / 2;
-      return paddingLeft + (idx / (totalPoints - 1)) * chartWidth;
-    }
-  };
+  const allYValues: number[] = normalized.isMultiSeries
+    ? normalized.seriesData.flatMap(s => s.values.map(v => v.y))
+    : normalized.simpleData.map(d => d.value);
+
+  const minY = Math.min(0, ...allYValues);
+  const maxY = Math.max(1, ...allYValues);
+  const rangeY = maxY - minY || 1;
 
   const getYCoord = (val: number) => {
-    const minY = 0; // Align on 0 base
-    const rangeY = maxValue - minY || 1;
     return height - paddingBottom - ((val - minY) / rangeY) * chartHeight;
   };
 
-  // RENDER: Bar / Clustered Columns Chart
-  const renderBarChart = () => {
-    if (normalized.isMultiSeries) {
-      // Clustered Grouped Bars
-      const groupCount = normalized.xValues.length;
-      const seriesCount = normalized.seriesData.length;
-      
-      const groupWidth = chartWidth / groupCount;
-      const groupBarsWidth = groupWidth * 0.75;
-      const barWidth = Math.min(25, groupBarsWidth / seriesCount);
-      const innerGap = (groupBarsWidth - barWidth * seriesCount) / (seriesCount + 1 || 1);
-
-      return (
-        <div className="relative w-full">
-          <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible select-none">
-            <defs>
-              <clipPath id="chart-clip">
-                <rect x={paddingLeft - 2} y={paddingTop} width={chartWidth + 4} height={chartHeight} />
-              </clipPath>
-              {PRESET_GRADIENTS.map((g) => (
-                <linearGradient key={g.id} id={g.id} x1="0" y1="1" x2="0" y2="0">
-                  <stop offset="0%" stopColor={g.start} stopOpacity={0.2} />
-                  <stop offset="100%" stopColor={g.end} stopOpacity={0.9} />
-                </linearGradient>
-              ))}
-              {PRESET_GRADIENTS.map((g) => (
-                <linearGradient key={`glow-${g.id}`} id={`glow-${g.id}`} x1="0" y1="1" x2="0" y2="0">
-                  <stop offset="0%" stopColor={g.start} stopOpacity={0.4} />
-                  <stop offset="100%" stopColor={g.end} stopOpacity={1} />
-                </linearGradient>
-              ))}
-              <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-                <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000000" floodOpacity="0.3" />
-              </filter>
-            </defs>
-
-            {/* Grid lines */}
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-              const y = paddingTop + chartHeight * (1 - ratio);
-              const val = (maxValue * ratio).toFixed(0);
-              return (
-                <g key={i} className="opacity-40">
-                  <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#334155" strokeWidth="0.5" strokeDasharray="4,4" />
-                  <text x={paddingLeft - 10} y={y + 4} fill="#94a3b8" fontSize="10" fontWeight="bold" textAnchor="end">{val}{unit}</text>
-                </g>
-              );
-            })}
-
-            {/* Axes */}
-            <line x1={paddingLeft} y1={paddingTop} x2={paddingLeft} y2={height - paddingBottom} stroke="#475569" strokeWidth="1" />
-            <line x1={paddingLeft} y1={height - paddingBottom} x2={width - paddingRight} y2={height - paddingBottom} stroke="#475569" strokeWidth="1" />
-
-            {/* X-Axis labels */}
-            {normalized.xValues.map((xVal, gIdx) => {
-              const xCenter = paddingLeft + gIdx * groupWidth + groupWidth / 2;
-              return (
-                <text 
-                  key={gIdx} 
-                  x={xCenter} 
-                  y={height - paddingBottom + 12} 
-                  fill="#94a3b8" 
-                  fontSize="8.5" 
-                  fontWeight="bold" 
-                  textAnchor="end"
-                  transform={`rotate(-25, ${xCenter}, ${height - paddingBottom + 12})`}
-                >
-                  {String(xVal).length > 25 ? `${String(xVal).slice(0, 23)}..` : String(xVal)}
-                </text>
-              );
-            })}
-
-            {/* Grouped Bars */}
-            {normalized.xValues.map((xVal, gIdx) => {
-              const xStart = paddingLeft + gIdx * groupWidth + (groupWidth - groupBarsWidth) / 2;
-              
-              return normalized.seriesData.map((series, sIdx) => {
-                const pt = series.values.find(v => v.x === xVal);
-                if (!pt) return null;
-
-                const val = pt.y;
-                const barHeight = (val / maxValue) * chartHeight;
-                const barX = xStart + innerGap + sIdx * (barWidth + innerGap);
-                const barY = height - paddingBottom - barHeight;
-                const isHovered = hoveredIdx === gIdx && hoveredXIdx === sIdx;
-
-                const grad = PRESET_GRADIENTS[sIdx % PRESET_GRADIENTS.length];
-                const fillUrl = isHovered ? `url(#glow-${grad.id})` : `url(#${grad.id})`;
-
-                return (
-                  <g
-                    key={`${gIdx}-${sIdx}`}
-                    onMouseEnter={() => {
-                      setHoveredIdx(gIdx);
-                      setHoveredXIdx(sIdx);
-                    }}
-                    onMouseLeave={() => {
-                      setHoveredIdx(null);
-                      setHoveredXIdx(null);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <motion.rect
-                      x={barX}
-                      y={barY}
-                      width={barWidth}
-                      height={Math.max(barHeight + 10, 2)} /* Offset downwards to clip flat at the baseline */
-                      clipPath="url(#chart-clip)"
-                      rx="4"
-                      ry="4"
-                      fill={fillUrl}
-                      stroke={grad.end}
-                      strokeWidth={isHovered ? "2" : "1"}
-                      filter={isHovered ? "url(#shadow)" : ""}
-                      initial={{ height: 0, y: height - paddingBottom }}
-                      animate={{ height: Math.max(barHeight + 10, 2), y: barY }}
-                      transition={{ duration: 0.8, ease: "easeOut", delay: gIdx * 0.04 }}
-                    />
-                  </g>
-                );
-              });
-            })}
-          </svg>
-
-          {/* Interactive Tooltip Overlay */}
-          <div className="absolute top-4 right-4 pointer-events-none min-w-[150px]">
-            <AnimatePresence>
-              {hoveredIdx !== null && hoveredXIdx !== null && (
-                <motion.div
-                  initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                  className="p-3 rounded-xl bg-slate-950/90 border border-slate-800/80 backdrop-blur-md shadow-2xl flex flex-col gap-1 text-[11px]"
-                >
-                  <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">
-                    {normalized.seriesData[hoveredXIdx].label}
-                  </span>
-                  <span className="text-white font-extrabold text-sm flex items-baseline gap-1">
-                    {normalized.seriesData[hoveredXIdx].values.find(v => v.x === normalized.xValues[hoveredIdx])?.y}
-                    <span className="text-xs text-slate-400 font-medium">{unit}</span>
-                  </span>
-                  <span className="text-slate-400">
-                    {labels.xAxis}: {normalized.xValues[hoveredIdx]}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      );
-    } else {
-      // Single series standard bars
-      const barWidth = Math.min(45, (chartWidth / normalized.simpleData.length) * 0.6);
-      const gap = (chartWidth - barWidth * normalized.simpleData.length) / (normalized.simpleData.length + 1);
-
-      return (
-        <div className="relative w-full">
-          <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible select-none">
-            <defs>
-              <clipPath id="chart-clip-single">
-                <rect x={paddingLeft - 2} y={paddingTop} width={chartWidth + 4} height={chartHeight} />
-              </clipPath>
-              {PRESET_GRADIENTS.map((g) => (
-                <linearGradient key={g.id} id={g.id} x1="0" y1="1" x2="0" y2="0">
-                  <stop offset="0%" stopColor={g.start} stopOpacity={0.2} />
-                  <stop offset="100%" stopColor={g.end} stopOpacity={0.9} />
-                </linearGradient>
-              ))}
-              {PRESET_GRADIENTS.map((g) => (
-                <linearGradient key={`glow-${g.id}`} id={`glow-${g.id}`} x1="0" y1="1" x2="0" y2="0">
-                  <stop offset="0%" stopColor={g.start} stopOpacity={0.4} />
-                  <stop offset="100%" stopColor={g.end} stopOpacity={1} />
-                </linearGradient>
-              ))}
-              <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-                <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000000" floodOpacity="0.3" />
-              </filter>
-            </defs>
-
-            {/* Grid */}
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-              const y = paddingTop + chartHeight * (1 - ratio);
-              const val = (maxValue * ratio).toFixed(0);
-              return (
-                <g key={i} className="opacity-40">
-                  <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#334155" strokeWidth="0.5" strokeDasharray="4,4" />
-                  <text x={paddingLeft - 10} y={y + 4} fill="#94a3b8" fontSize="10" fontWeight="bold" textAnchor="end">{val}{unit}</text>
-                </g>
-              );
-            })}
-
-            {/* Axes */}
-            <line x1={paddingLeft} y1={paddingTop} x2={paddingLeft} y2={height - paddingBottom} stroke="#475569" strokeWidth="1" />
-            <line x1={paddingLeft} y1={height - paddingBottom} x2={width - paddingRight} y2={height - paddingBottom} stroke="#475569" strokeWidth="1" />
-
-            {/* Bars */}
-            {normalized.simpleData.map((item, idx) => {
-              const x = paddingLeft + gap + idx * (barWidth + gap);
-              const barHeight = (item.value / maxValue) * chartHeight;
-              const y = height - paddingBottom - barHeight;
-              const isHovered = hoveredIdx === idx;
-
-              const grad = PRESET_GRADIENTS[idx % PRESET_GRADIENTS.length];
-              const fillUrl = isHovered ? `url(#glow-${grad.id})` : `url(#${grad.id})`;
-
-              return (
-                <g
-                  key={idx}
-                  onMouseEnter={() => setHoveredIdx(idx)}
-                  onMouseLeave={() => setHoveredIdx(null)}
-                  className="cursor-pointer group"
-                >
-                  <motion.rect
-                    x={x}
-                    y={y}
-                    width={barWidth}
-                    height={Math.max(barHeight + 10, 2)} /* Offset downwards to clip flat at the baseline */
-                    clipPath="url(#chart-clip-single)"
-                    rx="6"
-                    ry="6"
-                    fill={fillUrl}
-                    stroke={grad.end}
-                    strokeWidth={isHovered ? "2" : "1"}
-                    filter={isHovered ? "url(#shadow)" : ""}
-                    initial={{ height: 0, y: height - paddingBottom }}
-                    animate={{ height: Math.max(barHeight + 10, 2), y }}
-                    transition={{ duration: 0.8, ease: "easeOut", delay: idx * 0.05 }}
-                  />
-
-                  {isHovered && (
-                    <circle cx={x + barWidth / 2} cy={y} r="8" fill={grad.end} className="animate-ping opacity-30 pointer-events-none" />
-                  )}
-
-                  <text 
-                    x={x + barWidth / 2} 
-                    y={height - paddingBottom + 12} 
-                    fill={isHovered ? "#3b82f6" : "#94a3b8"} 
-                    fontSize="8.5" 
-                    fontWeight="bold" 
-                    textAnchor="end"
-                    transform={`rotate(-25, ${x + barWidth / 2}, ${height - paddingBottom + 12})`}
-                  >
-                    {item.label.length > 25 ? `${item.label.slice(0, 23)}..` : item.label}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
-
-          {/* Interactive Tooltip Overlay */}
-          <div className="absolute top-4 right-4 pointer-events-none min-w-[140px]">
-            <AnimatePresence>
-              {hoveredIdx !== null && (
-                <motion.div
-                  initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                  className="p-3 rounded-xl bg-slate-950/90 border border-slate-800/80 backdrop-blur-md shadow-2xl flex flex-col gap-1 text-[11px]"
-                >
-                  <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">
-                    {normalized.simpleData[hoveredIdx].label}
-                  </span>
-                  <span className="text-white font-extrabold text-sm flex items-baseline gap-1">
-                    {normalized.simpleData[hoveredIdx].value}
-                    <span className="text-xs text-slate-400 font-medium">{unit}</span>
-                  </span>
-                  <span className="text-blue-400 font-semibold">
-                    {((normalized.simpleData[hoveredIdx].value / totalValue) * 100).toFixed(1)}% {labels.percentOfTotal}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      );
-    }
-  };
-
-  // RENDER: Donut Chart
-  const renderDonutChart = () => {
-    let accumulatedAngle = 0;
-
-    const size = 260;
-    const center = size / 2;
-    const radius = 90;
-    const strokeWidth = 24;
-
-    // Use selected series values if multi-series is active
-    const donutData = normalized.isMultiSeries
-      ? normalized.seriesData[selectedSeriesIdx].values.map(v => ({ label: String(v.x), value: v.y }))
-      : normalized.simpleData;
-
-    return (
-      <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-14 py-4 w-full">
-        {/* Dynamic drop-down picker for multi-series donuts */}
-        {normalized.isMultiSeries && (
-          <div className="absolute top-16 left-6 z-40 select-none">
-            <button
-              onClick={() => setShowSeriesDropdown(!showSeriesDropdown)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800/80 text-xs text-slate-200 font-bold hover:bg-slate-800 transition-colors"
-            >
-              <span>{normalized.seriesData[selectedSeriesIdx].label}</span>
-              <ChevronDown className="w-3.5 h-3.5 opacity-60" />
-            </button>
-            <AnimatePresence>
-              {showSeriesDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="absolute left-0 mt-1 w-[160px] max-h-[150px] overflow-y-auto rounded-xl bg-slate-900 border border-slate-800 shadow-2xl flex flex-col p-1.5"
-                >
-                  {normalized.seriesData.map((s, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setSelectedSeriesIdx(idx);
-                        setShowSeriesDropdown(false);
-                      }}
-                      className={`text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold ${
-                        idx === selectedSeriesIdx
-                          ? 'bg-indigo-600 text-white'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
-
-        <div className="relative shrink-0" style={{ width: size, height: size }}>
-          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="select-none overflow-visible">
-            <defs>
-              <filter id="donut-glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="5" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-              </filter>
-            </defs>
-
-            {/* Background Base */}
-            <circle cx={center} cy={center} r={radius} fill="transparent" stroke="#1e293b" strokeWidth={strokeWidth} className="opacity-50" />
-
-            {/* Arcs */}
-            <g transform={`rotate(-90 ${center} ${center})`}>
-              {donutData.map((item, idx) => {
-                const percentage = item.value / totalValue;
-                const angle = percentage * 360;
-                const circumference = 2 * Math.PI * radius;
-                const strokeDasharray = `${(percentage * circumference).toFixed(2)} ${circumference.toFixed(2)}`;
-                const strokeDashoffset = -((accumulatedAngle / 360) * circumference).toFixed(2);
-
-                accumulatedAngle += angle;
-
-                const grad = PRESET_GRADIENTS[idx % PRESET_GRADIENTS.length];
-                const isHovered = hoveredIdx === idx;
-
-                return (
-                  <motion.circle
-                    key={idx}
-                    cx={center}
-                    cy={center}
-                    r={radius}
-                    fill="transparent"
-                    stroke={grad.end}
-                    strokeWidth={isHovered ? strokeWidth + 4 : strokeWidth}
-                    strokeDasharray={strokeDasharray}
-                    strokeDashoffset={strokeDashoffset}
-                    strokeLinecap="round"
-                    onMouseEnter={() => setHoveredIdx(idx)}
-                    onMouseLeave={() => setHoveredIdx(null)}
-                    className="cursor-pointer transition-all duration-300"
-                    style={{ transformOrigin: `${center}px ${center}px` }}
-                    filter={isHovered ? "url(#donut-glow)" : ""}
-                    initial={{ strokeDasharray: `0 ${circumference}` }}
-                    animate={{ strokeDasharray }}
-                    transition={{ duration: 1, ease: "easeInOut", delay: idx * 0.08 }}
-                  />
-                );
-              })}
-            </g>
-          </svg>
-
-          {/* Readout overlay inside donut hole */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <AnimatePresence mode="wait">
-              {hoveredIdx !== null ? (
-                <motion.div
-                  key={`hovered-${hoveredIdx}`}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  className="text-center flex flex-col items-center justify-center"
-                >
-                  <div className="text-[9px] uppercase font-bold tracking-widest text-slate-400 max-w-[120px] truncate leading-none">
-                    {donutData[hoveredIdx].label}
-                  </div>
-                  <div className="text-xl font-black text-white mt-1 leading-none">
-                    {donutData[hoveredIdx].value}
-                    <span className="text-xs text-slate-400 font-medium ml-0.5">{unit}</span>
-                  </div>
-                  <div className="text-[10px] text-blue-400 font-extrabold mt-1 leading-none">
-                    {((donutData[hoveredIdx].value / totalValue) * 100).toFixed(1)}%
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="total"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  className="text-center flex flex-col items-center justify-center"
-                >
-                  <div className="text-[9px] uppercase font-bold tracking-widest text-slate-500 leading-none">
-                    {labels.total}
-                  </div>
-                  <div className="text-2xl font-black text-slate-100 mt-1 leading-none">
-                    {totalValue}
-                    <span className="text-xs text-slate-400 font-medium ml-0.5">{unit}</span>
-                  </div>
-                  <div className="text-[9px] text-slate-400 mt-1 leading-none">
-                    {donutData.length} {labels.segments}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Legend sidebar */}
-        <div className="flex flex-col gap-2.5 min-w-[160px] max-w-[220px]">
-          {donutData.map((item, idx) => {
-            const grad = PRESET_GRADIENTS[idx % PRESET_GRADIENTS.length];
-            const isHovered = hoveredIdx === idx;
-            const percent = ((item.value / totalValue) * 100).toFixed(1);
-
-            return (
-              <div
-                key={idx}
-                onMouseEnter={() => setHoveredIdx(idx)}
-                onMouseLeave={() => setHoveredIdx(null)}
-                className={`flex items-center gap-3 p-2 rounded-xl transition-all duration-200 cursor-pointer border ${
-                  isHovered 
-                    ? "bg-slate-900 border-slate-700/80 shadow-lg translate-x-1" 
-                    : "bg-slate-950/20 border-transparent hover:bg-slate-950/40"
-                }`}
-              >
-                <div
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{
-                    background: `linear-gradient(135deg, ${grad.start}, ${grad.end})`,
-                    boxShadow: isHovered ? `0 0 10px ${grad.end}` : 'none'
-                  }}
-                />
-                <div className="min-w-0 flex-1 flex flex-col gap-0.5">
-                  <span className="text-xs font-bold text-slate-200 truncate">{item.label}</span>
-                  <span className="text-[10px] text-slate-400">
-                    {item.value} {unit} ({percent}%)
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  // RENDER: Line Chart
-  const renderLineChart = () => {
-    return (
-      <div className="relative w-full">
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible select-none">
-          <defs>
-            {LINE_COLORS.map((color, idx) => (
-              <linearGradient key={`line-grad-${idx}`} id={`line-grad-${idx}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity={0.2} />
-                <stop offset="100%" stopColor={color} stopOpacity={0.0} />
-              </linearGradient>
-            ))}
-          </defs>
-
-          {/* Grid lines (Y-axis) */}
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-            const y = paddingTop + chartHeight * (1 - ratio);
-            const val = (maxValue * ratio).toFixed(0);
-            return (
-              <g key={i} className="opacity-40">
-                <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#334155" strokeWidth="0.5" strokeDasharray="4,4" />
-                <text x={paddingLeft - 10} y={y + 4} fill="#94a3b8" fontSize="10" fontWeight="bold" textAnchor="end">{val}{unit}</text>
-              </g>
-            );
-          })}
-
-          {/* Axes */}
-          <line x1={paddingLeft} y1={paddingTop} x2={paddingLeft} y2={height - paddingBottom} stroke="#475569" strokeWidth="1" />
-          <line x1={paddingLeft} y1={height - paddingBottom} x2={width - paddingRight} y2={height - paddingBottom} stroke="#475569" strokeWidth="1" />
-
-          {/* Dynamic filled area curves */}
-          {normalized.seriesData.map((series, idx) => {
-            if (series.values.length === 0) return null;
-
-            const areaPathPoints = series.values.map((p, pIdx) => {
-              const sx = getXCoord(p.x, pIdx);
-              const sy = getYCoord(p.y);
-              return `${sx},${sy}`;
-            });
-
-            const firstX = getXCoord(series.values[0].x, 0);
-            const lastX = getXCoord(series.values[series.values.length - 1].x, series.values.length - 1);
-            const zeroY = height - paddingBottom;
-
-            const pathString = `M ${firstX},${zeroY} L ${areaPathPoints.join(' L ')} L ${lastX},${zeroY} Z`;
-
-            return (
-              <path
-                key={`area-${idx}`}
-                d={pathString}
-                fill={`url(#line-grad-${idx % LINE_COLORS.length})`}
-                opacity="0.5"
-                className="transition-all duration-300"
-              />
-            );
-          })}
-
-          {/* Line Curves */}
-          {normalized.seriesData.map((series, idx) => {
-            if (series.values.length === 0) return null;
-
-            const pathPoints = series.values.map((p, pIdx) => {
-              const sx = getXCoord(p.x, pIdx);
-              const sy = getYCoord(p.y);
-              return `${pIdx === 0 ? 'M' : 'L'} ${sx} ${sy}`;
-            }).join(' ');
-
-            const color = LINE_COLORS[idx % LINE_COLORS.length];
-
-            return (
-              <motion.path
-                key={`line-${idx}`}
-                d={pathPoints}
-                fill="none"
-                stroke={color}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 1.2, ease: "easeOut", delay: idx * 0.1 }}
-              />
-            );
-          })}
-
-          {/* Vertical indicator slice grid line */}
-          {hoveredXIdx !== null && (
-            <line
-              x1={getXCoord(normalized.xValues[hoveredXIdx], hoveredXIdx)}
-              y1={paddingTop}
-              x2={getXCoord(normalized.xValues[hoveredXIdx], hoveredXIdx)}
-              y2={height - paddingBottom}
-              stroke="#64748b"
-              strokeWidth="1"
-              strokeDasharray="3,3"
-            />
-          )}
-
-          {/* High-quality responsive interactive highlight circles */}
-          {hoveredXIdx !== null && normalized.seriesData.map((series, idx) => {
-            const activeX = normalized.xValues[hoveredXIdx];
-            let pt;
-            if (normalized.isMultiSeries) {
-              pt = series.values.find(v => v.x === activeX);
-            } else {
-              pt = series.values[hoveredXIdx];
-            }
-            if (!pt) return null;
-
-            const sx = getXCoord(pt.x, hoveredXIdx);
-            const sy = getYCoord(pt.y);
-            const color = LINE_COLORS[idx % LINE_COLORS.length];
-
-            return (
-              <g key={`highlight-${idx}`}>
-                <circle cx={sx} cy={sy} r="6" fill={color} stroke="#ffffff" strokeWidth="1.5" className="shadow-md" />
-                <circle cx={sx} cy={sy} r="12" fill="transparent" stroke={color} strokeWidth="1.5" className="animate-ping opacity-40 pointer-events-none" />
-              </g>
-            );
-          })}
-
-          {/* Invisible mouse hover slice bars */}
-          {normalized.xValues.map((x, idx) => {
-            const sx = getXCoord(x, idx);
-            const prevX = idx > 0 ? getXCoord(normalized.xValues[idx - 1], idx - 1) : sx;
-            const nextX = idx < normalized.xValues.length - 1 ? getXCoord(normalized.xValues[idx + 1], idx + 1) : sx;
-            
-            const rectX = sx - (sx - prevX) / 2;
-            const rectWidth = (nextX - sx) / 2 + (sx - rectX);
-
-            return (
-              <rect
-                key={`slice-${idx}`}
-                x={idx === 0 ? paddingLeft : rectX}
-                y={paddingTop}
-                width={idx === 0 ? rectWidth + (rectX - paddingLeft) : rectWidth}
-                height={chartHeight}
-                fill="transparent"
-                className="cursor-crosshair"
-                onMouseEnter={() => setHoveredXIdx(idx)}
-                onMouseLeave={() => setHoveredXIdx(null)}
-              />
-            );
-          })}
-
-          {/* Static category labels on Line Chart ticks */}
-          {!normalized.isMultiSeries && normalized.xValues.map((label, idx) => {
-            const sx = getXCoord(label, idx);
-            return (
-              <text key={idx} x={sx} y={height - paddingBottom + 16} fill="#94a3b8" fontSize="8" fontWeight="bold" textAnchor="middle">
-                {String(label).length > 8 ? `${String(label).slice(0, 6)}..` : String(label)}
-              </text>
-            );
-          })}
-
-          {/* Multi series year ticks */}
-          {normalized.isMultiSeries && normalized.xValues.map((x, idx) => {
-            const sx = getXCoord(x, idx);
-            return (
-              <text key={idx} x={sx} y={height - paddingBottom + 16} fill="#94a3b8" fontSize="9" fontWeight="bold" textAnchor="middle">
-                {x}
-              </text>
-            );
-          })}
-        </svg>
-
-        {/* Hover slice tooltip overlay */}
-        <div className="absolute top-4 right-4 pointer-events-none min-w-[160px]">
-          <AnimatePresence>
-            {hoveredXIdx !== null && (
-              <motion.div
-                initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                className="p-3 rounded-xl bg-slate-950/95 border border-slate-800/80 backdrop-blur-md shadow-2xl flex flex-col gap-1.5 text-[11px]"
-              >
-                <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">
-                  {normalized.isMultiSeries ? `${xAxisLabel || 'X'}: ${normalized.xValues[hoveredXIdx]}` : normalized.simpleData[hoveredXIdx].label}
-                </span>
-                <div className="flex flex-col gap-1">
-                  {normalized.seriesData.map((series, idx) => {
-                    const activeX = normalized.xValues[hoveredXIdx];
-                    let pt;
-                    if (normalized.isMultiSeries) {
-                      pt = series.values.find(v => v.x === activeX);
-                    } else {
-                      pt = series.values[hoveredXIdx];
-                    }
-                    if (!pt) return null;
-                    const color = LINE_COLORS[idx % LINE_COLORS.length];
-                    return (
-                      <div key={idx} className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-                          <span className="text-slate-350 font-medium">{series.label}</span>
-                        </div>
-                        <span className="text-white font-extrabold">
-                          {pt.y}
-                          <span className="text-[10px] text-slate-500 font-medium ml-0.5">{unit}</span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-    );
-  };
-
-  // RENDER: styled dark-theme Table Mode
-  const renderTableMode = () => {
-    if (normalized.isMultiSeries) {
-      return (
-        <div className="w-full overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60 backdrop-blur-md">
-          <table className="w-full text-left border-collapse text-xs select-text">
-            <thead>
-              <tr className="border-b border-slate-800 bg-slate-900/50">
-                <th className="px-4 py-3 font-bold text-slate-400 uppercase tracking-wider">{xAxisLabel || labels.xAxis}</th>
-                {normalized.seriesData.map((series, idx) => (
-                  <th key={idx} className="px-4 py-3 font-bold text-slate-300 uppercase tracking-wider">
-                    <span className="inline-block w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: LINE_COLORS[idx % LINE_COLORS.length] }} />
-                    {series.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {normalized.xValues.map((x, gIdx) => (
-                <tr key={gIdx} className="border-b border-slate-900/60 hover:bg-slate-900/20 transition-colors">
-                  <td className="px-4 py-3 text-slate-200 font-bold">{x}</td>
-                  {normalized.seriesData.map((series, sIdx) => {
-                    const pt = series.values.find(v => v.x === x);
-                    return (
-                      <td key={sIdx} className="px-4 py-3 text-slate-300 font-medium">
-                        {pt ? `${pt.y} ${unit}` : "-"}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    } else {
-      return (
-        <div className="w-full overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60 backdrop-blur-md">
-          <table className="w-full text-left border-collapse text-xs select-text">
-            <thead>
-              <tr className="border-b border-slate-800 bg-slate-900/50">
-                <th className="px-4 py-3 font-bold text-slate-400 uppercase tracking-wider">{xAxisLabel || labels.category}</th>
-                <th className="px-4 py-3 font-bold text-slate-300 uppercase tracking-wider">{yAxisLabel || labels.value}</th>
-                <th className="px-4 py-3 font-bold text-slate-400 uppercase tracking-wider">{labels.percentage}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {normalized.simpleData.map((item, idx) => (
-                <tr key={idx} className="border-b border-slate-900/60 hover:bg-slate-900/20 transition-colors">
-                  <td className="px-4 py-3 text-slate-200 font-bold">{item.label}</td>
-                  <td className="px-4 py-3 text-slate-300 font-medium">{item.value} {unit}</td>
-                  <td className="px-4 py-3 text-indigo-400 font-extrabold">{((item.value / totalValue) * 100).toFixed(1)} %</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    }
-  };
-
-  // RENDER: Scatter Plot with Linear Regression
-  const renderScatterChart = () => {
-    interface ScatterPoint {
-      x: number;
-      y: number;
-      label: string;
-      seriesIdx: number;
-    }
-
-    const points: ScatterPoint[] = [];
-
-    if (normalized.isMultiSeries) {
-      normalized.seriesData.forEach((series, sIdx) => {
-        series.values.forEach((v) => {
-          if (typeof v.x === 'number' && typeof v.y === 'number') {
-            points.push({ x: v.x, y: v.y, label: `${series.label} (x: ${v.x})`, seriesIdx: sIdx });
-          }
-        });
-      });
-    } else {
-      normalized.simpleData.forEach((d, idx) => {
-        const xVal = parseFloat(d.label);
-        const yVal = d.value;
-        const xResolved = isNaN(xVal) ? idx : xVal;
-        points.push({ x: xResolved, y: yVal, label: d.label, seriesIdx: 0 });
-      });
-    }
-
-    if (points.length === 0) {
-      return (
-        <div className="flex items-center justify-center h-48 text-slate-400">
-          No numerical data available for scatter plot.
-        </div>
-      );
-    }
-
-    // Determine numerical bounds
-    const xValuesList = points.map(p => p.x);
-    const yValuesList = points.map(p => p.y);
-    const minXRaw = Math.min(...xValuesList);
-    const maxXRaw = Math.max(...xValuesList);
-    const minYRaw = Math.min(...yValuesList);
-    const maxYRaw = Math.max(...yValuesList);
-
-    const xRange = maxXRaw - minXRaw || 1;
-    const yRange = maxYRaw - minYRaw || 1;
-    const minX = minXRaw - xRange * 0.1;
-    const maxX = maxXRaw + xRange * 0.1;
-    const minY = Math.max(0, minYRaw - yRange * 0.1);
-    const maxY = maxYRaw + yRange * 0.1;
-
-    // Linear Regression (Least Squares) for selected series (or all simple data)
-    const regressionPoints = normalized.isMultiSeries
-      ? points.filter(p => p.seriesIdx === selectedSeriesIdx)
-      : points;
-
-    let slope = 0;
-    let intercept = 0;
-    let rValue = 0;
-    let rSquared = 0;
-    const N = regressionPoints.length;
-
-    if (N > 1) {
-      let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0, sumYY = 0;
-      regressionPoints.forEach(p => {
-        sumX += p.x;
-        sumY += p.y;
-        sumXY += p.x * p.y;
-        sumXX += p.x * p.x;
-        sumYY += p.y * p.y;
-      });
-
-      const num = N * sumXY - sumX * sumY;
-      const denSlope = N * sumXX - sumX * sumX;
-      slope = denSlope !== 0 ? num / denSlope : 0;
-      intercept = (sumY - slope * sumX) / N;
-
-      const denR = Math.sqrt((N * sumXX - sumX * sumX) * (N * sumYY - sumY * sumY));
-      rValue = denR !== 0 ? num / denR : 0;
-      rSquared = rValue * rValue;
-    }
-
-    // Coordinate converters
-    const getX = (xVal: number) => paddingLeft + ((xVal - minX) / (maxX - minX)) * chartWidth;
-    const getY = (yVal: number) => height - paddingBottom - ((yVal - minY) / (maxY - minY)) * chartHeight;
-
-    // Regression line points
-    const regLineX1 = Math.min(...regressionPoints.map(p => p.x));
-    const regLineX2 = Math.max(...regressionPoints.map(p => p.x));
-    const regLineY1 = slope * regLineX1 + intercept;
-    const regLineY2 = slope * regLineX2 + intercept;
-
-    return (
-      <div className="relative w-full flex flex-col items-center">
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible select-none">
-          <defs>
-            <clipPath id="chart-clip-scatter">
-              <rect x={paddingLeft - 2} y={paddingTop} width={chartWidth + 4} height={chartHeight} />
-            </clipPath>
-            <filter id="glow-scatter" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-          </defs>
-
-          {/* Grid lines */}
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-            const yVal = minY + (maxY - minY) * ratio;
-            const y = getY(yVal);
-            return (
-              <g key={`y-grid-${i}`} className="opacity-40">
-                <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#334155" strokeWidth="0.5" strokeDasharray="4,4" />
-                <text x={paddingLeft - 10} y={y + 4} fill="#94a3b8" fontSize="9" fontWeight="bold" textAnchor="end">{yVal.toFixed(1)}{unit}</text>
-              </g>
-            );
-          })}
-
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-            const xVal = minX + (maxX - minX) * ratio;
-            const x = getX(xVal);
-            return (
-              <g key={`x-grid-${i}`} className="opacity-40">
-                <line x1={x} y1={paddingTop} x2={x} y2={height - paddingBottom} stroke="#334155" strokeWidth="0.5" strokeDasharray="4,4" />
-                <text x={x} y={height - paddingBottom + 14} fill="#94a3b8" fontSize="9" fontWeight="bold" textAnchor="middle">{xVal.toFixed(1)}</text>
-              </g>
-            );
-          })}
-
-          {/* Axes */}
-          <line x1={paddingLeft} y1={paddingTop} x2={paddingLeft} y2={height - paddingBottom} stroke="#475569" strokeWidth="1" />
-          <line x1={paddingLeft} y1={height - paddingBottom} x2={width - paddingRight} y2={height - paddingBottom} stroke="#475569" strokeWidth="1" />
-
-          {/* Linear regression trendline */}
-          {N > 1 && (
-            <g clipPath="url(#chart-clip-scatter)">
-              <motion.line
-                x1={getX(regLineX1)}
-                y1={getY(regLineY1)}
-                x2={getX(regLineX2)}
-                y2={getY(regLineY2)}
-                stroke="#6366f1"
-                strokeWidth="2.5"
-                strokeDasharray="6,4"
-                filter="url(#glow-scatter)"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              />
-            </g>
-          )}
-
-          {/* Render individual points */}
-          {points.map((p, idx) => {
-            const cx = getX(p.x);
-            const cy = getY(p.y);
-            const color = LINE_COLORS[p.seriesIdx % LINE_COLORS.length];
-            const isHovered = hoveredIdx === idx;
-
-            return (
-              <g key={idx}>
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={isHovered ? 8 : 5}
-                  fill={color}
-                  stroke="#ffffff"
-                  strokeWidth={isHovered ? 2 : 1}
-                  className="cursor-pointer transition-all duration-200"
-                  onMouseEnter={() => setHoveredIdx(idx)}
-                  onMouseLeave={() => setHoveredIdx(null)}
-                />
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* Analytics stats dashboard overlay */}
-        {N > 1 && (
-          <div className="mt-4 p-3 bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl flex flex-col gap-1 w-full max-w-sm text-center">
-            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">
-              {langKey === 'FR' ? 'Analyse de Régression' : 'Regression Analysis'}
-            </span>
-            <div className="grid grid-cols-3 gap-2 mt-1 text-slate-300 text-xs">
-              <div className="flex flex-col bg-slate-950/40 p-2 rounded-xl border border-slate-800">
-                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Modèle (y=)</span>
-                <span className="font-mono font-bold text-slate-200 mt-0.5">
-                  {slope.toFixed(2)}x {intercept >= 0 ? '+' : '-'} {Math.abs(intercept).toFixed(2)}
-                </span>
-              </div>
-              <div className="flex flex-col bg-slate-950/40 p-2 rounded-xl border border-slate-800">
-                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Pearson R</span>
-                <span className="font-mono font-bold text-emerald-400 mt-0.5">
-                  {(rValue >= 0 ? '+' : '') + rValue.toFixed(3)}
-                </span>
-              </div>
-              <div className="flex flex-col bg-slate-950/40 p-2 rounded-xl border border-slate-800">
-                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">R² (Déterm.)</span>
-                <span className="font-mono font-bold text-cyan-400 mt-0.5">{rSquared.toFixed(3)}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tooltip detail panel */}
-        <AnimatePresence>
-          {hoveredIdx !== null && points[hoveredIdx] && (
-            <motion.div
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="absolute top-2 right-4 pointer-events-none bg-slate-950/90 border border-slate-800 p-2.5 rounded-xl shadow-xl flex flex-col gap-0.5 z-20"
-            >
-              <span className="text-[9px] font-black uppercase text-indigo-400">
-                {normalized.isMultiSeries ? normalized.seriesData[points[hoveredIdx].seriesIdx].label : (langKey === 'FR' ? 'Point' : 'Point')}
-              </span>
-              <span className="text-xs font-bold text-slate-100">{points[hoveredIdx].label}</span>
-              <div className="flex gap-3 text-xs mt-1 font-mono">
-                <span className="text-slate-400">X: <strong className="text-slate-200">{points[hoveredIdx].x.toFixed(2)}</strong></span>
-                <span className="text-slate-400">Y: <strong className="text-slate-200">{points[hoveredIdx].y.toFixed(2)}</strong></span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    );
-  };
-
   return (
-    <div className="my-8 rounded-[40px] overflow-visible border border-slate-800/80 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8 relative">
-      <div className="absolute -right-12 -top-12 w-32 h-32 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
-      <div className="absolute -left-12 -bottom-12 w-32 h-32 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
+    <div className={`my-8 rounded-[40px] overflow-visible border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl p-6 sm:p-8 shadow-2xl relative select-none ${className}`}>
+      <div className="absolute -right-12 -top-12 w-32 h-32 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+      <div className="absolute -left-12 -bottom-12 w-32 h-32 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
       {/* Top Header Selector Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4 mb-6 relative z-10 select-none">
-        {title && (
-          <h4 className="text-xs font-black text-slate-200 uppercase tracking-[0.2em] flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
-            <span>{title}</span>
-          </h4>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          {title && (
+            <h4 className="text-xs font-black text-slate-200 uppercase tracking-[0.2em] flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
+              {title}
+            </h4>
+          )}
+          {description && (
+            <p className="text-xs text-slate-400 mt-1">{description}</p>
+          )}
+        </div>
+
+        {/* View Toggle Tabs */}
+        {allowToggleType && (
+          <div className="flex items-center gap-1.5 p-1 bg-slate-950/70 border border-slate-800/80 rounded-2xl self-start sm:self-auto shadow-inner">
+            <button
+              type="button"
+              onClick={() => setActiveType('bar')}
+              className={`p-2 rounded-xl text-xs font-medium transition-all ${
+                activeType === 'bar'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title={t.types?.bar || "Bar Chart"}
+            >
+              <BarChart3 className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveType('line')}
+              className={`p-2 rounded-xl text-xs font-medium transition-all ${
+                activeType === 'line'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title={t.types?.line || "Line Chart"}
+            >
+              <LineChartIcon className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveType('donut')}
+              className={`p-2 rounded-xl text-xs font-medium transition-all ${
+                activeType === 'donut'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title={t.types?.donut || "Donut Chart"}
+            >
+              <PieChart className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveType('scatter')}
+              className={`p-2 rounded-xl text-xs font-medium transition-all ${
+                activeType === 'scatter'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title={t.types?.scatter || "Scatter & Regression"}
+            >
+              <Activity className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveType('table')}
+              className={`p-2 rounded-xl text-xs font-medium transition-all ${
+                activeType === 'table'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title={t.types?.table || "Data Table"}
+            >
+              <TableIcon className="w-4 h-4" />
+            </button>
+          </div>
         )}
-
-        {/* Dynamic selector buttons */}
-        <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-2xl border border-slate-800/85">
-          <button
-            onClick={() => setActiveRep('bar')}
-            className={`p-2 rounded-xl transition-all duration-300 cursor-pointer ${
-              activeRep === 'bar' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'
-            }`}
-            title={labels.bar}
-          >
-            <BarChart3 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setActiveRep('donut')}
-            className={`p-2 rounded-xl transition-all duration-300 cursor-pointer ${
-              activeRep === 'donut' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'
-            }`}
-            title={labels.donut}
-          >
-            <PieChart className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setActiveRep('line')}
-            className={`p-2 rounded-xl transition-all duration-300 cursor-pointer ${
-              activeRep === 'line' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'
-            }`}
-            title={labels.line}
-          >
-            <TrendingUp className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setActiveRep('table')}
-            className={`p-2 rounded-xl transition-all duration-300 cursor-pointer ${
-              activeRep === 'table' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'
-            }`}
-            title={labels.table}
-          >
-            <Table className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setActiveRep('scatter')}
-            className={`p-2 rounded-xl transition-all duration-300 cursor-pointer ${
-              activeRep === 'scatter' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'
-            }`}
-            title={labels.scatter}
-          >
-            <CircleDot className="w-4 h-4" />
-          </button>
-        </div>
       </div>
 
-      {/* Main visualization card body */}
-      <div className="w-full flex justify-center relative min-h-[220px]">
-        {activeRep === 'bar' && renderBarChart()}
-        {activeRep === 'donut' && renderDonutChart()}
-        {activeRep === 'line' && renderLineChart()}
-        {activeRep === 'table' && renderTableMode()}
-        {activeRep === 'scatter' && renderScatterChart()}
+      {/* Chart Canvas Rendering */}
+      <div className="w-full flex items-center justify-center min-h-[300px]">
+        {activeType === 'bar' && (
+          <BarChartRender
+            normalized={normalized}
+            chartWidth={chartWidth}
+            chartHeight={chartHeight}
+            width={width}
+            height={height}
+            paddingLeft={paddingLeft}
+            paddingBottom={paddingBottom}
+            paddingTop={paddingTop}
+            paddingRight={paddingRight}
+            getYCoord={getYCoord}
+            hoveredItem={hoveredItem}
+            setHoveredItem={setHoveredItem}
+            tooltipPos={tooltipPos}
+            setTooltipPos={setTooltipPos}
+            unit={unit}
+            totalSum={totalSum}
+            t={t}
+          />
+        )}
+        {activeType === 'donut' && (
+          <DonutChartRender
+            normalized={normalized}
+            totalSum={totalSum}
+            hoveredItem={hoveredItem}
+            setHoveredItem={setHoveredItem}
+            unit={unit}
+            t={t}
+          />
+        )}
+        {activeType === 'line' && (
+          <LineChartRender
+            normalized={normalized}
+            chartWidth={chartWidth}
+            chartHeight={chartHeight}
+            width={width}
+            height={height}
+            paddingLeft={paddingLeft}
+            paddingBottom={paddingBottom}
+            paddingTop={paddingTop}
+            paddingRight={paddingRight}
+            getYCoord={getYCoord}
+            hoveredItem={hoveredItem}
+            setHoveredItem={setHoveredItem}
+            tooltipPos={tooltipPos}
+            setTooltipPos={setTooltipPos}
+            unit={unit}
+            totalSum={totalSum}
+            t={t}
+          />
+        )}
+        {activeType === 'scatter' && (
+          <ScatterChartRender
+            normalized={normalized}
+            selectedSeriesIdx={selectedSeriesIdx}
+            width={width}
+            height={height}
+            paddingLeft={paddingLeft}
+            paddingBottom={paddingBottom}
+            paddingTop={paddingTop}
+            paddingRight={paddingRight}
+            hoveredScatterIdx={hoveredScatterIdx}
+            setHoveredScatterIdx={setHoveredScatterIdx}
+            tooltipPos={tooltipPos}
+            setTooltipPos={setTooltipPos}
+            t={t}
+          />
+        )}
+        {activeType === 'table' && (
+          <TableModeRender
+            normalized={normalized}
+            unit={unit}
+            totalSum={totalSum}
+            t={t}
+          />
+        )}
       </div>
-
-      {/* Multi-series general legends in non-table views */}
-      {normalized.isMultiSeries && activeRep !== 'table' && activeRep !== 'donut' && (
-        <div className="flex flex-wrap justify-center gap-4 mt-6 border-t border-slate-800/60 pt-4 select-none">
-          {normalized.seriesData.map((series, idx) => {
-            const color = LINE_COLORS[idx % LINE_COLORS.length];
-            return (
-              <div key={idx} className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-                <span className="text-xs font-bold text-slate-400">{series.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 };

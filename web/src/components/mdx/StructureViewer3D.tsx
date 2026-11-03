@@ -1,40 +1,29 @@
-"use client";
-
 import React, { useState, useEffect, useRef } from 'react';
-import { RotateCw, ZoomIn, ZoomOut, Zap, Eye, AlertCircle } from 'lucide-react';
+import { RotateCw, ZoomIn, ZoomOut, Zap, Eye, AlertCircle, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 import {
-  Atom,
-  Bond,
-  Preset,
-  StructureViewer3DProps,
+  type Atom,
+  type Bond,
+  type Preset,
+  type StructureViewer3DProps,
   PRESETS,
-  ELEMENT_DETAILS,
   STRUCTURE_VIEWER_STRINGS,
-  generateNaCl,
-  generateGraphene
+  getPresetName,
+  getPresetDesc
 } from './structure-viewer/presets';
-import {
-  decodeBase64,
-  centerCoordinates,
-  parseSDF,
-  parseXYZ,
-  darkenColor
-} from './structure-viewer/parsers';
+import { parsePubChemJSON, parseSDF } from './structure-viewer/parsers';
+import { MoleculeHeader } from './structure-viewer/MoleculeHeader';
+import { CompoundDetailsPanel } from './structure-viewer/CompoundDetailsPanel';
 
 export type { Atom, Bond, Preset, StructureViewer3DProps };
 export {
   PRESETS,
-  ELEMENT_DETAILS,
   STRUCTURE_VIEWER_STRINGS,
-  generateNaCl,
-  generateGraphene,
-  decodeBase64,
-  centerCoordinates,
-  parseSDF,
-  parseXYZ,
-  darkenColor
+  getPresetName,
+  getPresetDesc,
+  parsePubChemJSON,
+  parseSDF
 };
 
 export const StructureViewer3D = ({
@@ -482,62 +471,21 @@ export const StructureViewer3D = ({
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8">
       {/* Molecule Details Header Row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-5 mb-5">
-        <div>
-          <h4 className="text-sm font-black text-slate-100 uppercase tracking-widest flex items-center gap-2">
-            <Zap className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>{t["Interactive 3D Structure Viewer"]}</span>
-          </h4>
-          <p className="text-[11px] text-slate-400 font-semibold mt-1">
-            {t["Drag to rotate molecule. Scroll/slider to zoom. Click an atom to inspect properties."]}
-          </p>
-        </div>
 
-        {/* Preset pill list & Search Bar container */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          {shouldShowPresetsMenu && (
-            <div className="flex flex-wrap gap-1.5">
-              {PRESETS.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => {
-                    setActivePreset(p);
-                    setSelectedAtomIndex(null);
-                  }}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
-                    activePreset.id === p.id
-                      ? "bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
-                      : "bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  {(t[p.name] || p.name).split(' ')[0]}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Real-time search/load from PubChem */}
-          <form onSubmit={handleSearch} className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/80 rounded-xl p-1 shrink-0">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={localStr.searchPlaceholder}
-              className="bg-transparent text-[10px] text-slate-200 placeholder-slate-500 font-bold px-2.5 py-1 focus:outline-none w-[170px] sm:w-[190px]"
-            />
-            <button
-              type="submit"
-              className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_10px_rgba(245,158,11,0.2)] hover:scale-[1.02]"
-            >
-              {localStr.loadBtn}
-            </button>
-          </form>
-        </div>
-      </div>
+      <MoleculeHeader
+        activePreset={activePreset}
+        presetList={presetList}
+        onSelectPreset={selectPreset}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        handleSearchAndLoad={handleSearchAndLoad}
+        isLoading={isLoading}
+        localStr={localStr}
+        t={t}
+      />
 
       {/* Main interactive viewport container */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
-        
         {/* Canvas Render Panel (3 cols) */}
         <div className="lg:col-span-3 relative h-[340px] rounded-2xl border border-slate-800 bg-slate-950 overflow-hidden group select-none">
           <canvas
@@ -626,91 +574,14 @@ export const StructureViewer3D = ({
           </div>
         </div>
 
+
         {/* Compound details & Info card (1 col) */}
-        <div className="lg:col-span-1 flex flex-col justify-between bg-slate-900/30 border border-slate-800 rounded-2xl p-5 space-y-4">
-          
-          {selectedAtom && selectedElement ? (
-            <div className="space-y-3.5 animate-fadeIn">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest bg-amber-500/5 border border-amber-500/10 px-2.5 py-1 rounded-lg w-max block">
-                  {t["Atom Inspector"]}
-                </span>
-                <button 
-                  onClick={() => setSelectedAtomIndex(null)}
-                  className="text-[10px] font-bold text-slate-500 hover:text-slate-300 uppercase cursor-pointer"
-                >
-                  {t["Clear"]}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-3 bg-slate-950/40 border border-slate-800 p-3 rounded-xl">
-                <div 
-                  className="w-11 h-11 rounded-lg flex items-center justify-center text-lg font-black text-white shadow-md border border-slate-800"
-                  style={{ backgroundColor: selectedAtom.color }}
-                >
-                  {selectedAtom.label}
-                </div>
-                <div>
-                  <h5 className="text-xs font-black text-white">{t[selectedElement.nameEN] || selectedElement.nameEN}</h5>
-                  <p className="text-[10px] text-slate-400 font-bold">{t[selectedElement.categoryEN] || selectedElement.categoryEN}</p>
-                </div>
-              </div>
-
-              <div className="space-y-1.5 border-t border-slate-800/80 pt-3">
-                <div className="flex justify-between items-center text-[10px] font-bold">
-                  <span className="text-slate-500 uppercase tracking-wide">{t["Atomic Number"]}</span>
-                  <span className="text-slate-300 font-black">{selectedElement.num}</span>
-                </div>
-                <div className="flex justify-between items-center text-[10px] font-bold">
-                  <span className="text-slate-500 uppercase tracking-wide">{t["Atomic Mass"]}</span>
-                  <span className="text-slate-300 font-black">{selectedElement.weight} u</span>
-                </div>
-                
-                {gradeLevel !== "middle_school" && (
-                  <>
-                    <div className="flex justify-between items-center text-[10px] font-bold">
-                      <span className="text-slate-500 uppercase tracking-wide">{t["Configuration"]}</span>
-                      <span className="text-slate-300 font-mono font-black">{selectedElement.config}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-[10px] font-bold">
-                      <span className="text-slate-500 uppercase tracking-wide">{t["Electronegativity"]}</span>
-                      <span className="text-slate-300 font-black">{selectedElement.electronegativity}</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest flex items-center gap-1 bg-amber-500/5 border border-amber-500/10 px-2.5 py-1 rounded-lg w-max">
-                {t["Active Specimen"]}
-              </span>
-              <h5 className="text-sm font-extrabold text-slate-100">{t[activePreset.name] || activePreset.name}</h5>
-              <p className="text-xs text-slate-400 leading-relaxed font-semibold">
-                {t[activePreset.description] || activePreset.description}
-              </p>
-            </div>
-          )}
-
-          <div className="pt-4 border-t border-slate-800/80 space-y-2">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">
-              {t["Atom Legend"]}
-            </span>
-            <div className="flex flex-col gap-1.5">
-              {Array.from(new Map(activePreset.atoms.map(a => [a.label, a])).values()).map((atom, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full border border-slate-900 shadow-sm"
-                    style={{ backgroundColor: atom.color }}
-                  />
-                  <span className="text-[10px] font-black text-slate-300">{atom.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
+        <CompoundDetailsPanel
+          activePreset={activePreset}
+          selectedAtomIndex={selectedAtomIndex}
+          localStr={localStr}
+          t={t}
+        />
       </div>
     </div>
   );

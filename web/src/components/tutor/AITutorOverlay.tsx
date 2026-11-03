@@ -1,64 +1,48 @@
-"use client";
-
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Send, Sparkles, X, Bookmark, CheckCircle, Globe, GraduationCap, Brain, Lock, Mic
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useLanguage } from '@/context/LanguageContext';
-import { dbService, TutorPersonality } from '@/lib/db';
-import { decryptApiKey } from '@/lib/crypto';
-import { UI_STRINGS } from '@/lib/translations';
 import { usePathname } from 'next/navigation';
-import { TutorMessageContent, renderInlineContent, parseMarkdownTableRow } from './overlay/TutorMessageContent';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, X, Send, Bot, RotateCcw, AlertTriangle, CheckCircle, HelpCircle, ChevronRight, MessageSquare, Volume2, VolumeX, Mic, MicOff, BookOpen, Layers, Check, RefreshCw } from 'lucide-react';
+import { dbService, TutorPersonality } from '@/lib/db';
+import { useLanguage } from '@/context/LanguageContext';
 import {
-  AITutorOverlayProps,
-  AI_ACT_DISCLAIMERS,
+  UI_STRINGS,
   TUTOR_LOCAL_STRINGS,
+  isFrancophoneLocale,
   extractFlashcardsFromContext,
-  getProbableLocationOnPage
+  getTutorPersonaPrompt
 } from './overlay/tutorStringsAndHelpers';
 import { useTutorVoiceInput } from './overlay/useTutorVoiceInput';
-import { TutorFlashcardsPanel, TutorSelectorModal, TutorCoachPopover } from './overlay/TutorPanelsAndModals';
+import { useTutorCoach } from './overlay/useTutorCoach';
+import { useTutorFlashcards } from './overlay/useTutorFlashcards';
+import { useTutorAuthAndPersona } from './overlay/useTutorAuthAndPersona';
+import { TutorPanelsAndModals } from './overlay/TutorPanelsAndModals';
+import { TutorInputArea } from './overlay/TutorInputArea';
+import { getQuickActions, getDashboardQuickActions } from './overlay/quickActions';
+import { TutorMessageContent } from './overlay/TutorMessageContent';
 
-export type { AITutorOverlayProps };
-export {
-  TutorMessageContent,
-  renderInlineContent,
-  parseMarkdownTableRow,
-  AI_ACT_DISCLAIMERS,
-  TUTOR_LOCAL_STRINGS,
-  extractFlashcardsFromContext,
-  getProbableLocationOnPage,
-  useTutorVoiceInput,
-  TutorFlashcardsPanel,
-  TutorSelectorModal,
-  TutorCoachPopover
-};
+interface AITutorOverlayProps {
+  pageContext?: string;
+  courseTitle?: string;
+  lang?: string;
+}
 
-export const AITutorOverlay = ({ 
-  lang: propLang, 
+export const AITutorOverlay = ({
   pageContext,
-  courseLevel,
   courseTitle,
-  courseSubject,
-  isDashboardMode = false
-}: AITutorOverlayProps = {}) => {
+  lang: propLang
+}: AITutorOverlayProps) => {
   const { language: contextLang } = useLanguage();
-  const lang = propLang || contextLang;
-  
+  const lang = (propLang || contextLang || 'FR').toUpperCase();
+
   const [tutorAssistanceBlocked, setTutorAssistanceBlocked] = useState(false);
 
   useEffect(() => {
-    const handleLockdown = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail && typeof customEvent.detail.disabled === 'boolean') {
-        setTutorAssistanceBlocked(customEvent.detail.disabled);
-      }
+    const handleExamState = (e: any) => {
+      setTutorAssistanceBlocked(Boolean(e.detail?.active));
     };
-    window.addEventListener('op_disable_tutor_assistance', handleLockdown);
+    window.addEventListener('op_exam_mode_active', handleExamState);
     return () => {
-      window.removeEventListener('op_disable_tutor_assistance', handleLockdown);
+      window.removeEventListener('op_exam_mode_active', handleExamState);
     };
   }, []);
 
@@ -74,219 +58,35 @@ export const AITutorOverlay = ({
   const glowTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [input, setInput] = useState('');
-  const [readingProgress, setReadingProgress] = useState<{
-    textSnippet: string;
-    index: number;
-    total: number;
-    tagName: string;
-  } | null>(null);
-
-  useEffect(() => {
-    const handleProgress = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail) {
-        setReadingProgress({
-          textSnippet: customEvent.detail.textSnippet,
-          index: customEvent.detail.index,
-          total: customEvent.detail.total,
-          tagName: customEvent.detail.tagName
-        });
-      }
-    };
-    window.addEventListener('op_reading_progress', handleProgress);
-    return () => window.removeEventListener('op_reading_progress', handleProgress);
-  }, []);
-
-  const [persona, setPersona] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('op_active_tutor_personality') || 'socratic';
-    }
-    return 'socratic';
-  });
-  const [personalities, setPersonalities] = useState<TutorPersonality[]>([]);
+  const [activeTab, setActiveTab] = useState<'chat' | 'flashcards'>('chat');
+  const [isCoachingDismissed, setIsCoachingDismissed] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const pathname = usePathname();
-  
-  const segments = pathname ? pathname.split('/').filter(Boolean) : [];
-  const isCurriculumPage = segments.length >= 4 && 
-    !['profile', 'admin', 'api', 'catalog', 'login', 'signup'].includes(segments[0]);
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [tutorEnabled, setTutorEnabled] = useState(true);
-  const [activeTab, setActiveTab] = useState<'chat' | 'flashcards'>('chat');
-  const [flashcards, setFlashcards] = useState<{ term: string; definition: string }[]>([]);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [cardMastery, setCardMastery] = useState<Record<string, string>>({});
-  const [isCoachingDismissed, setIsCoachingDismissed] = useState(false);
-  
+  const pathname = usePathname();
+  const segments = pathname ? pathname.split('/').filter(Boolean) : [];
+  const isCurriculumPage = segments.length >= 2;
+  const isDashboardMode = pathname === '/dashboard' || pathname?.includes('/dashboard/');
+
+  const { isLoggedIn, tutorEnabled, personalities, persona, getPersonaName, handleSelectTutor } = useTutorAuthAndPersona();
+  const { flashcards, currentCardIndex, setCurrentCardIndex, isFlipped, setIsFlipped, cardMastery, handleRateCard } = useTutorFlashcards({ pageContext });
+  const { selfEvalPre, selfEvalPost, coachAdvice, showCoachPopover, setShowCoachPopover, handleDismissCoachPopover, handleOpenChatFromCoach } = useTutorCoach({
+    isCurriculumPage,
+    isDashboardMode,
+    segments,
+    lang,
+    pathname,
+    isOpen,
+    setIsOpen
+  });
+
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { isListening, micActivity, toggleListening } = useTutorVoiceInput(
     lang,
-    input,
-    setInput,
-    t.voice_not_supported
+    (transcript) => {
+      setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+    }
   );
-
-  const [selfEvalPre, setSelfEvalPre] = useState<number | null>(null);
-  const [selfEvalPost, setSelfEvalPost] = useState<number | null>(null);
-  const [coachAdvice, setCoachAdvice] = useState<string>('');
-  const [showCoachPopover, setShowCoachPopover] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    async function fetchAdvice() {
-      if (!isCurriculumPage || isDashboardMode) return;
-      const savedProfile = localStorage.getItem('op_user_profile');
-      const loggedIn = localStorage.getItem('op_session') === 'true';
-      let userId = 'u1';
-      if (loggedIn && savedProfile) {
-        try {
-          const p = JSON.parse(savedProfile);
-          if (p.id) userId = p.id;
-        } catch (e) {}
-      }
-      
-      try {
-        const currentCourseSlug = segments[2];
-        const { data: progressData } = await dbService.getUserProgress(userId, lang, currentCourseSlug);
-        if (progressData && progressData.aiSummary && active) {
-          const rawAdvice = progressData.aiSummary.trim();
-          const isSubstantive = rawAdvice.length >= 30;
-          const isGenericPlaceholder = /^(bienvenue|welcome|bonjour|hello|salut|démarrez|start|commencez|let's start|bonne chance|good luck|continuez|continue)/i.test(rawAdvice);
-          
-          if (isSubstantive && !isGenericPlaceholder) {
-            setCoachAdvice(rawAdvice);
-            const dismissed = sessionStorage.getItem('op_dismiss_resumption_coach_advice');
-            if (!dismissed) {
-              const timer = setTimeout(() => {
-                setShowCoachPopover(true);
-              }, 1500);
-              return () => clearTimeout(timer);
-            }
-          }
-        }
-      } catch (e) {
-        console.error("Error fetching coach advice in overlay:", e);
-      }
-    }
-    fetchAdvice();
-    return () => {
-      active = false;
-    };
-  }, [lang, isCurriculumPage, pathname]);
-
-  const handleDismissCoachPopover = () => {
-    setShowCoachPopover(false);
-    sessionStorage.setItem('op_dismiss_resumption_coach_advice', 'true');
-  };
-
-  const handleOpenChatFromCoach = () => {
-    setShowCoachPopover(false);
-    sessionStorage.setItem('op_dismiss_resumption_coach_advice', 'true');
-    setIsOpen(true);
-  };
-
-  useEffect(() => {
-    if (isOpen && pathname) {
-      const getSelfEvalScores = () => {
-        if (typeof window === 'undefined') return { pre: null, post: null };
-        const storages = [localStorage, sessionStorage];
-        let preVal: number | null = null;
-        let postVal: number | null = null;
-        
-        for (const storage of storages) {
-          if (!storage) continue;
-          const pre = storage.getItem(`op_selfeval_pre_${pathname}`);
-          const post = storage.getItem(`op_selfeval_post_${pathname}`);
-          if (pre && preVal === null) preVal = parseInt(pre, 10);
-          if (post && postVal === null) postVal = parseInt(post, 10);
-        }
-        return { pre: preVal, post: postVal };
-      };
-      
-      const scores = getSelfEvalScores();
-      setSelfEvalPre(scores.pre);
-      setSelfEvalPost(scores.post);
-    }
-  }, [isOpen, pathname]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsCoachingDismissed(localStorage.getItem('op_dismiss_flashcard_coaching') === 'true');
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!tutorEnabled) {
-      setActiveTab('flashcards');
-    }
-  }, [tutorEnabled]);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
-    }
-  }, [input]);
-
-  const getPersonaName = (pId: string) => {
-    const selected = personalities.find(p => p.id === pId || p.name === pId);
-    if (selected) {
-      const transName = selected.translations?.[lang.toUpperCase()]?.name || selected.translations?.[lang.toLowerCase()]?.name;
-      if (transName) {
-        return transName;
-      }
-      return selected.name;
-    }
-    return pId;
-  };
-
-  useEffect(() => {
-    const updateAuth = () => {
-      const session = localStorage.getItem('op_session');
-      setIsLoggedIn(session === 'true');
-    };
-    updateAuth();
-    window.addEventListener('storage', updateAuth);
-    window.addEventListener('op_auth_state_changed', updateAuth);
-    window.addEventListener('op_auth_state_change', updateAuth);
-    return () => {
-      window.removeEventListener('storage', updateAuth);
-      window.removeEventListener('op_auth_state_changed', updateAuth);
-      window.removeEventListener('op_auth_state_change', updateAuth);
-    };
-  }, []);
-
-  useEffect(() => {
-    const syncTutorEnabled = () => {
-      const savedProfile = localStorage.getItem('op_user_profile');
-      if (savedProfile) {
-        try {
-          const p = JSON.parse(savedProfile);
-          if (p.tutorEnabled !== undefined) {
-            setTutorEnabled(p.tutorEnabled);
-          } else if (p.tutor_enabled !== undefined) {
-            setTutorEnabled(p.tutor_enabled);
-          } else {
-            setTutorEnabled(true);
-          }
-        } catch (e) {
-          setTutorEnabled(true);
-        }
-      } else {
-        setTutorEnabled(true);
-      }
-    };
-    syncTutorEnabled();
-    window.addEventListener('op_accessibility_preferences_changed', syncTutorEnabled);
-    window.addEventListener('storage', syncTutorEnabled);
-    return () => {
-      window.removeEventListener('op_accessibility_preferences_changed', syncTutorEnabled);
-      window.removeEventListener('storage', syncTutorEnabled);
-    };
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -294,38 +94,6 @@ export const AITutorOverlay = ({
         abortControllerRef.current.abort();
       }
     };
-  }, []);
-
-  useEffect(() => {
-    async function loadPersonalities() {
-      const { data } = await dbService.getTutorPersonalities();
-      if (data && data.length > 0) {
-        setPersonalities(data);
-        
-        const syncActiveTutor = () => {
-          const storedId = localStorage.getItem('op_active_tutor_personality') || 'socratic';
-          const active = data.find(p => p.id === storedId);
-          if (active) {
-            setPersona(active.id);
-          } else {
-            const defaultPers = data.find(p => p.isDefault) || data[0];
-            if (defaultPers) {
-              setPersona(defaultPers.id);
-              localStorage.setItem('op_active_tutor_personality', defaultPers.id);
-            }
-          }
-        };
-
-        syncActiveTutor();
-        window.addEventListener('op_active_tutor_changed', syncActiveTutor);
-        window.addEventListener('storage', syncActiveTutor);
-        return () => {
-          window.removeEventListener('op_active_tutor_changed', syncActiveTutor);
-          window.removeEventListener('storage', syncActiveTutor);
-        };
-      }
-    }
-    loadPersonalities();
   }, []);
 
   const handleAuthClick = (mode: 'login' | 'signup') => {
@@ -339,25 +107,7 @@ export const AITutorOverlay = ({
     /##+\s*[^\p{L}\p{N}\s]*\s*(Glossaire|Glossary|Lexique|Glosario|Glossar|词汇表)/iu.test(pageContext)
   );
 
-  const QUICK_ACTIONS = [
-    { label: t.give_example, icon: <Sparkles className="w-3 h-3" />, prompt: t.give_example_prompt },
-    { label: t.tell_story, icon: <Bookmark className="w-3 h-3" />, prompt: t.tell_story_prompt },
-    { label: t.simplify, icon: <Globe className="w-3 h-3" />, prompt: t.simplify_prompt },
-    { label: t.test_me, icon: <CheckCircle className="w-3 h-3" />, prompt: t.test_me_prompt }
-  ];
-
-  const DASHBOARD_QUICK_ACTIONS = [
-    { 
-      label: tls.dashboardDiscussLabel, 
-      icon: <GraduationCap className="w-3 h-3" />, 
-      prompt: tls.dashboardDiscussPrompt 
-    },
-    { 
-      label: tls.dashboardPlanLabel, 
-      icon: <Sparkles className="w-3 h-3" />, 
-      prompt: tls.dashboardPlanPrompt 
-    }
-  ];
+  const quickActions = isDashboardMode ? getDashboardQuickActions(tls) : getQuickActions(t);
 
   const courseSlug = isDashboardMode ? 'curriculum_dashboard' : (isCurriculumPage ? segments[2] : 'global');
   const welcomeMessage = isDashboardMode ? tls.dashboardWelcome : t.welcome;
@@ -586,18 +336,6 @@ export const AITutorOverlay = ({
     }
   }, []);
 
-  const handleRateCard = (rating: 'easy' | 'medium' | 'hard') => {
-    if (flashcards.length === 0) return;
-    const currentCard = flashcards[currentCardIndex];
-    const updatedMastery = { ...cardMastery, [currentCard.term]: rating };
-    setCardMastery(updatedMastery);
-    localStorage.setItem('op_srs_mastery', JSON.stringify(updatedMastery));
-
-    setIsFlipped(false);
-    setTimeout(() => {
-      setCurrentCardIndex((prev) => (prev + 1) % flashcards.length);
-    }, 200);
-  };
 
   useEffect(() => {
     const handleFeynmanTrigger = (e: Event) => {
@@ -676,41 +414,6 @@ export const AITutorOverlay = ({
     };
   }, [isOpen, activeTab, flashcards.length]);
 
-  const handleSelectTutor = async (id: string) => {
-    localStorage.setItem('op_active_tutor_personality', id);
-    setPersona(id);
-    
-    const savedProfile = localStorage.getItem('op_user_profile');
-    const loggedIn = localStorage.getItem('op_session') === 'true';
-    let userId = 'u1';
-    
-    if (loggedIn && savedProfile) {
-      try {
-        const profile = JSON.parse(savedProfile);
-        if (profile.id) userId = profile.id;
-      } catch (e) {}
-    }
-
-    if (loggedIn && savedProfile) {
-      try {
-        const { supabase } = await import('@/lib/supabase');
-        if (userId && userId !== 'u1') {
-          await supabase
-            .from('profiles')
-            .update({ tutor_choice: id })
-            .eq('id', userId);
-          console.log(`Tutor choice updated in Supabase from lessons: ${id}`);
-        }
-      } catch (e) {
-        console.error("Error updating tutor choice in Supabase from lessons:", e);
-      }
-    }
-    
-    window.dispatchEvent(new Event('op_active_tutor_changed'));
-    setTimeout(() => {
-      window.location.reload();
-    }, 150);
-  };
 
   if (tutorAssistanceBlocked) return null;
   if (!isDashboardMode && (!isCurriculumPage || (!tutorEnabled && !hasGlossaryInProp))) return null;
@@ -805,91 +508,26 @@ export const AITutorOverlay = ({
                     </div>
 
                     <div className={`px-6 py-4 grid ${isDashboardMode ? 'grid-cols-1' : 'grid-cols-2'} gap-2 bg-slate-950/20 border-t border-slate-800/50`}>
-                       {(isDashboardMode ? DASHBOARD_QUICK_ACTIONS : QUICK_ACTIONS).map(qa => (
+                       {quickActions.map(qa => (
                          <button key={qa.label} disabled={isGenerating} onClick={() => handleSend(qa.prompt)} className="flex items-center gap-2 px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:border-blue-500/50 hover:text-blue-400 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed">
                            {qa.icon} {qa.label}
                          </button>
                        ))}
                     </div>
 
-                    <div className="p-6 bg-slate-950/50 border-t border-slate-800/50">
-                      <div className="relative flex items-end">
-                        <textarea 
-                          ref={textareaRef}
-                          disabled={isGenerating} 
-                          value={input} 
-                          onChange={(e) => setInput(e.target.value)} 
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              handleSend();
-                            }
-                          }}
-                          rows={1}
-                          placeholder={t.placeholder} 
-                          className="w-full bg-slate-800/40 border border-slate-775 rounded-2xl py-3.5 pl-6 pr-28 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed resize-none min-h-[48px] max-h-32 custom-scrollbar" 
-                        />
-                        
-                        <div className="absolute right-16 bottom-3 flex items-center justify-center">
-                          {isListening && (
-                            <>
-                              <motion.div 
-                                className="absolute inset-0 rounded-xl bg-blue-500/30 z-0"
-                                style={{
-                                  scale: 1 + (micActivity / 128) * 0.6,
-                                  opacity: 0.3 + (micActivity / 255) * 0.7,
-                                }}
-                                transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                              />
-                              <motion.div 
-                                className="absolute inset-0 rounded-xl bg-indigo-500/20 z-0"
-                                style={{
-                                  scale: 1 + (micActivity / 128) * 0.3,
-                                  opacity: 0.2 + (micActivity / 255) * 0.5,
-                                }}
-                                transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.05 }}
-                              />
-                            </>
-                          )}
-                          <button 
-                            type="button"
-                            disabled={isGenerating} 
-                            onClick={toggleListening} 
-                            className={`relative p-2 rounded-xl border transition-all z-10 ${
-                              isListening 
-                                ? 'bg-blue-600 text-white border-transparent shadow-[0_0_15px_rgba(37,99,235,0.5)]' 
-                                : 'bg-slate-800/40 text-slate-400 border-slate-775 hover:bg-slate-800 hover:text-white hover:border-slate-700'
-                            } disabled:opacity-40 disabled:cursor-not-allowed`}
-                            title={isListening ? t.voice_stop : t.voice_enable}
-                            aria-label="Active voice coaching input"
-                          >
-                            <Mic className={`w-4 h-4 ${isListening ? 'text-white' : ''}`} />
-                          </button>
-                        </div>
-
-                        {isGenerating ? (
-                          <button 
-                            type="button"
-                            onClick={stopGeneration} 
-                            className="absolute right-4 bottom-3 p-2 bg-red-650 rounded-xl text-white hover:bg-red-650 transition-all cursor-pointer flex items-center justify-center border border-red-500/30"
-                            title={tls.stopTitle}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5"><rect x="4" y="4" width="16" height="16" rx="2" /></svg>
-                          </button>
-                        ) : (
-                          <button 
-                            disabled={isGenerating} 
-                            onClick={() => handleSend()} 
-                            className="absolute right-4 bottom-3 p-2 bg-blue-600 rounded-xl text-white hover:bg-blue-500 transition-all disabled:bg-blue-600/30 disabled:cursor-not-allowed"
-                          >
-                            <Send className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                      <div className="mt-3 text-[9px] text-slate-500/80 leading-normal text-center font-medium max-w-full">
-                        {AI_ACT_DISCLAIMERS[lang.toUpperCase() as keyof typeof AI_ACT_DISCLAIMERS] || AI_ACT_DISCLAIMERS.EN}
-                      </div>
-                    </div>
+              <TutorInputArea
+                textareaRef={textareaRef}
+                isGenerating={isGenerating}
+                input={input}
+                setInput={setInput}
+                handleSend={handleSend}
+                isListening={isListening}
+                micActivity={micActivity}
+                toggleListening={toggleListening}
+                stopGeneration={stopGeneration}
+                t={t}
+                tls={tls}
+              />
                   </>
                 ) : (
                   <TutorFlashcardsPanel
