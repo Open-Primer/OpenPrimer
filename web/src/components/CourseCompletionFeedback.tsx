@@ -7,47 +7,19 @@ import Link from 'next/link';
 import { dbService, progressService } from '@/lib/db';
 import { sanitizeString, detectPromptInjection, isSpam } from '@/lib/security';
 import { STATIC_UI_STRINGS, cleanPathSegment, getCoursePath } from '@/lib/translations';
+import {
+  CourseCompletionFeedbackProps,
+  BADGE_LIBRARY,
+  SPAM_MESSAGES,
+  LOCKED_EVAL_TITLES,
+  LOCKED_EVAL_DESCS,
+  GuestFeedbackState,
+  UnenrolledFeedbackState,
+  NewlyEarnedBadgesSection
+} from './feedback/FeedbackSections';
 
-interface CourseCompletionFeedbackProps {
-  courseId: string;
-  courseTitle: string;
-  lang: string;
-}
-
-const BADGE_LIBRARY = [
-  { id: 'img_1', iconName: 'Award', gradient: 'from-violet-500 to-fuchsia-600' },
-  { id: 'img_2', iconName: 'Zap', gradient: 'from-amber-400 to-orange-500' },
-  { id: 'img_3', iconName: 'Star', gradient: 'from-yellow-400 to-amber-500' },
-  { id: 'img_4', iconName: 'Flame', gradient: 'from-red-500 to-orange-500' },
-  { id: 'img_5', iconName: 'Trophy', gradient: 'from-yellow-300 to-yellow-500' },
-  { id: 'img_6', iconName: 'Clock', gradient: 'from-blue-400 to-cyan-500' },
-  { id: 'img_7', iconName: 'Clock', gradient: 'from-indigo-400 to-purple-600' },
-  { id: 'img_8', iconName: 'Crown', gradient: 'from-yellow-500 to-amber-600' },
-  { id: 'img_9', iconName: 'Book', gradient: 'from-emerald-400 to-teal-500' },
-  { id: 'img_10', iconName: 'ShieldCheck', gradient: 'from-teal-400 to-cyan-500' },
-  { id: 'img_11', iconName: 'Award', gradient: 'from-green-400 to-emerald-600' },
-  { id: 'img_12', iconName: 'Layers', gradient: 'from-pink-400 to-rose-600' },
-  { id: 'img_13', iconName: 'CheckCircle', gradient: 'from-cyan-400 to-blue-500' },
-  { id: 'img_14', iconName: 'Trophy', gradient: 'from-slate-300 to-slate-500' },
-  { id: 'img_15', iconName: 'Activity', gradient: 'from-rose-500 to-red-600' },
-  { id: 'img_16', iconName: 'Heart', gradient: 'from-pink-500 to-rose-500' },
-  { id: 'img_17', iconName: 'Compass', gradient: 'from-blue-500 to-indigo-500' },
-  { id: 'img_18', iconName: 'Map', gradient: 'from-amber-500 to-emerald-500' },
-  { id: 'img_19', iconName: 'GraduationCap', gradient: 'from-cyan-500 to-blue-600' },
-  { id: 'img_20', iconName: 'Target', gradient: 'from-red-600 to-rose-600' },
-  { id: 'img_21', iconName: 'Cpu', gradient: 'from-slate-700 to-slate-900' },
-  { id: 'img_22', iconName: 'Globe', gradient: 'from-sky-400 to-blue-500' },
-  { id: 'img_23', iconName: 'Key', gradient: 'from-yellow-600 to-amber-600' },
-  { id: 'img_24', iconName: 'Lock', gradient: 'from-red-500 to-rose-700' },
-  { id: 'img_25', iconName: 'Lightbulb', gradient: 'from-amber-300 to-yellow-400' },
-  { id: 'img_26', iconName: 'Rocket', gradient: 'from-orange-500 to-red-650' },
-  { id: 'img_27', iconName: 'Search', gradient: 'from-slate-400 to-slate-600' },
-  { id: 'img_28', iconName: 'Sparkles', gradient: 'from-violet-400 to-indigo-600' },
-  { id: 'img_29', iconName: 'Award', gradient: 'from-amber-500 to-yellow-600' },
-  { id: 'img_30', iconName: 'Trophy', gradient: 'from-orange-400 to-pink-500' }
-];
-
-
+export type { CourseCompletionFeedbackProps };
+export { BADGE_LIBRARY, GuestFeedbackState, UnenrolledFeedbackState, NewlyEarnedBadgesSection };
 
 export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: CourseCompletionFeedbackProps) => {
   const [rating, setRating] = useState(0);
@@ -99,11 +71,7 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
           );
           if (matchingModule) {
             setIsEnrolled(true);
-            if (matchingModule.progress === 100) {
-              setIsCompleted(true);
-            } else {
-              setIsCompleted(false);
-            }
+            setIsCompleted(matchingModule.progress === 100);
           } else {
             setIsEnrolled(false);
             setIsCompleted(false);
@@ -136,7 +104,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       // 2. Fetch existing course feedback from remote DB to synchronize
       dbService.getCourseFeedbacks(courseId, uId).then((res) => {
         if (res.data && res.data.length > 0) {
-          // Find if there is feedback explicitly associated with this user
           const fb = res.data.find((f: any) => {
             const fUserId = f.user_id || f.userId;
             return fUserId && uId && fUserId !== 'undefined' && uId !== 'undefined' && fUserId === uId;
@@ -147,7 +114,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
             setRating(fb.rating);
             setComment(fb.comment || '');
             
-            // Write back to local storage to sync
             localStorage.setItem(localFeedbackKey, JSON.stringify({
               rating: fb.rating,
               comment: fb.comment || ''
@@ -163,13 +129,12 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       const earned = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('op_earned_achievements') || '[]') : [];
       setEarnedIds(earned);
 
-      // Load the set of badge IDs already shown for this specific course
       const shownKey = `op_shown_badges_${courseId}`;
       const alreadyShown = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem(shownKey) || '[]') : [];
       setAlreadyShownIds(alreadyShown);
     }
 
-    // Check next course in curriculum path asynchronously (whether logged in or not)
+    // Check next course in curriculum path asynchronously
     dbService.getAllCourses().then(async (res) => {
       if (!res || !res.data) return;
       const courses = res.data;
@@ -180,8 +145,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       setCurrentCourse(currentCourseObj);
 
       const currentCourseId = currentCourseObj.id;
-
-      // Find if this course is part of any curriculum
       const parentCurriculum = courses.find(
         (c: any) => c.isCurriculum && c.childCourses && c.childCourses.includes(currentCourseId)
       );
@@ -191,7 +154,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
         const currentIndex = childIds.indexOf(currentCourseId);
 
         if (currentIndex !== -1 && currentIndex < childIds.length - 1) {
-          // If logged in, look for the first subsequent incomplete child
           if (loggedIn) {
             try {
               const progressMap = typeof window !== 'undefined' ? JSON.parse(window.localStorage.getItem('op_course_progress') || '{}') : {};
@@ -217,7 +179,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
             }
           }
 
-          // Fallback or not logged in: immediate next child
           const nextChildId = childIds[currentIndex + 1];
           const nextChildCourse = courses.find((c: any) => c.id === nextChildId);
           if (nextChildCourse) {
@@ -239,7 +200,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     };
   }, [courseId]);
 
-  // Handle toast timeout
   useEffect(() => {
     if (showSuccessToast) {
       const timer = setTimeout(() => setShowSuccessToast(false), 5000);
@@ -253,19 +213,8 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
 
     if (comment.trim()) {
       if (isSpam(comment) || detectPromptInjection(comment)) {
-        const spamMsg: Record<string, string> = {
-          FR: "Votre commentaire contient du spam ou du contenu inapproprié.",
-          EN: "Your comment contains spam or inappropriate content.",
-          ES: "Su comentario contiene spam o contenido inapropiado.",
-          DE: "Ihr Kommentar enthält Spam oder ungeeignete Inhalte.",
-          ZH: "您的评论包含垃圾信息或不当内容。",
-          PT: "O seu comentário contém spam ou conteúdo impróprio.",
-          AR: "تعليقك يحتوي على محتوى غير لائق أو رسائل مزعجة.",
-          HI: "आपकी टिप्पणी में स्पैम या अनुपयुक्त सामग्री है।",
-          UR: "آپ کے تبصرے میں سپیم یا نامناسب مواد شامل ہے۔"
-        };
         const langKey = (lang || 'EN').toUpperCase();
-        alert(spamMsg[langKey] || spamMsg.EN);
+        alert(SPAM_MESSAGES[langKey] || SPAM_MESSAGES.EN);
         return;
       }
     }
@@ -281,13 +230,11 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       } catch (err) {}
     }
 
-    // 1. Write to local storage immediately as source of truth
     localStorage.setItem(`op_feedback_${userId}_${courseId}`, JSON.stringify({
       rating,
       comment: cleanComment
     }));
 
-    // 2. Dual-write to database asynchronously
     await dbService.addCourseFeedback({
       courseId,
       rating,
@@ -319,17 +266,10 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     }
   };
 
-  /**
-   * Returns only the badges NEWLY earned for this course that haven't been shown yet.
-   * Badges already shown on a previous visit (tracked in localStorage per course) are excluded,
-   * so the celebration is genuine every time — just like real-world platforms (Duolingo, Coursera).
-   * The global trophy shelf (profile/curriculum) still shows ALL earned badges at all times.
-   */
   const getCourseEarnedAchievements = () => {
     if (typeof window === 'undefined') return [];
     const courseEarned: any[] = [];
 
-    // 1. Fast Learner: completed this course within 3 days of enrollment
     const fastLearnerAch = achievements.find(a => a.threshold.toLowerCase().includes('3 days'));
     if (fastLearnerAch && earnedIds.includes(fastLearnerAch.id)) {
       const enrollDateStr = localStorage.getItem('op_enroll_date_' + courseId);
@@ -341,7 +281,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       }
     }
 
-    // 2. Perfect Score on the final evaluation of this course
     const perfectScoreAch = achievements.find(a => a.threshold.toLowerCase().includes('100% score'));
     if (perfectScoreAch && earnedIds.includes(perfectScoreAch.id)) {
       const quizResults = JSON.parse(localStorage.getItem('op_quiz_results') || '{}');
@@ -351,7 +290,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       }
     }
 
-    // 3. Cumulative completion milestones (e.g. "completed 5 courses")
     const completedCount = Object.values(
       JSON.parse(localStorage.getItem('op_course_progress') || '{}')
     ).filter(v => v === 100).length;
@@ -364,12 +302,9 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     });
 
     const allEarned = Array.from(new Set(courseEarned));
-
-    // Filter to only badges NOT yet shown for this course visit
     return allEarned.filter((a: any) => !alreadyShownIds.includes(a.id));
   };
 
-  /** Mark all currently displayed course badges as "seen" so they aren't repeated on reload. */
   const markBadgesAsSeen = (badges: any[]) => {
     if (typeof window === 'undefined' || badges.length === 0) return;
     const shownKey = `op_shown_badges_${courseId}`;
@@ -412,14 +347,12 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
   };
   const isEvaluationCompleted = submitted || userRating !== null;
 
-  // Compute new (unshown) badges once achievements + earned data are loaded
   // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(() => {
     if (achievements.length === 0) return;
     const fresh = getCourseEarnedAchievements();
     setNewBadgesForCourse(fresh);
     if (fresh.length > 0) {
-      // Auto-mark as seen after a short delay so the celebration animation plays
       const t = setTimeout(() => markBadgesAsSeen(fresh), 2000);
       return () => clearTimeout(t);
     }
@@ -427,114 +360,16 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
   }, [achievements, earnedIds, alreadyShownIds]);
 
   if (!isLoggedIn) {
-    return (
-      <div className="mt-32 pt-12 border-t border-slate-900 text-center space-y-6 animate-fade-in">
-        <div className="w-16 h-16 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center mx-auto mb-4 border border-blue-500/20">
-          <CheckCircle className="w-8 h-8" />
-        </div>
-        <h3 className="text-2xl font-black text-white uppercase tracking-wider">
-          {t.courseCompleted}
-        </h3>
-        <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">
-          {t.courseCompletedDesc}
-        </p>
-        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link 
-            href="/catalog" 
-            className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-blue-600/20"
-          >
-            {t.browseCatalog} <ChevronRight className="w-4 h-4" />
-          </Link>
-          <button 
-            onClick={() => window.dispatchEvent(new CustomEvent('op_trigger_auth_state', { detail: 'signup' }))}
-            className="inline-flex items-center gap-3 px-8 py-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 cursor-pointer"
-          >
-            {t.createAccount}
-          </button>
-        </div>
-      </div>
-    );
+    return <GuestFeedbackState t={t} />;
   }
 
   if (isLoggedIn && !isEnrolled) {
-    return (
-      <div className="mt-32 pt-12 border-t border-slate-900 text-center space-y-6 animate-fade-in">
-        <div className="w-16 h-16 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
-          <Icons.Bookmark className="w-8 h-8" />
-        </div>
-        <h3 className="text-2xl font-black text-white uppercase tracking-wider">
-          {t.enrollTitle}
-        </h3>
-        <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed">
-          {t.enrollDesc}
-        </p>
-        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button 
-            onClick={handleEnroll}
-            disabled={enrollLoading}
-            className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-blue-600/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {enrollLoading ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Icons.PlusCircle className="w-4 h-4" />
-            )}
-            {t.buttonEnroll}
-          </button>
-          <Link 
-            href="/profile/curriculum" 
-            className="inline-flex items-center gap-3 px-8 py-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 cursor-pointer"
-          >
-            {t.buttonCurriculum}
-          </Link>
-        </div>
-      </div>
-    );
+    return <UnenrolledFeedbackState t={t} handleEnroll={handleEnroll} enrollLoading={enrollLoading} />;
   }
 
   return (
     <div className="mt-32 pt-12 border-t border-slate-900 space-y-8 animate-fade-in">
-      {/* Newly earned badges block — shown only once per course completion */}
-      {newBadgesForCourse.length > 0 && (
-        <div className="bg-slate-900/10 border border-amber-500/20 rounded-[36px] p-8 md:p-10 space-y-6 backdrop-blur-md animate-fade-in">
-          <div>
-            <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest block mb-1">
-              {t.badgesEarned}
-            </span>
-            <h3 className="text-lg md:text-xl font-black text-white leading-tight">
-              {t.achievementsTitle}
-            </h3>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              {t.achievementsDesc}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 pt-2">
-            {newBadgesForCourse.map((ach) => {
-              const badge = BADGE_LIBRARY.find(b => b.id === ach.icon) || { iconName: 'Award', gradient: 'from-blue-500 to-indigo-500' };
-              const IconComponent = (Icons as any)[badge.iconName] || Icons.Award;
-              return (
-                <div
-                  key={ach.id}
-                  className="p-5 border rounded-[28px] flex items-center gap-4 transition-all bg-slate-950/40 border-amber-500/20 shadow-xl shadow-amber-500/5 hover:border-amber-500/40 animate-fade-in"
-                >
-                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${badge.gradient} flex items-center justify-center text-white shadow-md shrink-0`}>
-                    <IconComponent className="w-5 h-5" />
-                  </div>
-                  <div className="space-y-0.5">
-                    <h4 className="text-xs font-black text-slate-200 line-clamp-1">
-                      {ach.translations?.[lang.toUpperCase()]?.name || ach.translations?.[lang.toLowerCase()]?.name || ach.name}
-                    </h4>
-                    <p className="text-[10px] text-slate-500 leading-normal line-clamp-2">
-                      {ach.translations?.[lang.toUpperCase()]?.description || ach.translations?.[lang.toLowerCase()]?.description || ach.description}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <NewlyEarnedBadgesSection newBadgesForCourse={newBadgesForCourse} lang={lang} t={t} />
 
       {/* Main evaluation form block */}
       <div className="bg-slate-900/20 border border-slate-800 rounded-[36px] p-8 md:p-10 space-y-8 backdrop-blur-md relative overflow-hidden">
@@ -563,18 +398,10 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
             </div>
             <div className="space-y-1">
               <h4 className="text-sm font-black text-slate-200 uppercase tracking-wider">
-                {langKey === 'FR' ? "Évaluation verrouillée" : "Evaluation Locked"}
+                {LOCKED_EVAL_TITLES[langKey] || LOCKED_EVAL_TITLES.EN}
               </h4>
               <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                {langKey === 'FR' 
-                  ? "Vous devez réussir l'évaluation finale de ce cours (obtenir une note supérieure ou égale à la moyenne) pour débloquer l'évaluation du cours."
-                  : langKey === 'ES'
-                  ? "Debes aprobar la evaluación final de este curso con una calificación igual o superior al promedio para desbloquear la evaluación del curso."
-                  : langKey === 'DE'
-                  ? "Sie müssen die Abschlussprüfung auf dieser Seite mit einer Note über oder gleich dem Durchschnitt bestehen, um die Kursbewertung freizuschalten."
-                  : langKey === 'ZH'
-                  ? "您必须通过本页面的终期评估（成绩达到或超过平均分）才能解锁课程评价。"
-                  : "You must pass the final exam on this page with a grade above or equal to average to unlock course evaluation."}
+                {LOCKED_EVAL_DESCS[langKey] || LOCKED_EVAL_DESCS.EN}
               </p>
             </div>
           </div>
@@ -582,7 +409,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
 
         <form onSubmit={handleSubmit} className={`space-y-6 ${(!isCompleted || !isEvaluationPassed) ? 'pointer-events-none opacity-30 select-none filter blur-[0.2px]' : ''}`}>
           <div className={isEvaluationCompleted ? "pointer-events-none opacity-70 filter blur-[0.4px] select-none space-y-6" : "space-y-6"}>
-            {/* Stars Selection */}
             <div className="space-y-3">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
                 {t.rateCourse} {!isEvaluationCompleted && <span className="text-red-500">*</span>}
@@ -610,7 +436,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
               </div>
             </div>
 
-            {/* Comment Input */}
             <div className="space-y-2">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
                 {t.commentsSuggestions}
@@ -667,7 +492,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
       <div className="mt-12 pt-12 border-t border-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-6">
         {nextCoursePath ? (
           <>
-            {/* Main call-to-action: Continue on to the next subsequent course in the curriculum */}
             <Link 
               href={nextCoursePath} 
               className="flex-1 max-w-md p-6 bg-slate-900/20 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/30 rounded-[28px] flex items-center justify-between group transition-all duration-300 shadow-xl cursor-pointer"
@@ -685,7 +509,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
               </div>
             </Link>
 
-            {/* Secondary fallback link: Back to Curriculum list */}
             <Link 
               href="/profile/curriculum" 
               className="px-6 py-4 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-900/10 hover:bg-slate-900/30 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all text-center shrink-0 cursor-pointer"
@@ -694,7 +517,6 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
             </Link>
           </>
         ) : (
-          /* End of curriculum path, provide return button as main action */
           <Link 
             href="/profile/curriculum" 
             className="flex-1 p-6 bg-slate-900/20 hover:bg-blue-600/10 border border-slate-800 hover:border-blue-500/30 rounded-[28px] flex items-center justify-between group transition-all duration-300 shadow-xl cursor-pointer"
@@ -713,4 +535,3 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
     </div>
   );
 };
-

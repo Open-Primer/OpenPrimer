@@ -1,393 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { 
-  Shield, Target, Users, Mail, Phone, MapPin, Globe, Sparkles, 
-  BookOpen, ChevronRight, Search, Filter, Book, Award, Zap, Languages,
-  ShieldCheck, Clock, Star, CheckCircle2, GraduationCap, X, Bell, Rocket,
-  BrainCircuit, FlaskConical, Scale, Calculator, Atom, Leaf, Bookmark,
-  Play, Plus, FileText
-} from 'lucide-react';
-import { TopNav, UI_STRINGS, Footer, formatCourseLevel, getLocalizedLabel } from '../RefinedUI';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Globe, Sparkles } from 'lucide-react';
+import { TopNav, UI_STRINGS, Footer } from '../RefinedUI';
+import { AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { dbService, progressService, isDatabaseConfigured, syncLocalStorageToSupabase } from '@/lib/db';
-import { CourseKiosk } from '../CourseKiosk';
 import { EnrollmentModal } from '../modals/EnrollmentModal';
-import { getLocalizedDiscipline, translateDisciplineQuery, cleanPathSegment, getCoursePath } from '@/lib/translations';
-import { validateEmail, detectPromptInjection, isSpam } from '@/lib/security';
+import { getLocalizedDiscipline, translateDisciplineQuery, getCoursePath } from '@/lib/translations';
+import { SmartEmptyState, EMPTY_STATE_STRINGS, SUBJECT_SUGGESTIONS } from './catalog/SmartEmptyState';
+import { CatalogFilterControls, CatalogCourseCard, CatalogPopups } from './catalog/CatalogCardAndControls';
 
-// ── Smart Empty State: No courses found ───────────────────────────────────────────
-const SUBJECT_SUGGESTIONS = [
-  { label: 'Mathematics', icon: Calculator, href: '/catalog?search=Mathematics', color: 'blue' },
-  { label: 'Physics', icon: Atom, href: '/catalog?search=Physics', color: 'violet' },
-  { label: 'Biology', icon: Leaf, href: '/catalog?search=Biology', color: 'emerald' },
-  { label: 'Chemistry', icon: FlaskConical, href: '/catalog?search=Chemistry', color: 'amber' },
-  { label: 'Law', icon: Scale, href: '/catalog?search=Law', color: 'pink' },
-  { label: 'Computer Science', icon: BrainCircuit, href: '/catalog?search=Computer', color: 'cyan' },
-];
-
-
-const EMPTY_STATE_STRINGS = {
-  EN: {
-    spam_detected: "Your request has been flagged as spam.",
-    unauthorized_content: "Unauthorized content detected.",
-    generic_error: "An error occurred. Please try again.",
-    title: "No courses found",
-    subtitle_a: "This search is being tracked by our",
-    subtitle_b: "AI Generation Engine.",
-    freq_label: "Frequently searched — not yet generated",
-    explain: "When enough students search for this topic, our sovereign AI curriculum engine automatically drafts and publishes a new course. You can leave your details below to be notified the moment it goes live.",
-    email_placeholder: "Your email address",
-    email_required: "Please enter a valid email address.",
-    cta_notify: "Notify me when this course is live",
-    success_title: "You're on the list!",
-    success_desc: "We'll send you a notification as soon as this course is auto-generated and published.",
-    alt_title: "Explore available courses",
-    alt_sub: "Or try one of these popular subjects:",
-    clear: "Clear search",
-    privacy_note: "Your email address is securely retained for up to 90 days and will be automatically purged if the course is not generated within this period.",
-  },
-  FR: {
-    spam_detected: "Votre demande a été signalée comme spam.",
-    unauthorized_content: "Contenu non autorisé détecté.",
-    generic_error: "Une erreur est survenue. Veuillez réessayer.",
-    title: "Aucun cours trouvé",
-    subtitle_a: "Cette recherche est suivie par notre",
-    subtitle_b: "Moteur de Génération IA.",
-    freq_label: "Recherche fréquente — cours non encore généré",
-    explain: "Lorsqu'un nombre suffisant d'étudiants recherchent ce sujet, notre moteur IA génère et publie automatiquement un nouveau cours. Laissez vos coordonnées ci-dessous pour être notifié dès sa mise en ligne.",
-    email_placeholder: "Votre adresse e-mail",
-    email_required: "Veuillez entrer une adresse e-mail valide.",
-    cta_notify: "Me notifier à la mise en ligne du cours",
-    success_title: "Vous êtes inscrit !",
-    success_desc: "Nous vous enverrons une notification dès que ce cours sera généré et publié automatiquement.",
-    alt_title: "Explorer les cours disponibles",
-    alt_sub: "Ou essayez l'un de ces sujets populaires :",
-    clear: "Effacer la recherche",
-    privacy_note: "Votre adresse e-mail est conservée de manière sécurisée pendant 90 jours maximum et sera automatiquement supprimée si le cours n'est pas généré durant cette période.",
-  },
-  ES: {
-    spam_detected: "Su solicitud ha sido marcada como spam.",
-    unauthorized_content: "Contenido no autorizado detectado.",
-    generic_error: "Ocurrió un error. Por favor, inténtelo de nuevo.",
-    title: "No se encontraron cursos",
-    subtitle_a: "Esta búsqueda es rastreada por nuestro",
-    subtitle_b: "Motor de Generación IA.",
-    freq_label: "Búsqueda frecuente — curso aún no generado",
-    explain: "Cuando suficientes estudiantes buscan este tema, nuestro motor de IA genera y publica automáticamente un nuevo curso. Deja tus datos para recibir una notificación en cuanto esté disponible.",
-    email_placeholder: "Tu dirección de correo",
-    email_required: "Por favor, introduce un correo electrónico válido.",
-    cta_notify: "Notificarme cuando el curso esté disponible",
-    success_title: "¡Estás en la lista!",
-    success_desc: "Te enviaremos una notificación en cuanto este curso sea generado y publicado.",
-    alt_title: "Explorar cursos disponibles",
-    alt_sub: "O prueba uno de estos temas populares:",
-    clear: "Borrar búsqueda",
-    privacy_note: "Su dirección de correo electrónico se conserva de forma segura durante un máximo de 90 días y se eliminará automáticamente si el curso no se genera durante este período.",
-  },
-  DE: {
-    spam_detected: "Ihre Anfrage wurde als Spam markiert.",
-    unauthorized_content: "Nicht autorisierter Inhalt erkannt.",
-    generic_error: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
-    title: "Keine Kurse gefunden",
-    subtitle_a: "Diese Suche wird von unserem",
-    subtitle_b: "KI-Generierungs-Engine verfolgt.",
-    freq_label: "Häufig gesucht — Kurs noch nicht generiert",
-    explain: "Wenn genug Studierende dieses Thema suchen, erstellt und veröffentlicht unsere KI automatisch einen neuen Kurs. Hinterlasse deine Daten, um benachrichtigt zu werden, sobald er verfügbar ist.",
-    email_placeholder: "Deine E-Mail-Adresse",
-    email_required: "Bitte gib eine gültige E-Mail-Adresse ein.",
-    cta_notify: "Benachrichtige mich, wenn der Kurs verfügbar ist",
-    success_title: "Du bist auf der Liste!",
-    success_desc: "Wir senden dir eine Benachrichtigung, sobald dieser Kurs automatisch generiert und veröffentlicht wurde.",
-    alt_title: "Verfügbare Kurse erkunden",
-    alt_sub: "Oder probiere eines dieser beliebten Themen:",
-    clear: "Suche löschen",
-    privacy_note: "Ihre E-Mail-Adresse wird bis zu 90 Tage lang sicher aufbewahrt und automatisch gelöscht, wenn der Kurs in diesem Zeitraum nicht erstellt wird.",
-  },
-  ZH: {
-    spam_detected: "您的请求已被标记为垃圾信息。",
-    unauthorized_content: "检测到未授权内容。",
-    generic_error: "发生错误，请重试。",
-    title: "未找到课程",
-    subtitle_a: "此搜索正由我们的",
-    subtitle_b: "AI生成引擎追踪。",
-    freq_label: "搜索频繁 — 课程尚未生成",
-    explain: "当足够多的学生搜索此主题时，我们的 AI 主权课程引擎将自动起草并发布新课程。请在下方留下您的信息，以便在课程上线时第一时间收到通知。",
-    email_placeholder: "您的电子邮件地址",
-    email_required: "请输入有效的电子邮件地址。",
-    cta_notify: "课程上线时通知我",
-    success_title: "您已成功报名！",
-    success_desc: "一旦此课程被自动生成并发布，我们将立即向您发送通知。",
-    alt_title: "探索现有课程",
-    alt_sub: "或者尝试这些热门主题：",
-    clear: "清除搜索",
-    privacy_note: "您的电子邮件地址将被安全保留最多90天，如果在此期间未生成课程，将被自动清除。",
-  },
-  PT: {
-    spam_detected: "A sua solicitação foi sinalizada como spam.",
-    unauthorized_content: "Conteúdo não autorizado detectado.",
-    generic_error: "Ocorreu um erro. Por favor, tente novamente.",
-    title: "Nenhum curso encontrado",
-    subtitle_a: "Esta busca está sendo rastreada pelo nosso",
-    subtitle_b: "Motor de Geração IA.",
-    freq_label: "Busca frequente — curso ainda não gerado",
-    explain: "Quando estudantes suficientes buscam por este tema, nosso motor de currículo de IA soberano rascunha e publica automaticamente um novo curso. Você pode deixar seus dados abaixo para ser notificado no momento em que for lançado.",
-    email_placeholder: "Seu endereço de e-mail",
-    email_required: "Por favor, insira um endereço de e-mail válido.",
-    cta_notify: "Notifique-me quando este curso estiver disponível",
-    success_title: "Você está na lista!",
-    success_desc: "Enviaremos uma notificação a você assim que este curso for gerado e publicado automaticamente.",
-    alt_title: "Explorar cursos disponíveis",
-    alt_sub: "Ou tente um destes tópicos populares:",
-    clear: "Limpar busca",
-    privacy_note: "Seu endereço de e-mail é retido com segurança por até 90 dias e será excluído automaticamente se o curso não for gerado dentro deste período.",
-  },
-  AR: {
-    spam_detected: "تم وضع علامة على طلبك كرسالة غير مرغوب فيها.",
-    unauthorized_content: "تم اكتشاف محتوى غير مصرح به.",
-    generic_error: "حدث خطأ. يرجى المحاولة مرة أخرى.",
-    title: "لم يتم العثور على دورات",
-    subtitle_a: "هذا البحث يتم تتبعه بواسطة",
-    subtitle_b: "محرك التوليد المدعوم بالذكاء الاصطناعي الخاص بنا.",
-    freq_label: "يبحث عنه بكثرة — لم يتم توليده بعد",
-    explain: "عندما يبحث عدد كافٍ من الطلاب عن هذا الموضوع، يقوم محرك المناهج الدراسية السيادي المدعوم بالذكاء الاصطناعي لدينا بصياغة ونشر دورة جديدة تلقائيًا. يمكنك ترك بياناتك أدناه ليتم إخطارك في اللحظة التي يبدأ فيها البث المباشر.",
-    email_placeholder: "عنوان بريدك الإلكتروني",
-    email_required: "يرجى إدخال عنوان بريد إلكتروني صحيح.",
-    cta_notify: "أخبرني عندما تكون هذه الدورة متاحة",
-    success_title: "لقد تم إضافتك إلى القائمة!",
-    success_desc: "سنرسل إليك إشعارًا بمجرد إنشاء هذه الدورة ونشرها تلقائيًا.",
-    alt_title: "استكشف الدورات المتاحة",
-    alt_sub: "أو جرب أحد هذه المواضيع الشائعة:",
-    clear: "مسح البحث",
-    privacy_note: "يتم الاحتفاظ بعنوان بريدك الإلكتروني بشكل آمن لمدة تصل إلى 90 يومًا وسيتم حذفه تلقائيًا إذا لم يتم إنشاء الدورة التدريبية خلال هذه الفترة.",
-  },
-  HI: {
-    spam_detected: "आपके अनुरोध को स्पैम के रूप में चिह्नित किया गया है।",
-    unauthorized_content: "अनधिकृत सामग्री का पता चला।",
-    generic_error: "एक त्रुटि उत्पन्न हुई। कृपया पुन: प्रयास करें।",
-    title: "कोई कोर्स नहीं मिला",
-    subtitle_a: "यह खोज हमारे द्वारा ट्रैक की जा रही है",
-    subtitle_b: "एआई जनरेशन इंजन।",
-    freq_label: "अक्सर खोजा गया — अभी तक उत्पन्न नहीं हुआ",
-    explain: "जब पर्याप्त छात्र इस विषय की खोज करते हैं, तो हमारा संसंप्रभु एआई पाठ्यक्रम इंजन स्वचालित रूप से एक नया पाठ्यक्रम तैयार और प्रकाशित करता है। लाइव होने के क्षण ही अधिसूचित होने के लिए आप नीचे अपना विवरण छोड़ सकते हैं।",
-    email_placeholder: "आपका ईमेल पता",
-    email_required: "कृपया एक मान्य ईमेल पता दर्ज करें।",
-    cta_notify: "इस कोर्स के लाइव होने पर मुझे सूचित करें",
-    success_title: "आप सूची में हैं!",
-    success_desc: "जैसे ही यह कोर्स स्वचालित रूप से उत्पन्न और प्रकाशित होगा, हम आपको एक अधिसूचना भेजेंगे।",
-    alt_title: "उपलब्ध पाठ्यक्रमों का पता लगाएं",
-    alt_sub: "या इनमें से किसी एक लोकप्रिय विषय को आज़माएं:",
-    clear: "खोज साफ़ करें",
-    privacy_note: "आपका ईमेल पता अधिकतम 90 दिनों के लिए सुरक्षित रूप से रखा जाता है और यदि इस अवधि के भीतर पाठ्यक्रम उत्पन्न नहीं होता है तो स्वचालित रूप से हटा दिया जाएगा।",
-  },
-  UR: {
-    spam_detected: "آپ کی درخواست کو سپیم کے طور پر نشان زد کیا گیا ہے۔",
-    unauthorized_content: "غیر مجاز مواد کا پتہ چلا۔",
-    generic_error: "ایک خرابی پیش آگئی ہے۔ براہ کرم دوبارہ کوشش کریں۔",
-    title: "کوئی کورس نہیں ملا",
-    subtitle_a: "یہ تلاش ہماری طرف سے ٹریک کی جا رہی ہے",
-    subtitle_b: "اے آئی جنریشن انجن۔",
-    freq_label: "اکثر تلاش کیا گیا — ابھی تک تیار نہیں کیا گیا",
-    explain: "جب کافی طلباء اس موضوع کو تلاش کریں گے، تو ہمارا خود مختار اے آئی نصاب انجن خود بخود ایک نیا کورس تیار اور شائع کرے گا۔ آپ لائیو ہونے کے فوراً بعد اطلاع حاصل کرنے کے لیے نیچے اپنی تفصیلات درج کر سکتے ہیں۔",
-    email_placeholder: "آپ کا ای میل ایڈریس",
-    email_required: "براہ کرم ایک درست ای میل ایڈریس درج کریں۔",
-    cta_notify: "اس کورس کے لائیو ہونے پر مجھے مطلع کریں",
-    success_title: "آپ فہرست میں شامل ہیں!",
-    success_desc: "جیسے ہی یہ کورس خود بخود تیار اور شائع ہوگا، ہم آپ کو ایک اطلاع بھیجیں گے۔",
-    alt_title: "دستیاب کورسز تلاش کریں",
-    alt_sub: "یا ان میں سے کسی ایک مقبول موضوع کو آزمائیں:",
-    clear: "تلاش صاف کریں",
-    privacy_note: "آپ کا ای میل ایڈریس 90 دنوں تک محفوظ طریقے سے رکھا جاتا ہے اور اگر اس مدت کے دوران کورس تیار نہیں ہوتا ہے تو خود بخود صاف ہو جائے گا۔",
-  },
-};
-
-interface SmartEmptyStateProps {
-  searchQuery: string;
-  onClear: () => void;
-  lang: string;
-  onSelectSubject?: (subject: string) => void;
-}
-
-const SmartEmptyState = ({ searchQuery, onClear, lang, onSelectSubject }: SmartEmptyStateProps) => {
-  const es = EMPTY_STATE_STRINGS[lang as keyof typeof EMPTY_STATE_STRINGS] || EMPTY_STATE_STRINGS.EN;
-  const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const trimmedEmail = email.trim();
-
-    // 1. Email validation
-    const emailCheck = validateEmail(trimmedEmail);
-    if (!emailCheck.isValid) {
-      setError(emailCheck.reason || es.email_required);
-      return;
-    }
-
-    // 2. Content spam verification
-    if (isSpam(searchQuery) || isSpam(trimmedEmail)) {
-      setError(es.spam_detected);
-      return;
-    }
-
-    // 3. Prompt injection detection
-    if (detectPromptInjection(searchQuery) || detectPromptInjection(trimmedEmail)) {
-      setError(es.unauthorized_content);
-      return;
-    }
-
-    try {
-      // Persist notification request in permanent database (Supabase backed)
-      await dbService.saveCourseNotification(searchQuery, trimmedEmail);
-      setSubmitted(true);
-    } catch (err) {
-      setError(es.generic_error);
-    }
-  };
-
-  return (
-    <div className="col-span-full">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-2xl mx-auto py-12 space-y-8"
-      >
-        {/* Header section */}
-        <div className="text-center space-y-4">
-          <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-violet-600/20 to-blue-600/20 border border-violet-500/20 flex items-center justify-center shadow-2xl shadow-violet-500/5">
-            <Rocket className="w-9 h-9 text-violet-400" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-black text-white mb-2">{es.title}</h2>
-            {searchQuery && (
-              <p className="text-sm text-slate-400 leading-relaxed">
-                {es.subtitle_a}{' '}
-                <span className="text-violet-400 font-bold">{es.subtitle_b}</span>
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Explanation card */}
-        {searchQuery && (
-          <div className="p-6 bg-slate-900/40 border border-slate-800/50 rounded-3xl backdrop-blur-xl">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-blue-600/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <BrainCircuit className="w-5 h-5 text-blue-400" />
-              </div>
-              <p className="text-sm text-slate-400 leading-relaxed">{es.explain}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Notification Form */}
-        {searchQuery && (
-          <AnimatePresence mode="wait">
-            {submitted ? (
-              <motion.div
-                key="success"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="p-8 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl text-center space-y-3"
-              >
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/20 flex items-center justify-center">
-                  <CheckCircle2 className="w-7 h-7 text-emerald-400" />
-                </div>
-                <h3 className="text-lg font-black text-emerald-400">{es.success_title}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{es.success_desc}</p>
-              </motion.div>
-            ) : (
-              <motion.form
-                key="form"
-                onSubmit={handleSubmit}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl space-y-4 shadow-2xl backdrop-blur-xl"
-              >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-xl bg-violet-600/10 flex items-center justify-center">
-                    <Bell className="w-4 h-4 text-violet-400" />
-                  </div>
-                  <span className="text-xs font-black uppercase tracking-widest text-slate-400">{es.cta_notify}</span>
-                </div>
-
-                {error && (
-                  <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-2xl">
-                    {error}
-                  </div>
-                )}
-
-                {/* Email field — blocking */}
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={es.email_placeholder}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-11 pr-5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500/50 transition-all"
-                  />
-                </div>
-
-                {/* Privacy Warning Sub-label */}
-                <p className="text-[10px] text-slate-500 leading-relaxed text-center px-4 font-medium">
-                  {es.privacy_note}
-                </p>
-
-                <button
-                  type="submit"
-                  className="w-full py-4 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all shadow-xl shadow-violet-600/20 flex items-center justify-center gap-2"
-                >
-                  <Bell className="w-4 h-4" />
-                  {es.cta_notify}
-                </button>
-              </motion.form>
-            )}
-          </AnimatePresence>
-        )}
-
-        {/* Divider */}
-        <div className="flex items-center gap-4">
-          <div className="flex-1 h-px bg-slate-800/60" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">{es.alt_sub}</span>
-          <div className="flex-1 h-px bg-slate-800/60" />
-        </div>
-
-        {/* Alternative subject suggestions */}
-        <div className="w-full max-w-4xl mx-auto relative z-50">
-          <CourseKiosk 
-            lang={lang} 
-            mode="disciplines"
-            title={t.explore_elite_disciplines}
-            subtitle={t.select_discipline_to_restart}
-            onDisciplineClick={(subject) => onSelectSubject?.(subject)}
-          />
-        </div>
-
-        {/* Clear search */}
-        {searchQuery && (
-          <div className="text-center">
-            <button
-              onClick={onClear}
-              className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-slate-400 transition-colors"
-            >
-              <X className="w-3.5 h-3.5" /> {es.clear}
-            </button>
-          </div>
-        )}
-      </motion.div>
-    </div>
-  );
-};
-
-// COURSE_SYLLABUS_DETAILS static fallback dictionary was removed. OpenPrimer is now 100% database-driven.
+export { SmartEmptyState, EMPTY_STATE_STRINGS, SUBJECT_SUGGESTIONS, CatalogFilterControls, CatalogCourseCard, CatalogPopups };
 
 // --- PAGE: CATALOG ---
 export const CatalogPage = () => {
@@ -395,7 +19,6 @@ export const CatalogPage = () => {
   const t = UI_STRINGS[lang as keyof typeof UI_STRINGS] || UI_STRINGS.EN;
 
   const [subjectFilter, setSubjectFilter] = useState('All');
-  // Initialize from URL immediately so ?search= params work on first render
   const [searchQuery, setSearchQuery] = useState(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search).get('search') || '';
@@ -403,7 +26,6 @@ export const CatalogPage = () => {
     return '';
   });
 
-  // Synchronize searchQuery to URL search parameters in real-time
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
@@ -416,7 +38,6 @@ export const CatalogPage = () => {
     }
   }, [searchQuery]);
 
-  // Synchronize searchQuery with back/forward history events (popstate)
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
@@ -426,7 +47,6 @@ export const CatalogPage = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Dynamically translate active search queries when language changes
   useEffect(() => {
     if (!searchQuery) return;
     const translated = translateDisciplineQuery(searchQuery, lang);
@@ -436,10 +56,7 @@ export const CatalogPage = () => {
   }, [lang]);
 
   const [bookmarks, setBookmarks] = useState<number[]>([]);
-
   const [courses, setCourses] = useState<any[]>([]);
-  // isLoading starts true — stays true until the first DB response arrives.
-  // This prevents the 'no courses found' flash on mount.
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
@@ -447,7 +64,6 @@ export const CatalogPage = () => {
   const [filterType, setFilterType] = useState<'All' | 'Course' | 'Curriculum'>('All');
   const [sortBy, setSortBy] = useState<'popularity' | 'validations'>('popularity');
 
-  // Dynamic Enrollment States
   const [enrolledIds, setEnrolledIds] = useState<number[]>([]);
   const [selectedEnrollCourse, setSelectedEnrollCourse] = useState<any | null>(null);
   const [userProgress, setUserProgress] = useState<any>(null);
@@ -485,8 +101,6 @@ export const CatalogPage = () => {
     }
   };
 
-  // enrolled IDs: loaded exclusively from Supabase in production;
-  // only falls back to localStorage when explicitly in sandbox mode.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const isSandbox = localStorage.getItem('op_allow_sandbox') === 'true';
@@ -496,12 +110,9 @@ export const CatalogPage = () => {
         setEnrolledIds(saved ? JSON.parse(saved) : []);
       } catch { setEnrolledIds([]); }
     }
-    // Production enrolled IDs come from loadCoursesAndProgress() via Supabase below
   }, []);
 
-  // Delegates to the canonical 90-day rule in progressService
   const isCourseNew = (course: any) => progressService.isNewCourse(course.created_at);
-
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -544,10 +155,8 @@ export const CatalogPage = () => {
           setCourses(data);
           validDbIds = new Set(data.map((c: any) => c.id));
         } else if (data) {
-          // Empty array returned — still set it so filter can run
           setCourses(data);
         }
-        // Only fetch progress in production (Supabase configured) and not sandbox
         const isSandbox = typeof window !== 'undefined' && localStorage.getItem('op_allow_sandbox') === 'true';
         if (isDatabaseConfigured && !isSandbox) {
           let userId = 'u1';
@@ -561,7 +170,6 @@ export const CatalogPage = () => {
             }
           }
           
-          // Background sync local trapped data to Supabase before querying
           try {
             await syncLocalStorageToSupabase(userId);
           } catch (syncErr) {
@@ -572,14 +180,12 @@ export const CatalogPage = () => {
           if (progressData) {
             setUserProgress(progressData);
             if (progressData.activeModules) {
-              // Supabase is authoritative — overwrite any sandbox enrolled IDs and filter by valid DB courses
               const loadedIds = progressData.activeModules.map((m: any) => m.id);
               const cleanIds = loadedIds.filter((id: number) => validDbIds.has(id));
               setEnrolledIds(cleanIds);
             }
           }
         } else if (isSandbox) {
-          // Filter sandbox enrolled IDs as well
           const saved = localStorage.getItem('op_enrolled_courses');
           if (saved) {
             try {
@@ -599,7 +205,6 @@ export const CatalogPage = () => {
     }
     loadCoursesAndProgress();
 
-    // Read URL search param on mount
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const query = params.get('search');
@@ -608,17 +213,13 @@ export const CatalogPage = () => {
   }, []);
 
   useEffect(() => {
-    // Session state — read from localStorage (session flag is legitimately local)
     const session = typeof window !== 'undefined' ? localStorage.getItem('op_session') : null;
     setIsLoggedIn(session === 'true');
 
-    // Bookmarks are a local preference — localStorage is appropriate here
     const savedBookmarks = typeof window !== 'undefined' ? localStorage.getItem('op_bookmarks') : null;
     if (savedBookmarks) {
       try { setBookmarks(JSON.parse(savedBookmarks)); } catch {}
     }
-
-
   }, [lang]);
 
   useEffect(() => {
@@ -649,18 +250,15 @@ export const CatalogPage = () => {
     };
   }, []);
 
-  // Debounce search logging to database search history
   useEffect(() => {
     if (!searchQuery.trim()) return;
 
     const timer = setTimeout(async () => {
       const cleanSearch = searchQuery.trim().toLowerCase();
-      // Calculate if the search matches any active courses in the database
       const matchingCount = courses.filter(c => {
         const currentLevel = typeof c.archivingLevel === 'number' ? c.archivingLevel : 0;
         if (currentLevel >= 2) return false;
         
-        // Strip accents for robust comparison
         const stripAccents = (str: string) =>
           str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -729,47 +327,22 @@ export const CatalogPage = () => {
     return course.description || '';
   };
 
-
-
   const filteredCourses = courses.filter(c => {
-
-
-    // Respect standardized archiving levels:
-    // Level 0: Active, visible for all
-    // Level 1: Invisible for new selection (can't select, doesn't appear unless already in bookmarks)
-    // Level 2: Invisible for users that were using it (therefore invisible for all users)
     const currentLevel = typeof c.archivingLevel === 'number' ? c.archivingLevel : 0;
     if (currentLevel >= 2) return false;
-    if (currentLevel === 1) {
-      if (!bookmarks.includes(c.id)) {
-        return false;
-      }
-    }
+    if (currentLevel === 1 && !bookmarks.includes(c.id)) return false;
     if (c.is_active === false) return false;
     
-    // Determine matchesLang precisely to separate French and English catalogs cleanly
     let matchesLang = false;
     if (c.languages && c.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase())) {
       const activeLangCode = (lang || 'EN').toUpperCase();
-      if (activeLangCode === 'EN') {
+      const hasTranslation = c.translations && c.translations[activeLangCode];
+      const isEnglishPrimary = c.languages.some((l: string) => l.toLowerCase() === 'en') && (!c.id || c.id < 13);
+      if (hasTranslation || !isEnglishPrimary || c.languages.some((l: string) => l.toUpperCase() === activeLangCode && activeLangCode === 'EN')) {
         matchesLang = true;
-      } else {
-        // If active language is non-English, the course must either:
-        // 1. Have an explicit translation for this language code
-        // 2. Or, if it is a generated course, its primary content must not be in English
-        const hasTranslation = c.translations && c.translations[activeLangCode];
-        if (hasTranslation) {
-          matchesLang = true;
-        } else {
-          const isEnglishPrimary = c.languages.some((l: string) => l.toLowerCase() === 'en') && (!c.id || c.id < 13);
-          if (!isEnglishPrimary) {
-            matchesLang = true;
-          }
-        }
       }
     }
 
-    // Strict Availability: Curricula only exist in a language if all mandatory child courses also support that language.
     if (matchesLang && c.isCurriculum) {
       const childIds = c.childCourses || [];
       const activeLangCode = (lang || 'EN').toUpperCase();
@@ -780,14 +353,9 @@ export const CatalogPage = () => {
         const childSupportsLang = childCourse.languages && childCourse.languages.some((l: string) => l.toLowerCase() === lang.toLowerCase());
         if (!childSupportsLang) return false;
         
-        if (activeLangCode === 'EN') {
-          return true;
-        } else {
-          const hasTrans = childCourse.translations && childCourse.translations[activeLangCode];
-          if (hasTrans) return true;
-          const isEngPrimary = childCourse.languages.some((l: string) => l.toLowerCase() === 'en') && (!childCourse.id || childCourse.id < 13);
-          return !isEngPrimary;
-        }
+        const hasTrans = childCourse.translations && childCourse.translations[activeLangCode];
+        const isEngPrimary = childCourse.languages.some((l: string) => l.toLowerCase() === 'en') && (!childCourse.id || childCourse.id < 13);
+        return Boolean(hasTrans || !isEngPrimary || childCourse.languages.some((l: string) => l.toUpperCase() === activeLangCode && activeLangCode === 'EN'));
       });
       if (!allChildrenSupport) {
         matchesLang = false;
@@ -861,102 +429,20 @@ export const CatalogPage = () => {
             </div>
           </div>
           
-          {/* Controls Column: Stack Row 1 & Row 2 vertically, aligned to the right */}
-          <div className="flex flex-col gap-4 items-stretch md:items-end w-full md:w-auto mt-2">
-            
-            {/* ── Row 1: Search + Type filters + New Only ─────────────────────────── */}
-            <div className="flex flex-wrap items-center gap-3 justify-start md:justify-end w-full">
-              {/* Search Input */}
-              <div className="relative group w-full md:w-80">
-                <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
-                <input 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t.search} 
-                  className="bg-slate-900 border border-slate-800 rounded-2xl py-3 pl-12 pr-10 text-sm focus:outline-none focus:border-blue-500/50 transition-all w-full text-white" 
-                />
-                {searchQuery && (
-                  <button 
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-600 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
-                    title={t.clear_search}
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              {/* Catalog Filter Mode (All / Courses / Curricula) */}
-              <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-2xl shrink-0">
-                {[
-                  { key: 'All',        label: { EN: 'All',      FR: 'Tout',         ES: 'Todo',    DE: 'Alle',       ZH: '全部',   IT: 'Tutti',      PT: 'Tudo',        AR: 'الكل',    HI: 'सभी',       UR: 'تمام' } },
-                  { key: 'Course',     label: { EN: 'Courses',  FR: 'Cours',        ES: 'Cursos',  DE: 'Kurse',      ZH: '课程',   IT: 'Corsi',      PT: 'Cursos',      AR: 'الدورات',  HI: 'पाठ्यक्रम',  UR: 'کورسز' } },
-                  { key: 'Curriculum', label: { EN: 'Curricula',FR: 'Curriculums',  ES: 'Planes',  DE: 'Lehrpläne',  ZH: '课程体系', IT: 'Curriculum', PT: 'Currículos',  AR: 'المناهج',  HI: 'पाठ्यचर्या', UR: 'نصاب' } }
-                ].map(opt => {
-                  const active = filterType === opt.key;
-                  const labelText = opt.label[lang.toUpperCase() as keyof typeof opt.label] || opt.label.EN;
-                  return (
-                    <button 
-                      key={opt.key}
-                      type="button"
-                      onClick={() => setFilterType(opt.key as any)}
-                      className={`px-3.5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
-                    >
-                      {labelText}
-                    </button>
-                  );
-                })}
-              </div>
-              
-              {/* New Only toggle */}
-              <button 
-                type="button"
-                onClick={() => setShowNewOnly(!showNewOnly)}
-                className={`p-3 rounded-2xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest cursor-pointer ${showNewOnly ? 'bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-600/20' : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'}`}
-              >
-                <Sparkles className={`w-4 h-4 ${showNewOnly ? 'animate-pulse text-white' : ''}`} />
-                <span className="hidden sm:inline">
-                  {t.new_only || 'New Only'}
-                </span>
-              </button>
-            </div>
-
-            {/* ── Row 2: Sort + Saved — right-aligned under Row 1 ─────────── */}
-            <div className="flex flex-wrap items-center gap-3 justify-start md:justify-end w-full">
-              {/* Saved bookmark */}
-              <button 
-                type="button"
-                onClick={() => setSubjectFilter(subjectFilter === 'Saved' ? 'All' : 'Saved')}
-                className={`p-3 rounded-2xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest cursor-pointer ${subjectFilter === 'Saved' ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20' : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'}`}
-              >
-                <Bookmark className={`w-4 h-4 ${subjectFilter === 'Saved' ? 'fill-current' : ''}`} />
-                <span className="hidden sm:inline">{t.saved}</span>
-              </button>
-
-              {/* Sort — Popularity / Graduates */}
-              <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-2xl shrink-0">
-                {[
-                  { key: 'popularity',  label: { EN: 'Popularity', FR: 'Popularité',  ES: 'Popularidad', DE: 'Beliebtheit', ZH: '最热',  IT: 'Popolarità', PT: 'Popularidade', AR: 'الشعبية', HI: 'लोकप्रियता', UR: 'مقبولیت' } },
-                  { key: 'validations', label: { EN: 'Graduates',  FR: 'Diplômés',    ES: 'Graduados',   DE: 'Absolventen', ZH: '结业数', IT: 'Diplomati',    PT: 'Graduados',    AR: 'الخريجون', HI: 'स्नातक',      UR: 'فارغ التحصیل' } }
-                ].map(opt => {
-                  const active = sortBy === opt.key;
-                  const labelText = opt.label[lang.toUpperCase() as keyof typeof opt.label] || opt.label.EN;
-                  return (
-                    <button 
-                      key={opt.key}
-                      type="button"
-                      onClick={() => setSortBy(opt.key as any)}
-                      className={`px-3.5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${active ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
-                    >
-                      {labelText}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-          </div>
+          <CatalogFilterControls
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            filterType={filterType}
+            setFilterType={setFilterType}
+            showNewOnly={showNewOnly}
+            setShowNewOnly={setShowNewOnly}
+            subjectFilter={subjectFilter}
+            setSubjectFilter={setSubjectFilter}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            lang={lang}
+            t={t}
+          />
         </div>
 
         {/* Results Grid */}
@@ -968,253 +454,28 @@ export const CatalogPage = () => {
                 {t.loading_courses || 'Loading courses...'}
               </p>
             </div>
-          ) : sortedCourses.length > 0 ? sortedCourses.map((course) => {
-            const isEnrolled = enrolledIds.includes(course.id);
-            const activeModule = userProgress?.activeModules?.find((m: any) => m.slug === course.slug || m.id === course.id || (m.title_key && course.title_key && m.title_key === course.title_key));
-            
-            const isBrowser = typeof window !== 'undefined';
-            const localProgressMap = isBrowser ? (() => {
-              try {
-                return JSON.parse(localStorage.getItem('op_course_progress') || '{}');
-              } catch (e) {
-                return {};
-              }
-            })() : {};
-            
-            let progressPercent = 0;
-            if (course.isCurriculum && course.childCourses && course.childCourses.length > 0) {
-              let totalChildProgress = 0;
-              let childCount = 0;
-              course.childCourses.forEach((childId: number) => {
-                const childCourse = sortedCourses.find(c => c.id === childId);
-                if (childCourse) {
-                  const childActive = userProgress?.activeModules?.find((m: any) => m.slug === childCourse.slug || m.id === childCourse.id || (m.title_key && childCourse.title_key && m.title_key === childCourse.title_key));
-                  const childLocal = typeof localProgressMap[childCourse.slug] === 'number'
-                    ? localProgressMap[childCourse.slug]
-                    : (typeof localProgressMap[childCourse.id] === 'number' ? localProgressMap[childCourse.id] : 0);
-                  const childProgress = childActive ? childActive.progress : childLocal;
-                  totalChildProgress += childProgress;
-                  childCount++;
-                }
-              });
-              progressPercent = childCount > 0 ? Math.round(totalChildProgress / childCount) : 0;
-            } else {
-              const localPercent = typeof localProgressMap[course.slug] === 'number' 
-                ? localProgressMap[course.slug] 
-                : (typeof localProgressMap[course.id] === 'number' ? localProgressMap[course.id] : 0);
-              progressPercent = activeModule ? activeModule.progress : localPercent;
-            }
-            
-            const hasStarted = course.isCurriculum ? isEnrolled : (isEnrolled || progressPercent > 0);
-            return (
-              <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={course.id}>
-                <div 
-                  onClick={() => {
-                    navigateToCourse(course);
-                  }}
-                  className="group block h-full cursor-pointer"
-                >
-                  <div className="p-8 bg-slate-900/40 border border-slate-880/50 rounded-[40px] hover:border-blue-500/50 transition-all shadow-2xl hover:shadow-blue-600/10 flex flex-col h-full backdrop-blur-xl relative overflow-hidden">
-                    
-                    {/* Corner ribbon: NEW takes priority over REVISED */}
-                    {(() => {
-                      const isNew = isCourseNew(course);
-                      const isRecentlyRevised = !isNew &&
-                        course.last_revision_date &&
-                        (Date.now() - new Date(course.last_revision_date).getTime()) < 30 * 24 * 60 * 60 * 1000;
-                      if (isNew) return (
-                        <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
-                          <div className="absolute top-6 -left-8 w-[150px] bg-gradient-to-r from-blue-600 to-cyan-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 -rotate-45 shadow-xl border-y border-white/20 select-none">
-                            {t.new_badge || 'New'}
-                          </div>
-                        </div>
-                      );
-                      if (isRecentlyRevised) return (
-                        <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden pointer-events-none z-20">
-                          <div className="absolute top-6 -left-8 w-[150px] bg-gradient-to-r from-emerald-600 to-teal-400 text-white text-[8px] font-black uppercase tracking-widest text-center py-2.5 -rotate-45 shadow-xl border-y border-white/20 select-none">
-                            {t.revised_badge || 'Revised'}
-                          </div>
-                        </div>
-                      );
-                      return null;
-                    })()}
-
-                    {(() => {
-                      const ratingVal = course.averageRating ?? 0;
-                      const countVal = course.ratingCount ?? 0;
-                      return (
-                        <div className="flex justify-between items-start mb-6 w-full gap-4">
-                          {course.isCurriculum ? (
-                            <div className="w-12 h-12 bg-violet-600/10 rounded-2xl flex items-center justify-center text-violet-400 group-hover:scale-110 transition-transform flex-shrink-0" title={t.complete_curriculum || "Complete Curriculum"}>
-                              <GraduationCap className="w-6 h-6" />
-                            </div>
-                          ) : (
-                            <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform flex-shrink-0">
-                              <Book className="w-6 h-6" />
-                            </div>
-                          )}
-                          <div className="flex flex-col items-end gap-2 flex-1 mr-8">
-                            {/* 1st row: badges */}
-                            <div className="flex gap-2 items-center flex-wrap justify-end">
-                              {/* Course / Curriculum Differentiating Badge */}
-                              {course.isCurriculum ? (
-                                <span className="px-2.5 py-1 bg-violet-950/40 border border-violet-900/30 rounded-lg text-[8px] font-black uppercase text-violet-400 tracking-wider">
-                                  🎓 {t.curriculum || 'Curriculum'}
-                                </span>
-                              ) : (
-                                <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider">
-                                  📖 {t.course || 'Course'}
-                                </span>
-                              )}
-                              {/* Unified gold star rating badge */}
-                              <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 flex items-center gap-1.5" title={`${ratingVal.toFixed(1)} / 5 — ${countVal} ${t.reviews || 'reviews'}`}>
-                                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                                {ratingVal.toFixed(1)} ({countVal})
-                              </span>
-                              {/* Expected duration chip */}
-                              <span className="px-2.5 py-1 bg-blue-950/40 border border-blue-900/30 rounded-lg text-[8px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1" title={(t.expected_learning_hours || '{hours} expected learning hours').replace('{hours}', String(course.hours || (course.ects ? course.ects * 25 : 150)))}>
-                                <Clock className="w-3 h-3 text-blue-400" />
-                                {course.hours || (course.ects ? course.ects * 25 : 150)}h
-                              </span>
-                              {/* Level badge */}
-                              <span className="px-2.5 py-1 bg-slate-800 border border-slate-750 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-wider">
-                                {formatCourseLevel(course.level, lang)}
-                              </span>
-                            </div>
-                            
-                            {/* 2nd row: action buttons (Course Sheet, Bookmark) */}
-                            <div className="flex gap-2 items-center mt-1">
-                              {/* Course Presentation Sheet (always visible) */}
-                              <button 
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setSelectedEnrollCourse(course);
-                                }}
-                                className="h-8 px-3 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[8px] font-black uppercase tracking-widest"
-                                title={t.course_sheet || "Course Sheet"}
-                              >
-                                <Book className="w-3 h-3" />
-                                <span>{t.course_sheet || "Course Sheet"}</span>
-                              </button>
-
-                              {/* Bookmark */}
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toggleBookmark(course.id, e);
-                                }}
-                                title={bookmarks.includes(course.id) ? (t.remove_favorites || 'Remove bookmark') : (t.save_course || 'Save this course')}
-                                className={`w-8 h-8 border rounded-xl transition-all flex items-center justify-center cursor-pointer ${
-                                  bookmarks.includes(course.id)
-                                    ? 'text-blue-400 bg-blue-400/10 border-blue-500/20'
-                                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
-                                }`}
-                              >
-                                <Bookmark className={`w-3 h-3 ${bookmarks.includes(course.id) ? 'fill-current' : ''}`} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                    
-                    <h3 className="text-xl font-black mb-3 group-hover:text-blue-400 transition-colors">
-                      {getLocalizedCourseTitle(course)}
-                    </h3>
-                    <p className="text-sm text-slate-500 mb-4 flex-1 leading-relaxed line-clamp-3 overflow-hidden text-ellipsis">
-                      {getLocalizedCourseDescription(course)}
-                    </p>
-
-
-                    {/* PROGRESS INDICATOR (only visible if enrolled or started progress) */}
-                    {hasStarted && (
-                      <div className="mb-6">
-                         <div className="flex justify-between items-center mb-2">
-                            <span className="text-[8px] font-black uppercase text-slate-600">{t.progress || 'Progress'}</span>
-                            <span className="text-[8px] font-black text-blue-500">{progressPercent}%</span>
-                         </div>
-                         <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden mb-2">
-                            <div className="h-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.5)]" style={{ width: `${progressPercent}%` }} />
-                         </div>
-                         <div className="flex items-center justify-between text-[7px] font-bold text-slate-500 uppercase tracking-wider">
-                           <span>{t.time_spent || 'Time spent:'} {progressService.getLessonTimeForCourse(course.slug)}m</span>
-                           <span>{t.expected_time || 'Expected:'} {course.hours || (course.ects ? course.ects * 25 : 150)}h</span>
-                         </div>
-                      </div>
-                    )}
-
-
-                    <div className="flex items-center gap-2 pt-6 border-t border-slate-800/50 mt-auto w-full">
-                      {/* 1. Main Action Button: Poursuivre / Continuer / Commencer */}
-                      <button 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          navigateToCourse(course);
-                        }}
-                        className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all shadow-md shadow-blue-600/10 flex items-center justify-center gap-2"
-                      >
-                        <Play className="w-3 h-3 fill-current" />
-                        <span className="truncate">
-                          {course.isCurriculum 
-                            ? (t.manage_curriculum || 'Gérer le Curriculum') 
-                            : (hasStarted ? t.continue_course : t.start_learning)}
-                        </span>
-                      </button>
-
-                      {/* 2. Enroll Button (if not enrolled) */}
-                      {!isEnrolled && (
-                        <button 
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (isLoggedIn) {
-                              let userId = 'u1';
-                              const savedProfile = localStorage.getItem('op_user_profile');
-                              if (savedProfile) {
-                                try {
-                                  const p = JSON.parse(savedProfile);
-                                  if (p.id) userId = p.id;
-                                } catch (err) {}
-                              }
-                              await dbService.enrollInCourse(userId, course.id);
-                              setEnrolledIds(prev => [...prev, course.id]);
-                              
-                              setEnrollmentSuccess(true);
-                              const courseToOpen = course;
-                              setSelectedEnrollCourse(null);
-                              window.dispatchEvent(new Event('op_progress_updated'));
-                              
-                              if (courseToOpen.languages && courseToOpen.languages.length > 0) {
-                                const currentLangLower = lang.toLowerCase();
-                                const supportsCurrentLang = courseToOpen.languages.some((l: string) => l.toLowerCase() === currentLangLower);
-                                if (!supportsCurrentLang) {
-                                  setActiveLang(courseToOpen.languages[0].toUpperCase());
-                                }
-                              }
-
-                              setTimeout(() => {
-                                setEnrollmentSuccess(false);
-                                navigateToCourse(courseToOpen);
-                              }, 2000);
-                            } else {
-                              navigateToCourse(course, true);
-                            }
-                          }}
-                          className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-770 text-white border border-emerald-500/20 rounded-2xl text-[9px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-2"
-                        >
-                          <Plus className="w-3 h-3" />
-                          <span className="truncate">{t.enroll_label || 'Enroll'}</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          }) : (
+          ) : sortedCourses.length > 0 ? sortedCourses.map((course) => (
+            <CatalogCourseCard
+              key={course.id}
+              course={course}
+              sortedCourses={sortedCourses}
+              enrolledIds={enrolledIds}
+              userProgress={userProgress}
+              bookmarks={bookmarks}
+              lang={lang}
+              t={t}
+              isLoggedIn={isLoggedIn}
+              isCourseNew={isCourseNew}
+              getLocalizedCourseTitle={getLocalizedCourseTitle}
+              getLocalizedCourseDescription={getLocalizedCourseDescription}
+              navigateToCourse={navigateToCourse}
+              setSelectedEnrollCourse={setSelectedEnrollCourse}
+              toggleBookmark={toggleBookmark}
+              setEnrolledIds={setEnrolledIds}
+              setEnrollmentSuccess={setEnrollmentSuccess}
+              setActiveLang={setActiveLang}
+            />
+          )) : (
             <SmartEmptyState
               searchQuery={searchQuery}
               onClear={() => setSearchQuery('')}
@@ -1229,47 +490,14 @@ export const CatalogPage = () => {
       </div>
       <Footer />
 
-      <AnimatePresence>
-        {showWelcomePopup && (
-          <div 
-            onClick={dismissWelcomePopup}
-            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl cursor-pointer"
-          >
-            <motion.div
-              onClick={(e) => e.stopPropagation()}
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-[32px] p-8 shadow-2xl relative overflow-hidden text-center cursor-default"
-            >
-              {/* Decorative radial gradients */}
-              <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl" />
-              <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-violet-600/10 rounded-full blur-3xl" />
+      <CatalogPopups
+        showWelcomePopup={showWelcomePopup}
+        dismissWelcomePopup={dismissWelcomePopup}
+        enrollmentSuccess={enrollmentSuccess}
+        lang={lang}
+        t={t}
+      />
 
-              <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-br from-blue-600/20 to-violet-600/20 border border-blue-500/20 flex items-center justify-center shadow-xl shadow-blue-500/5 mb-6">
-                <GraduationCap className="w-8 h-8 text-blue-400" />
-              </div>
-
-              <h2 className="text-2xl font-black text-white mb-3 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-violet-400">
-                {t.welcome_title || "Welcome to OpenPrimer!"}
-              </h2>
-              
-              <p className="text-sm text-slate-400 leading-relaxed mb-8">
-                {t.welcome_desc || "Your registration has been successfully validated. All that is left is to choose the courses that interest you in the catalog below to build your first personalized curriculum!"}
-              </p>
-
-              <button
-                onClick={dismissWelcomePopup}
-                className="w-full py-4 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all shadow-xl shadow-blue-600/20 cursor-pointer"
-              >
-                {t.start_exploring || "Start Exploring"}
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Socratic Interactive Syllabus Enrollment Overlay Panel */}
       <AnimatePresence>
         {selectedEnrollCourse && (
           <EnrollmentModal
@@ -1321,24 +549,6 @@ export const CatalogPage = () => {
           />
         )}
       </AnimatePresence>
-
-      <AnimatePresence>
-        {enrollmentSuccess && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20, x: "-50%" }}
-            animate={{ opacity: 1, y: 0, x: "-50%" }}
-            exit={{ opacity: 0, y: -20, x: "-50%" }}
-            className="fixed top-24 left-1/2 px-6 py-3.5 rounded-full bg-slate-900/90 border border-emerald-500/30 shadow-2xl flex items-center gap-3 z-[12000] backdrop-blur-xl"
-          >
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 animate-pulse" />
-            <span className="text-xs font-bold text-slate-100 tracking-wide">
-              {lang.toUpperCase() === 'FR' ? 'Inscription Réussie !' : 'Enrollment Successful!'}
-            </span>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
-
-// --- PAGE: PHILOSOPHY ---

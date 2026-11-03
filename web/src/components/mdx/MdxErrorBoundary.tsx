@@ -25,19 +25,27 @@ interface MdxErrorBoundaryState {
   componentStack?: string | null;
 }
 
-const COMPATIBILITY_TRANSLATIONS: Record<string, {
+interface CompatibilityLocaleConfig {
   title: string;
   fallbackText: string;
+  listSeparator: string;
+  genericInteractiveSuffix: string;
+  useFullWidthParens: boolean;
   singular: { prefix: string; suffix: string };
   plural: { prefix: string; suffix: string };
   categories: {
     singular: Record<string, string>;
     plural: Record<string, string>;
   };
-}> = {
+}
+
+const COMPATIBILITY_TRANSLATIONS: Record<string, CompatibilityLocaleConfig> = {
   EN: {
     title: "Compatibility Mode Enabled",
     fallbackText: "This chapter is displayed in a simplified version due to an anomaly in the format of the interactive components of the lesson. This incident may be temporary due to the use of external sources. The incident has been reported to the administration.",
+    listSeparator: ", ",
+    genericInteractiveSuffix: "interactive components",
+    useFullWidthParens: false,
     singular: {
       prefix: "This chapter is displayed in a simplified version due to an anomaly in the format of an interactive component (",
       suffix: ") of the lesson. This incident may be temporary due to the use of external sources. The incident has been reported to the administration."
@@ -72,6 +80,9 @@ const COMPATIBILITY_TRANSLATIONS: Record<string, {
   FR: {
     title: "Mode de compatibilité activé",
     fallbackText: "Ce chapitre s'affiche en version allégée en raison d'une anomalie dans le format des composants interactifs de la leçon. Cet incident peut être transitoire en raison de l'utilisation de sources externes. L'incident a été signalé à l'administration.",
+    listSeparator: ", ",
+    genericInteractiveSuffix: "des composants interactifs",
+    useFullWidthParens: false,
     singular: {
       prefix: "Ce chapitre s'affiche en version allégée en raison d'une anomalie dans le format d'un composant interactif (",
       suffix: ") de la leçon. Cet incident peut être transitoire en raison de l'utilisation de sources externes. L'incident a été signalé à l'administration."
@@ -106,6 +117,9 @@ const COMPATIBILITY_TRANSLATIONS: Record<string, {
   ES: {
     title: "Modo de compatibilidad activado",
     fallbackText: "Este capítulo se muestra en una versión simplificada debido a una anomalía en el formato de los componentes interactivos de la lección. Este incidente puede ser transitorio debido al uso de fuentes externas. El incidente ha sido reportado a la administración.",
+    listSeparator: ", ",
+    genericInteractiveSuffix: "de los componentes interactivos",
+    useFullWidthParens: false,
     singular: {
       prefix: "Este capítulo se muestra en una versión simplificada debido a una anomalía en el formato de un componente interactivo (",
       suffix: ") de la lección. Este incidente puede ser transitorio debido al uso de fuentes externas. El incidente ha sido reportado a la administración."
@@ -140,6 +154,9 @@ const COMPATIBILITY_TRANSLATIONS: Record<string, {
   DE: {
     title: "Kompatibilitätsmodus aktiviert",
     fallbackText: "Dieses Kapitel wird aufgrund einer Anomalie im Format interaktiver Komponenten der Lektion in einer vereinfachten Version angezeigt. Dieser Vorfall kann aufgrund der Verwendung externer Quellen vorübergehend sein. Der Vorfall wurde der Verwaltung gemeldet.",
+    listSeparator: ", ",
+    genericInteractiveSuffix: "der interaktiven Komponenten",
+    useFullWidthParens: false,
     singular: {
       prefix: "Dieses Kapitel wird aufgrund einer Anomalie im Format einer interaktiven Komponente (",
       suffix: ") der Lektion in einer vereinfachten Version angezeigt. Dieser Vorfall kann aufgrund der Verwendung externer Quellen vorübergehend sein. Der Vorfall wurde der Verwaltung gemeldet."
@@ -174,6 +191,9 @@ const COMPATIBILITY_TRANSLATIONS: Record<string, {
   ZH: {
     title: "兼容模式已启用",
     fallbackText: "本章因课程的互动组件格式异常而以精简版显示。由于使用了外部来源，此问题可能是暂时的。该事件已报告给管理部门。",
+    listSeparator: "、",
+    genericInteractiveSuffix: "互动组件",
+    useFullWidthParens: true,
     singular: {
       prefix: "本章因课程的单个互动组件（",
       suffix: "）格式异常而以精简版显示。由于使用了外部来源，此问题可能是暂时的。该事件已报告给管理部门。"
@@ -204,6 +224,154 @@ const COMPATIBILITY_TRANSLATIONS: Record<string, {
         video: "视频"
       }
     }
+  },
+  PT: {
+    title: "Modo de compatibilidade ativado",
+    fallbackText: "Este capítulo é exibido em uma versão simplificada devido a uma anomalia no formato dos componentes interativos da lição. Este incidente pode ser temporário devido ao uso de fontes externas. O incidente foi reportado à administração.",
+    listSeparator: ", ",
+    genericInteractiveSuffix: "de componentes interativos",
+    useFullWidthParens: false,
+    singular: {
+      prefix: "Este capítulo é exibido em uma versão simplificada devido a uma anomalia no formato de um componente interativo (",
+      suffix: ") da lição. Este incidente pode ser temporário devido ao uso de fontes externas. O incidente foi reportado à administração."
+    },
+    plural: {
+      prefix: "Este capítulo é exibido em uma versão simplificada devido a uma anomalia no formato de componentes interativos (",
+      suffix: ") da lição. Este incidente pode ser temporário devido ao uso de fontes externas. O incidente foi reportado à administração."
+    },
+    categories: {
+      singular: {
+        quiz: "questionário",
+        simulations: "simulação",
+        diagrams: "diagrama/gráfico",
+        exercises: "exercício",
+        blanks: "preenchimento de lacunas",
+        tables: "tabela",
+        models3d: "modelo 3D",
+        video: "vídeo"
+      },
+      plural: {
+        quiz: "questionários",
+        simulations: "simulações",
+        diagrams: "diagramas/gráficos",
+        exercises: "exercícios",
+        blanks: "preenchimento de lacunas",
+        tables: "tabelas",
+        models3d: "modelos 3D",
+        video: "vídeos"
+      }
+    }
+  },
+  AR: {
+    title: "تم تفعيل وضع التوافق",
+    fallbackText: "يتم عرض هذا الفصل في نسخة مبسطة بسبب خلل في تنسيق المكونات التفاعلية للدرس. قد يكون هذا الحادث مؤقتاً بسبب استخدام مصادر خارجية. تم إبلاغ الإدارة بالحادث.",
+    listSeparator: "، ",
+    genericInteractiveSuffix: "مكونات تفاعلية",
+    useFullWidthParens: false,
+    singular: {
+      prefix: "يتم عرض هذا الفصل في نسخة مبسطة بسبب خلل في تنسيق مكون تفاعلي (",
+      suffix: ") للدرس. قد يكون هذا الحادث مؤقتاً بسبب استخدام مصادر خارجية. تم إبلاغ الإدارة بالحادث."
+    },
+    plural: {
+      prefix: "يتم عرض هذا الفصل في نسخة مبسطة بسبب خلل في تنسيق مكونات تفاعلية (",
+      suffix: ") للدرس. قد يكون هذا الحادث مؤقتاً بسبب استخدام مصادر خارجية. تم إبلاغ الإدارة بالحادث."
+    },
+    categories: {
+      singular: {
+        quiz: "اختبار قصير",
+        simulations: "محاكاة",
+        diagrams: "رسم بياني",
+        exercises: "تمرين",
+        blanks: "ملء الفراغات",
+        tables: "جدول",
+        models3d: "نموذج ثلاثي الأبعاد",
+        video: "فيديو"
+      },
+      plural: {
+        quiz: "اختبارات قصيرة",
+        simulations: "محاكاة",
+        diagrams: "رسوم بيانية",
+        exercises: "تمارين",
+        blanks: "ملء الفراغات",
+        tables: "جداول",
+        models3d: "نماذج ثلاثية الأبعاد",
+        video: "مقاطع فيديو"
+      }
+    }
+  },
+  HI: {
+    title: "संगतता मोड सक्षम",
+    fallbackText: "पाठ के इंटरएक्टिव घटकों के प्रारूप में विसंगति के कारण यह अध्याय सरलीकृत संस्करण में प्रदर्शित किया गया है। बाहरी स्रोतों के उपयोग के कारण यह घटना अस्थायी हो सकती है। प्रशासन को सूचित कर दिया गया है।",
+    listSeparator: ", ",
+    genericInteractiveSuffix: "इंटरएक्टिव घटक",
+    useFullWidthParens: false,
+    singular: {
+      prefix: "पाठ के एक इंटरएक्टिव घटक (",
+      suffix: ") के प्रारूप में विसंगति के कारण यह अध्याय सरलीकृत संस्करण में प्रदर्शित किया गया है। प्रशासन को सूचित कर दिया गया है।"
+    },
+    plural: {
+      prefix: "पाठ के इंटरएक्टिव घटकों (",
+      suffix: ") के प्रारूप में विसंगति के कारण यह अध्याय सरलीकृत संस्करण में प्रदर्शित किया गया है। प्रशासन को सूचित कर दिया गया है।"
+    },
+    categories: {
+      singular: {
+        quiz: "प्रश्नोत्तरी",
+        simulations: "सिमुलेशन",
+        diagrams: "आरेख/ग्राफ़िक",
+        exercises: "अभ्यास",
+        blanks: "रिक्त स्थान भरें",
+        tables: "तालिका",
+        models3d: "3D मॉडल",
+        video: "वीडियो"
+      },
+      plural: {
+        quiz: "प्रश्नोत्तरी",
+        simulations: "सिमुलेशन",
+        diagrams: "आरेख/ग्राफ़िक्स",
+        exercises: "अभ्यास",
+        blanks: "रिक्त स्थान भरें",
+        tables: "तालिकाएँ",
+        models3d: "3D मॉडल",
+        video: "वीडियो"
+      }
+    }
+  },
+  UR: {
+    title: "مطابقت کا موڈ فعال ہے",
+    fallbackText: "سبق کے انٹرایکٹو اجزاء کی فارمیٹ میں خرابی کی وجہ سے اس باب کو سادہ شکل میں دکھایا جا رہا ہے۔ بیرونی ذرائع کے استعمال کی وجہ سے یہ مسئلہ عارضی ہو سکتا ہے۔ انتظامیہ کو اطلاع دے دی گئی ہے۔",
+    listSeparator: "، ",
+    genericInteractiveSuffix: "انٹرایکٹو اجزاء",
+    useFullWidthParens: false,
+    singular: {
+      prefix: "سبق کے ایک انٹرایکٹو جزو (",
+      suffix: ") کی فارمیٹ میں خرابی کی وجہ سے اس باب کو سادہ شکل میں دکھایا جا رہا ہے۔ انتظامیہ کو اطلاع دے دی گئی ہے۔"
+    },
+    plural: {
+      prefix: "سبق کے انٹرایکٹو اجزاء (",
+      suffix: ") کی فارمیٹ میں خرابی کی وجہ سے اس باب کو سادہ شکل میں دکھایا جا رہا ہے۔ انتظامیہ کو اطلاع دے دی گئی ہے۔"
+    },
+    categories: {
+      singular: {
+        quiz: "کوئز",
+        simulations: "سمولیشن",
+        diagrams: "خاکہ/گرافک",
+        exercises: "مشق",
+        blanks: "خالی جگہ پر کریں",
+        tables: "جدول",
+        models3d: "3D ماڈل",
+        video: "ویڈیو"
+      },
+      plural: {
+        quiz: "کوئزز",
+        simulations: "سمولیشنز",
+        diagrams: "خاکے/گرافکس",
+        exercises: "مشقیں",
+        blanks: "خالی جگہ پر کریں",
+        tables: "جدولیں",
+        models3d: "3D ماڈلز",
+        video: "ویڈیوز"
+      }
+    }
   }
 };
 
@@ -219,33 +387,15 @@ function detectComponentsFromError(
     componentStack || ''
   ].join('\n');
 
-  // Scanning for component classes or tag signatures in stack/message
-  if (/Quiz|Question/i.test(errorText)) {
-    detected.push('quiz');
-  }
-  if (/CodeSandbox|ExternalSandbox|DynamicSimulation|ChemicalStoichiometry|BasicMathExplorer|LogicGateSimulator/i.test(errorText)) {
-    detected.push('simulations');
-  }
-  if (/InteractiveDiagram|Mermaid|FunctionPlotter|FunctionManipulator|EquationManipulator|Geometry2D|ComparisonSlider|DataChart/i.test(errorText)) {
-    detected.push('diagrams');
-  }
-  if (/SolvedExercise|UnsolvedExercise|SolvedProblem|SelfAssessment/i.test(errorText)) {
-    detected.push('exercises');
-  }
-  if (/FillInBlanks/i.test(errorText)) {
-    detected.push('blanks');
-  }
-  if (/DynamicTableChart/i.test(errorText)) {
-    detected.push('tables');
-  }
-  if (/StructureViewer3D|QuantumOrbitalExplorer/i.test(errorText)) {
-    detected.push('models3d');
-  }
-  if (/Video|YouTube|Vimeo|IframeVideo/i.test(errorText)) {
-    detected.push('video');
-  }
+  if (/Quiz|Question/i.test(errorText)) detected.push('quiz');
+  if (/CodeSandbox|ExternalSandbox|DynamicSimulation|ChemicalStoichiometry|BasicMathExplorer|LogicGateSimulator/i.test(errorText)) detected.push('simulations');
+  if (/InteractiveDiagram|Mermaid|FunctionPlotter|FunctionManipulator|EquationManipulator|Geometry2D|ComparisonSlider|DataChart/i.test(errorText)) detected.push('diagrams');
+  if (/SolvedExercise|UnsolvedExercise|SolvedProblem|SelfAssessment/i.test(errorText)) detected.push('exercises');
+  if (/FillInBlanks/i.test(errorText)) detected.push('blanks');
+  if (/DynamicTableChart/i.test(errorText)) detected.push('tables');
+  if (/StructureViewer3D|QuantumOrbitalExplorer/i.test(errorText)) detected.push('models3d');
+  if (/Video|YouTube|Vimeo|IframeVideo/i.test(errorText)) detected.push('video');
 
-  // Fallback to checking the presence of components in raw MDX if nothing was found in the stack
   if (detected.length === 0 && rawMdx) {
     if (/<Quiz/i.test(rawMdx)) detected.push('quiz');
     if (/<(CodeSandbox|ExternalSandbox|DynamicSimulation|ChemicalStoichiometry|BasicMathExplorer)/i.test(rawMdx)) detected.push('simulations');
@@ -281,7 +431,7 @@ function getFormattedCompatibilityMessage(
   const categoryMap = isSingular ? trans.categories.singular : trans.categories.plural;
 
   const items = failedKeys.map(key => categoryMap[key] || COMPATIBILITY_TRANSLATIONS.EN.categories[isSingular ? 'singular' : 'plural'][key] || key);
-  const separator = language === 'ZH' ? '、' : ', ';
+  const separator = trans.listSeparator || ', ';
   const listStr = items.join(separator);
 
   return {
@@ -310,122 +460,42 @@ const CRITICAL_ERROR_MESSAGES: Record<string, { title: string; desc: string }> =
   ZH: {
     title: "显示错误",
     desc: "由于技术显示问题，无法加载本章。请使用导航或菜单继续下一步。"
+  },
+  PT: {
+    title: "Erro de exibição",
+    desc: "Este capítulo não pôde ser carregado devido a um problema técnico de exibição. Prossiga para a próxima etapa usando a navegação ou o menu."
+  },
+  AR: {
+    title: "خطأ في العرض",
+    desc: "تعذر تحميل هذا الفصل بسبب مشكلة فنية في العرض. يرجى المتابعة إلى الخطوة التالية باستخدام التنقل أو القائمة."
+  },
+  HI: {
+    title: "प्रदर्शन त्रुटि",
+    desc: "तकनीकी प्रदर्शन समस्या के कारण यह अध्याय लोड नहीं किया जा सका। कृपया नेविगेशन या मेनू का उपयोग करके अगले चरण पर आगे बढ़ें।"
+  },
+  UR: {
+    title: "ڈسپلے کی خرابی",
+    desc: "تکنیکی ڈسپلے کے مسئلے کی وجہ سے یہ باب لوڈ نہیں ہو سکا۔ براہ کرم نیویگेशन یا مینو کا استعمال کرتے ہوئے اگلے مرحلے پر جائیں۔"
   }
 };
 
 function getAffectedComponentsList(rawMdx: string | undefined, lang: string): string {
   const language = (lang || 'EN').toUpperCase();
-  
+  const trans = COMPATIBILITY_TRANSLATIONS[language] || COMPATIBILITY_TRANSLATIONS.EN;
+  const baseLabel = trans.genericInteractiveSuffix || COMPATIBILITY_TRANSLATIONS.EN.genericInteractiveSuffix;
+
   if (!rawMdx) {
-    if (isFr) return "des composants interactifs";
-    if (language === 'ES') return "de los componentes interactivos";
-    if (language === 'DE') return "der interaktiven Komponenten";
-    if (language === 'ZH') return "互动组件";
-    return "interactive components";
+    return baseLabel;
   }
 
-  const detected: string[] = [];
-
-  // Check for components
-  if (/<Quiz/i.test(rawMdx)) {
-    detected.push('quiz');
-  }
-  if (/<(CodeSandbox|ExternalSandbox|DynamicSimulation|ChemicalStoichiometry|BasicMathExplorer)/i.test(rawMdx)) {
-    detected.push('simulations');
-  }
-  if (/<(InteractiveDiagram|Mermaid|FunctionPlotter|FunctionManipulator|EquationManipulator|Geometry2D)/i.test(rawMdx)) {
-    detected.push('diagrams');
-  }
-  if (/<(ComparisonSlider|DataChart)/i.test(rawMdx)) {
-    detected.push('diagrams'); // Treat DataChart/slider as graphical/diagram components
-  }
-  if (/<(SolvedExercise|UnsolvedExercise|SolvedProblem|SelfAssessment)/i.test(rawMdx)) {
-    detected.push('exercises');
-  }
-  if (/<FillInBlanks/i.test(rawMdx)) {
-    detected.push('blanks');
-  }
-  if (/<DynamicTableChart/i.test(rawMdx)) {
-    detected.push('tables');
-  }
-  if (/<(StructureViewer3D|QuantumOrbitalExplorer)/i.test(rawMdx)) {
-    detected.push('models3d');
-  }
-
-  const translations: Record<string, Record<string, string>> = {
-    quiz: {
-      EN: "quizzes",
-      FR: "quiz",
-      ES: "cuestionarios",
-      DE: "Quiz",
-      ZH: "小测验"
-    },
-    simulations: {
-      EN: "simulations",
-      FR: "simulations",
-      ES: "simulaciones",
-      DE: "Simulationen",
-      ZH: "模拟"
-    },
-    diagrams: {
-      EN: "diagrams/graphics",
-      FR: "schémas/graphiques",
-      ES: "esquemas/gráficos",
-      DE: "Diagramme/Grafiken",
-      ZH: "图表/图形"
-    },
-    exercises: {
-      EN: "exercises",
-      FR: "exercices",
-      ES: "ejercicios",
-      DE: "Übungen",
-      ZH: "练习"
-    },
-    blanks: {
-      EN: "fill-in-the-blanks",
-      FR: "textes à trous",
-      ES: "ejercicios de rellenar huecos",
-      DE: "Lückentexte",
-      ZH: "填空题"
-    },
-    tables: {
-      EN: "tables",
-      FR: "tableaux",
-      ES: "tablas",
-      DE: "Tabellen",
-      ZH: "表格"
-    },
-    models3d: {
-      EN: "3D models",
-      FR: "modèles 3D",
-      ES: "modelos 3D",
-      DE: "3D-Modelle",
-      ZH: "3D模型"
-    }
-  };
-
-  const uniqueDetected = Array.from(new Set(detected));
-
-  const DEFAULT_LABELS: Record<string, string> = {
-    EN: "interactive components",
-    FR: "des composants interactifs",
-    ES: "de los componentes interactivos",
-    DE: "der interaktiven Komponenten",
-    ZH: "互动组件",
-    PT: "de componentes interativos",
-    AR: "مكونات تفاعلية",
-    HI: "इंटरएक्टिव घटक",
-    UR: "انٹرایکٹو اجزاء"
-  };
-
-  const baseLabel = DEFAULT_LABELS[language] || DEFAULT_LABELS.EN;
+  const uniqueDetected = detectComponentsFromError(null, null, rawMdx);
   if (uniqueDetected.length === 0) {
     return baseLabel;
   }
 
-  const items = uniqueDetected.map(key => translations[key]?.[language] || translations[key]?.EN || key);
-  const sep = language === 'ZH' ? '、' : ', ';
-  return language === 'ZH' ? `${baseLabel}（${items.join(sep)}）` : `${baseLabel} (${items.join(sep)})`;
+  const items = uniqueDetected.map(key => trans.categories.plural[key] || COMPATIBILITY_TRANSLATIONS.EN.categories.plural[key] || key);
+  const sep = trans.listSeparator || ', ';
+  return trans.useFullWidthParens ? `${baseLabel}（${items.join(sep)}）` : `${baseLabel} (${items.join(sep)})`;
 }
 
 /**
@@ -511,7 +581,5 @@ class MdxErrorBoundary extends React.Component<MdxErrorBoundaryProps, MdxErrorBo
   }
 }
 
-
-
-export { MdxErrorBoundary };
-export type { MdxErrorBoundaryProps, MdxErrorBoundaryState };
+export { MdxErrorBoundary, COMPATIBILITY_TRANSLATIONS, CRITICAL_ERROR_MESSAGES, getFormattedCompatibilityMessage, getAffectedComponentsList };
+export type { MdxErrorBoundaryProps, MdxErrorBoundaryState, CompatibilityLocaleConfig };

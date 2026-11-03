@@ -1,56 +1,33 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Sliders, Sparkles, RefreshCw, Layers, Database, Download } from 'lucide-react';
+import { Play, Pause, Sliders, Sparkles, RefreshCw, Database, Download } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
+import {
+  LoggedMeasurement,
+  WAVE_INTERFERENCE_STRINGS,
+  computeWaveNetHeight,
+  computeProbeAmplitude
+} from './wave-interference/presets';
 
-interface LoggedMeasurement {
-  id: number;
-  obstacle: string;
-  x: number;
-  y: number;
-  freq: number;
-  waveLen: number;
-  amplitude: number;
-}
+export {
+  WAVE_INTERFERENCE_STRINGS,
+  computeWaveNetHeight,
+  computeProbeAmplitude
+};
+export type { LoggedMeasurement };
 
 export const WaveInterferenceSim = () => {
   const { language } = useLanguage();
 
-  const localFR: Record<string, string> = {
-    "Optics & Young's Double-Slit Lab": "Laboratoire d'Optique & de Fentes de Young",
-    "Analyze wave diffraction: toggle Young's apertures barrier, drag the green oscilloscope probe to extract local amplitudes, and compile CSV reports.": "Expérimentez la diffraction : insérez une double fente de Young, glissez la sonde verte d'oscilloscope pour mesurer les amplitudes locales et exportez vos mesures.",
-    "Free Tank": "Cuve Libre",
-    "Fente Simple": "Fente Simple",
-    "Fentes de Young": "Fentes de Young",
-    "Single Slit": "Fente Simple",
-    "Double Slit": "Fentes de Young",
-    "Virtual Oscilloscope Probe z(t)": "Sonde Oscilloscope Virtuelle z(t)",
-    "Wave Controls": "Paramètres d'onde",
-    "Frequency (f)": "Fréquence (f)",
-    "Wavelength (λ)": "Longueur d'onde (λ)",
-    "Experimental Data Registry": "Journal d'acquisition de données",
-    "Clear": "Effacer",
-    "No logged values yet": "Aucune donnée enregistrée",
-    "Log Amplitude": "Consigner point",
-    "Export CSV": "Exporter CSV",
-    "Huygens-Fresnel Diffraction": "Interférences & Principe de Huygens",
-    "According to Huygens, apertures serve as emitters of coherent secondary wave fronts. Drag the green probe into dark nodes to analyze destructive waves cancelation.": "Selon Huygens, chaque fente se comporte comme une source d'ondes secondaires cohérentes. Glissez la sonde verte dans les zones sombres pour vérifier l'interférence destructive (amplitude minimale).",
-    "Obstacle": "Obstacle",
-    "Freq": "Fréq.",
-    "Lambda": "λ",
-    "Amplitude": "Amp.",
-    "Free": "Libre",
-    "Slits": "Fentes"
-  };
-
   const t = (key: string) => {
-    const globalT = (STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
+    const langCode = (language || 'EN').toUpperCase();
+    const globalT = (STATIC_UI_STRINGS[langCode as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN) as any;
     const translated = globalT?.[key];
     if (translated && translated !== key) return translated;
-    if (language.toUpperCase() === 'FR' && localFR[key]) return localFR[key];
-    return key;
+    const localDict = WAVE_INTERFERENCE_STRINGS[langCode] || WAVE_INTERFERENCE_STRINGS.EN;
+    return localDict[key] || key;
   };
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -92,7 +69,7 @@ export const WaveInterferenceSim = () => {
     if (!ctx) return;
 
     let animId: number;
-    let t = 0; // phase time parameter
+    let phaseTime = 0; // phase time parameter
 
     const width = canvas.width;
     const height = canvas.height;
@@ -100,97 +77,34 @@ export const WaveInterferenceSim = () => {
 
     const render = () => {
       const data = imgData.data;
-
-      // k = 2 * pi / lambda
       const k = (2 * Math.PI) / wavelength;
-      // omega = 2 * pi * f
       const omega = 2 * Math.PI * frequency * 0.04;
-
-      // Middle dividing wall coordinate for single/double slit diffraction (x=75)
       const xObstacle = 75;
 
       // Loop through space coordinates to solve Huygens-Fresnel wave front sums
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
           const idx = (y * width + x) * 4;
-
-          let netHeight = 0;
-
-          // Draw physical partition walls in the pixel grid
-          const isAtWall = x === xObstacle;
-          let isBlocked = false;
-
-          if (obstacleMode === 'single_slit' && isAtWall) {
-            // Slit open area is y between 54 and 66 (width = 12px)
-            if (y < 54 || y > 66) isBlocked = true;
-          } else if (obstacleMode === 'double_slit' && isAtWall) {
-            // Two slits open: y between 40-48 and 72-80
-            const inSlit1 = y >= 40 && y <= 48;
-            const inSlit2 = y >= 72 && y <= 80;
-            if (!inSlit1 && !inSlit2) isBlocked = true;
-          }
+          const { isBlocked, netHeight } = computeWaveNetHeight(
+            x,
+            y,
+            xObstacle,
+            obstacleMode,
+            source1,
+            source2,
+            k,
+            phaseTime
+          );
 
           if (isBlocked) {
-            // Render physical steel gray wall pixel
-            data[idx] = 71;     // R
-            data[idx + 1] = 85; // G
-            data[idx + 2] = 105; // B
+            data[idx] = 71;
+            data[idx + 1] = 85;
+            data[idx + 2] = 105;
             data[idx + 3] = 255;
             continue;
           }
 
-          // Compute mathematical amplitudes based on wave front boundary zone
-          if (obstacleMode === 'free' || x < xObstacle) {
-            // WAVEFRONT ZONE 1: Normal propagation from primary sources S1 and S2
-            const d1 = Math.sqrt((x - source1.x) ** 2 + (y - source1.y) ** 2);
-            const d2 = Math.sqrt((x - source2.x) ** 2 + (y - source2.y) ** 2);
-
-            const amp1 = 120 / (d1 * 0.12 + 2);
-            const amp2 = 120 / (d2 * 0.12 + 2);
-
-            const h1 = amp1 * Math.cos(k * d1 - t);
-            const h2 = amp2 * Math.cos(k * d2 - t);
-
-            netHeight = h1 + h2;
-
-          } else {
-            // WAVEFRONT ZONE 2 (x >= 75): Huygens-Fresnel Diffraction propagation
-            // Secondary coherent wave front emitters are the slits apertures
-            if (obstacleMode === 'single_slit') {
-              // Single slit source is at (75, 60)
-              const dSlit = Math.sqrt((x - xObstacle) ** 2 + (y - 60) ** 2);
-              
-              // Calculate amplitude at the slit mouth from the primary source (e.g. S1 at left)
-              const dSourceToSlit = Math.sqrt((xObstacle - source1.x) ** 2 + (60 - source1.y) ** 2);
-              const ampAtSlit = 110 / (dSourceToSlit * 0.12 + 2);
-
-              // Secondary wave propagation
-              const ampOut = (ampAtSlit * 1.5) / (dSlit * 0.12 + 2.5);
-              netHeight = ampOut * Math.cos(k * dSlit - t);
-
-            } else if (obstacleMode === 'double_slit') {
-              // Double slit sources at (75, 44) and (75, 76)
-              const dSlit1 = Math.sqrt((x - xObstacle) ** 2 + (y - 44) ** 2);
-              const dSlit2 = Math.sqrt((x - xObstacle) ** 2 + (y - 76) ** 2);
-
-              // Coherent source 1 to slit 1
-              const dSourceToSlit1 = Math.sqrt((xObstacle - source1.x) ** 2 + (44 - source1.y) ** 2);
-              const ampAtSlit1 = 100 / (dSourceToSlit1 * 0.12 + 2);
-
-              // Coherent source 2 to slit 2
-              const dSourceToSlit2 = Math.sqrt((xObstacle - source2.x) ** 2 + (76 - source2.y) ** 2);
-              const ampAtSlit2 = 100 / (dSourceToSlit2 * 0.12 + 2);
-
-              const hSlit1 = (ampAtSlit1 * 1.5) / (dSlit1 * 0.12 + 2.5) * Math.cos(k * dSlit1 - t);
-              const hSlit2 = (ampAtSlit2 * 1.5) / (dSlit2 * 0.12 + 2.5) * Math.cos(k * dSlit2 - t);
-
-              netHeight = hSlit1 + hSlit2;
-            }
-          }
-
-          // Map net Height amplitude (-128 to 128) to high-fidelity plasma pixel colors
           let r = 10, g = 15, b = 30;
-
           if (netHeight >= 0) {
             r = Math.min(255, Math.floor(10 + netHeight * 1.5));
             g = Math.min(255, Math.floor(25 + netHeight * 2.2));
@@ -213,7 +127,7 @@ export const WaveInterferenceSim = () => {
 
       // Draw primary sources overlay if cuve is free or left of barrier
       if (obstacleMode === 'free') {
-        ctx.fillStyle = '#f43f5e'; // S1 Source (Red)
+        ctx.fillStyle = '#f43f5e';
         ctx.beginPath();
         ctx.arc(source1.x, source1.y, 4, 0, Math.PI * 2);
         ctx.fill();
@@ -221,13 +135,12 @@ export const WaveInterferenceSim = () => {
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        ctx.fillStyle = '#06b6d4'; // S2 Source (Blue)
+        ctx.fillStyle = '#06b6d4';
         ctx.beginPath();
         ctx.arc(source2.x, source2.y, 4, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
       } else {
-        // Draw single primary generator source (S1 at left)
         ctx.fillStyle = '#f43f5e';
         ctx.beginPath();
         ctx.arc(source1.x, source1.y, 4, 0, Math.PI * 2);
@@ -238,24 +151,22 @@ export const WaveInterferenceSim = () => {
       }
 
       // Draw active green draggable measurement probe target P(x, y)
-      ctx.strokeStyle = '#22c55e'; // Neon Green
+      ctx.strokeStyle = '#22c55e';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      // Draw crosshair
       ctx.moveTo(probe.x - 6, probe.y);
       ctx.lineTo(probe.x + 6, probe.y);
       ctx.moveTo(probe.x, probe.y - 6);
       ctx.lineTo(probe.x, probe.y + 6);
       ctx.stroke();
 
-      // Outer target ring
       ctx.beginPath();
       ctx.arc(probe.x, probe.y, 4, 0, Math.PI * 2);
       ctx.stroke();
 
       if (isPlaying) {
-        t += omega;
-        if (t > Math.PI * 100) t = 0;
+        phaseTime += omega;
+        if (phaseTime > Math.PI * 100) phaseTime = 0;
       }
 
       animId = requestAnimationFrame(render);
@@ -291,49 +202,17 @@ export const WaveInterferenceSim = () => {
       ctx.lineTo(canvas.width, canvas.height / 2);
       ctx.stroke();
 
-      // Calculate localized math amplitude at probe coordinate
-      const xObstacle = 75;
-      let amp = 0;
-      const k = (2 * Math.PI) / wavelength;
-
-      if (obstacleMode === 'free' || probe.x < xObstacle) {
-        const d1 = Math.sqrt((probe.x - source1.x) ** 2 + (probe.y - source1.y) ** 2);
-        const d2 = Math.sqrt((probe.x - source2.x) ** 2 + (probe.y - source2.y) ** 2);
-        const amp1 = 120 / (d1 * 0.12 + 2);
-        const amp2 = 120 / (d2 * 0.12 + 2);
-        
-        // Compute maximum constructive peak amplitude bounds
-        amp = (amp1 + amp2) * 0.35;
-      } else {
-        if (obstacleMode === 'single_slit') {
-          const dSlit = Math.sqrt((probe.x - xObstacle) ** 2 + (probe.y - 60) ** 2);
-          const dSourceToSlit = Math.sqrt((xObstacle - source1.x) ** 2 + (60 - source1.y) ** 2);
-          const ampAtSlit = 110 / (dSourceToSlit * 0.12 + 2);
-          amp = ((ampAtSlit * 1.5) / (dSlit * 0.12 + 2.5)) * 0.45;
-        } else {
-          const dSlit1 = Math.sqrt((probe.x - xObstacle) ** 2 + (probe.y - 44) ** 2);
-          const dSlit2 = Math.sqrt((probe.x - xObstacle) ** 2 + (probe.y - 76) ** 2);
-          const dSourceToSlit1 = Math.sqrt((xObstacle - source1.x) ** 2 + (44 - source1.y) ** 2);
-          const dSourceToSlit2 = Math.sqrt((xObstacle - source2.x) ** 2 + (76 - source2.y) ** 2);
-          const ampAtSlit1 = 100 / (dSourceToSlit1 * 0.12 + 2);
-          const ampAtSlit2 = 100 / (dSourceToSlit2 * 0.12 + 2);
-
-          amp = (((ampAtSlit1 * 1.5) / (dSlit1 * 0.12 + 2.5)) + ((ampAtSlit2 * 1.5) / (dSlit2 * 0.12 + 2.5))) * 0.35;
-        }
-      }
-
-      // Ensure bounds limit
+      const amp = computeProbeAmplitude(probe, 75, obstacleMode, source1, source2);
       const clampedAmp = Math.min(canvas.height / 2 - 4, amp * 12);
 
       // Draw scrolling sine wave matching wavelength period
-      ctx.strokeStyle = '#22c55e'; // Green
+      ctx.strokeStyle = '#22c55e';
       ctx.lineWidth = 1.75;
       ctx.beginPath();
 
       const steps = canvas.width;
       for (let i = 0; i < steps; i++) {
         const x = i;
-        // z = Amp * cos(kx - omega*t)
         const y = canvas.height / 2 + clampedAmp * Math.cos(i * 0.12 - localPhase);
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -370,7 +249,6 @@ export const WaveInterferenceSim = () => {
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const coords = getCanvasCoords(e);
-    
     const d1 = Math.sqrt((coords.x - source1.x) ** 2 + (coords.y - source1.y) ** 2);
     const d2 = Math.sqrt((coords.x - source2.x) ** 2 + (coords.y - source2.y) ** 2);
     const dP = Math.sqrt((coords.x - probe.x) ** 2 + (coords.y - probe.y) ** 2);
@@ -382,7 +260,7 @@ export const WaveInterferenceSim = () => {
     } else if (obstacleMode === 'free' && d2 < 10) {
       activeDragRef.current = 's2';
     } else if (d1 < 10) {
-      activeDragRef.current = 's1'; // single generator draggable
+      activeDragRef.current = 's1';
     }
   };
 
@@ -396,7 +274,6 @@ export const WaveInterferenceSim = () => {
     if (activeDragRef.current === 'probe') {
       setProbe({ x: xClamped, y: yClamped });
     } else if (activeDragRef.current === 's1') {
-      // S1 generator must stay on the left of dividing wall (x < 75)
       const xGen = Math.min(70, xClamped);
       setSource1({ x: xGen, y: yClamped });
     } else if (activeDragRef.current === 's2') {
@@ -411,7 +288,6 @@ export const WaveInterferenceSim = () => {
 
   // Log currently measured local amplitude to experimental data database table
   const handleLogMeasurement = () => {
-    // Proportional calculation for current probe amplitude
     const xObstacle = 75;
     let amp = 0;
     if (obstacleMode === 'free' || probe.x < xObstacle) {
@@ -440,7 +316,6 @@ export const WaveInterferenceSim = () => {
     setDataLogs([]);
   };
 
-  // Export current list to standard CSV file format
   const handleExportCSV = () => {
     if (dataLogs.length === 0) return;
     const header = "ID,Obstacle,X,Y,Frequency(Hz),Wavelength(px),Amplitude(V)\n";

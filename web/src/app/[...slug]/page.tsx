@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { getPageContent, getNavigationTree, getFirstAvailableLanguage, NavItem, rehypeMdxSanitizer } from '@/lib/content';
+import { getPageContent, getNavigationTree, rehypeMdxSanitizer } from '@/lib/content';
 import { serialize } from 'next-mdx-remote/serialize';
 import { notFound, redirect, unstable_rethrow } from 'next/navigation';
 import { cookies } from 'next/headers';
@@ -11,12 +11,15 @@ import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import { CourseCompletionFeedback } from '@/components/CourseCompletionFeedback';
-import { STATIC_UI_STRINGS, cleanPathSegment, formatCourseLevel, getLocalizedLevelSlug, getLocalizedSubjectSlug, getCoursePath, getCanonicalLevelFromSlug, getCanonicalSubjectFromSlug } from '@/lib/translations';
+import { STATIC_UI_STRINGS, cleanPathSegment, formatCourseLevel, getCoursePath, getCanonicalLevelFromSlug, getCanonicalSubjectFromSlug } from '@/lib/translations';
 import { ExportLessonButton } from '@/components/ExportLessonButton';
-import { ErrorModal } from '@/components/modals/ErrorModal';
 import { dbService } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
-
+import {
+  resolveModuleName,
+  getLocalizedSubject,
+  renderCourseErrorFallback
+} from './_components/SlugRouteHelpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,7 +80,6 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
       if (archivingLevel === 1 && !isAdmin) {
         let isEnrolled = false;
 
-        // First check the op_enrolled_courses cookie (instant and reliable for both mock and remote sessions)
         const enrolledCookie = cookieStore.get('op_enrolled_courses')?.value;
         console.log(`[CoursePage Guard] enrolledCookie raw value:`, enrolledCookie);
         if (enrolledCookie) {
@@ -90,7 +92,6 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
           } catch (e) {}
         }
 
-        // If not found in cookie and userId exists, do a DB query fallback to be extra robust
         if (!isEnrolled && userId) {
           const { data: progressData } = await dbService.getUserProgress(userId, lang);
           console.log(`[CoursePage Guard] dbService.getUserProgress returned progressData:`, progressData);
@@ -124,7 +125,6 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
             .eq('lang', lang.toLowerCase());
           
           if (!count || count === 0) {
-            // Fallback check: find the first available language for this course
             const { data: otherLangs } = await supabase
               .from('lessons')
               .select('lang')
@@ -154,7 +154,6 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     if (slug.length === 3 || (slug.length === 4 && slug[3] === 'introduction')) {
       const courseSlug = slug[2];
       try {
-        // Check if the slug corresponds to a curriculum
         const { data: courseData } = await dbService.getSyllabus(courseSlug);
         if (courseData?.isCurriculum && courseData.childCourses && courseData.childCourses.length > 0) {
           const { data: allCourses } = await dbService.getAllCourses();
@@ -238,7 +237,6 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     const normalizedLangCode = (lang.toUpperCase().split('-')[0]) as keyof typeof STATIC_UI_STRINGS;
     const t = STATIC_UI_STRINGS[normalizedLangCode] || STATIC_UI_STRINGS.EN;
 
-    // Serialize MDX on the server — safe to pass to client components
     const mdxSource = await serialize(pageData.content, {
       mdxOptions: {
         remarkPlugins: [remarkMath, remarkGfm],
@@ -268,230 +266,11 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
 
     const title = pageData.meta.title || 'Untitled Module';
     const subject = pageData.meta.subject || 'Academic Content';
-    
-    let moduleName = pageData.meta.module || t.overview || STATIC_UI_STRINGS.EN.overview;
-    if (moduleName.toLowerCase() === 'core module') {
-      const lUpper = lang.toUpperCase();
-      if (lUpper === 'FR') moduleName = "Module Principal";
-      else if (lUpper === 'ES') moduleName = "Módulo Principal";
-      else if (lUpper === 'DE') moduleName = "Kernmodul";
-      else if (lUpper === 'ZH') moduleName = "核心模块";
-      else if (lUpper === 'PT') moduleName = "Módulo Principal";
-      else if (lUpper === 'AR') moduleName = "الوحدة الرئيسية";
-      else if (lUpper === 'HI') moduleName = "मुख्य मॉड्यूल";
-      else if (lUpper === 'UR') moduleName = "بنیادی ماڈیول";
-    }
-    
+    const moduleName = resolveModuleName(pageData.meta.module, lang, t);
     const level = pageData.meta.level || 'L1';
     const courseSlug = slug[2];
     const { data: courseData } = await dbService.getSyllabus(courseSlug);
     const courseVersion = courseData?.version || '1.0';
-
-    const getLocalizedCoreModule = (currentLang: string, lvl: string) => {
-      const lUpper = currentLang.toUpperCase();
-      let moduleLabel = "Core Module";
-      if (lUpper === 'FR') moduleLabel = "Module Principal";
-      else if (lUpper === 'ES') moduleLabel = "Módulo Principal";
-      else if (lUpper === 'DE') moduleLabel = "Kernmodul";
-      else if (lUpper === 'ZH') moduleLabel = "核心模块";
-      else if (lUpper === 'PT') moduleLabel = "Módulo Principal";
-      else if (lUpper === 'AR') moduleLabel = "الوحدة الرئيسية";
-      else if (lUpper === 'HI') moduleLabel = "मुख्य मॉड्यूल";
-      else if (lUpper === 'UR') moduleLabel = "بنیادی ماڈیول";
-
-      const lvlStr = String(lvl).toUpperCase();
-      let lvlVal = lvlStr;
-      if (lvlStr === 'L1') {
-        if (lUpper === 'EN') lvlVal = '101';
-        else if (lUpper === 'ZH') lvlVal = '大一 (101)';
-        else lvlVal = 'L1 (101)';
-      } else if (lvlStr === 'L2') {
-        if (lUpper === 'EN') lvlVal = '201';
-        else if (lUpper === 'ZH') lvlVal = '大二 (201)';
-        else lvlVal = 'L2 (201)';
-      } else if (lvlStr === 'L3') {
-        if (lUpper === 'EN') lvlVal = '301';
-        else if (lUpper === 'ZH') lvlVal = '大三 (301)';
-        else lvlVal = 'L3 (301)';
-      } else if (lvlStr === 'M1') {
-        if (lUpper === 'EN') lvlVal = '501';
-        else if (lUpper === 'ZH') lvlVal = '研一 (501)';
-        else lvlVal = 'M1 (501)';
-      } else if (lvlStr === 'M2') {
-        if (lUpper === 'EN') lvlVal = '502';
-        else if (lUpper === 'ZH') lvlVal = '研二 (502)';
-        else lvlVal = 'M2 (502)';
-      } else if (/^\d+$/.test(lvlStr)) {
-        const num = parseInt(lvlStr, 10);
-        if (lUpper === 'ZH') lvlVal = `${num}年级`;
-        else if (lUpper === 'EN') lvlVal = `Grade ${num}`;
-        else if (lUpper === 'FR') lvlVal = `Niveau ${num}`;
-        else if (lUpper === 'ES') lvlVal = `Grado ${num}`;
-        else if (lUpper === 'DE') lvlVal = `Klasse ${num}`;
-        else if (lUpper === 'PT') lvlVal = `Ano ${num}`;
-        else if (lUpper === 'AR') lvlVal = `الصف ${num}`;
-        else if (lUpper === 'HI') lvlVal = `कक्षा ${num}`;
-        else if (lUpper === 'UR') lvlVal = `کلاس ${num}`;
-      }
-
-      return `${moduleLabel} • ${lvlVal}`;
-    };
-
-    const getLocalizedSubject = (currentLang: string, sub: string) => {
-      const lUpper = currentLang.toUpperCase();
-      const subLower = sub.toLowerCase().trim();
-
-      const formatSubjectName = (str: string): string => {
-        if (!str) return '';
-        if (str.includes('_') || str === str.toUpperCase()) {
-          return str
-            .split('_')
-            .map(word => {
-              if (word.length <= 3 && !['ET', 'DE', 'LA', 'LE', 'UN', 'UNE', 'DU', 'AU', 'AUX', 'EN', 'SUR', 'DES'].includes(word.toUpperCase())) {
-                return word.toUpperCase();
-              }
-              const lower = word.toLowerCase();
-              if (['et', 'de', 'la', 'le', 'un', 'une', 'du', 'au', 'aux', 'en', 'sur', 'pour', 'des'].includes(lower)) {
-                return lower;
-              }
-              // Preserve accents if already present, but capitalize first letter
-              return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-            })
-            .join(' ')
-            .replace(/^\w/, c => c.toUpperCase());
-        }
-        return str;
-      };
-
-      const dict: Record<string, Record<string, string>> = {
-        physics: {
-          EN: "Physics",
-          FR: "Physique",
-          ES: "Física",
-          DE: "Physik",
-          ZH: "物理",
-          IT: "Fisica",
-          PT: "Física",
-          AR: "الفيزياء",
-          HI: "भौतिक विज्ञान",
-          UR: "طبیعیات"
-        },
-        "classical mechanics": {
-          EN: "Classical Mechanics",
-          FR: "Mécanique Classique",
-          ES: "Mecánica Clásica",
-          DE: "Klassische Mechanik",
-          ZH: "经典力学",
-          IT: "Meccanica Classica",
-          PT: "Mecânica Clásica",
-          AR: "الميكانيكا الكلاسيكية",
-          HI: "शास्त्रीय यांत्रिकी",
-          UR: "کلاسیکی میکانکس"
-        },
-        biology: {
-          EN: "Biology",
-          FR: "Biologie",
-          ES: "Biología",
-          DE: "Biologie",
-          ZH: "生物",
-          IT: "Biologia",
-          PT: "Biologia",
-          AR: "علم الأحياء",
-          HI: "जीव विज्ञान",
-          UR: "حیاتیات"
-        },
-        chemistry: {
-          EN: "Chemistry",
-          FR: "Chimie",
-          ES: "Química",
-          DE: "Chemie",
-          ZH: "化学",
-          IT: "Chimica",
-          PT: "Química",
-          AR: "الكيمياء",
-          HI: "रसायन विज्ञान",
-          UR: "کیمسٹری"
-        },
-        law: {
-          EN: "Law",
-          FR: "Droit",
-          ES: "Derecho",
-          DE: "Recht",
-          ZH: "法律",
-          IT: "Diritto",
-          PT: "Direito",
-          AR: "القانون",
-          HI: "कानून",
-          UR: "قانون"
-        },
-        mathematics: {
-          EN: "Mathematics",
-          FR: "Mathématiques",
-          ES: "Matemáticas",
-          DE: "Mathematik",
-          ZH: "数学",
-          IT: "Matematica",
-          PT: "Matemática",
-          AR: "الرياضيات",
-          HI: "गणित",
-          UR: "ریاضی"
-        },
-        economics: {
-          EN: "Economics",
-          FR: "Économie",
-          ES: "Economía",
-          DE: "Wirtschaft",
-          ZH: "经济学",
-          IT: "Economia",
-          PT: "Economia",
-          AR: "الاقتصاد",
-          HI: "अर्थशास्त्र",
-          UR: "معاشیات"
-        },
-        "computer science": {
-          EN: "Computer Science",
-          FR: "Informatique",
-          ES: "Informática",
-          DE: "Informatik",
-          ZH: "计算机科学",
-          IT: "Informatica",
-          PT: "Ciência da Computação",
-          AR: "علوم الحاسوب",
-          HI: "कंप्यूटर विज्ञान",
-          UR: "کمپ्यूटर سائنس"
-        },
-        cs: {
-          EN: "Computer Science",
-          FR: "Informatique",
-          ES: "Informática",
-          DE: "Informatik",
-          ZH: "计算机科学",
-          IT: "Informatica",
-          PT: "Ciência da Computação",
-          AR: "علوم الحاسوب",
-          HI: "कंप्यूटर विज्ञान",
-          UR: "کمپ्यूटर سائنس"
-        },
-        history: {
-          EN: "History",
-          FR: "Histoire",
-          ES: "Historia",
-          DE: "Geschichte",
-          ZH: "历史",
-          IT: "Storia",
-          PT: "História",
-          AR: "التاريخ",
-          HI: "इतिहास",
-          UR: "تاریخ"
-        }
-      };
-
-      if (dict[subLower] && dict[subLower][lUpper]) {
-        return dict[subLower][lUpper];
-      }
-      return formatSubjectName(sub);
-    };
-
 
     return (
       <CourseClientWrapper 
@@ -562,7 +341,6 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
               lang={lang}
             />
           )}
-          {/* Removed auto-switch script injection */}
         </div>
       </CourseClientWrapper>
     );
@@ -577,123 +355,6 @@ export default async function CoursePage({ params }: { params: { slug: string[] 
     }
     unstable_rethrow(err);
     console.error("CRITICAL ERROR IN CoursePage:", err);
-    
-    // In background, log the issue to the database
-    let pagePath = 'Unknown Page';
-    let courseSlug = 'general';
-    try {
-      pagePath = (slug && slug.length > 0) ? slug.join('/') : 'Unknown Page';
-      courseSlug = (slug && slug[2]) || 'general';
-      const errorMessage = err?.stack || err?.message || String(err);
-      
-      await dbService.submitReport(
-        courseSlug,
-        pagePath,
-        `[CRITICAL RENDERING EXCEPTION] ${errorMessage}`
-      );
-      console.log(`[ERROR AUTO-REPORT] Logged rendering error for page ${pagePath}`);
-    } catch (reportErr) {
-      console.error("Failed to submit error report:", reportErr);
-    }
-
-    // Try to construct navigation data so the user has the sidebar context and can go to the next page
-    let navItems: any[] = [];
-    let nextPage: any = null;
-    let title = 'Error';
-    let subject = 'Academic Content';
-    let moduleName = 'Overview';
-    
-    try {
-      const coursePath = slug.slice(0, 3).join('/');
-      const rawNav = await getNavigationTree(coursePath, lang);
-      const normalizedLangCode = (lang.toUpperCase().split('-')[0]) as keyof typeof STATIC_UI_STRINGS;
-      const t = STATIC_UI_STRINGS[normalizedLangCode] || STATIC_UI_STRINGS.EN;
-      
-      const files = rawNav.filter(item => item.type === 'file');
-      const folders = rawNav.filter(item => item.type === 'folder');
-      
-      navItems = [
-        ...(files.length > 0 ? [{ name: t.overview || STATIC_UI_STRINGS.EN.overview, type: 'folder', children: files }] : []),
-        ...folders
-      ];
-
-      const flatPages: any[] = [];
-      navItems.forEach(folder => {
-        folder.children?.forEach((p: any) => {
-          flatPages.push(p);
-        });
-      });
-
-      const currentPath = `/${slug.join('/')}`;
-      const currentIndex = flatPages.findIndex(p => p.path === currentPath);
-      nextPage = currentIndex !== -1 && currentIndex < flatPages.length - 1 ? flatPages[currentIndex + 1] : null;
-
-      if (pageData) {
-        title = pageData.meta.title || 'Untitled Module';
-        subject = pageData.meta.subject || 'Academic Content';
-        moduleName = pageData.meta.module || t.overview || STATIC_UI_STRINGS.EN.overview;
-      }
-    } catch (e) {
-      console.warn("Failed to generate sidebar for error view fallback:", e);
-    }
-
-    if (navItems.length > 0) {
-      return (
-        <CourseClientWrapper 
-          navItems={navItems} 
-          pageContext={pageData?.content || ''}
-          courseLevel={formatCourseLevel(pageData?.meta?.level || 'L1', lang)}
-          courseTitle={title}
-          courseSubject={subject}
-          courseLang={lang}
-        >
-          <div className="max-w-4xl mx-auto py-16 px-12 pb-40 relative min-h-[600px]">
-            {/* Blurred background layout to give context */}
-            <div className="filter blur-md opacity-30 select-none pointer-events-none">
-              <div className="flex items-center justify-between gap-4 mb-12">
-                <div className="flex items-center gap-2 text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">
-                  <span>{subject}</span>
-                  <ChevronRight className="w-3 h-3 text-slate-800" />
-                  <span>{moduleName}</span>
-                  <ChevronRight className="w-3 h-3 text-slate-800" />
-                  <span className="text-blue-500">{title}</span>
-                </div>
-              </div>
-              <header className="mb-12">
-                <h1 className="text-3xl md:text-5xl font-black mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-emerald-400 leading-tight">
-                  {title}
-                </h1>
-                <div className="w-16 h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500 rounded-full" />
-              </header>
-              <article className="prose prose-invert prose-slate max-w-none">
-                <p>This course content could not be rendered due to a formatting anomaly in the module source. Please proceed using the navigation controls.</p>
-              </article>
-            </div>
-
-            <ErrorModal 
-              lang={lang} 
-              subject={subject} 
-              title={title} 
-              nextPagePath={nextPage ? nextPage.path : null} 
-            />
-          </div>
-        </CourseClientWrapper>
-      );
-    }
-
-    return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-        {/* Glow ambient background effects */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-900/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] bg-slate-900/30 rounded-full blur-[100px] pointer-events-none" />
-
-        <ErrorModal 
-          lang={lang} 
-          subject={subject} 
-          title={title} 
-          nextPagePath={nextPage ? nextPage.path : null} 
-        />
-      </div>
-    );
+    return renderCourseErrorFallback(err, slug, lang, pageData);
   }
 }
