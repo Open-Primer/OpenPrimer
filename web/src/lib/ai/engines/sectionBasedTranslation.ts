@@ -1,5 +1,5 @@
-import { isVertexConfigured, callVertexAI } from '../vertex-client';
-import { isolateJsxForTranslation, restoreJsxAfterTranslation } from '../content';
+import { isVertexConfigured, callVertexAI } from '@/lib/vertex-client';
+import { isolateJsxForTranslation, restoreJsxAfterTranslation } from '@/lib/content';
 import { cleanPathSegment } from '../../translations';
 
 export async function cascadeCurriculumTranslation(
@@ -157,7 +157,7 @@ function parseJointRepairOutput(output: string): Map<string, string> {
 // WFTA schemas and dynamic schema generators extracted to ./ai/schemas
 
 
-async function performSectionBasedTranslation(
+export async function performSectionBasedTranslation(
   lesson: { title: string; content: string; lesson_slug: string },
   targetLang: string,
   apiKey: string | undefined | null,

@@ -1,15 +1,15 @@
-import { locale as arLocale } from '../../admin/curriculum/locales/ar';
-import { locale as deLocale } from '../../admin/curriculum/locales/de';
-import { locale as enLocale } from '../../admin/curriculum/locales/en';
-import { locale as esLocale } from '../../admin/curriculum/locales/es';
-import { locale as frLocale } from '../../admin/curriculum/locales/fr';
-import { locale as hiLocale } from '../../admin/curriculum/locales/hi';
-import { locale as ptLocale } from '../../admin/curriculum/locales/pt';
-import { locale as urLocale } from '../../admin/curriculum/locales/ur';
-import { locale as zhLocale } from '../../admin/curriculum/locales/zh';
+import { locale as arLocale } from '@/app/admin/curriculum/locales/ar';
+import { locale as deLocale } from '@/app/admin/curriculum/locales/de';
+import { locale as enLocale } from '@/app/admin/curriculum/locales/en';
+import { locale as esLocale } from '@/app/admin/curriculum/locales/es';
+import { locale as frLocale } from '@/app/admin/curriculum/locales/fr';
+import { locale as hiLocale } from '@/app/admin/curriculum/locales/hi';
+import { locale as ptLocale } from '@/app/admin/curriculum/locales/pt';
+import { locale as urLocale } from '@/app/admin/curriculum/locales/ur';
+import { locale as zhLocale } from '@/app/admin/curriculum/locales/zh';
 
 
-const LOCALES: Record<string, Record<string, string>> = {
+export const LOCALES: Record<string, Record<string, string>> = {
   AR: arLocale,
   DE: deLocale,
   EN: enLocale,
@@ -21,7 +21,7 @@ const LOCALES: Record<string, Record<string, string>> = {
   ZH: zhLocale,
 };
 
-const MOBILE_OFFLINE_STRINGS: Record<string, Record<string, string>> = {
+export const MOBILE_OFFLINE_STRINGS: Record<string, Record<string, string>> = {
   FR: {
     offline_title: "Vous êtes hors-ligne",
     offline_subtitle: "Vérifiez votre connexion internet pour accéder à l'intégralité d'OpenPrimer.",

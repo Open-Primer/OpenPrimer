@@ -5,7 +5,7 @@
  * and automated structural repair for all lesson interactive widgets.
  */
 
-import { callVertexAI } from '../vertex-client';
+import { callVertexAI } from '@/lib/vertex-client';
 import {
   resolvePersonDates,
   isPlaceholderDates,
@@ -14,13 +14,13 @@ import {
   resolveChemicalData,
   resolveScientificFormula,
   resolveGoingFurtherResource
-} from '../wikidata-resolver';
+} from '@/lib/wikidata-resolver';
 import {
   resolveMediaImage,
   searchYouTubeVideo,
   fetchWikimediaAudio,
   fetchWithTimeout
-} from '../media-resolver';
+} from '@/lib/media-resolver';
 
 export function getDisciplineFallbackSentence(discipline?: string, lang: string = 'fr'): { sentence: string; answer: string } {
   const normDisc = (discipline || '').toLowerCase();

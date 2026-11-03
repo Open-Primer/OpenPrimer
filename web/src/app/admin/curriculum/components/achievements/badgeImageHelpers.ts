@@ -1,7 +1,7 @@
 import React from 'react';
 
 
-  const getGradientColors = (gradient: string): [string, string] => {
+  export const getGradientColors = (gradient: string): [string, string] => {
     const map: Record<string, [string, string]> = {
       'from-violet-500 to-fuchsia-600': ['#8b5cf6', '#d946ef'],
       'from-amber-400 to-orange-500': ['#fbbf24', '#f97316'],
@@ -49,7 +49,7 @@ import React from 'react';
     return map[gradient] || ['#8b5cf6', '#d946ef'];
   };
 
-  const getLucideIconPath = (iconName: string): string => {
+  export const getLucideIconPath = (iconName: string): string => {
     try {
       const IconComp = LUCIDE_ICONS[iconName];
       if (!IconComp) return '';
@@ -86,7 +86,7 @@ import React from 'react';
     return '';
   };
 
-  const resolveBadgeIconToBase64 = async (iconKey: string): Promise<string> => {
+  export const resolveBadgeIconToBase64 = async (iconKey: string): Promise<string> => {
     if (iconKey.startsWith('data:image') || iconKey.startsWith('http')) {
       return await resizeAndStandardizeImage(iconKey);
     }
@@ -127,7 +127,7 @@ import React from 'react';
     }
   };
 
-  const resolveBadgeIconToBase64Sync = (iconKey: string): string => {
+  export const resolveBadgeIconToBase64Sync = (iconKey: string): string => {
     if (!iconKey) return '';
     if (iconKey.startsWith('data:image') || iconKey.startsWith('http')) {
       return iconKey;
@@ -169,7 +169,7 @@ import React from 'react';
     }
   };
 
-  const resizeAndStandardizeImage = (imageSrc: string): Promise<string> => {
+  export const resizeAndStandardizeImage = (imageSrc: string): Promise<string> => {
     return new Promise((resolve) => {
       if (imageSrc && (imageSrc.includes('image/svg+xml') || imageSrc.startsWith('<svg') || imageSrc.includes('.svg'))) {
         resolve(imageSrc);

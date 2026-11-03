@@ -35,7 +35,7 @@ export interface PronunciationTranslation {
 }
 
 export   // UI Localizations — 9-locale registry
-  const PRONUNCIATION_STRINGS: Record<string, {
+  export const PRONUNCIATION_STRINGS: Record<string, {
     title: string; subtitle: string; ipaLabel: string; playRef: string;
 
     record: string; stop: string; listening: string; resultTitle: string;

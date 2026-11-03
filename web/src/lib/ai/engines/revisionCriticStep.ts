@@ -1,4 +1,4 @@
-import { callVertexAI } from '../vertex-client';
+import { callVertexAI } from '@/lib/vertex-client';
 import { extractAndInjectCitations } from '../stitcher';
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;

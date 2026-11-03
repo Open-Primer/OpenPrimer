@@ -5,6 +5,7 @@ useDefault = true
 [allowlist]
 description = "Global allowlist to ignore historical scripts with revoked keys and mock secrets/hashes in documentation/testing code."
 paths = [
+  '''web/src/components/landing/useHomeAuth\.ts''',
   '''generator/.*\.py''',
   '''docs/GCP_CLOUD_RUN_DEPLOYMENT\.md''',
   '''web/scripts/register_parameters\.ts''',

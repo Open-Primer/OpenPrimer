@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '../../supabase';
 import { cleanPathSegment } from '../../translations';
-import { callVertexAI } from '../vertex-client';
+import { callVertexAI } from '@/lib/vertex-client';
 import { generateStatsMarkdown } from './statsGenerators';
 import { generateSyllabusStep } from './syllabusArchitect';
 import { runScribeStep } from './scribeGenerator';

@@ -1,5 +1,4 @@
-import { evaluateMdxComponents, stripJsxAndRenderMdx } from '../mdx-evaluator';
-import { rehypeMdxSanitizer } from '../content';
+import { rehypeMdxSanitizer, preprocessMdx, resolvePrecompiledAnchors } from '@/lib/content';
 
 function stripJsxComments(mdx: string): string {
   const tagRegex = /<([A-Z][a-zA-Z0-9]*)([\s\S]*?)(\/?>)/g;

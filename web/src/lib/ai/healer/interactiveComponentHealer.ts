@@ -1,8 +1,7 @@
 import { healWikidataEntities } from './wikidataEntityHealer';
 import { detectLanguageLeakage, translateText } from './languageLeakageDetector';
-import { queryWikidataBirthDeath, queryWikidataEventDates, queryWikidataChemicalCompound, queryWikidataConceptFormula } from '../wikidata-resolver';
-import { resolveImageFromSources, compileFinalLabel } from '../media-resolver';
-import { callVertexAI } from '../vertex-client';
+import { resolveImageFromSources, compileFinalLabel } from '@/lib/media-resolver';
+import { callVertexAI } from '@/lib/vertex-client';
 
 const FORMULA_SUFFIX_MAP: Record<string, string> = {
   FR: ' (formule)',

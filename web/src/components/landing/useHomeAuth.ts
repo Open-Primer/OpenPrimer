@@ -1,7 +1,7 @@
 import React from 'react';
 import { dbService } from '@/lib/db';
-import { getLocalString } from '@/lib/translations';
-import { getAuthStrings } from '../components/landing/landingStrings';
+
+import { getLocalString, AUTH_STRINGS } from './landingStrings';
 
 interface UseHomeAuthProps {
   lang: string;
@@ -273,7 +273,7 @@ export function useHomeAuth({
 
       if (matchedUser) {
         const inputHash = dbService.hashPassword(password);
-        const expectedPassword = matchedUser.password || '832a760c15b462e3b6015fb4ffe6390e9df7d454a9185da8c77b3025a22c6d80';
+        const expectedPassword = matchedUser.password || '';
         const isPasswordCorrect = expectedPassword === inputHash || expectedPassword === password;
 
         if (isPasswordCorrect) {

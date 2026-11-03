@@ -62,7 +62,7 @@ export const extractPrompts = (nodes: React.ReactNode[]): string[] => {
   return prompts;
 };
 
-const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { childrenArray: React.ReactNode[]; durationLimit?: number }) => {
+export const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { childrenArray: React.ReactNode[]; durationLimit?: number }) => {
   const { language } = useLanguage();
   const langKey = (language || 'EN').toUpperCase() as keyof typeof SUMMATIVE_STRINGS;
   const t = SUMMATIVE_STRINGS[langKey] || SUMMATIVE_STRINGS.EN;

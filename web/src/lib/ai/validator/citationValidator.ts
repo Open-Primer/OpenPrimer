@@ -1,5 +1,5 @@
 import { isUrlReachable } from './urlReachability';
-import { callVertexAI } from '../vertex-client';
+import { callVertexAI } from '@/lib/vertex-client';
 
 export function simplifyCitationQuery(citationText: string): string {
   let cleanText = citationText

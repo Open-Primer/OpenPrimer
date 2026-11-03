@@ -3,8 +3,8 @@
  * @description Standalone CSS styles generator for exported HTML lessons and SCORM packages.
  */
 
-export // Shared premium CSS design to make exported HTML look premium and wow the user
-  const getPremiumStyles = () => {
+// Shared premium CSS design to make exported HTML look premium and wow the user
+export const getPremiumStyles = () => {
     return `
       @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
       

@@ -4,18 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Send, Bot, RotateCcw, AlertTriangle, CheckCircle, HelpCircle, ChevronRight, MessageSquare, Volume2, VolumeX, Mic, MicOff, BookOpen, Layers, Check, RefreshCw } from 'lucide-react';
 import { dbService, TutorPersonality } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
-import {
-  UI_STRINGS,
-  TUTOR_LOCAL_STRINGS,
-  isFrancophoneLocale,
-  extractFlashcardsFromContext,
-  getTutorPersonaPrompt
-} from './overlay/tutorStringsAndHelpers';
+import { UI_STRINGS } from '@/lib/translations';
+import { TUTOR_LOCAL_STRINGS, extractFlashcardsFromContext } from './overlay/tutorStringsAndHelpers';
 import { useTutorVoiceInput } from './overlay/useTutorVoiceInput';
 import { useTutorCoach } from './overlay/useTutorCoach';
 import { useTutorFlashcards } from './overlay/useTutorFlashcards';
 import { useTutorAuthAndPersona } from './overlay/useTutorAuthAndPersona';
-import { TutorPanelsAndModals } from './overlay/TutorPanelsAndModals';
+import { TutorFlashcardsPanel, TutorSelectorModal, TutorCoachPopover } from './overlay/TutorPanelsAndModals';
 import { TutorInputArea } from './overlay/TutorInputArea';
 import { getQuickActions, getDashboardQuickActions } from './overlay/quickActions';
 import { TutorMessageContent } from './overlay/TutorMessageContent';

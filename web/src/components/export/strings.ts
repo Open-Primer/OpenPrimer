@@ -450,3 +450,5 @@ export const REVISION_TRANSLATIONS = {
     taskTitle: "┘àÏ┤┘é / ┌®Ïº┘à"
   }
 };
+
+export type ExportStrings = typeof MODAL_TRANSLATIONS.EN;

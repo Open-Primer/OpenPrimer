@@ -57,7 +57,7 @@ const generateOrbitalMesh = (
 };
 
 // Generates the meshes for standard and hybrid presets
-const generateMeshForPreset = (presetId: string): Mesh[] => {
+export const generateMeshForPreset = (presetId: string): Mesh[] => {
   const meshes: Mesh[] = [];
 
   switch (presetId) {
@@ -272,7 +272,7 @@ const generateMeshForPreset = (presetId: string): Mesh[] => {
 };
 
 // Custom mesh generator for arbitrary quantum numbers n, l, m
-const generateCustomMesh = (n: number, l: number, m: number): Mesh[] => {
+export const generateCustomMesh = (n: number, l: number, m: number): Mesh[] => {
   const meshes: Mesh[] = [];
   const numShells = n - l;
   

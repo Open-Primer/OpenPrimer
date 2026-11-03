@@ -10,7 +10,8 @@ import { validateAndFixExternalResources } from '../resource-validator';
 import { deduplicateLessonWidgetsAndReferences } from './deduplicationHelpers';
 import { validateMdxContent } from './mdxValidator';
 import { healMdxWithAI } from './mdxHealer';
-import { saveDraftRevision, generateStatsMarkdown } from './coreUtils';
+import { saveDraftRevision } from './coreUtils';
+import { generateStatsMarkdown } from './statsGenerators';
 
 export async function persistLesson(
   item: any,

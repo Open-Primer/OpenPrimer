@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DISCIPLINES, getDisciplineLabel, ACADEMIC_LEVELS } from '../strings';
+import { DISCIPLINES, getDisciplineLabel, ACADEMIC_LEVELS } from '../../strings';
 
 interface UseWidgetAdminStateProps {
   adminId: string;
@@ -87,3 +87,5 @@ export function useWidgetAdminConcurrency({ adminId, setAdminId, showToast, tr }
     releaseLock
   };
 }
+
+export const useWidgetConcurrency = useWidgetAdminConcurrency;

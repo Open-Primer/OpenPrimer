@@ -1,7 +1,7 @@
 import { LOCALES } from './profileLocales';
 import { formatCourseLevel } from '@/lib/translations';
 
-function getConflictDescription(conflict: any, lang: string): string {
+export function getConflictDescription(conflict: any, lang: string): string {
   const langKey = lang.toUpperCase();
   const isDe = lang.toUpperCase() === 'DE';
   const isZh = lang.toUpperCase() === 'ZH';
@@ -457,13 +457,13 @@ const ELECTIVE_FORMATTERS: Record<string, (enrolled: number, min: number, isComp
   EN: (enrolled, min, isCompliant) => `${enrolled} of ${min} optional course(s) chosen — ${isCompliant ? 'Compliant' : 'Selection required'}`
 };
 
-function getElectiveDescription(enrolled: number, min: number, isCompliant: boolean, lang: string): string {
+export function getElectiveDescription(enrolled: number, min: number, isCompliant: boolean, lang: string): string {
   const l = (lang || 'en').toUpperCase();
   const fn = ELECTIVE_FORMATTERS[l] || ELECTIVE_FORMATTERS.EN;
   return fn(enrolled, min, isCompliant);
 }
 
-function getAchievementTranslation(ach: any, field: 'name' | 'description', lang: string): string {
+export function getAchievementTranslation(ach: any, field: 'name' | 'description', lang: string): string {
   const upperLang = (lang || 'EN').toUpperCase();
   const dynamicVal = ach.translations?.[upperLang]?.[field] || ach.translations?.[lang.toLowerCase()]?.[field];
   if (dynamicVal) return dynamicVal;

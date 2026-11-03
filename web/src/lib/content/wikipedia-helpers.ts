@@ -27,7 +27,7 @@ ${text}`;
 }
 
 // ── Local glossary fuzzy-match helpers ───────────────────────────────────────
-function cleanStringForMatching(s: string): string {
+export function cleanStringForMatching(s: string): string {
   return s
     .toLowerCase()
     .normalize('NFD')
@@ -92,7 +92,7 @@ export function parseLocalGlossary(content: string): Map<string, { definition: s
  * Finds the best matching glossary entry for a query term using fuzzy matching.
  * Returns null if no sufficiently close match is found.
  */
-function findGlossaryMatch(
+export function findGlossaryMatch(
   queryName: string,
   glossaryMap: Map<string, { definition: string; url?: string }>
 ): { definition: string; url?: string } | null {

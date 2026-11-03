@@ -1,4 +1,4 @@
-import { callVertexAI } from '../vertex-client';
+import { callVertexAI } from '@/lib/vertex-client';
 
 export async function correctCourseTitle(title: string, targetLang: string = 'en', translateToTargetLang = true): Promise<string> {
   const cleanTitle = title.trim();

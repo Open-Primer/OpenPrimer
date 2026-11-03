@@ -1,3 +1,6 @@
+export const toPascalCase = (str: string): string => {
+  return str.replace(/[^a-zA-Z0-9]/g, ' ').split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+};
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -8,36 +11,36 @@ import {
   Copy, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DISCIPLINES, getDisciplineLabel, ACADEMIC_LEVELS } from '../strings';
-import { Mermaid } from '../../../../components/mdx/Mermaid';
+import { DISCIPLINES, getDisciplineLabel, ACADEMIC_LEVELS } from '../../strings';
+import { Mermaid } from '@/components/mdx/Mermaid';
 
 // Statically import the 14 rich pedagogical widgets for safe live-rendering
-import { StructureViewer3D } from '../../../../components/mdx/StructureViewer3D';
-import { QuantumOrbitalExplorer } from '../../../../components/mdx/QuantumOrbitalExplorer';
-import { DynamicSimulation } from '../../../../components/mdx/DynamicSimulation';
-import { ChemicalStoichiometry } from '../../../../components/mdx/ChemicalStoichiometry';
-import { BasicMathExplorer } from '../../../../components/mdx/BasicMathExplorer';
-import { FunctionPlotter } from '../../../../components/mdx/FunctionPlotter';
-import { ComparisonSlider } from '../../../../components/mdx/ComparisonSlider';
-import { CodeSandbox } from '../../../../components/mdx/CodeSandbox';
-import { DataChart } from '../../../../components/mdx/DataChart';
-import { InteractiveDiagram } from '../../../../components/mdx/InteractiveDiagram';
-import { FunctionManipulator } from '../../../../components/mdx/FunctionManipulator';
-import { EquationManipulator } from '../../../../components/mdx/EquationManipulator';
-import { Geometry2D } from '../../../../components/mdx/Geometry2D';
-import { GestaltInteractive } from '../../../../components/mdx/GestaltInteractive';
-import { LogicGateSimulator } from '../../../../components/mdx/LogicGateSimulator';
-import { GeneticsPedigreeLab } from '../../../../components/mdx/GeneticsPedigreeLab';
-import { OrbitalMechanicsSim } from '../../../../components/mdx/OrbitalMechanicsSim';
-import { PeriodicTable } from '../../../../components/mdx/PeriodicTable';
-import { SolarSystemOrrery } from '../../../../components/mdx/SolarSystemOrrery';
-import { FinancialChart } from '../../../../components/mdx/FinancialChart';
-import { WaveInterferenceSim } from '../../../../components/mdx/WaveInterferenceSim';
-import { AcousticPianoSynth } from '../../../../components/mdx/AcousticPianoSynth';
-import { SankeyDiagram } from '../../../../components/mdx/SankeyDiagram';
+import { StructureViewer3D } from '@/components/mdx/StructureViewer3D';
+import { QuantumOrbitalExplorer } from '@/components/mdx/QuantumOrbitalExplorer';
+import { DynamicSimulation } from '@/components/mdx/DynamicSimulation';
+import { ChemicalStoichiometry } from '@/components/mdx/ChemicalStoichiometry';
+import { BasicMathExplorer } from '@/components/mdx/BasicMathExplorer';
+import { FunctionPlotter } from '@/components/mdx/FunctionPlotter';
+import { ComparisonSlider } from '@/components/mdx/ComparisonSlider';
+import { CodeSandbox } from '@/components/mdx/CodeSandbox';
+import { DataChart } from '@/components/mdx/DataChart';
+import { InteractiveDiagram } from '@/components/mdx/InteractiveDiagram';
+import { FunctionManipulator } from '@/components/mdx/FunctionManipulator';
+import { EquationManipulator } from '@/components/mdx/EquationManipulator';
+import { Geometry2D } from '@/components/mdx/Geometry2D';
+import { GestaltInteractive } from '@/components/mdx/GestaltInteractive';
+import { LogicGateSimulator } from '@/components/mdx/LogicGateSimulator';
+import { GeneticsPedigreeLab } from '@/components/mdx/GeneticsPedigreeLab';
+import { OrbitalMechanicsSim } from '@/components/mdx/OrbitalMechanicsSim';
+import { PeriodicTable } from '@/components/mdx/PeriodicTable';
+import { SolarSystemOrrery } from '@/components/mdx/SolarSystemOrrery';
+import { FinancialChart } from '@/components/mdx/FinancialChart';
+import { WaveInterferenceSim } from '@/components/mdx/WaveInterferenceSim';
+import { AcousticPianoSynth } from '@/components/mdx/AcousticPianoSynth';
+import { SankeyDiagram } from '@/components/mdx/SankeyDiagram';
 
 
-interface Widget {
+export interface Widget {
   id: string;
   fileName: string;
   sizeBytes: number;
@@ -62,7 +65,7 @@ interface WidgetsTabProps {
 }
 
 // Preset controls mapping to display custom configurations inside the Live Sandbox Preview
-const SANDBOX_PRESETS: Record<string, { label: string; props: Record<string, any> }[]> = {
+export const SANDBOX_PRESETS: Record<string, { label: string; props: Record<string, any> }[]> = {
   StructureViewer3D: [
     { label: "Water Molecule (H₂O)", props: { presetId: "water" } },
     { label: "Salt Crystal Lattice (NaCl)", props: { presetId: "nacl" } },

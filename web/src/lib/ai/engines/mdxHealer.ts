@@ -1,4 +1,4 @@
-import { callVertexAI } from '../vertex-client';
+import { callVertexAI } from '@/lib/vertex-client';
 import { searchYouTubeVideo } from '../../media-resolver';
 
 const QUERY_SUFFIX_MAP: Record<string, string> = {

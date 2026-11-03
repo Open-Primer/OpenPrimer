@@ -5,80 +5,80 @@ import { createPortal } from 'react-dom';
 import { Maximize2, ZoomIn, ZoomOut, X, RotateCcw } from 'lucide-react';
 import { MDXRemote } from 'next-mdx-remote';
 import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
-import { Quiz, Question, Option } from './Quiz';
-import { Glossary } from './Glossary';
-import { GlossaryBlock } from './GlossaryBlock';
-import { Video } from './Video';
-import { FillInBlanks, MetaNote, ExternalSandbox, FillInBlanksQuestion } from './Interactive';
-import { SolvedProblem, Summary, SelfEval, SelfAssessment } from './AdvancedLearning';
-import { RealPerson, HistoricalPerson, FictionalCharacter, Location, EntityLink, EventLink, HistoricalEventLink, EvenementHistorique, Artwork, WebsiteLink, ProjectLink, ConceptLink, TheoremLink, InstitutionLink, SpeciesLink, SpeciesLien, EspeceLien, EspèceLien, OrganismeLien, ChemicalLink, ChemicalLien, MoleculesLien, MoleculeLien, ChimieLien, CelestialLink, CelestialLien, CorpsCeleste, CorpsCéleste, AstroLien } from './HistoricalPerson';
-import { EssayEvaluation } from './EssayEvaluation';
-import { OralEvaluation } from './OralEvaluation';
-import { Prerequisites } from './Prerequisites';
-import { Epistemology } from './Epistemology';
-import { DiagnosticQuiz } from './DiagnosticQuiz';
-import { AudioPlayer } from './AudioPlayer';
-import { PronunciationSandbox } from './PronunciationSandbox';
-import { References } from './References';
-import { Reference } from './Reference';
-import { BiophysicsSimulator } from './BiophysicsSimulator';
-import { LogicGateSimulator } from './LogicGateSimulator';
-import { CardSort } from './CardSort';
-import { SocraticInput } from './SocraticInput';
-import { Timeline } from './Timeline';
-import { Biography } from './Biography';
-import { MatchingEvaluation } from './MatchingEvaluation';
-import { ReorderEvaluation } from './ReorderEvaluation';
-import { LawLink } from './LawLink';
-import { NestingContext } from './CitationContext';
+import { Quiz, Question, Option } from '../Quiz';
+import { Glossary } from '../Glossary';
+import { GlossaryBlock } from '../GlossaryBlock';
+import { Video } from '../Video';
+import { FillInBlanks, MetaNote, ExternalSandbox, FillInBlanksQuestion } from '../Interactive';
+import { SolvedProblem, Summary, SelfEval, SelfAssessment } from '../AdvancedLearning';
+import { RealPerson, HistoricalPerson, FictionalCharacter, Location, EntityLink, EventLink, HistoricalEventLink, EvenementHistorique, Artwork, WebsiteLink, ProjectLink, ConceptLink, TheoremLink, InstitutionLink, SpeciesLink, SpeciesLien, EspeceLien, EspèceLien, OrganismeLien, ChemicalLink, ChemicalLien, MoleculesLien, MoleculeLien, ChimieLien, CelestialLink, CelestialLien, CorpsCeleste, CorpsCéleste, AstroLien } from '../HistoricalPerson';
+import { EssayEvaluation } from '../EssayEvaluation';
+import { OralEvaluation } from '../OralEvaluation';
+import { Prerequisites } from '../Prerequisites';
+import { Epistemology } from '../Epistemology';
+import { DiagnosticQuiz } from '../DiagnosticQuiz';
+import { AudioPlayer } from '../AudioPlayer';
+import { PronunciationSandbox } from '../PronunciationSandbox';
+import { References } from '../References';
+import { Reference } from '../Reference';
+import { BiophysicsSimulator } from '../BiophysicsSimulator';
+import { LogicGateSimulator } from '../LogicGateSimulator';
+import { CardSort } from '../CardSort';
+import { SocraticInput } from '../SocraticInput';
+import { Timeline } from '../Timeline';
+import { Biography } from '../Biography';
+import { MatchingEvaluation } from '../MatchingEvaluation';
+import { ReorderEvaluation } from '../ReorderEvaluation';
+import { LawLink } from '../LawLink';
+import { NestingContext } from '../CitationContext';
 
 // New Visual and Interactive Components
-import { Mermaid } from './Mermaid';
-import { FunctionPlotter } from './FunctionPlotter';
-import { InteractiveDiagram } from './InteractiveDiagram';
-import { ComparisonSlider } from './ComparisonSlider';
-import { CodeSandbox } from './CodeSandbox';
-import { SolvedExercise, UnsolvedExercise } from './InteractiveExercises';
-import { GestaltInteractive } from './GestaltInteractive';
-import { DataChart } from './DataChart';
-import { StructureViewer3D } from './StructureViewer3D';
-import { QuantumOrbitalExplorer } from './QuantumOrbitalExplorer';
-import { DynamicSimulation } from './DynamicSimulation';
-import { GoingFurther, GoingFurtherItem } from './GoingFurther';
-import { Citation, QuoteBlock, InteractiveQuote } from './Citation';
-import { FunctionManipulator } from './FunctionManipulator';
-import { ClimateImpactMap } from './ClimateImpactMap';
-import { GeoMapExplorer } from './GeoMapExplorer';
-import { EquationManipulator } from './EquationManipulator';
-import { ChemicalStoichiometry } from './ChemicalStoichiometry';
-import { BasicMathExplorer } from './BasicMathExplorer';
-import { GeneticsPedigreeLab } from './GeneticsPedigreeLab';
-import { OrbitalMechanicsSim } from './OrbitalMechanicsSim';
-import { PeriodicTable } from './PeriodicTable';
-import { SolarSystemOrrery } from './SolarSystemOrrery';
-import { FinancialChart } from './FinancialChart';
-import { WaveInterferenceSim } from './WaveInterferenceSim';
-import { AcousticPianoSynth } from './AcousticPianoSynth';
-import { SankeyDiagram } from './SankeyDiagram';
+import { Mermaid } from '../Mermaid';
+import { FunctionPlotter } from '../FunctionPlotter';
+import { InteractiveDiagram } from '../InteractiveDiagram';
+import { ComparisonSlider } from '../ComparisonSlider';
+import { CodeSandbox } from '../CodeSandbox';
+import { SolvedExercise, UnsolvedExercise } from '../InteractiveExercises';
+import { GestaltInteractive } from '../GestaltInteractive';
+import { DataChart } from '../DataChart';
+import { StructureViewer3D } from '../StructureViewer3D';
+import { QuantumOrbitalExplorer } from '../QuantumOrbitalExplorer';
+import { DynamicSimulation } from '../DynamicSimulation';
+import { GoingFurther, GoingFurtherItem } from '../GoingFurther';
+import { Citation, QuoteBlock, InteractiveQuote } from '../Citation';
+import { FunctionManipulator } from '../FunctionManipulator';
+import { ClimateImpactMap } from '../ClimateImpactMap';
+import { GeoMapExplorer } from '../GeoMapExplorer';
+import { EquationManipulator } from '../EquationManipulator';
+import { ChemicalStoichiometry } from '../ChemicalStoichiometry';
+import { BasicMathExplorer } from '../BasicMathExplorer';
+import { GeneticsPedigreeLab } from '../GeneticsPedigreeLab';
+import { OrbitalMechanicsSim } from '../OrbitalMechanicsSim';
+import { PeriodicTable } from '../PeriodicTable';
+import { SolarSystemOrrery } from '../SolarSystemOrrery';
+import { FinancialChart } from '../FinancialChart';
+import { WaveInterferenceSim } from '../WaveInterferenceSim';
+import { AcousticPianoSynth } from '../AcousticPianoSynth';
+import { SankeyDiagram } from '../SankeyDiagram';
 import { AlertTriangle, Info, ShieldAlert, CheckCircle2, AlertOctagon, Target, BookOpen, Key, Compass, Award, FileText, Calendar, Send, HelpCircle, PenTool, RefreshCw, Play, Timer, Lock, ClipboardCheck } from 'lucide-react';
-import { CriticalThinking } from './CriticalThinking';
-import { DidYouKnow } from './DidYouKnow';
-import { HistoricalAnecdote } from './HistoricalAnecdote';
-import { HistoricalEvent as HistoricalFactBlock, HistoricalFact } from './HistoricalFact';
+import { CriticalThinking } from '../CriticalThinking';
+import { DidYouKnow } from '../DidYouKnow';
+import { HistoricalAnecdote } from '../HistoricalAnecdote';
+import { HistoricalEvent as HistoricalFactBlock, HistoricalFact } from '../HistoricalFact';
 
-import { ScientificMethod } from './ScientificMethod';
-import { WhatsNext } from './WhatsNext';
-import { PointOfView } from './PointOfView';
-import { DivergingViews } from './DivergingViews';
-import { BrilliantIdea, IdeeBrillante } from './BrilliantIdea';
-import { DynamicTableChart } from './DynamicTableChart';
-import { Geometry2D } from './Geometry2D';
-import { OpenQuestion } from './OpenQuestion';
-import { ScientificDebate } from './ScientificDebate';
-import { PreviousLessonSummary } from './PreviousLessonSummary';
-import { CareerProfile } from './CareerProfile';
-import { ResearchFocus } from './ResearchFocus';
-import { RecentNewsBridge } from './RecentNewsBridge';
+import { ScientificMethod } from '../ScientificMethod';
+import { WhatsNext } from '../WhatsNext';
+import { PointOfView } from '../PointOfView';
+import { DivergingViews } from '../DivergingViews';
+import { BrilliantIdea, IdeeBrillante } from '../BrilliantIdea';
+import { DynamicTableChart } from '../DynamicTableChart';
+import { Geometry2D } from '../Geometry2D';
+import { OpenQuestion } from '../OpenQuestion';
+import { ScientificDebate } from '../ScientificDebate';
+import { PreviousLessonSummary } from '../PreviousLessonSummary';
+import { CareerProfile } from '../CareerProfile';
+import { ResearchFocus } from '../ResearchFocus';
+import { RecentNewsBridge } from '../RecentNewsBridge';
 
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -94,22 +94,22 @@ function withDisabledOverlays<T extends React.ComponentType<any>>(Component: T):
 
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 import { dbService } from '@/lib/db';
-import { MdxStatusProvider, useMdxStatus } from './MdxStatusContext';
+import { MdxStatusProvider, useMdxStatus } from '../MdxStatusContext';
 // DegradedModeBanner extracted to ./elements/DegradedModeBanner
-import { DegradedModeBanner } from './elements/DegradedModeBanner';
+import { DegradedModeBanner } from '../elements/DegradedModeBanner';
 
-import { Alert, isChildrenEmpty, ALERT_TITLES } from './elements/Alert';
+import { Alert, isChildrenEmpty, ALERT_TITLES } from '../elements/Alert';
 // PreCodeInterceptor extracted to ./elements/PreCodeInterceptor
-import { PreCodeInterceptor } from './elements/PreCodeInterceptor';
+import { PreCodeInterceptor } from '../elements/PreCodeInterceptor';
 
 
 // CustomFigure and ZoomableImage extracted to ./elements/CustomFigure
-import { CustomFigure, ZoomableImage, isExistingArtwork, FIGURE_STRINGS } from './elements/CustomFigure';
+import { CustomFigure, ZoomableImage, isExistingArtwork, FIGURE_STRINGS } from '../elements/CustomFigure';
 
-// ClimateImpactMap is now imported modularly from './ClimateImpactMap'
+// ClimateImpactMap is now imported modularly from '../ClimateImpactMap'
 
 // Objectives components extracted to ./elements/Objectives
-import { Objectives, Objective, Knowledge, Skills, Attitudes } from './elements/Objectives';
+import { Objectives, Objective, Knowledge, Skills, Attitudes } from '../elements/Objectives';
 
 // Evaluations components extracted to ./elements/Evaluations
 import {
@@ -118,13 +118,13 @@ import {
   FinalProject, FinalWork, Format, Instructions, FinalQuiz,
   QuizQuestion, Answer, Description, Title, FormativeQuiz,
   SUMMATIVE_STRINGS, extractPrompts
-} from './elements/Evaluations';
+} from '../elements/Evaluations';
 
 
 import {
   Callout, CalloutContainer, ImageAlias, Explanation, Solution, KeyConcept, Instruction, Shape,
   FillInBlanksWrapper, SmartEquationManipulator
-} from './basicElements';
+} from '../basicElements';
 
 const components = {
   Alert,

@@ -1,4 +1,4 @@
-import { callVertexAI } from '../vertex-client';
+import { callVertexAI } from '@/lib/vertex-client';
 import { dbService } from '../../db';
 import { curriculumSchema } from '../schemas';
 

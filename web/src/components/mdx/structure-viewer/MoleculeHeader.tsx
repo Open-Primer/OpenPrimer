@@ -1,5 +1,5 @@
 import React from 'react';
-import { Preset } from './structure-viewer/presets';
+import { Preset } from './presets';
 import { Loader2 } from 'lucide-react';
 
 interface MoleculeHeaderProps {

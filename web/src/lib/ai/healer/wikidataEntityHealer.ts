@@ -1,4 +1,3 @@
-import { queryWikidataBirthDeath, queryWikidataEventDates, queryWikidataChemicalCompound, queryWikidataConceptFormula } from '../wikidata-resolver';
 
 const FORMULA_SUFFIX_MAP: Record<string, string> = {
   FR: ' (formule)',

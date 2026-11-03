@@ -1,5 +1,5 @@
 import { fetchWithTimeout } from './urlReachability';
-import { fetchWikimediaAudio } from '../media-resolver';
+import { fetchWikimediaAudio } from '@/lib/media-resolver';
 
 /**
  * @file resource-validator.ts
@@ -7,10 +7,10 @@ import { fetchWikimediaAudio } from '../media-resolver';
  * with automated reachability checking, fallback discovery and MDX repair.
  */
 
-import { dbService } from '../db';
-import { callVertexAI, isVertexConfigured } from '../vertex-client';
-import { searchYouTubeVideo, fetchWikimediaAudio } from '../media-resolver';
-import { resolveGoingFurtherResource } from '../wikidata-resolver';
+import { dbService } from '@/lib/db';
+import { callVertexAI, isVertexConfigured } from '@/lib/vertex-client';
+import { searchYouTubeVideo, fetchWikimediaAudio } from '@/lib/media-resolver';
+import { resolveGoingFurtherResource } from '@/lib/wikidata-resolver';
 
 export async function findAlternativeAudio(title: string, lang: string): Promise<string | null> {
   console.log(`[ALTERNATIVE SEARCH] Searching alternative audio for title: "${title}" (${lang})...`);

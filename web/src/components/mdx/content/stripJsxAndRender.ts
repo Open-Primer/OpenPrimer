@@ -1,6 +1,6 @@
 import React from 'react';
 
-function stripJsxAndRender(rawMdx: string) {
+export function stripJsxAndRender(rawMdx: string) {
   // Clean raw MDX content from JSX tags to prevent rendering errors
   let clean = rawMdx;
   

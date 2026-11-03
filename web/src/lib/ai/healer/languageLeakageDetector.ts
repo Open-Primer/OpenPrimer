@@ -1,4 +1,4 @@
-import { callVertexAI } from '../vertex-client';
+import { callVertexAI } from '@/lib/vertex-client';
 
 export function detectLanguageLeakage(text: string, targetLang: string): boolean {
   if (!text || typeof text !== 'string') return false;

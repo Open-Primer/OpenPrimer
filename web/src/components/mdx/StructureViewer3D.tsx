@@ -12,7 +12,7 @@ import {
   getPresetName,
   getPresetDesc
 } from './structure-viewer/presets';
-import { parsePubChemJSON, parseSDF } from './structure-viewer/parsers';
+import { parseXYZ, parseSDF } from './structure-viewer/parsers';
 import { MoleculeHeader } from './structure-viewer/MoleculeHeader';
 import { CompoundDetailsPanel } from './structure-viewer/CompoundDetailsPanel';
 
@@ -22,7 +22,7 @@ export {
   STRUCTURE_VIEWER_STRINGS,
   getPresetName,
   getPresetDesc,
-  parsePubChemJSON,
+  parseXYZ,
   parseSDF
 };
 

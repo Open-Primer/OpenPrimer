@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { WIDGETS_CATALOG } from '@/components/mdx/catalog';
 
 interface CitationStyleSpec {
   name: string;       // Short label, e.g. "APA 7"

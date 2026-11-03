@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Eye, Sliders, Volume2, Clock, Palette, CheckCircle } from 'lucide-react';
-import { COLORBLIND_PALETTES } from '../settings-strings';
 
 export interface AccessibilityTabProps {
   t: any;
