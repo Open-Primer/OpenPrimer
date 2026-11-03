@@ -1,3 +1,4 @@
+import { getBcp47Locale } from '@/lib/translations';
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -209,7 +210,7 @@ export default function AdminFeedbackPage() {
             const daysOld = Math.floor((Date.now() - new Date(fb.timestamp).getTime()) / (24 * 60 * 60 * 1000));
             const daysRemaining = Math.max(0, 90 - daysOld);
 
-            const formattedDate = new Date(fb.timestamp).toLocaleDateString(lang === 'FR' ? 'fr-FR' : 'en-US', {
+            const formattedDate = new Date(fb.timestamp).toLocaleDateString(getBcp47Locale(lang), {
               year: 'numeric',
               month: 'short',
               day: 'numeric',

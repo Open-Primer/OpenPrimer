@@ -1,113 +1,22 @@
+const NO_SOLUTION_LABELS: Record<string, string> = {
+  EN: 'Detailed solution not available.',
+  FR: 'Solution détaillée non disponible.',
+  ES: 'Solución detallada no disponible.',
+  DE: 'Detaillierte Lösung nicht verfügbar.',
+  ZH: '详细解答不可用。',
+  PT: 'Solução detalhada não disponível.',
+  AR: 'الحل التفصيلي غير متاح.',
+  HI: 'विस्तृत समाधान उपलब्ध नहीं है.',
+  UR: 'تفصیلی حل دستیاب نہیں ہے۔'
+};
 "use client";
 
 import React, { useState } from 'react';
 import { Lightbulb, ChevronDown, ChevronUp, CheckCircle2, XCircle, HelpCircle, ArrowRight, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-import { STATIC_UI_STRINGS } from '@/lib/translations';
-import katex from 'katex';
+import { renderNodeWithMath, renderTextWithMathAndMarkdown, renderTextSegmentWithMath } from './MathRenderer';
 
-const renderTextSegmentWithMath = (text: string) => {
-  if (!text) return [];
-  const mathRegex = /(\$\$[\s\S]+?\$\$|\$[^\n$]+?\$)/g;
-  const parts = text.split(mathRegex);
-  
-  return parts.map((part, i) => {
-    if (part.startsWith('$$') && part.endsWith('$$')) {
-      const formula = part.slice(2, -2).trim();
-      try {
-        const html = katex.renderToString(formula, { displayMode: true, throwOnError: false });
-        return <span key={i} dangerouslySetInnerHTML={{ __html: html }} className="block my-3 overflow-x-auto" />;
-      } catch (e) {
-        console.error("KaTeX error:", e);
-        return <code key={i} className="text-rose-400">{part}</code>;
-      }
-    } else if (part.startsWith('$') && part.endsWith('$')) {
-      const formula = part.slice(1, -1).trim();
-      try {
-        const html = katex.renderToString(formula, { displayMode: false, throwOnError: false });
-        return <span key={i} dangerouslySetInnerHTML={{ __html: html }} className="inline-block" />;
-      } catch (e) {
-        console.error("KaTeX error:", e);
-        return <code key={i} className="text-rose-400">{part}</code>;
-      }
-    }
-    return <span key={i}>{part}</span>;
-  });
-};
-
-const renderTextWithMathAndMarkdown = (text: string, inParagraph: boolean): React.ReactNode => {
-  if (!text) return null;
-  const lines = text.split(/\n/);
-  
-  const renderedLines = lines.map((line, li) => {
-    const isBullet = /^(\*|-|\d+\.) /.test(line.trim());
-    const content = line.replace(/^(\*|-|\d+\.) /, '');
-    
-    const parts = content.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/);
-    const rendered = parts.map((part, pi) => {
-      if (/^\*\*[^*]+\*\*$/.test(part)) {
-        return <strong key={pi}>{renderTextSegmentWithMath(part.slice(2, -2))}</strong>;
-      }
-      if (/^\*[^*]+\*$/.test(part)) {
-        return <em key={pi}>{renderTextSegmentWithMath(part.slice(1, -1))}</em>;
-      }
-      return <React.Fragment key={pi}>{renderTextSegmentWithMath(part)}</React.Fragment>;
-    });
-
-    if (isBullet) {
-      return <li key={li} className="ml-6 list-disc mb-2 text-slate-300">{rendered}</li>;
-    }
-    if (!line.trim()) {
-      return inParagraph ? <span key={li} className="block h-2" /> : <br key={li} />;
-    }
-    
-    if (inParagraph) {
-      return <span key={li} className="inline">{rendered}</span>;
-    }
-    
-    return <p key={li} className="mb-1 text-slate-300 leading-relaxed">{rendered}</p>;
-  });
-
-  return <>{renderedLines}</>;
-};
-
-export const renderNodeWithMath = (node: React.ReactNode, inParagraph = false): React.ReactNode => {
-  if (node === null || node === undefined) return node;
-
-  if (typeof node === 'string') {
-    return renderTextWithMathAndMarkdown(node, inParagraph);
-  }
-
-  if (typeof node === 'number' || typeof node === 'boolean') {
-    return node;
-  }
-
-  if (Array.isArray(node)) {
-    return node.map((child, index) => <React.Fragment key={index}>{renderNodeWithMath(child, inParagraph)}</React.Fragment>);
-  }
-
-  if (React.isValidElement(node)) {
-    const element = node as React.ReactElement<any>;
-    const isP = element.type === 'p';
-    const isInlineOrContainer = typeof element.type === 'string' && (
-      ['p', 'li', 'strong', 'em', 'span', 'b', 'i', 'u', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'sub', 'sup', 'code', 'td', 'th'].includes(element.type.toLowerCase())
-    );
-    if (element.props && element.props.children) {
-      const processedChildren = renderNodeWithMath(element.props.children, isP || inParagraph || isInlineOrContainer);
-      return React.cloneElement(element, { ...element.props }, processedChildren);
-    }
-    return node;
-  }
-
-  return node;
-};
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 const normalizeStringResponse = (str: string): string => {
   if (!str) return '';
@@ -315,7 +224,7 @@ export const SolvedExercise = ({ title, children, solution }: SolvedExerciseProp
                   : finalSolution
               ) : (
                 <p className="text-slate-400 italic">
-                  {language === 'FR' ? 'Solution détaillée non disponible.' : language === 'ES' ? 'Solución detallada no disponible.' : language === 'DE' ? 'Detaillierte Lösung nicht verfügbar.' : language === 'ZH' ? '详细解答不可用。' : language === 'PT' ? 'Solução detalhada não disponível.' : language === 'AR' ? 'الحل التفصيلي غير متاح.' : language === 'HI' ? 'विस्तृत समाधान उपलब्ध नहीं है.' : language === 'UR' ? 'تفصیلی حل دستیاب نہیں ہے.' : 'Detailed solution not available.'}
+                  {NO_SOLUTION_LABELS[(language || 'EN').toUpperCase()] || NO_SOLUTION_LABELS.EN}
                 </p>
               )}
             </div>

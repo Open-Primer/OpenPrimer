@@ -248,22 +248,17 @@ async function updateLocalesForWidgetAndCodeKeys(
     if (lang === 'en') {
       record[newNameEN] = newNameEN;
       record[newDescEN] = newDescEN;
-    } else if (lang === 'fr') {
-      record[newNameEN] = nameFR;
-      record[newDescEN] = descFR;
     } else {
-      const transName = await translateText(newNameEN, lang);
-      const transDesc = await translateText(newDescEN, lang);
-      record[newNameEN] = transName;
-      record[newDescEN] = transDesc;
+      const directName = lang === 'fr' ? nameFR : null;
+      const directDesc = lang === 'fr' ? descFR : null;
+      record[newNameEN] = directName || await translateText(newNameEN, lang);
+      record[newDescEN] = directDesc || await translateText(newDescEN, lang);
     }
 
     // Translate and insert new code visual keys
     for (const newKey of newCodeKeys) {
       if (lang === 'en') {
         record[newKey] = newKey;
-      } else if (lang === 'fr') {
-        record[newKey] = await translateText(newKey, 'fr');
       } else {
         record[newKey] = await translateText(newKey, lang);
       }
@@ -523,12 +518,11 @@ async function updateDraftTranslationsCache(
       if (lang === 'en') {
         record[nameEN] = nameEN;
         record[descEN] = descEN;
-      } else if (lang === 'fr') {
-        record[nameEN] = nameFR;
-        record[descEN] = descFR;
       } else {
-        record[nameEN] = await translateText(nameEN, lang);
-        record[descEN] = await translateText(descEN, lang);
+        const directName = lang === 'fr' ? nameFR : null;
+        const directDesc = lang === 'fr' ? descFR : null;
+        record[nameEN] = directName || await translateText(nameEN, lang);
+        record[descEN] = directDesc || await translateText(descEN, lang);
       }
     }
   }
@@ -540,8 +534,6 @@ async function updateDraftTranslationsCache(
         const record = draft.draftTranslations[lang];
         if (lang === 'en') {
           record[key] = key;
-        } else if (lang === 'fr') {
-          record[key] = await translateText(key, 'fr');
         } else {
           record[key] = await translateText(key, lang);
         }
@@ -654,18 +646,24 @@ async function applyDraftTranslationsToLocales(
     if (draftRecord[newNameEN] !== undefined) {
       record[newNameEN] = draftRecord[newNameEN];
     } else {
-      if (lang === 'en') record[newNameEN] = newNameEN;
-      else if (lang === 'fr') record[newNameEN] = catalogInfo.draft.nameFR || newNameEN;
-      else record[newNameEN] = await translateText(newNameEN, lang);
+      if (lang === 'en') {
+        record[newNameEN] = newNameEN;
+      } else {
+        const directName = lang === 'fr' ? catalogInfo.draft.nameFR : null;
+        record[newNameEN] = directName || await translateText(newNameEN, lang);
+      }
     }
 
     // Description
     if (draftRecord[newDescEN] !== undefined) {
       record[newDescEN] = draftRecord[newDescEN];
     } else {
-      if (lang === 'en') record[newDescEN] = newDescEN;
-      else if (lang === 'fr') record[newDescEN] = catalogInfo.draft.descFR || newDescEN;
-      else record[newDescEN] = await translateText(newDescEN, lang);
+      if (lang === 'en') {
+        record[newDescEN] = newDescEN;
+      } else {
+        const directDesc = lang === 'fr' ? catalogInfo.draft.descFR : null;
+        record[newDescEN] = directDesc || await translateText(newDescEN, lang);
+      }
     }
 
     // Code visual keys
@@ -673,9 +671,11 @@ async function applyDraftTranslationsToLocales(
       if (draftRecord[newKey] !== undefined) {
         record[newKey] = draftRecord[newKey];
       } else {
-        if (lang === 'en') record[newKey] = newKey;
-        else if (lang === 'fr') record[newKey] = await translateText(newKey, 'fr');
-        else record[newKey] = await translateText(newKey, lang);
+        if (lang === 'en') {
+          record[newKey] = newKey;
+        } else {
+          record[newKey] = await translateText(newKey, lang);
+        }
       }
     }
 
@@ -1065,9 +1065,11 @@ Guidelines:
 - Keep styles modern and premium using Tailwind CSS utility classes and subtle animations.
 - Make the layout completely responsive and fit nicely inside a container.
 - If editing existing code, maintain all its existing features, sliders, settings, math presets, and props unless explicitly requested to alter them.
-- All user-facing UI labels, titles, chart legends, button texts, help blocks, and descriptions MUST be fully bilingual, dynamically rendering English or French by reading a \`lang?: 'EN' | 'FR'\` prop (or checking if current lang is 'FR'). Example:
-  \`const label = lang === 'FR' ? 'Réinitialiser la molécule' : 'Reset Molecule';\`
-- If the visual texts use a localization helper like \`t("Key String")\`, ensure they are wrapped appropriately.
+- All user-facing UI labels, titles, chart legends, button texts, help blocks, and descriptions MUST retrieve localized strings via the Universal Translator pattern querying STATIC_UI_STRINGS:
+  \`const { language } = useLanguage();\`
+  \`const t = (key: string) => ((STATIC_UI_STRINGS as any)[language.toUpperCase()] || STATIC_UI_STRINGS.EN)?.[key] || key;\`
+  NEVER hardcode binary language conditionals (e.g. no \`lang === 'FR' ? ... : ...\`).
+- If the visual texts use a localization helper like \`t("Key String")\`, ensure all visual strings query it.
 - Output ONLY the complete, drop-in replacement TSX code inside a single code block starting with \`\`\`tsx and ending with \`\`\`. Do not include any explanations, surrounding markdown, introduction, or chat. Output just the code.
 
 Production Stability & Backward Compatibility (ABCD Guidelines) - CRITICAL:

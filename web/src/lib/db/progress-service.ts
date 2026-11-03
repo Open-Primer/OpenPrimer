@@ -1025,16 +1025,28 @@ export const progressService = {
    * - else     → full date string
    */
   formatRevisionDate: (date: string | null | undefined, lang: string = 'EN'): string => {
-    if (!date) return lang === 'FR' ? 'À jour (Version initiale)' : 'Up to date (Initial release)';
+    const key = (lang || 'EN').toUpperCase();
+    const LABELS: Record<string, { initial: string; today: string; yesterday: string; daysAgo: (d: number) => string; monthsAgo: (m: number) => string; locale: string }> = {
+      EN: { initial: 'Up to date (Initial release)', today: 'Today', yesterday: 'Yesterday', daysAgo: d => `${d} days ago`, monthsAgo: m => `${m} month${m > 1 ? 's' : ''} ago`, locale: 'en-GB' },
+      FR: { initial: 'À jour (Version initiale)', today: "Aujourd'hui", yesterday: 'Hier', daysAgo: d => `Il y a ${d} jours`, monthsAgo: m => `Il y a ${m} mois`, locale: 'fr-FR' },
+      ES: { initial: 'Al día (Versión inicial)', today: 'Hoy', yesterday: 'Ayer', daysAgo: d => `Hace ${d} días`, monthsAgo: m => `Hace ${m} mes${m > 1 ? 'es' : ''}`, locale: 'es-ES' },
+      DE: { initial: 'Aktuell (Erstversion)', today: 'Heute', yesterday: 'Gestern', daysAgo: d => `Vor ${d} Tagen`, monthsAgo: m => `Vor ${m} Monat${m > 1 ? 'en' : ''}`, locale: 'de-DE' },
+      ZH: { initial: '已是最新 (初始版本)', today: '今天', yesterday: '昨天', daysAgo: d => `${d} 天前`, monthsAgo: m => `${m} 个月前`, locale: 'zh-CN' },
+      PT: { initial: 'Atualizado (Versão inicial)', today: 'Hoje', yesterday: 'Ontem', daysAgo: d => `Há ${d} dias`, monthsAgo: m => `Há ${m} mês${m > 1 ? 'es' : ''}`, locale: 'pt-PT' },
+      AR: { initial: 'محدث (الإصدار الأولي)', today: 'اليوم', yesterday: 'أمس', daysAgo: d => `منذ ${d} أيام`, monthsAgo: m => `منذ ${m} أشهر`, locale: 'ar-SA' },
+      HI: { initial: 'अद्यतन (प्रारंभिक संस्करण)', today: 'आज', yesterday: 'कल', daysAgo: d => `${d} दिन पहले`, monthsAgo: m => `${m} महीने पहले`, locale: 'hi-IN' },
+      UR: { initial: 'تازہ ترین (ابتدائی ورژن)', today: 'آج', yesterday: 'کل', daysAgo: d => `${d} دن پہلے`, monthsAgo: m => `${m} ماہ پہلے`, locale: 'ur-PK' }
+    };
+    const l = LABELS[key] || LABELS.EN;
+    if (!date) return l.initial;
     const diffMs = Date.now() - new Date(date).getTime();
     const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-    const isFr = lang.toUpperCase() === 'FR';
-    if (diffDays < 1)  return isFr ? "Aujourd'hui" : 'Today';
-    if (diffDays < 2)  return isFr ? 'Hier' : 'Yesterday';
-    if (diffDays < 30) return isFr ? `Il y a ${diffDays} jours` : `${diffDays} days ago`;
+    if (diffDays < 1)  return l.today;
+    if (diffDays < 2)  return l.yesterday;
+    if (diffDays < 30) return l.daysAgo(diffDays);
     const diffMonths = Math.floor(diffDays / 30);
-    if (diffMonths < 12) return isFr ? `Il y a ${diffMonths} mois` : `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
-    return new Date(date).toLocaleDateString(isFr ? 'fr-FR' : 'en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+    if (diffMonths < 12) return l.monthsAgo(diffMonths);
+    return new Date(date).toLocaleDateString(l.locale, { year: 'numeric', month: 'short', day: 'numeric' });
   },
 
   /**

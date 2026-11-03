@@ -48,7 +48,7 @@ export const SyllabusPage = ({ title = "Classical Mechanics L1" }) => {
            <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
               <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-3" />
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Mastery Weight</p>
-              <p className="text-2xl font-black text-white">{course.ects} <span className="text-sm text-slate-500">{t.credits_label || (lang === 'FR' ? 'crédits' : 'credits')}</span></p>
+              <p className="text-2xl font-black text-white">{course.ects} <span className="text-sm text-slate-500">{t.credits_label || 'credits'}</span></p>
            </div>
            <div className="p-8 bg-slate-900/30 border border-slate-800 rounded-[40px] text-center backdrop-blur-xl shadow-2xl">
               <Clock className="w-8 h-8 text-blue-500 mx-auto mb-3" />

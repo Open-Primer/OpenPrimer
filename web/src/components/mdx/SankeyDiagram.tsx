@@ -4,6 +4,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, Layers, Sparkles, Move, Sliders, AlertTriangle, HelpCircle, RefreshCw } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { getSankeyStrings } from './sankey/strings';
 
 interface SankeyNode {
   id: string;
@@ -22,7 +23,13 @@ interface SankeyLink {
 
 export const SankeyDiagram = () => {
   const { language } = useLanguage();
-  const isFR = language === 'FR';
+  const t = useMemo(() => getSankeyStrings(language), [language]);
+
+  const getLocalizedLabel = (item: { labelFR?: string; labelEN?: string; [k: string]: any } | undefined) => {
+    if (!item) return '';
+    const langKey = (language || 'EN').toUpperCase();
+    return item[`label${langKey}`] || item.labelEN || item.labelFR || '';
+  };
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -222,8 +229,8 @@ export const SankeyDiagram = () => {
 
       return {
         id: `${l.source}->${l.target}`,
-        sourceLabel: isFR ? srcNode.node.labelFR : srcNode.node.labelEN,
-        targetLabel: isFR ? tgtNode.node.labelFR : tgtNode.node.labelEN,
+        sourceLabel: getLocalizedLabel(srcNode.node),
+        targetLabel: getLocalizedLabel(tgtNode.node),
         value: l.value,
         colorSrc: srcNode.node.color,
         colorTgt: tgtNode.node.color,
@@ -232,7 +239,7 @@ export const SankeyDiagram = () => {
         isThermal: l.target === 'thermal_losses'
       };
     }).filter(Boolean);
-  }, [resolvedSystem, compiledNodesMap, isFR]);
+  }, [resolvedSystem, compiledNodesMap, language]);
 
   // Reset to initial states
   const handleResetSystem = () => {
@@ -253,12 +260,10 @@ export const SankeyDiagram = () => {
         <div>
           <h3 className="text-sm font-black text-slate-200 uppercase tracking-[0.25em] flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse" />
-            <span>{isFR ? "Laboratoire Thermodynamique & Réseau Élec" : "Thermodynamic Loss & Load Grid Lab"}</span>
+            <span>{t.title}</span>
           </h3>
           <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            {isFR 
-              ? "Étudiez le premier principe de la thermodynamique (conservation d'énergie) : déterminez les pertes thermiques d'effet Joule et équilibrez la charge du réseau."
-              : "Explore the first law of thermodynamics (conservation of energy): simulate component heat dissipation losses and perform grid load balancing."}
+            {t.desc}
           </p>
         </div>
 
@@ -268,7 +273,7 @@ export const SankeyDiagram = () => {
           className="px-3.5 py-1.5 rounded-xl bg-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-300 cursor-pointer hover:bg-slate-700 hover:text-white flex items-center gap-1.5 transition-all"
         >
           <RefreshCw className="w-3 h-3" />
-          <span>{isFR ? "Réinitialiser" : "Reset Lab"}</span>
+          <span>{t.reset}</span>
         </button>
       </div>
 
@@ -291,12 +296,10 @@ export const SankeyDiagram = () => {
                   <AlertTriangle className="w-5 h-5 text-rose-400 animate-bounce shrink-0" />
                   <div className="text-rose-200">
                     <span className="font-black uppercase tracking-wider text-[10px] block text-rose-400">
-                      {isFR ? "Alerte : Surchage Thermique de l'Onduleur" : "Warning: Inverter Thermal Overload"}
+                      {t.overloadWarning}
                     </span>
                     <span className="text-[10.5px]">
-                      {isFR 
-                        ? `Le flux total de ${resolvedSystem.metrics.inverterInRaw.toFixed(1)} kW dépasse la capacité physique de 100 kW de l'onduleur !`
-                        : `Total flux of ${resolvedSystem.metrics.inverterInRaw.toFixed(1)} kW exceeds the inverter's safe physical capacity limit of 100 kW!`}
+                      {t.overloadDesc(resolvedSystem.metrics.inverterInRaw)}
                     </span>
                   </div>
                 </motion.div>
@@ -378,7 +381,7 @@ export const SankeyDiagram = () => {
                       fontWeight="bold"
                       className="pointer-events-none"
                     >
-                      {isFR ? n.labelFR : n.labelEN}
+                      {getLocalizedLabel(n)}
                     </text>
 
                     {/* Numeric Value tag overlay */}
@@ -410,7 +413,7 @@ export const SankeyDiagram = () => {
           <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-rose-400" />
-              <span>{isFR ? "Rendement Thermique (η)" : "Thermodynamic Efficiencies"}</span>
+              <span>{t.thermoEfficiencies}</span>
             </h4>
 
             {/* Battery Efficiency Slider */}
@@ -452,7 +455,7 @@ export const SankeyDiagram = () => {
           <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sliders className="w-4 h-4 text-teal-400" />
-              <span>{isFR ? "Régulation des Charges" : "Grid Load Balance"}</span>
+              <span>{t.gridLoadBalance}</span>
             </h4>
 
             {/* Appliance demand */}
@@ -494,7 +497,7 @@ export const SankeyDiagram = () => {
           <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-5 flex flex-col gap-4">
             <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-1">
               <Sparkles className="w-4 h-4 text-yellow-400" />
-              <span>{isFR ? "Génération Renouvelable" : "Renewable Generation"}</span>
+              <span>{t.renewableGeneration}</span>
             </h4>
 
             {/* Solar slider */}
@@ -519,12 +522,10 @@ export const SankeyDiagram = () => {
           <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-4 text-center select-text">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center justify-center gap-1.5">
               <HelpCircle className="w-3.5 h-3.5 text-rose-400" />
-              <span>{isFR ? "Analyse Énergétique Quantitative" : "Quantitative Thermodynamics"}</span>
+              <span>{t.quantitativeAnalysis}</span>
             </span>
             <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed">
-              {isFR 
-                ? "L'effet Joule convertit l'énergie électrique en pertes thermiques indésirables. Si vous baissez les rendements, les flux de chaleur rouge vif gonflent ! Si la charge dépasse 100 kW, l'onduleur surchauffe."
-                : "Joule heating converts electricity into heat losses. Reducing efficiency swells the glowing red waste flows! Overloading the inverter past 100 kW triggers thermal stress warning states."}
+              {t.quantitativeDesc}
             </p>
           </div>
 

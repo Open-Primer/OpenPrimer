@@ -3215,6 +3215,24 @@ export function getCoursePath(level: string, subject: string, courseSlug: string
   return `/${levelSlug}/${subjectSlug}/${courseSlug}/${lessonSlug}`;
 }
 
+/**
+ * Maps OpenPrimer language codes (EN, FR, ES, DE, ZH, PT, AR, HI, UR) to standard BCP 47 locale codes
+ * for native Intl, toLocaleString, and toLocaleDateString APIs.
+ */
+export const LOCALE_BCP47_MAP: Record<string, string> = {
+  EN: 'en-US',
+  FR: 'fr-FR',
+  ES: 'es-ES',
+  DE: 'de-DE',
+  ZH: 'zh-CN',
+  PT: 'pt-BR',
+  AR: 'ar-SA',
+  HI: 'hi-IN',
+  UR: 'ur-PK'
+};
 
-
-
+export function getBcp47Locale(lang?: string): string {
+  if (!lang) return 'en-US';
+  const upper = lang.toUpperCase();
+  return LOCALE_BCP47_MAP[upper] || 'en-US';
+}

@@ -11,25 +11,6 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const getProgressionStorage = (): Storage | null => {
-  if (typeof window === 'undefined') return null;
-  const session = localStorage.getItem('op_session');
-  const loggedIn = session !== 'false' && session !== null;
-  return loggedIn ? localStorage : sessionStorage;
-};
-
-import { STATIC_UI_STRINGS } from '@/lib/translations';
-
-const GuestFootnote = () => {
-  const { language } = useLanguage();
-  const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
-  return (
-    <span className="text-[10px] font-medium text-slate-400 block w-full mt-2 border-t border-slate-800/40 pt-2 select-none leading-relaxed">
-      {dict.quiz_guest_alert}
-    </span>
-  );
-};
-
 interface QuizProps {
   children: React.ReactNode;
   durationLimit?: number; // in seconds
@@ -57,40 +38,9 @@ export const Quiz = ({
 }: QuizProps) => {
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
-  const t = {
-    title: dict.quiz_title,
-    start: dict.quiz_start,
-    desc: dict.quiz_desc,
-    time_limit: dict.quiz_time_limit,
-    time_remaining: dict.quiz_time_remaining,
-    time_expired: dict.quiz_time_expired,
-    score: dict.quiz_score,
-    retry: dict.quiz_retry,
-    completed: dict.quiz_completed,
-    guest_alert: dict.quiz_guest_alert,
-    minutes: dict.quiz_minutes,
-    seconds: dict.quiz_seconds,
-    prep_advice: dict.quiz_prep_advice,
-    time_focus: dict.quiz_time_focus,
-    time_focus_default: dict.quiz_time_focus_default,
-    tutor_explanation: dict.quiz_tutor_explanation,
-    summative_single_attempt_warning: dict.summative_single_attempt_warning,
-    eval_mode_label: (dict as any).eval_mode_label || "Evaluation Format",
-    eval_attempts_unlimited: (dict as any).eval_attempts_unlimited || "Unlimited retries (unless final exam)",
-    eval_attempts_single: (dict as any).eval_attempts_single || "Single attempt only — final evaluation"
-  };
+  const t = getQuizStrings(dict);
 
-  const estTimeTexts: Record<string, string> = {
-    EN: "Estimated time:",
-    FR: "Temps estimé :",
-    ES: "Tiempo estimado:",
-    DE: "Geschätzte Zeit:",
-    ZH: "预计时间："
-  };
-  const langKey = language.toUpperCase();
-  const estTimeText = estTimeTexts[langKey] || estTimeTexts.EN;
-
-  const [extendTime, setExtendTime] = useState(false);
+    const [extendTime, setExtendTime] = useState(false);
   const [level, setLevel] = useState('L1');
   const [courseHours, setCourseHours] = useState(150);
   const [resetKey, setResetKey] = useState(0);
@@ -129,19 +79,7 @@ export const Quiz = ({
 
   // Resolve questions via stable Fisher-Yates shuffle on resetKey / mount
   const questions: any[] = React.useMemo(() => {
-    // Fisher-Yates Shuffle
-    const shuffleArray = <T,>(array: T[]): T[] => {
-      const copy = [...array];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const temp = copy[i];
-        copy[i] = copy[j];
-        copy[j] = temp;
-      }
-      return copy;
-    };
-
-    const shuffled = shuffleArray(parsedQuestions);
+        const shuffled = shuffleArray(parsedQuestions);
     const targetLimit = limit ?? (isFinal && targetNumQuestions ? targetNumQuestions : undefined);
     const finalLimit = targetLimit 
       ? Math.min(targetLimit, parsedQuestions.length)
@@ -212,127 +150,27 @@ export const Quiz = ({
   // Fetch tutor feedback on quiz completion
   useEffect(() => {
     if (isFinished && totalQuestions > 0) {
-      const fetchFeedback = async () => {
-        setIsTutorLoading(true);
-        try {
-          const pathname = window.location.pathname;
-          const qResults = questions.map((q: any, i) => {
-            let qText = q.props.q;
-            if (!qText && q.props.children) {
-              const stringChild = React.Children.toArray(q.props.children).find(
-                c => typeof c === 'string'
-              );
-              if (stringChild) {
-                qText = String(stringChild);
-              }
-            }
-            qText = qText || `question_${i}`;
-            return {
-              question: qText,
-              correct: answers[qText] === true
-            };
-          });
-
-          const response = await fetch('/api/tutor/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              messages: [
-                {
-                  role: 'user',
-                  content: `The student has just completed the end-of-course quiz.\nScore obtained: ${totalCorrect}/${totalQuestions}.\nHere are the results:\n${qResults.map((r, i) => `Question ${i+1}: "${r.question}" - Answer: ${r.correct ? 'CORRECT' : 'INCORRECT'}`).join('\n')}\n\nGenerate a personalized feedback comment of one paragraph about their result (strengths and weaknesses) and offer constructive complementary explanations to deepen understanding of any unvalidated concepts. Please reply in the requested language.`
-                }
-              ],
-              persona: 'curious_polymath',
-              language: language,
-              pageContext: `Course title: ${document.title || 'OpenPrimer Lesson'}`
-            })
-          });
-
-          if (response.ok) {
-            const reader = response.body?.getReader();
-            const decoder = new TextDecoder('utf-8');
-            if (!reader) {
-              setIsTutorLoading(false);
-              return;
-            }
-            let accumulated = '';
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              const chunk = decoder.decode(value, { stream: true });
-              const lines = chunk.split('\n');
-              for (const line of lines) {
-                if (line.startsWith('data:')) {
-                  try {
-                    const parsed = JSON.parse(line.slice(5).trim());
-                    if (parsed.text) {
-                      accumulated += parsed.text;
-                      setTutorComment(accumulated);
-                    }
-                  } catch {}
-                }
-              }
-            }
-          } else {
-            throw new Error("Tutor chat feedback failed");
-          }
-        } catch (e) {
-          console.warn("[QUIZ TUTOR FEEDBACK] Offline fallback...", e);
-          const ratio = totalQuestions > 0 ? (totalCorrect / totalQuestions) : 0;
-          const lang = (language || 'EN').toUpperCase();
-          let fallback = '';
-          if (ratio === 1) {
-            if (lang === 'FR') {
-              fallback = `Tuteur : Excellent sans-faute ! Vous avez obtenu ${totalCorrect}/${totalQuestions}. Vous maîtrisez parfaitement ces notions.`;
-            } else if (lang === 'ES') {
-              fallback = `Tutor: ¡Excelente, puntuación perfecta! Obtuviste ${totalCorrect}/${totalQuestions}. Has dominado completamente estos conceptos.`;
-            } else if (lang === 'DE') {
-              fallback = `Tutor: Hervorragend, perfekte Punktzahl! Sie haben ${totalCorrect}/${totalQuestions} erreicht. Sie haben diese Konzepte vollständig gemeistert.`;
-            } else if (lang === 'ZH') {
-              fallback = `导师：太棒了，满分！你答对了 ${totalCorrect}/${totalQuestions}。你已完全掌握了这些概念。`;
-            } else {
-              fallback = `Tutor: Excellent perfect score! You scored ${totalCorrect}/${totalQuestions}. You have fully mastered these concepts.`;
-            }
-          } else if (ratio >= 0.5) {
-            if (lang === 'FR') {
-              fallback = `Tuteur : Félicitations, vous avez obtenu ${totalCorrect}/${totalQuestions}. C'est une bonne base. Prenez le temps de revoir les questions incorrectes pour bien ancrer vos connaissances.`;
-            } else if (lang === 'ES') {
-              fallback = `Tutor: ¡Felicitaciones! Obtuviste ${totalCorrect}/${totalQuestions}. Es una buena base. Tómate el tiempo para revisar las preguntas incorrectas y consolidar tus conocimientos.`;
-            } else if (lang === 'DE') {
-              fallback = `Tutor: Herzlichen Glückwunsch! Sie haben ${totalCorrect}/${totalQuestions} erreicht. Das ist eine gute Grundlage. Nehmen Sie sich Zeit, um die falschen Fragen zu überprüfen und Ihr Wissen zu festigen.`;
-            } else if (lang === 'ZH') {
-              fallback = `导师：恭喜！你答对了 ${totalCorrect}/${totalQuestions}。这是一个不错的基础。花点时间复习一下答错的题目，以巩固你的知识。`;
-            } else {
-              fallback = `Tutor: Congratulations, you scored ${totalCorrect}/${totalQuestions}. That's a good foundation. Take some time to review the incorrect questions to solidify your knowledge.`;
-            }
-          } else {
-            if (lang === 'FR') {
-              fallback = `Tuteur : Vous avez obtenu ${totalCorrect}/${totalQuestions}. Des lacunes subsistent sur ces notions. Prenez le temps de relire attentivement le cours et de revoir les questions incorrectes avec les explications complémentaires.`;
-            } else if (lang === 'ES') {
-              fallback = `Tutor: Obtuviste ${totalCorrect}/${totalQuestions}. Aún quedan lagunas por resolver. Tómate el tiempo para leer atentamente la lección y revisar las preguntas incorrectas con las explicaciones adicionales.`;
-            } else if (lang === 'DE') {
-              fallback = `Tutor: Sie haben ${totalCorrect}/${totalQuestions} erreicht. Es gibt noch einige Lücken in Ihrem Verständnis. Nehmen Sie sich Zeit, um die Lektion sorgfältig noch einmal zu lesen und die falschen Fragen mit den zusätzlichen Erklärungen zu überprüfen.`;
-            } else if (lang === 'ZH') {
-              fallback = `导师：你答对了 ${totalCorrect}/${totalQuestions}。对于这些概念的理解还存在一些薄弱环节。请花时间仔细重读课程，并结合补充解析复习答错的题目。`;
-            } else {
-              fallback = `Tutor: You scored ${totalCorrect}/${totalQuestions}. There are still some gaps in your understanding of these concepts. Take the time to carefully reread the lesson and review the incorrect questions with the additional explanations.`;
-            }
-          }
-          setTutorComment(fallback);
-        } finally {
+      setIsTutorLoading(true);
+      fetchQuizTutorFeedback({
+        questions,
+        answers,
+        totalCorrect,
+        totalQuestions,
+        language,
+        onChunk: (accumulated) => setTutorComment(accumulated),
+        onDone: () => setIsTutorLoading(false),
+        onError: (err) => {
+          console.error('[QUIZ TUTOR FEEDBACK] Error:', err);
           setIsTutorLoading(false);
         }
-      };
-
-      fetchFeedback();
+      });
     } else {
       setTutorComment('');
       setShowAnswers(false);
     }
   }, [isFinished, totalCorrect, totalQuestions, language]);
 
-  // Resolve course slug and completion status
+    // Resolve course slug and completion status
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -572,191 +410,26 @@ export const Quiz = ({
     setResetKey((prev) => prev + 1);
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatDurationText = (seconds: number) => {
-    if (seconds >= 60) {
-      const mins = Math.round(seconds / 60);
-      return `${mins} ${t.minutes}`;
-    }
-    return `${seconds} ${t.seconds}`;
-  };
+  const formatDuration = (sec: number) => formatDurationText(sec, t);
 
   // 1. Initial State: Start Screen Cover
   if (!isStarted && !isFinished) {
-    const estimatedSeconds = totalQuestions * 60;
-    const questionsLabel = language === 'FR' ? `📝 ${totalQuestions} question(s) à choix multiple`
-      : language === 'ES' ? `📝 ${totalQuestions} pregunta(s) de opción múltiple`
-      : language === 'DE' ? `📝 ${totalQuestions} Multiple-Choice-Frage(n)`
-      : language === 'ZH' ? `📝 ${totalQuestions} 道选择题`
-      : `📝 ${totalQuestions} multiple-choice question(s)`;
     return (
-      <div className="my-10 p-8 bg-slate-900/50 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl text-center space-y-4">
-        <div className="w-16 h-16 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center mx-auto border border-blue-500/20">
-          <CheckCircle2 className="w-8 h-8" />
-        </div>
-        <div className="space-y-2">
-          <h3 className="text-xl font-bold text-white">{t.title}</h3>
-          <p className="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">{t.desc}</p>
-        </div>
-
-        {/* Dynamic Aids/Rules Card if Final */}
-        {isFinal && (
-          <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-5 text-left max-w-md mx-auto space-y-3.5">
-            <p className="font-black text-rose-400 uppercase tracking-widest text-[10px] flex items-center gap-1.5">
-              <ShieldAlert className="w-4 h-4" />
-              <span>
-                {language === 'FR' ? "📋 Consignes & Matériaux de l'épreuve"
-                  : language === 'ES' ? "📋 Instrucciones y materiales del examen"
-                  : language === 'DE' ? "📋 Prüfungsregeln & Hilfsmittel"
-                  : language === 'ZH' ? "📋 考试说明与适用材料"
-                  : "📋 Rules & Assessment Materials"}
-              </span>
-            </p>
-            <div className="grid grid-cols-2 gap-3 text-xs leading-relaxed text-slate-300 border-t border-slate-800/60 pt-3">
-              <div className="flex items-center gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
-                <span className={calculatorAllowed ? "text-emerald-400" : "text-rose-500"}>
-                  {calculatorAllowed ? "✓" : "✖"}
-                </span>
-                <span>
-                  {language === 'FR' ? `Calculatrice ${calculatorAllowed ? "Autorisée" : "Interdite"}`
-                    : language === 'ES' ? `Calculadora ${calculatorAllowed ? "Permitida" : "Prohibida"}`
-                    : language === 'DE' ? `Taschenrechner ${calculatorAllowed ? "Erlaubt" : "Unzulässig"}`
-                    : language === 'ZH' ? `计算器 ${calculatorAllowed ? "允许使用" : "禁止使用"}`
-                    : `Calculator ${calculatorAllowed ? "Allowed" : "Prohibited"}`}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
-                <span className={externalDocumentsAllowed ? "text-emerald-400" : "text-rose-500"}>
-                  {externalDocumentsAllowed ? "✓" : "✖"}
-                </span>
-                <span>
-                  {language === 'FR' ? `Documents ${externalDocumentsAllowed ? "Autorisés" : "Interdits"}`
-                    : language === 'ES' ? `Documentos ${externalDocumentsAllowed ? "Permitidos" : "Prohibidos"}`
-                    : language === 'DE' ? `Unterlagen ${externalDocumentsAllowed ? "Erlaubt" : "Unzulässig"}`
-                    : language === 'ZH' ? `参考资料 ${externalDocumentsAllowed ? "允许使用" : "禁止使用"}`
-                    : `Documents ${externalDocumentsAllowed ? "Allowed" : "Prohibited"}`}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
-                <span className={webBrowsingAllowed ? "text-emerald-400" : "text-rose-500"}>
-                  {webBrowsingAllowed ? "✓" : "✖"}
-                </span>
-                <span>
-                  {language === 'FR' ? `Navigation Web ${webBrowsingAllowed ? "Autorisée" : "Interdite"}`
-                    : language === 'ES' ? `Navegación Web ${webBrowsingAllowed ? "Permitida" : "Prohibida"}`
-                    : language === 'DE' ? `Web-Browsing ${webBrowsingAllowed ? "Erlaubt" : "Unzulässig"}`
-                    : language === 'ZH' ? `网页浏览 ${webBrowsingAllowed ? "允许" : "禁止"}`
-                    : `Web Browsing ${webBrowsingAllowed ? "Allowed" : "Prohibited"}`}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/50">
-                <span className={aiTutorAssistanceAllowed ? "text-emerald-400" : "text-rose-500"}>
-                  {aiTutorAssistanceAllowed ? "✓" : "✖"}
-                </span>
-                <span>
-                  {language === 'FR' ? `Tuteur IA ${aiTutorAssistanceAllowed ? "Actif" : "Désactivé"}`
-                    : language === 'ES' ? `Tutor IA ${aiTutorAssistanceAllowed ? "Activo" : "Desactivado"}`
-                    : language === 'DE' ? `KI-Tutor ${aiTutorAssistanceAllowed ? "Aktiv" : "Deaktiviert"}`
-                    : language === 'ZH' ? `AI 导师 ${aiTutorAssistanceAllowed ? "可用" : "禁用"}`
-                    : `AI Tutor ${aiTutorAssistanceAllowed ? "Enabled" : "Disabled"}`}
-                </span>
-              </div>
-            </div>
-            <p className="text-[10px] text-slate-500 italic text-center mt-1 select-none">
-              {language === 'FR' ? "Note : Même s'il n'y a pas de contrôle physique, vous devez respecter ces modalités d'examen."
-                : language === 'ES' ? "Nota: Aunque no haya supervisión física, debe respetar estas modalidades de examen."
-                : language === 'DE' ? "Hinweis: Auch ohne physische Aufsicht müssen diese Prüfungsregeln eingehalten werden."
-                : language === 'ZH' ? "注：即使没有物理监考，您也必须遵守这些考试规则。"
-                : "Note: Even without physical proctoring, you must respect these exam modalities."}
-            </p>
-          </div>
-        )}
-
-        {/* Evaluation Mode Info Card */}
-        <div className="bg-slate-950/80 border border-blue-500/20 rounded-2xl p-5 text-left max-w-md mx-auto space-y-1.5">
-          <p className="font-black text-blue-400 uppercase tracking-widest text-xs">📋 {t.eval_mode_label}</p>
-          <div className="grid grid-cols-1 gap-1.5 text-sm text-slate-300">
-            <div className="flex items-start gap-2">
-              <span className="text-blue-400 font-black shrink-0">▸</span>
-              <span>{questionsLabel}</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-blue-400 font-black shrink-0">▸</span>
-              <span>
-                {language === 'FR' ? "Format de réponse attendu : Choix unique ou choix multiple"
-                  : language === 'ES' ? "Formato de respuesta esperado: Selección única o múltiple"
-                  : language === 'DE' ? "Erwartetes Antwortformat: Einfach- oder Mehrfachauswahl"
-                  : language === 'ZH' ? "期望的回答格式：单选或多选"
-                  : "Expected response format: Single or multiple choice"}
-              </span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-blue-400 font-black shrink-0">▸</span>
-              <span>
-                {language === 'FR' ? `Barème : Score sur ${totalQuestions} (en %)`
-                  : language === 'ES' ? `Calificación: Puntuación sobre ${totalQuestions} (en %)`
-                  : language === 'DE' ? `Bewertung: Ergebnis von ${totalQuestions} (in %)`
-                  : language === 'ZH' ? `评分：${totalQuestions} 分中的得分 (百分比)`
-                  : `Grading: Score out of ${totalQuestions} (in %)`}
-              </span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-blue-400 font-black shrink-0">▸</span>
-              <span>
-                {language === 'FR' ? `Durée : ${actualDurationLimit ? formatDurationText(actualDurationLimit) : 'Illimitée'}`
-                  : language === 'ES' ? `Duración: ${actualDurationLimit ? formatDurationText(actualDurationLimit) : 'Ilimitada'}`
-                  : language === 'DE' ? `Dauer: ${actualDurationLimit ? formatDurationText(actualDurationLimit) : 'Unbegrenzt'}`
-                  : language === 'ZH' ? `时长：${actualDurationLimit ? formatDurationText(actualDurationLimit) : '无限制'}`
-                  : `Duration: ${actualDurationLimit ? formatDurationText(actualDurationLimit) : 'Unlimited'}`}
-              </span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className={cn("font-black shrink-0", isFinal ? "text-amber-500" : "text-blue-400")}>
-                {isFinal ? "⚠️" : "▸"}
-              </span>
-              <span>
-                {isFinal
-                  ? t.summative_single_attempt_warning.replace(/^⚠️\s*/, '')
-                  : t.eval_attempts_unlimited}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Pre-flight Checklist Card */}
-        <div className="bg-slate-950/60 border border-slate-700/50 rounded-2xl p-4 text-left text-sm max-w-md mx-auto space-y-1.5">
-          <p className="font-black text-slate-400 uppercase tracking-widest text-xs">💡 Checklist</p>
-          <ul className="list-disc list-inside space-y-1 leading-relaxed text-slate-300">
-            <li>{t.prep_advice}</li>
-            <li>
-              {language === 'FR' ? "Assurez-vous d'avoir un peu plus de temps que nécessaire pour répondre aux questions."
-                : language === 'ES' ? "Asegúrese de tener un poco más de tiempo del necesario para responder a las preguntas."
-                : language === 'DE' ? "Stellen Sie sicher, dass Sie etwas mehr Zeit als nötig haben, um die Fragen zu beantworten."
-                : language === 'ZH' ? "请确保您有比回答问题所需稍微多一点的时间。"
-                : "Ensure you have a bit more time than necessary to answer the questions."}
-            </li>
-          </ul>
-        </div>
-
-        <div className="pt-2">
-          <button
-            onClick={handleStart}
-            className="px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-blue-600/10 flex items-center gap-2 mx-auto cursor-pointer"
-          >
-            <Play className="w-4 h-4 fill-white" />
-            {t.start}
-          </button>
-        </div>
-      </div>
+      <QuizStartCover
+        totalQuestions={totalQuestions}
+        isFinal={isFinal}
+        actualDurationLimit={actualDurationLimit}
+        t={t}
+        language={language}
+        formatDurationText={formatDuration}
+        handleStart={handleStart}
+        allowedAids={allowedAids}
+        forbiddenAids={forbiddenAids}
+      />
     );
   }
 
-  // 2. Active Quiz State
+    // 2. Active Quiz State
   const isTwentyPercentLeft = actualDurationLimit ? (timeLeft <= actualDurationLimit * 0.20) : false;
   const isFifteenPercentLeft = actualDurationLimit ? (timeLeft <= actualDurationLimit * 0.15) : false;
 
@@ -808,15 +481,7 @@ export const Quiz = ({
         )}>
           <Timer className="w-4 h-4 text-current animate-pulse" />
           <span>
-            {language === 'FR' 
-              ? `⏳ Attention ! Il reste moins de ${isFifteenPercentLeft ? '15%' : '20%'} du temps imparti (${formatTime(timeLeft)} restants). Hâtez-vous de répondre !`
-              : language === 'ES'
-              ? `⏳ ¡Atención! Queda menos del ${isFifteenPercentLeft ? '15%' : '20%'} del tiempo asignado (${formatTime(timeLeft)} restantes). ¡Dése prisa para responder!`
-              : language === 'DE'
-              ? `⏳ Achtung! Es verbleiben weniger als ${isFifteenPercentLeft ? '15%' : '20%'} der zugewiesenen Zeit (${formatTime(timeLeft)} übrig). Bitte beeilen Sie sich mit der Antwort!`
-              : language === 'ZH'
-              ? `⏳ 注意！剩余时间已不足 ${isFifteenPercentLeft ? '15' : '20'}%（还剩 ${formatTime(timeLeft)}）。请尽快答题！`
-              : `⏳ Warning! Less than ${isFifteenPercentLeft ? '15%' : '20%'} of the allocated time is left (${formatTime(timeLeft)} remaining). Hurry up to answer!`}
+            {ql.timerWarning(isFifteenPercentLeft ? '15%' : '20%', formatTime(timeLeft))}
           </span>
         </div>
       )}
@@ -833,7 +498,7 @@ export const Quiz = ({
         <div className="space-y-2 select-none">
           <div className="flex justify-between items-center text-xs font-bold text-slate-400">
             <span>
-              {language === 'FR' ? `Question ${currentQuestionIndex + 1} sur ${totalQuestions}` : `Question ${currentQuestionIndex + 1} of ${totalQuestions}`}
+              {ql.questionOf(currentQuestionIndex + 1, totalQuestions)}
             </span>
             <span className={cn("font-mono", questionTimeLeft <= 3 ? "text-red-400 animate-pulse font-black" : "text-slate-300")}>
               {questionTimeLeft}s
@@ -857,9 +522,9 @@ export const Quiz = ({
                   ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
                   : "bg-red-500/10 border-red-500/20 text-red-400"
             )}>
-              {feedbackType === 'correct' && (language === 'FR' ? '✓ Correct !' : '✓ Correct!')}
-              {feedbackType === 'incorrect' && (language === 'FR' ? '✖ Incorrect !' : '✖ Incorrect!')}
-              {feedbackType === 'timeout' && (language === 'FR' ? '⏳ Temps écoulé !' : '⏳ Time is up!')}
+              {feedbackType === 'correct' && ql.feedbackCorrect}
+              {feedbackType === 'incorrect' && ql.feedbackIncorrect}
+              {feedbackType === 'timeout' && ql.feedbackTimeout}
             </div>
           )}
         </div>
@@ -902,472 +567,22 @@ export const Quiz = ({
 
       {/* Quiz Summary & Controls */}
       {isFinished && (
-        <div className="mt-8 border-t border-slate-800/80 pt-6 space-y-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col items-center justify-center px-4 py-2 rounded-xl bg-blue-600/10 border border-blue-500/20 text-center min-w-[120px]">
-                <span className="text-[10px] font-black uppercase text-blue-400 tracking-wider mb-0.5">
-                  {language === 'FR' ? 'NOTE' : 'GRADE'}
-                </span>
-                <span className="text-lg font-extrabold text-white">{totalCorrect} / {totalQuestions}</span>
-              </div>
-              <span className="text-slate-400 text-xs font-semibold">{t.completed}</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowAnswers(!showAnswers)}
-                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all text-xs font-black uppercase tracking-widest cursor-pointer border border-transparent"
-              >
-                {showAnswers 
-                  ? (language === 'FR' ? 'Masquer les réponses' : 'Hide Answers')
-                  : (language === 'FR' ? 'Voir les réponses' : 'Show Answers')}
-              </button>
-
-              {!isFinal && (
-                <button
-                  onClick={handleRetry}
-                  className="px-4 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800/40 rounded-xl transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-slate-800/80"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  {t.retry}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Tutor Comment block */}
-          {(isTutorLoading || tutorComment) && (
-            <div className="p-6 bg-violet-500/10 border border-violet-500/20 rounded-3xl backdrop-blur-md relative overflow-hidden shadow-lg space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-400">
-                  <Sparkles className="w-4 h-4 text-violet-400 animate-pulse" />
-                </div>
-                <h4 className="text-xs font-black uppercase text-violet-400 tracking-widest">
-                  {language === 'FR' ? 'Commentaire du Tuteur' 
-                    : language === 'ES' ? 'Comentarios del tutor'
-                    : language === 'DE' ? 'Feedback des Tutors'
-                    : language === 'ZH' ? '导师反馈'
-                    : 'Tutor Feedback'}
-                </h4>
-              </div>
-              {isTutorLoading && !tutorComment ? (
-                <div className="flex items-center gap-2 text-slate-400 text-xs italic">
-                  <div className="w-3.5 h-3.5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-                  <span>
-                    {language === 'FR' ? 'Le tuteur analyse vos résultats...' 
-                      : language === 'ES' ? 'El tutor está analizando sus resultados...'
-                      : language === 'DE' ? 'Der Tutor analysiert Ihre Ergebnisse...'
-                      : language === 'ZH' ? '导师正在分析您的结果...'
-                      : 'Tutor analyzing your results...'}
-                  </span>
-                </div>
-              ) : (
-                <p className="text-slate-300 text-xs leading-relaxed font-medium italic pl-1 whitespace-pre-line">
-                  {tutorComment}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+        <QuizSummaryView
+          totalCorrect={totalCorrect}
+          totalQuestions={totalQuestions}
+          t={t}
+          language={language}
+          showAnswers={showAnswers}
+          setShowAnswers={setShowAnswers}
+          isFinal={isFinal}
+          handleRetry={handleRetry}
+          isTutorLoading={isTutorLoading}
+          tutorComment={tutorComment}
+        />
       )}
-    </div>
-  );
-};
-
-interface QuestionProps {
-  q: string;
-  children?: React.ReactNode;
-  onAnswer?: (correct: boolean) => void;
-  isParentReadOnly?: boolean;
-  savedCorrect?: boolean | null;
-  explanation?: string;
-  options?: string;
-  correctIndex?: string | number;
-  mediaType?: 'image' | 'audio' | 'video';
-  mediaUrl?: string;
-  mediaCaption?: string;
-  mode?: 'standard' | 'elimination';
-  durationLimit?: number;
-  multiple?: boolean; // If true, enables multi-answer (checkbox) mode
-}
-
-export const Question = ({
-  q,
-  children,
-  onAnswer,
-  isParentReadOnly,
-  savedCorrect,
-  explanation,
-  options: optionsProp,
-  correctIndex,
-  mediaType,
-  mediaUrl,
-  mediaCaption,
-  mode = 'standard',
-  multiple = false,
-}: QuestionProps) => {
-  const { language } = useLanguage();
-  const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
-  const t = {
-    tutor_explanation: dict.quiz_tutor_explanation
-  };
-
-  const [selected, setSelected] = useState<number | null>(null);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isFullscreenImage, setIsFullscreenImage] = useState(false);
-  const [eliminatedIndexes, setEliminatedIndexes] = useState<number[]>([]);
-  // Multiple-choice state
-  const [multiSelected, setMultiSelected] = useState<number[]>([]);
-  const [multiSubmitted, setMultiSubmitted] = useState(false);
-
-  // Parse options either from children or from options prop
-  const finalOptions = React.useMemo(() => {
-    if (optionsProp) {
-      const optList = optionsProp.split('|||').map(s => s.trim());
-      const cIndex = typeof correctIndex === 'string' ? parseInt(correctIndex, 10) : Number(correctIndex || 0);
-      return optList.map((text, idx) => ({
-        text,
-        correct: idx === cIndex
-      }));
-    } else {
-      const childOptions = (React.Children.toArray(children) as React.ReactElement[]).filter(
-        (child) => React.isValidElement(child) && (child.props as any) && ('text' in (child.props as any) || 'children' in (child.props as any))
-      );
-      return childOptions.map((opt) => ({
-        text: String((opt.props as any).text || (opt.props as any).children || ''),
-        correct: (opt.props as any).correct === true
-      }));
-    }
-  }, [children, optionsProp, correctIndex]);
-
-  const isReadOnly = isParentReadOnly || selected !== null;
-
-  useEffect(() => {
-    const session = localStorage.getItem('op_session');
-    setIsLoggedIn(session === 'true');
-
-    // Load saved option if already completed previously
-    if (savedCorrect !== null && savedCorrect !== undefined) {
-      setIsCorrect(savedCorrect);
-      // Auto-highlight correct choice
-      const correctIdx = finalOptions.findIndex((opt) => opt.correct === true);
-      if (correctIdx !== -1) {
-        setSelected(correctIdx);
-      }
-    }
-  }, [savedCorrect, finalOptions]);
-
-  const dispatchBridgeEvent = (index: number, correct: boolean) => {
-    if (typeof window !== 'undefined') {
-      const event = new CustomEvent('op_exercise_completed', {
-        detail: {
-          type: 'quiz',
-          success: correct,
-          question: q,
-          selectedAnswer: finalOptions[index]?.text,
-          correctAnswer: finalOptions.find((o) => o.correct === true)?.text,
-          explanation: explanation || undefined
-        }
-      });
-      window.dispatchEvent(event);
-    }
-  };
-
-  const handleSelect = (index: number, correct: boolean) => {
-    if (isReadOnly) return;
-
-    if (multiple) {
-      // Checkbox toggle
-      if (multiSubmitted) return;
-      setMultiSelected((prev) =>
-        prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-      );
-      return;
-    }
-
-    if (mode === 'elimination') {
-      // In elimination mode:
-      // Clicking a correct option is a failure (the user was supposed to eliminate incorrect options, not click the correct one!).
-      if (correct) {
-        setSelected(index);
-        setIsCorrect(false);
-        if (onAnswer) onAnswer(false);
-        
-        // Dispatch Cognitive Bridge Event
-        dispatchBridgeEvent(index, false);
-      } else {
-        // Clicking an incorrect option eliminates it!
-        const nextEliminated = [...eliminatedIndexes, index];
-        setEliminatedIndexes(nextEliminated);
-
-        // If they successfully eliminated all incorrect options!
-        const totalIncorrect = finalOptions.filter(o => !o.correct).length;
-        if (nextEliminated.length === totalIncorrect) {
-          // Highlight the remaining correct option!
-          const correctIdx = finalOptions.findIndex((opt) => opt.correct === true);
-          setSelected(correctIdx !== -1 ? correctIdx : index);
-          setIsCorrect(true);
-          if (onAnswer) onAnswer(true);
-
-          dispatchBridgeEvent(correctIdx !== -1 ? correctIdx : index, true);
-        }
-      }
-    } else {
-      // Standard mode
-      setSelected(index);
-      setIsCorrect(correct);
-      if (onAnswer) {
-        onAnswer(correct);
-      }
-      dispatchBridgeEvent(index, correct);
-    }
-  };
-
-  const handleMultiSubmit = () => {
-    if (multiSubmitted || multiSelected.length === 0) return;
-    // All correct options selected AND no incorrect option selected
-    const correctIndexes = finalOptions
-      .map((o, i) => ({ i, correct: o.correct }))
-      .filter((o) => o.correct)
-      .map((o) => o.i);
-    const isAllCorrect =
-      correctIndexes.length === multiSelected.length &&
-      correctIndexes.every((ci) => multiSelected.includes(ci));
-
-    setMultiSubmitted(true);
-    setIsCorrect(isAllCorrect);
-    if (onAnswer) onAnswer(isAllCorrect);
-    dispatchBridgeEvent(multiSelected[0] ?? 0, isAllCorrect);
-  };
-
-  return (
-    <div className="space-y-4">
-      {/* Mode Badge */}
-      {mode === 'elimination' && (
-        <span className="text-[10px] font-black uppercase tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-xl select-none inline-block">
-          {language === 'FR' ? "⚠️ Élimination des fausses affirmations" : "⚠️ Elimination of incorrect choices"}
-        </span>
-      )}
-      {multiple && (
-        <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl select-none inline-block">
-          {language === 'FR' ? "☑ Plusieurs réponses possibles" 
-            : language === 'ES' ? "☑ Varias respuestas posibles"
-            : language === 'DE' ? "☑ Mehrere Antworten möglich"
-            : language === 'ZH' ? "☑ 可多选"
-            : "☑ Multiple answers may be correct"}
-        </span>
-      )}
-
-      <p className="text-md font-bold text-slate-100">{q}</p>
-
-      {/* Media rendering */}
-      {mediaUrl && (
-        <div className="my-4">
-          {mediaType === 'image' && (
-            <div className="relative group/q_zoom w-full flex flex-col items-center justify-center">
-              <img 
-                src={mediaUrl} 
-                alt={mediaCaption || q} 
-                onClick={() => setIsFullscreenImage(true)}
-                style={{ cursor: 'zoom-in' }}
-                className="max-w-full rounded-2xl max-h-[260px] object-contain border border-slate-800/85 bg-slate-950/40 p-1.5 shadow-md"
-              />
-              {mediaCaption && <p className="text-[11px] text-slate-400 italic text-center mt-2 font-medium">{mediaCaption}</p>}
-
-              {/* Fullscreen Portal Image Replica */}
-              {isFullscreenImage && (
-                <div 
-                  onClick={() => setIsFullscreenImage(false)}
-                  className="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center select-none cursor-zoom-out animate-in fade-in duration-200"
-                >
-                  <img 
-                    src={mediaUrl} 
-                    alt={mediaCaption || q} 
-                    className="max-w-[95vw] max-h-[90vh] object-contain shadow-2xl rounded-xl"
-                  />
-                  {mediaCaption && (
-                    <p className="text-xs text-slate-300 font-semibold mt-4 bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-full">
-                      {mediaCaption}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {mediaType === 'audio' && (
-            <div className="p-4 bg-slate-950/60 border border-slate-800/80 rounded-2xl flex flex-col gap-3 my-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
-                  <Play className="w-4 h-4 fill-blue-400" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-black uppercase text-blue-400 tracking-widest">
-                    {language === 'FR' ? "Extrait Audio" : "Audio Clip"}
-                  </p>
-                  {mediaCaption && <p className="text-[11px] text-slate-400 italic mt-0.5 font-medium">{mediaCaption}</p>}
-                </div>
-              </div>
-              <audio src={mediaUrl} controls className="w-full bg-slate-900/40 rounded-xl" />
-            </div>
-          )}
-
-          {mediaType === 'video' && (
-            <div className="p-4 bg-slate-950/60 border border-slate-800/80 rounded-2xl flex flex-col gap-3 my-3">
-              <video src={mediaUrl} controls className="w-full rounded-xl max-h-[300px] bg-black/60 shadow-lg" />
-              {mediaCaption && <p className="text-[11px] text-slate-400 italic text-center font-medium">{mediaCaption}</p>}
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="grid gap-3">
-        {finalOptions.map((option, index) => {
-          const isSelectedOption = multiple ? multiSelected.includes(index) : index === selected;
-          const isOptionCorrect = option.correct === true;
-          const isEliminated = eliminatedIndexes.includes(index);
-          // Multiple-choice resolved state
-          const isMultiReadOnly = multiple ? (multiSubmitted || isParentReadOnly) : false;
-          const effectiveReadOnly = multiple ? isMultiReadOnly : isReadOnly;
-          // Color coding for multi after submit
-          let multiOptionClass = '';
-          if (multiple && multiSubmitted) {
-            if (isSelectedOption && isOptionCorrect) multiOptionClass = 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400 cursor-default';
-            else if (isSelectedOption && !isOptionCorrect) multiOptionClass = 'bg-red-500/10 border-red-500/50 text-red-400 cursor-default';
-            else if (!isSelectedOption && isOptionCorrect) multiOptionClass = 'bg-amber-500/10 border-amber-500/40 text-amber-400 cursor-default'; // missed correct
-            else multiOptionClass = 'bg-slate-800/30 border-slate-700 opacity-40 cursor-default';
-          }
-
-          return (
-            <button
-              key={index}
-              onClick={() => handleSelect(index, isOptionCorrect)}
-              disabled={effectiveReadOnly || isEliminated}
-              className={cn(
-                "p-4 text-left rounded-xl border transition-all duration-200 group flex items-center justify-between text-sm",
-                multiple && !multiSubmitted && !isParentReadOnly
-                  ? isSelectedOption
-                    ? "bg-amber-500/10 border-amber-500/50 text-white cursor-pointer"
-                    : "bg-slate-800/30 border-slate-700 hover:border-amber-500/40 hover:bg-amber-500/5 cursor-pointer text-slate-200"
-                  : multiple && multiSubmitted
-                  ? multiOptionClass
-                  : isEliminated 
-                  ? "bg-slate-900/10 border-slate-800 text-slate-500 opacity-40 cursor-default line-through"
-                  : isReadOnly
-                    ? isSelectedOption
-                      ? isCorrect
-                        ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400 cursor-default" 
-                        : "bg-red-500/10 border-red-500/50 text-red-400 cursor-default"
-                      : isOptionCorrect
-                        ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400 cursor-default"
-                        : "bg-slate-800/30 border-slate-700 opacity-50 cursor-default"
-                    : "bg-slate-800/30 border-slate-700 hover:border-blue-500/50 hover:bg-blue-500/5 cursor-pointer text-slate-200"
-              )}
-            >
-              {/* Checkbox / radio indicator */}
-              <span className="flex items-center gap-3 font-medium flex-1">
-                {multiple ? (
-                  <span className={cn(
-                    "w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors",
-                    isSelectedOption ? "bg-amber-500 border-amber-500" : "border-slate-600 bg-transparent"
-                  )}>
-                    {isSelectedOption && <span className="text-white text-[10px] font-black">✓</span>}
-                  </span>
-                ) : null}
-                {option.text}
-              </span>
-              {isEliminated ? (
-                <XCircle className="w-4 h-4 text-red-500/70" />
-              ) : !multiple && selected === null && !isParentReadOnly ? (
-                <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-blue-400" />
-              ) : !multiple && isSelectedOption ? (
-                isCorrect ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />
-              ) : !multiple && isOptionCorrect && isReadOnly ? (
-                <CheckCircle2 className="w-4 h-4" />
-              ) : multiple && multiSubmitted && isOptionCorrect ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              ) : null}
-            </button>
-          );
-        })}
       </div>
-
-      {/* Multi-choice Submit Button */}
-      {multiple && !multiSubmitted && !isParentReadOnly && (
-        <button
-          onClick={handleMultiSubmit}
-          disabled={multiSelected.length === 0}
-          className="w-full py-2.5 mt-1 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
-        >
-          <CheckCircle2 className="w-3.5 h-3.5" />
-          {language === 'FR' ? 'Valider mes réponses'
-            : language === 'ES' ? 'Validar mis respuestas'
-            : language === 'DE' ? 'Antworten bestätigen'
-            : language === 'ZH' ? '提交答案'
-            : 'Submit Answers'}
-        </button>
-      )}
-      
-      {isReadOnly && (
-        <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-2 mt-2 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400 font-semibold">
-              {language === 'FR' ? 'Votre réponse :' 
-                : language === 'ES' ? 'Su respuesta:'
-                : language === 'DE' ? 'Ihre Antwort:'
-                : language === 'ZH' ? '您的回答：'
-                : 'Your answer:'}
-            </span>
-            {selected !== null ? (
-              <span className={isCorrect ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
-                {finalOptions[selected]?.text}
-              </span>
-            ) : (
-              <span className="text-red-400 font-bold italic">
-                {language === 'FR' ? 'Aucune réponse (temps écoulé)' 
-                  : language === 'ES' ? 'Sin respuesta (tiempo agotado)'
-                  : language === 'DE' ? 'Keine Antwort (Zeitüberschreitung)'
-                  : language === 'ZH' ? '未作答 (超时)'
-                  : 'No answer (time out)'}
-              </span>
-            )}
-          </div>
-          {!isCorrect && (
-            <div className="flex items-center gap-2 border-t border-slate-800/40 pt-2">
-              <span className="text-slate-400 font-semibold">
-                {language === 'FR' ? 'Bonne réponse :' 
-                  : language === 'ES' ? 'Respuesta correcta:'
-                  : language === 'DE' ? 'Richtige Antwort:'
-                  : language === 'ZH' ? '正确答案：'
-                  : 'Correct answer:'}
-              </span>
-              <span className="text-emerald-400 font-bold">
-                {finalOptions.find((o) => o.correct === true)?.text}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {selected !== null && !isCorrect && explanation && (
-        <div className="p-4 bg-violet-500/10 border border-violet-500/20 rounded-2xl space-y-2 mt-2">
-          <div className="flex items-center gap-1.5 text-violet-400 text-[10px] font-black uppercase tracking-widest">
-            <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
-            <span>{t.tutor_explanation}</span>
-          </div>
-          <p className="text-slate-300 text-xs leading-relaxed italic font-medium">
-            {explanation}
-          </p>
-        </div>
-      )}
-
-      {!isLoggedIn && !isReadOnly && <GuestFootnote />}
-    </div>
   );
 };
 
-export const Option = ({ text, correct = false }: { text: string; correct?: boolean }) => {
-  return null; // Logic is handled in Question
-};
+// Subcomponents Question and Option extracted to ./quiz/Question
+export { Question, Option, type QuestionProps } from './quiz/Question';

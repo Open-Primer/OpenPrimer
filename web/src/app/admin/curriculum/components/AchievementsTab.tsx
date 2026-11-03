@@ -357,15 +357,13 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
   };
 
   const getCompiledTranslations = (name: string, desc: string, threshold?: string) => {
-    const isFr = lang === 'FR';
-    const limit = threshold || '3';
-    return [
-      { code: 'EN', name: name, desc: desc },
-      { code: 'FR', name: isFr ? name : `${name} (FR)`, desc: isFr ? desc : `${desc} (FR)` },
-      { code: 'ES', name: `${name} (ES)`, desc: `${desc} (ES)` },
-      { code: 'DE', name: `${name} (DE)`, desc: `${desc} (DE)` },
-      { code: 'ZH', name: `${name} (ZH)`, desc: `${desc} (ZH)` }
-    ];
+    const currentLang = (lang || 'EN').toUpperCase();
+    const supportedCodes = ['EN', 'FR', 'ES', 'DE', 'ZH', 'PT', 'AR', 'HI', 'UR'];
+    return supportedCodes.map(code => ({
+      code,
+      name: code === currentLang ? name : (code === 'EN' ? name : `${name} (${code})`),
+      desc: code === currentLang ? desc : (code === 'EN' ? desc : `${desc} (${code})`)
+    }));
   };
 
   const handleImageFile = (file: File, isEdit: boolean) => {

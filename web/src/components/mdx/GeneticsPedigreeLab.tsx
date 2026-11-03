@@ -135,11 +135,14 @@ export const GeneticsPedigreeLab = ({
     "Squares (□) represent males; circles (○) represent females. Filled shapes indicate the expressed phenotype. Half-filled circles denote heterozygous carriers in sex-linked traits.": "Les carrés (□) représentent les hommes ; les cercles (○) représentent les femmes. Les formes remplies indiquent le phénotype exprimé. Les cercles à moitié remplis désignent les porteurs hétérozygotes pour les caractères liés au sexe."
   };
 
+  const LOCAL_DICTS: Record<string, Record<string, string>> = {
+    ZH: localZH,
+    FR: localFR,
+  };
+
   const t = (key: string) => {
     const lang = (language || 'EN').toUpperCase();
-    if (lang === 'ZH' && localZH[key]) return localZH[key];
-    if (lang === 'FR' && localFR[key]) return localFR[key];
-    return key;
+    return LOCAL_DICTS[lang]?.[key] || key;
   };
 
   const [activeTrait, setActiveTrait] = useState(TRAITS[0]);

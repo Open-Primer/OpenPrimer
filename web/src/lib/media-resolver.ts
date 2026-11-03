@@ -1,3 +1,4 @@
+import { TransientNetworkError, StructuralJsonError } from './errors';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -148,19 +149,7 @@ Règles :
   return [specificQuery];
 }
 
-class TransientNetworkError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'TransientNetworkError';
-  }
-}
-
-class StructuralJsonError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'StructuralJsonError';
-  }
-}
+// TransientNetworkError & StructuralJsonError imported from ./errors
 
 async function safeResponseJson(res: Response, contextName: string = 'unknown'): Promise<any> {
   const contentType = res.headers.get('Content-Type') || '';

@@ -35,18 +35,21 @@ function stripDangerousHtml(raw: string): string {
     .replace(/<(?!\/?(strong|em|b|i|span|br|code)\b)[^>]+>/gi, '');
 }
 
-function parseMarkdownToHtml(text: string): string {
-  if (!text) return "";
-  // Sanitize raw input BEFORE any markdown transformation
-  const safe = stripDangerousHtml(text);
-  let html = safe;
-  // Replace double asterisks with strong
-  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  // Replace single asterisks with em
-  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  // Replace underscores with em
-  html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
-  return html;
+/**
+ * Safely parses markdown bold and italics into typed React nodes without dangerouslySetInnerHTML.
+ */
+function renderMarkdownInline(text: string): React.ReactNode {
+  if (!text) return null;
+  const parts = text.split(/(\?\?[^*]+\?\?|\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="font-semibold text-slate-100">{part.slice(2, -2)}</strong>;
+    }
+    if ((part.startsWith('*') && part.endsWith('*')) || (part.startsWith('_') && part.endsWith('_'))) {
+      return <em key={i} className="italic text-slate-300">{part.slice(1, -1)}</em>;
+    }
+    return <React.Fragment key={i}>{part}</React.Fragment>;
+  });
 }
 
 export function References({ itemsBase64, items: directItems }: ReferencesProps) {
@@ -206,10 +209,9 @@ export function References({ itemsBase64, items: directItems }: ReferencesProps)
             )}
             
             <div className="flex-1">
-              <span 
-                className="prose-strong:font-black prose-a:text-indigo-400 hover:prose-a:underline break-words" 
-                dangerouslySetInnerHTML={{ __html: parseMarkdownToHtml(item.text) }} 
-              />
+              <span className="prose-strong:font-black prose-a:text-indigo-400 hover:prose-a:underline break-words">
+                {renderMarkdownInline(item.text)}
+              </span>
               {item.scholarUrl && (() => {
                 // Sanitize scholarText: strip HTML tags, collapse whitespace, cap at 60 chars
                 const rawText = (item.scholarText || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();

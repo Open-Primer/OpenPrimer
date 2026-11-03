@@ -453,11 +453,18 @@ for (const lang of Object.keys(newTranslations)) {
   }
   
   const body = content.substring(startIdx + 1, endIdx);
-  let parsedObj;
+  let parsedObj = {};
   try {
-    parsedObj = eval('({' + body + '})');
+    // Safely parse key-value pairs without invoking eval()
+    const kvRegex = /^\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')\s*:\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')\s*,?\s*$/gm;
+    let m;
+    while ((m = kvRegex.exec(body)) !== null) {
+      const key = m[1] !== undefined ? JSON.parse('"' + m[1] + '"') : m[2].replace(/\\'/g, "'");
+      const val = m[3] !== undefined ? JSON.parse('"' + m[3] + '"') : m[4].replace(/\\'/g, "'");
+      parsedObj[key] = val;
+    }
   } catch (e) {
-    console.error(`Failed to eval body of ${lang}.ts`, e);
+    console.error(`Failed to safely parse body of ${lang}.ts`, e);
     continue;
   }
   

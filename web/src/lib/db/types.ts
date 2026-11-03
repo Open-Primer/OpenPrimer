@@ -342,83 +342,110 @@ export interface Lesson {
   evaluation_type?: 'formative' | 'summative';
 }
 
-export interface DatabaseService {
-  getSystemParameters(): Promise<{ data: SystemParameter[] | null; error: any }>;
-  saveSystemParameter(param: { key: string; value: string }): Promise<{ data: any; error: any }>;
-  getLocalizedCourseTitle(course: any, lang: string): string;
-  getAllCourseCompletions(): Promise<{ data: any[]; error: any }>;
-  getTranslationEmails(): Promise<{ data: TranslationEmailNotification[]; error: any }>;
-  saveTranslationEmail(email: TranslationEmailNotification): Promise<{ data: TranslationEmailNotification; error: any }>;
-  deleteTranslationEmail(id: string): Promise<{ data: null; error: any }>;
-  cleanupTranslationEmails(retentionDays: number): Promise<{ data: null; error: any }>;
-  getLesson(courseSlug: string, lessonSlug: string, lang: string): Promise<{ data: any; error: any }>;
-  getFirstLessonSlug(courseSlug: string, lang: string): Promise<{ data: string | null; error: any }>;
-  saveLesson(lesson: Lesson): Promise<{ data: any; error: any }>;
-  getSyllabus(id: string): Promise<{ data: MockCourse | null; error: any }>;
-  getAllCourses(): Promise<{ data: MockCourse[] | null; error: any }>;
-  getPipelineQueue(): Promise<{ data: any[]; error: any }>;
-  savePipelineQueue(queue: any[]): Promise<{ data: any[]; error: any }>;
-  getUsers(): Promise<{ data: UserProfile[] | null; error: any }>;
-  getUserProfile(id: string): Promise<{ data: UserProfile | null; error: any }>;
-  deleteUser(id: string): Promise<{ data: any; error: any }>;
-  toggleBlockUser(id: string): Promise<{ data: any; error: any }>;
-  updateUserRole(id: string, role: string): Promise<{ data: any; error: any }>;
-  updateUserPassword(id: string, password: string): Promise<{ data: any; error: any }>;
-  hashPassword(password: string): string;
-  createUser(user: Omit<UserProfile, 'joinedAt' | 'kp' | 'level' | 'isEmailVerified' | 'isBlocked' | 'favorites' | 'aiCoachMessage'>): Promise<{ data: UserProfile | null; error: any }>;
-  getSiteStats(): Promise<{ data: any; error: any }>;
-  getUserProgress(userId: string, lang?: string, currentCourseSlug?: string): Promise<{ data: any; error: any }>;
-  enrollInCourse(userId: string, courseId: number): Promise<{ data: any; error: any }>;
-  abandonCourse(userId: string, courseId: number): Promise<{ data: any; error: any }>;
-  getReportClusters(): Promise<{ data: any[]; error: any }>;
-  approveClusterFix(id: string): Promise<{ data: any; error: any }>;
-  autoApproveAll(): Promise<{ data: any; error: any }>;
-  toggleCourseActiveStatus(courseId: number): Promise<{ data: any; error: any }>;
-  setCourseArchivingLevel(courseId: number, level: number): Promise<{ data: any; error: any }>;
-  toggleCourseLanguageArchived(courseId: number, lang: string): Promise<{ data: any; error: any }>;
-  archiveAllCourseLanguages(courseId: number, archive: boolean): Promise<{ data: any; error: any }>;
-  purgeCourse(courseId: number): Promise<{ data: any; error: any }>;
-  submitReport(course: string, page: string, comment: string, userId?: string): Promise<{ data: any; error: any }>;
-  saveCourseNotification(query: string, email: string): Promise<{ data: any; error: any }>;
-  getCourseNotifications(): Promise<{ data: any[]; error: any }>;
-  getAvailableLanguages(): Promise<{ data: LanguageInfo[]; error: any }>;
-  getLanguagesAdmin(): Promise<{ data: LanguageInfo[]; error: any }>;
-  registerLanguage(lang: LanguageInfo): Promise<{ data: LanguageInfo; error: any }>;
-  setLanguageArchivingLevel(code: string, level: number): Promise<{ data: null; error: any }>;
-  deleteLanguage(code: string): Promise<{ data: null; error: any }>;
-  getAchievements(): Promise<{ data: Achievement[] | null; error: any }>;
-  saveAchievement(ach: Achievement): Promise<{ data: Achievement; error: any }>;
-  deleteAchievement(id: number): Promise<{ data: null; error: any }>;
-  getSearchHistory(): Promise<{ data: SearchHistoryEntry[] | null; error: any }>;
-  addSearchHistoryEntry(entry: Partial<SearchHistoryEntry> & { query: string; wasSuccessful: boolean; userId?: string; userLanguage?: string }): Promise<{ data: SearchHistoryEntry | null; error: any }>;
-  cleanupSearchHistory(retentionDays: number): Promise<{ data: { purged: number } | null; error: any }>;
-  getCourseFeedbacks(courseId?: string, userId?: string): Promise<{ data: CourseFeedback[]; error: any }>;
-  addCourseFeedback(feedback: Omit<CourseFeedback, 'id' | 'timestamp' | 'isTreated'> & { userId?: string }): Promise<{ data: CourseFeedback | null; error: any }>;
-  markFeedbackTreated(id: string | number): Promise<{ data: any; error: any }>;
-  cleanupCourseFeedbacks(retentionDays: number): Promise<{ data: { purged: number } | null; error: any }>;
-  addCourse(course: Omit<MockCourse, 'id' | 'popularity' | 'is_active'>): Promise<{ data: MockCourse; error: any }>;
-  saveCourse(course: any): Promise<{ data: MockCourse; error: any }>;
-  getTranslationRequests(): Promise<{ data: TranslationRequestEntry[]; error: any }>;
-  addTranslationRequest(entry: Omit<TranslationRequestEntry, 'id' | 'timestamp'>): Promise<{ data: TranslationRequestEntry; error: any }>;
-  purgeTranslationRequest(id: string): Promise<{ data: null; error: any }>;
-  cleanupTranslationRequests(retentionDays: number): Promise<{ data: { purged: number } | null; error: any }>;
-  getRefusedCourses(): Promise<{ data: RefusedCourseEntry[]; error: any }>;
-  addRefusedCourse(course: RefusedCourseEntry): Promise<{ data: RefusedCourseEntry; error: any }>;
-  deleteRefusedCourse(id: string): Promise<{ data: null; error: any }>;
-  getRefusedTranslations(): Promise<{ data: RefusedTranslationEntry[]; error: any }>;
-  addRefusedTranslation(trans: RefusedTranslationEntry): Promise<{ data: RefusedTranslationEntry; error: any }>;
-  deleteRefusedTranslation(id: string): Promise<{ data: null; error: any }>;
-  getRefusedRevisions(): Promise<{ data: RefusedRevisionEntry[]; error: any }>;
-  addRefusedRevision(rev: RefusedRevisionEntry): Promise<{ data: RefusedRevisionEntry; error: any }>;
-  deleteRefusedRevision(id: string): Promise<{ data: null; error: any }>;
-  getTutorPersonalities(): Promise<{ data: TutorPersonality[]; error: any }>;
-  saveTutorPersonality(pers: TutorPersonality): Promise<{ data: TutorPersonality; error: any }>;
-  deleteTutorPersonality(id: string): Promise<{ data: null; error: any }>;
-  getAgentMetrics(): Promise<{ data: AgentMetric[]; error: any }>;
-  updateAgentMetrics(id: string, cost: number, durationMs: number): Promise<{ data: any; error: any }>;
-  deleteCourse(courseId: number): Promise<{ data: any; error: any }>;
-  getContactFeedbacks(): Promise<{ data: ContactFeedback[]; error: any }>;
-  saveContactFeedback(feedback: Omit<ContactFeedback, 'id' | 'timestamp'>): Promise<{ data: ContactFeedback | null; error: any }>;
-  updateUserSettings(id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string; audioReadCourse?: boolean; audioReadTutor?: boolean; ttsEnabled?: boolean }): Promise<{ data: any; error: any }>;
-  flushLocalCaches(): Promise<{ data: null; error: any }>;
+export interface SystemRepository {
+  getSystemParameters(): Promise<{ data: SystemParameter[] | null; error: Error | null }>;
+  saveSystemParameter(param: { key: string; value: string }): Promise<{ data: any; error: Error | null }>;
+  getSiteStats(): Promise<{ data: any; error: Error | null }>;
+  getAgentMetrics(): Promise<{ data: AgentMetric[]; error: Error | null }>;
+  updateAgentMetrics(id: string, cost: number, durationMs: number): Promise<{ data: any; error: Error | null }>;
+  flushLocalCaches(): Promise<{ data: null; error: Error | null }>;
 }
+
+export interface CourseRepository {
+  getLocalizedCourseTitle(course: Partial<MockCourse> | Record<string, any>, lang: string): string;
+  getAllCourseCompletions(): Promise<{ data: any[]; error: Error | null }>;
+  getLesson(courseSlug: string, lessonSlug: string, lang: string): Promise<{ data: any; error: Error | null }>;
+  getFirstLessonSlug(courseSlug: string, lang: string): Promise<{ data: string | null; error: Error | null }>;
+  saveLesson(lesson: Lesson): Promise<{ data: any; error: Error | null }>;
+  getSyllabus(id: string): Promise<{ data: MockCourse | null; error: Error | null }>;
+  getAllCourses(): Promise<{ data: MockCourse[] | null; error: Error | null }>;
+  addCourse(course: Omit<MockCourse, 'id' | 'popularity' | 'is_active'>): Promise<{ data: MockCourse; error: Error | null }>;
+  saveCourse(course: Partial<MockCourse> | Record<string, any>): Promise<{ data: MockCourse; error: Error | null }>;
+  deleteCourse(courseId: number): Promise<{ data: any; error: Error | null }>;
+  toggleCourseActiveStatus(courseId: number): Promise<{ data: any; error: Error | null }>;
+  setCourseArchivingLevel(courseId: number, level: number): Promise<{ data: any; error: Error | null }>;
+  toggleCourseLanguageArchived(courseId: number, lang: string): Promise<{ data: any; error: Error | null }>;
+  archiveAllCourseLanguages(courseId: number, archive: boolean): Promise<{ data: any; error: Error | null }>;
+  purgeCourse(courseId: number): Promise<{ data: any; error: Error | null }>;
+  getPipelineQueue(): Promise<{ data: any[]; error: Error | null }>;
+  savePipelineQueue(queue: any[]): Promise<{ data: any[]; error: Error | null }>;
+}
+
+export interface UserRepository {
+  getUsers(): Promise<{ data: UserProfile[] | null; error: Error | null }>;
+  getUserProfile(id: string): Promise<{ data: UserProfile | null; error: Error | null }>;
+  deleteUser(id: string): Promise<{ data: any; error: Error | null }>;
+  toggleBlockUser(id: string): Promise<{ data: any; error: Error | null }>;
+  updateUserRole(id: string, role: string): Promise<{ data: any; error: Error | null }>;
+  updateUserPassword(id: string, password: string): Promise<{ data: any; error: Error | null }>;
+  hashPassword(password: string): string;
+  createUser(user: Omit<UserProfile, 'joinedAt' | 'kp' | 'level' | 'isEmailVerified' | 'isBlocked' | 'favorites' | 'aiCoachMessage'>): Promise<{ data: UserProfile | null; error: Error | null }>;
+  getUserProgress(userId: string, lang?: string, currentCourseSlug?: string): Promise<{ data: any; error: Error | null }>;
+  enrollInCourse(userId: string, courseId: number): Promise<{ data: any; error: Error | null }>;
+  abandonCourse(userId: string, courseId: number): Promise<{ data: any; error: Error | null }>;
+  updateUserSettings(id: string, settings: { audioVolume?: number; audioRate?: number; audioVoiceId?: string; audioReadCourse?: boolean; audioReadTutor?: boolean; ttsEnabled?: boolean }): Promise<{ data: any; error: Error | null }>;
+}
+
+export interface LanguageRepository {
+  getAvailableLanguages(): Promise<{ data: LanguageInfo[]; error: Error | null }>;
+  getLanguagesAdmin(): Promise<{ data: LanguageInfo[]; error: Error | null }>;
+  registerLanguage(lang: LanguageInfo): Promise<{ data: LanguageInfo; error: Error | null }>;
+  setLanguageArchivingLevel(code: string, level: number): Promise<{ data: null; error: Error | null }>;
+  deleteLanguage(code: string): Promise<{ data: null; error: Error | null }>;
+}
+
+export interface FeedbackRepository {
+  getCourseFeedbacks(courseId?: string, userId?: string): Promise<{ data: CourseFeedback[]; error: Error | null }>;
+  addCourseFeedback(feedback: Omit<CourseFeedback, 'id' | 'timestamp' | 'isTreated'> & { userId?: string }): Promise<{ data: CourseFeedback | null; error: Error | null }>;
+  markFeedbackTreated(id: string | number): Promise<{ data: any; error: Error | null }>;
+  cleanupCourseFeedbacks(retentionDays: number): Promise<{ data: { purged: number } | null; error: Error | null }>;
+  getContactFeedbacks(): Promise<{ data: ContactFeedback[]; error: Error | null }>;
+  saveContactFeedback(feedback: Omit<ContactFeedback, 'id' | 'timestamp'>): Promise<{ data: ContactFeedback | null; error: Error | null }>;
+  submitReport(course: string, page: string, comment: string, userId?: string): Promise<{ data: any; error: Error | null }>;
+  getReportClusters(): Promise<{ data: any[]; error: Error | null }>;
+  approveClusterFix(id: string): Promise<{ data: any; error: Error | null }>;
+  autoApproveAll(): Promise<{ data: any; error: Error | null }>;
+}
+
+export interface NotificationRepository {
+  getTranslationEmails(): Promise<{ data: TranslationEmailNotification[]; error: Error | null }>;
+  saveTranslationEmail(email: TranslationEmailNotification): Promise<{ data: TranslationEmailNotification; error: Error | null }>;
+  deleteTranslationEmail(id: string): Promise<{ data: null; error: Error | null }>;
+  cleanupTranslationEmails(retentionDays: number): Promise<{ data: null; error: Error | null }>;
+  saveCourseNotification(query: string, email: string): Promise<{ data: any; error: Error | null }>;
+  getCourseNotifications(): Promise<{ data: any[]; error: Error | null }>;
+}
+
+export interface AuditAndArchiveRepository {
+  getSearchHistory(): Promise<{ data: SearchHistoryEntry[] | null; error: Error | null }>;
+  addSearchHistoryEntry(entry: Partial<SearchHistoryEntry> & { query: string; wasSuccessful: boolean; userId?: string; userLanguage?: string }): Promise<{ data: SearchHistoryEntry | null; error: Error | null }>;
+  cleanupSearchHistory(retentionDays: number): Promise<{ data: { purged: number } | null; error: Error | null }>;
+  getTranslationRequests(): Promise<{ data: TranslationRequestEntry[]; error: Error | null }>;
+  addTranslationRequest(entry: Omit<TranslationRequestEntry, 'id' | 'timestamp'>): Promise<{ data: TranslationRequestEntry; error: Error | null }>;
+  purgeTranslationRequest(id: string): Promise<{ data: null; error: Error | null }>;
+  cleanupTranslationRequests(retentionDays: number): Promise<{ data: { purged: number } | null; error: Error | null }>;
+  getRefusedCourses(): Promise<{ data: RefusedCourseEntry[]; error: Error | null }>;
+  addRefusedCourse(course: RefusedCourseEntry): Promise<{ data: RefusedCourseEntry; error: Error | null }>;
+  deleteRefusedCourse(id: string): Promise<{ data: null; error: Error | null }>;
+  getRefusedTranslations(): Promise<{ data: RefusedTranslationEntry[]; error: Error | null }>;
+  addRefusedTranslation(trans: RefusedTranslationEntry): Promise<{ data: RefusedTranslationEntry; error: Error | null }>;
+  deleteRefusedTranslation(id: string): Promise<{ data: null; error: Error | null }>;
+  getRefusedRevisions(): Promise<{ data: RefusedRevisionEntry[]; error: Error | null }>;
+  addRefusedRevision(rev: RefusedRevisionEntry): Promise<{ data: RefusedRevisionEntry; error: Error | null }>;
+  deleteRefusedRevision(id: string): Promise<{ data: null; error: Error | null }>;
+  getAchievements(): Promise<{ data: Achievement[] | null; error: Error | null }>;
+  saveAchievement(ach: Achievement): Promise<{ data: Achievement; error: Error | null }>;
+  deleteAchievement(id: number): Promise<{ data: null; error: Error | null }>;
+  getTutorPersonalities(): Promise<{ data: TutorPersonality[]; error: Error | null }>;
+  saveTutorPersonality(pers: TutorPersonality): Promise<{ data: TutorPersonality; error: Error | null }>;
+  deleteTutorPersonality(id: string): Promise<{ data: null; error: Error | null }>;
+}
+
+export interface DatabaseService extends
+  SystemRepository,
+  CourseRepository,
+  UserRepository,
+  LanguageRepository,
+  FeedbackRepository,
+  NotificationRepository,
+  AuditAndArchiveRepository {}

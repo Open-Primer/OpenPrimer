@@ -253,7 +253,19 @@ export const CourseCompletionFeedback = ({ courseId, courseTitle, lang }: Course
 
     if (comment.trim()) {
       if (isSpam(comment) || detectPromptInjection(comment)) {
-        alert(lang === 'FR' ? "Votre commentaire contient du spam ou du contenu inapproprié." : "Your comment contains spam or inappropriate content.");
+        const spamMsg: Record<string, string> = {
+          FR: "Votre commentaire contient du spam ou du contenu inapproprié.",
+          EN: "Your comment contains spam or inappropriate content.",
+          ES: "Su comentario contiene spam o contenido inapropiado.",
+          DE: "Ihr Kommentar enthält Spam oder ungeeignete Inhalte.",
+          ZH: "您的评论包含垃圾信息或不当内容。",
+          PT: "O seu comentário contém spam ou conteúdo impróprio.",
+          AR: "تعليقك يحتوي على محتوى غير لائق أو رسائل مزعجة.",
+          HI: "आपकी टिप्पणी में स्पैम या अनुपयुक्त सामग्री है।",
+          UR: "آپ کے تبصرے میں سپیم یا نامناسب مواد شامل ہے۔"
+        };
+        const langKey = (lang || 'EN').toUpperCase();
+        alert(spamMsg[langKey] || spamMsg.EN);
         return;
       }
     }

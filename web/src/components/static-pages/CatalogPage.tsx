@@ -31,6 +31,9 @@ const SUBJECT_SUGGESTIONS = [
 
 const EMPTY_STATE_STRINGS = {
   EN: {
+    spam_detected: "Your request has been flagged as spam.",
+    unauthorized_content: "Unauthorized content detected.",
+    generic_error: "An error occurred. Please try again.",
     title: "No courses found",
     subtitle_a: "This search is being tracked by our",
     subtitle_b: "AI Generation Engine.",
@@ -47,6 +50,9 @@ const EMPTY_STATE_STRINGS = {
     privacy_note: "Your email address is securely retained for up to 90 days and will be automatically purged if the course is not generated within this period.",
   },
   FR: {
+    spam_detected: "Votre demande a été signalée comme spam.",
+    unauthorized_content: "Contenu non autorisé détecté.",
+    generic_error: "Une erreur est survenue. Veuillez réessayer.",
     title: "Aucun cours trouvé",
     subtitle_a: "Cette recherche est suivie par notre",
     subtitle_b: "Moteur de Génération IA.",
@@ -63,6 +69,9 @@ const EMPTY_STATE_STRINGS = {
     privacy_note: "Votre adresse e-mail est conservée de manière sécurisée pendant 90 jours maximum et sera automatiquement supprimée si le cours n'est pas généré durant cette période.",
   },
   ES: {
+    spam_detected: "Su solicitud ha sido marcada como spam.",
+    unauthorized_content: "Contenido no autorizado detectado.",
+    generic_error: "Ocurrió un error. Por favor, inténtelo de nuevo.",
     title: "No se encontraron cursos",
     subtitle_a: "Esta búsqueda es rastreada por nuestro",
     subtitle_b: "Motor de Generación IA.",
@@ -79,6 +88,9 @@ const EMPTY_STATE_STRINGS = {
     privacy_note: "Su dirección de correo electrónico se conserva de forma segura durante un máximo de 90 días y se eliminará automáticamente si el curso no se genera durante este período.",
   },
   DE: {
+    spam_detected: "Ihre Anfrage wurde als Spam markiert.",
+    unauthorized_content: "Nicht autorisierter Inhalt erkannt.",
+    generic_error: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     title: "Keine Kurse gefunden",
     subtitle_a: "Diese Suche wird von unserem",
     subtitle_b: "KI-Generierungs-Engine verfolgt.",
@@ -95,6 +107,9 @@ const EMPTY_STATE_STRINGS = {
     privacy_note: "Ihre E-Mail-Adresse wird bis zu 90 Tage lang sicher aufbewahrt und automatisch gelöscht, wenn der Kurs in diesem Zeitraum nicht erstellt wird.",
   },
   ZH: {
+    spam_detected: "您的请求已被标记为垃圾信息。",
+    unauthorized_content: "检测到未授权内容。",
+    generic_error: "发生错误，请重试。",
     title: "未找到课程",
     subtitle_a: "此搜索正由我们的",
     subtitle_b: "AI生成引擎追踪。",
@@ -111,6 +126,9 @@ const EMPTY_STATE_STRINGS = {
     privacy_note: "您的电子邮件地址将被安全保留最多90天，如果在此期间未生成课程，将被自动清除。",
   },
   PT: {
+    spam_detected: "A sua solicitação foi sinalizada como spam.",
+    unauthorized_content: "Conteúdo não autorizado detectado.",
+    generic_error: "Ocorreu um erro. Por favor, tente novamente.",
     title: "Nenhum curso encontrado",
     subtitle_a: "Esta busca está sendo rastreada pelo nosso",
     subtitle_b: "Motor de Geração IA.",
@@ -127,6 +145,9 @@ const EMPTY_STATE_STRINGS = {
     privacy_note: "Seu endereço de e-mail é retido com segurança por até 90 dias e será excluído automaticamente se o curso não for gerado dentro deste período.",
   },
   AR: {
+    spam_detected: "تم وضع علامة على طلبك كرسالة غير مرغوب فيها.",
+    unauthorized_content: "تم اكتشاف محتوى غير مصرح به.",
+    generic_error: "حدث خطأ. يرجى المحاولة مرة أخرى.",
     title: "لم يتم العثور على دورات",
     subtitle_a: "هذا البحث يتم تتبعه بواسطة",
     subtitle_b: "محرك التوليد المدعوم بالذكاء الاصطناعي الخاص بنا.",
@@ -143,6 +164,9 @@ const EMPTY_STATE_STRINGS = {
     privacy_note: "يتم الاحتفاظ بعنوان بريدك الإلكتروني بشكل آمن لمدة تصل إلى 90 يومًا وسيتم حذفه تلقائيًا إذا لم يتم إنشاء الدورة التدريبية خلال هذه الفترة.",
   },
   HI: {
+    spam_detected: "आपके अनुरोध को स्पैम के रूप में चिह्नित किया गया है।",
+    unauthorized_content: "अनधिकृत सामग्री का पता चला।",
+    generic_error: "एक त्रुटि उत्पन्न हुई। कृपया पुन: प्रयास करें।",
     title: "कोई कोर्स नहीं मिला",
     subtitle_a: "यह खोज हमारे द्वारा ट्रैक की जा रही है",
     subtitle_b: "एआई जनरेशन इंजन।",
@@ -159,6 +183,9 @@ const EMPTY_STATE_STRINGS = {
     privacy_note: "आपका ईमेल पता अधिकतम 90 दिनों के लिए सुरक्षित रूप से रखा जाता है और यदि इस अवधि के भीतर पाठ्यक्रम उत्पन्न नहीं होता है तो स्वचालित रूप से हटा दिया जाएगा।",
   },
   UR: {
+    spam_detected: "آپ کی درخواست کو سپیم کے طور پر نشان زد کیا گیا ہے۔",
+    unauthorized_content: "غیر مجاز مواد کا پتہ چلا۔",
+    generic_error: "ایک خرابی پیش آگئی ہے۔ براہ کرم دوبارہ کوشش کریں۔",
     title: "کوئی کورس نہیں ملا",
     subtitle_a: "یہ تلاش ہماری طرف سے ٹریک کی جا رہی ہے",
     subtitle_b: "اے آئی جنریشن انجن۔",
@@ -204,13 +231,13 @@ const SmartEmptyState = ({ searchQuery, onClear, lang, onSelectSubject }: SmartE
 
     // 2. Content spam verification
     if (isSpam(searchQuery) || isSpam(trimmedEmail)) {
-      setError(lang === 'FR' ? "Votre demande a été signalée comme spam." : "Your request has been flagged as spam.");
+      setError(es.spam_detected);
       return;
     }
 
     // 3. Prompt injection detection
     if (detectPromptInjection(searchQuery) || detectPromptInjection(trimmedEmail)) {
-      setError(lang === 'FR' ? "Contenu non autorisé détecté." : "Unauthorized content detected.");
+      setError(es.unauthorized_content);
       return;
     }
 
@@ -219,7 +246,7 @@ const SmartEmptyState = ({ searchQuery, onClear, lang, onSelectSubject }: SmartE
       await dbService.saveCourseNotification(searchQuery, trimmedEmail);
       setSubmitted(true);
     } catch (err) {
-      setError(lang === 'FR' ? "Une erreur est survenue. Veuillez réessayer." : "An error occurred. Please try again.");
+      setError(es.generic_error);
     }
   };
 

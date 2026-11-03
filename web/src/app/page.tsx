@@ -1052,7 +1052,7 @@ export default function Home() {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 {getLocalString('courses_available_badge', lang).replace(
                   '{count}',
-                  (stats?.total_courses || 0).toLocaleString(lang === 'FR' ? 'fr-FR' : 'en-US')
+                  (stats?.total_courses || 0).toLocaleString(getBcp47Locale(lang))
                 )}
               </span>
             </div>

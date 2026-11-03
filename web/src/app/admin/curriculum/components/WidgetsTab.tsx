@@ -341,6 +341,8 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
     const prop = `level${lang.toUpperCase()}`;
     return (w as any)[prop] || w.levelEN;
   };
+  const isFrancophoneLocale = String(lang).toUpperCase().startsWith('FR');
+  const getAcademicLevelText = (lvl: any): string => (lvl as any)[lang.toUpperCase()] || lvl.EN;
 
   // AI Generation workshop States
   const [prompt, setPrompt] = useState('');
@@ -424,7 +426,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   };
 
   const namingCollisionError = React.useMemo(() => {
-    const inputName = (lang === 'FR' ? newWidgetNameFR : newWidgetNameEN).trim();
+    const inputName = (isFrancophoneLocale ? newWidgetNameFR : newWidgetNameEN).trim();
     if (!inputName) return null;
 
     const inputLower = inputName.toLowerCase();
@@ -446,7 +448,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       const existingNameENPascal = toPascalCase(w.nameEN).toLowerCase();
       if (existingNameFRPascal === computedPascal || existingNameENPascal === computedPascal) {
         return tr("This name is too similar to '{existing}' and would generate a duplicate ID ({id}).")
-          .replace("{existing}", lang === 'FR' ? w.nameFR : w.nameEN)
+          .replace("{existing}", getWidgetName(w))
           .replace("{id}", w.id);
       }
     }
@@ -599,8 +601,8 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
               });
               return minRank === 999 ? 100 : minRank;
             };
-            const rankA = getLevelRank(lang === 'FR' ? a.levelFR : a.levelEN);
-            const rankB = getLevelRank(lang === 'FR' ? b.levelFR : b.levelEN);
+            const rankA = getLevelRank(getWidgetLevel(a));
+            const rankB = getLevelRank(getWidgetLevel(b));
             if (rankA !== rankB) return rankA - rankB;
           } else if (sortBy === 'discipline') {
             const discA = a.disciplines[0] || '';
@@ -716,7 +718,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
       let finalLevelFR = editLevelFR;
       let finalLevelEN = editLevelEN;
 
-      if (lang === 'FR') {
+      if (isFrancophoneLocale) {
         const [tName, tDesc, tLevel] = await Promise.all([
           translateText(editNameFR, 'FR', 'EN'),
           translateText(editDescFR, 'FR', 'EN'),
@@ -872,7 +874,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
   // Create brand new widget trigger
   const handleCreateWidget = async () => {
-    const isFr = lang === 'FR';
+    const isFr = isFrancophoneLocale;
     const activeName = isFr ? newWidgetNameFR.trim() : newWidgetNameEN.trim();
     if (!activeName || !newWidgetPrompt.trim() || isExecuting || namingCollisionError) return;
 
@@ -1108,8 +1110,8 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
         });
         return minRank === 999 ? 100 : minRank;
       };
-      const rankA = getLevelRank(lang === 'FR' ? a.levelFR : a.levelEN);
-      const rankB = getLevelRank(lang === 'FR' ? b.levelFR : b.levelEN);
+      const rankA = getLevelRank(getWidgetLevel(a));
+      const rankB = getLevelRank(getWidgetLevel(b));
       if (rankA !== rankB) return rankA - rankB;
     } else if (sortBy === 'discipline') {
       const discA = a.disciplines[0] || '';
@@ -1262,12 +1264,12 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   };
 
   const isEditFormInvalid = 
-    (lang === 'FR' ? (!editNameFR.trim() || editNameFR.trim().length < 3 || editNameFR.trim().length > 50 || !editDescFR.trim() || !editLevelFR.trim())
+    (isFrancophoneLocale ? (!editNameFR.trim() || editNameFR.trim().length < 3 || editNameFR.trim().length > 50 || !editDescFR.trim() || !editLevelFR.trim())
                    : (!editNameEN.trim() || editNameEN.trim().length < 3 || editNameEN.trim().length > 50 || !editDescEN.trim() || !editLevelEN.trim())) ||
     editDisciplines.length === 0;
 
   const isCreateFormInvalid = 
-    (lang === 'FR' ? (!newWidgetNameFR.trim() || newWidgetNameFR.trim().length < 3 || newWidgetNameFR.trim().length > 50 || !newWidgetDescFR.trim() || !newWidgetLevelFR.trim())
+    (isFrancophoneLocale ? (!newWidgetNameFR.trim() || newWidgetNameFR.trim().length < 3 || newWidgetNameFR.trim().length > 50 || !newWidgetDescFR.trim() || !newWidgetLevelFR.trim())
                    : (!newWidgetNameEN.trim() || newWidgetNameEN.trim().length < 3 || newWidgetNameEN.trim().length > 50 || !newWidgetDescEN.trim() || !newWidgetLevelEN.trim())) ||
     newWidgetDisciplines.length === 0 ||
     !newWidgetPrompt.trim() ||
@@ -1841,7 +1843,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
 
               <div className="flex-grow overflow-y-auto py-6 pr-2 pb-24 scrollbar-thin space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {lang === 'FR' ? (
+                  {isFrancophoneLocale ? (
                     <>
                       {/* Name FR */}
                       <div className="space-y-1.5 col-span-1 md:col-span-2">
@@ -2133,7 +2135,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                 
                 {/* Active-Language Only Inputs Grid */}
                 <div className="grid grid-cols-1 gap-4">
-                  {lang === 'FR' ? (
+                  {isFrancophoneLocale ? (
                     <>
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-black uppercase text-slate-500">{tr("Name")}</label>
@@ -2148,7 +2150,7 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                         <div className="mt-1.5 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-start gap-2">
                           <Info className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
                           <p className="text-[9px] text-slate-450 leading-relaxed font-medium">
-                            Le nom d'affichage doit contenir entre 3 et 50 caractères. Il sera utilisé pour déduire l'ID PascalCase technique du composant.
+                            {tr("Display name must be between 3 and 50 characters. It will automatically compile the technical component PascalCase ID.")}
                           </p>
                         </div>
                         {namingCollisionError && (
