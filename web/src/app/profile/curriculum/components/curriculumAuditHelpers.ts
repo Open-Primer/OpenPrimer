@@ -2,8 +2,7 @@ import { LOCALES } from './profileLocales';
 import { formatCourseLevel } from '@/lib/translations';
 
 function getConflictDescription(conflict: any, lang: string): string {
-  const isFr = lang.toUpperCase() === 'FR';
-  const isEs = lang.toUpperCase() === 'ES';
+  const langKey = lang.toUpperCase();
   const isDe = lang.toUpperCase() === 'DE';
   const isZh = lang.toUpperCase() === 'ZH';
   const isPt = lang.toUpperCase() === 'PT';
@@ -446,17 +445,22 @@ const ENROLLMENT_SUCCESSFUL_LABEL: Record<string, string> = {
   UR: "رجسٹریشن کامیاب!"
 };
 
+const ELECTIVE_FORMATTERS: Record<string, (enrolled: number, min: number, isCompliant: boolean) => string> = {
+  FR: (enrolled, min, isCompliant) => `${enrolled} sur ${min} cours optionnel(s) choisi(s) — ${isCompliant ? 'Conforme' : 'Sélection incomplète'}`,
+  ES: (enrolled, min, isCompliant) => `${enrolled} de ${min} curso(s) opcional(es) elegido(s) — ${isCompliant ? 'Conforme' : 'Selección requerida'}`,
+  DE: (enrolled, min, isCompliant) => `${enrolled} von ${min} optionalen Kurs(en) gewählt — ${isCompliant ? 'Konform' : 'Auswahl erforderlich'}`,
+  ZH: (enrolled, min, isCompliant) => `已选择 ${min} 个选修课程中的 ${enrolled} 个 — ${isCompliant ? '符合要求' : '需要选择'}`,
+  PT: (enrolled, min, isCompliant) => `${enrolled} de ${min} curso(s) opcional(is) escolhido(s) — ${isCompliant ? 'Conforme' : 'Seleção necessária'}`,
+  AR: (enrolled, min, isCompliant) => `تم اختيار ${enrolled} من أصل ${min} مقرر(ات) اختيارية — ${isCompliant ? 'متوافق' : 'الاختيار مطلوب'}`,
+  HI: (enrolled, min, isCompliant) => `${min} वैकल्पिक पाठ्यक्रमों में से ${enrolled} चुने गए — ${isCompliant ? 'अनुरूप' : 'चयन आवश्यक'}`,
+  UR: (enrolled, min, isCompliant) => `${min} اختیاری کورسز میں سے ${enrolled} منتخب کیے گئے — ${isCompliant ? 'مطابق' : 'انتخاب مطلوب'}`,
+  EN: (enrolled, min, isCompliant) => `${enrolled} of ${min} optional course(s) chosen — ${isCompliant ? 'Compliant' : 'Selection required'}`
+};
+
 function getElectiveDescription(enrolled: number, min: number, isCompliant: boolean, lang: string): string {
-  const l = lang.toUpperCase();
-  if (l === 'FR') return `${enrolled} sur ${min} cours optionnel(s) choisi(s) — ${isCompliant ? 'Conforme' : 'Sélection incomplète'}`;
-  if (l === 'ES') return `${enrolled} de ${min} curso(s) opcional(es) elegido(s) — ${isCompliant ? 'Conforme' : 'Selección requerida'}`;
-  if (l === 'DE') return `${enrolled} von ${min} optionalen Kurs(en) gewählt — ${isCompliant ? 'Konform' : 'Auswahl erforderlich'}`;
-  if (l === 'ZH') return `已选择 ${min} 个选修课程中的 ${enrolled} 个 — ${isCompliant ? '符合要求' : '需要选择'}`;
-  if (l === 'PT') return `${enrolled} de ${min} curso(s) opcional(is) escolhido(s) — ${isCompliant ? 'Conforme' : 'Seleção necessária'}`;
-  if (l === 'AR') return `تم اختيار ${enrolled} من أصل ${min} مقرر(ات) اختيارية — ${isCompliant ? 'متوافق' : 'الاختيار مطلوب'}`;
-  if (l === 'HI') return `${min} वैकल्पिक पाठ्यक्रमों में से ${enrolled} चुने गए — ${isCompliant ? 'अनुरूप' : 'चयन आवश्यक'}`;
-  if (l === 'UR') return `${min} اختیاری کورسز میں سے ${enrolled} منتخب کیے گئے — ${isCompliant ? 'مطابق' : 'انتخاب مطلوب'}`;
-  return `${enrolled} of ${min} optional course(s) chosen — ${isCompliant ? 'Compliant' : 'Selection required'}`;
+  const l = (lang || 'en').toUpperCase();
+  const fn = ELECTIVE_FORMATTERS[l] || ELECTIVE_FORMATTERS.EN;
+  return fn(enrolled, min, isCompliant);
 }
 
 function getAchievementTranslation(ach: any, field: 'name' | 'description', lang: string): string {

@@ -151,10 +151,11 @@ async function describeImageWithGemini(imageUrl: string, lang: string = 'fr'): P
     const arrayBuffer = await resImg.arrayBuffer();
     const base64Data = Buffer.from(arrayBuffer).toString('base64');
 
-    const targetLangName = lang.toLowerCase() === 'fr' ? 'français' :
-                           lang.toLowerCase() === 'es' ? 'espagnol' :
-                           lang.toLowerCase() === 'de' ? 'allemand' :
-                           lang.toLowerCase() === 'zh' ? 'chinois' : 'anglais';
+    const TARGET_LANG_NAME_MAP: Record<string, string> = {
+      FR: 'français', EN: 'anglais', ES: 'espagnol', DE: 'allemand',
+      ZH: 'chinois', PT: 'portugais', AR: 'arabe', HI: 'hindi', UR: 'ourdou'
+    };
+    const targetLangName = TARGET_LANG_NAME_MAP[lang.toUpperCase()] || 'anglais';
 
     const promptText = `Analyse cette image.
 Rédige une description concise, neutre, informative et factuelle (1 phrase, environ 10 à 25 mots) de ce qui est visible dans cette image, adaptée pour servir de légende (caption) et de texte alternatif (alt) pour des étudiants dans un cours pédagogique.

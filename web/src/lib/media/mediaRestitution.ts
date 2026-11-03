@@ -49,7 +49,12 @@ export async function repairMediaOnRestitution(mdxContent: string, targetLang: s
 
     if (needsResolution && title) {
       repairCount++;
-      const searchQuery = `${title} cours education ${targetLangLower === 'fr' ? 'français' : 'english'}`;
+      const SEARCH_LANG_NAME_MAP: Record<string, string> = {
+        FR: 'français', EN: 'english', ES: 'español', DE: 'deutsch',
+        ZH: '中文', PT: 'português', AR: 'عربي', HI: 'हिन्दी', UR: 'اردو'
+      };
+      const langDescriptor = SEARCH_LANG_NAME_MAP[targetLangLower.toUpperCase()] || 'english';
+      const searchQuery = `${title} cours education ${langDescriptor}`;
       const realId = await searchYouTubeVideo(searchQuery);
       
       if (realId) {

@@ -59,10 +59,8 @@ export function useWidgetCrud({
       let finalLevelFR = editLevelFR;
       let finalLevelEN = editLevelEN;
 
-      if (lang === 'FR') {
-        const [tName, tDesc, tLevel] = await Promise.all([
-          translateText(editNameFR, 'FR', 'EN'),
-          translateText(editDescFR, 'FR', 'EN'),
+    const langKey = lang.toUpperCase();
+    return (widget as any)[`description${langKey}`] || widget.description || '';
           translateText(editLevelFR, 'FR', 'EN')
         ]);
         finalNameEN = tName;

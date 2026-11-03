@@ -106,9 +106,12 @@ export async function healWikidataEntities(comp: any, targetLang: string): Promi
                 if (resolved.smiles) props.smiles = resolved.smiles;
                 
                 if (props.description && !props.description.includes(resolved.formula)) {
-                  const formulaSuffix = targetLang === 'fr' 
-                    ? ` (formule chimique : ${resolved.formula})` 
-                    : ` (chemical formula: ${resolved.formula})`;
+                  const FORMULA_LABEL_MAP: Record<string, string> = {
+                    FR: 'formule chimique', EN: 'chemical formula', ES: 'fórmula química', DE: 'chemische Formel',
+                    ZH: '化学式', PT: 'fórmula química', AR: 'الصيغة الكيميائية', HI: 'रासायनिक सूत्र', UR: 'کیمیائی فارمولا'
+                  };
+                  const label = FORMULA_LABEL_MAP[targetLang.toUpperCase()] || 'chemical formula';
+                  const formulaSuffix = ` (${label}: ${resolved.formula})`;
                   props.description = props.description.trim() + formulaSuffix;
                 }
                 console.log(`[CHEMICAL RESOLVER] Resolved formula for "${entityName}": ${resolved.formula}`);

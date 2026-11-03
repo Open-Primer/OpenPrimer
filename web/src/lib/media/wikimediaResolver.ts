@@ -188,16 +188,20 @@ async function synthesizeSpeech(text: string, lang: string = 'fr'): Promise<Buff
     const token = await getGoogleAccessToken();
     if (!token) return null;
 
-    const langCode = lang.toLowerCase() === 'fr' ? 'fr-FR' : 
-                     lang.toLowerCase() === 'es' ? 'es-ES' :
-                     lang.toLowerCase() === 'de' ? 'de-DE' :
-                     lang.toLowerCase() === 'zh' ? 'zh-CN' : 'en-US';
-
-    const voiceName = langCode === 'fr-FR' ? 'fr-FR-Standard-A' :
-                      langCode === 'en-US' ? 'en-US-Standard-A' :
-                      langCode === 'es-ES' ? 'es-ES-Standard-A' :
-                      langCode === 'de-DE' ? 'de-DE-Standard-A' : 'zh-CN-Standard-A';
-
+    const TTS_CONFIG_MAP: Record<string, { langCode: string; voiceName: string }> = {
+      FR: { langCode: 'fr-FR', voiceName: 'fr-FR-Standard-A' },
+      EN: { langCode: 'en-US', voiceName: 'en-US-Standard-A' },
+      ES: { langCode: 'es-ES', voiceName: 'es-ES-Standard-A' },
+      DE: { langCode: 'de-DE', voiceName: 'de-DE-Standard-A' },
+      ZH: { langCode: 'zh-CN', voiceName: 'zh-CN-Standard-A' },
+      PT: { langCode: 'pt-BR', voiceName: 'pt-BR-Standard-A' },
+      AR: { langCode: 'ar-XA', voiceName: 'ar-XA-Standard-A' },
+      HI: { langCode: 'hi-IN', voiceName: 'hi-IN-Standard-A' },
+      UR: { langCode: 'ur-PK', voiceName: 'ur-PK-Standard-A' }
+    };
+    const ttsConfig = TTS_CONFIG_MAP[lang.toUpperCase()] || TTS_CONFIG_MAP.EN;
+    const langCode = ttsConfig.langCode;
+    const voiceName = ttsConfig.voiceName;
     const ttsUrl = 'https://texttospeech.googleapis.com/v1/text:synthesize';
     const body = {
       input: { text },

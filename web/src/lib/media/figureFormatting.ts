@@ -227,16 +227,14 @@ async function validateWikipediaPage(term: string, lang: string): Promise<boolea
 }
 
 
+const FIGURE_PREFIX_MAP: Record<string, string> = {
+  FR: 'Figure', ES: 'Figura', PT: 'Figura', DE: 'Abbildung',
+  ZH: '图', AR: 'الشكل', HI: 'चित्र', UR: 'خاکہ', EN: 'Figure'
+};
+
 function getFigurePrefix(lang: string): string {
-  const l = lang.toLowerCase().split('-')[0];
-  if (l === 'fr') return 'Figure';
-  if (l === 'es' || l === 'pt') return 'Figura';
-  if (l === 'de') return 'Abbildung';
-  if (l === 'zh') return '图';
-  if (l === 'ar') return 'الشكل';
-  if (l === 'hi') return 'चित्र';
-  if (l === 'ur') return 'خاکہ';
-  return 'Figure';
+  const l = (lang || 'en').toUpperCase().split('-')[0];
+  return FIGURE_PREFIX_MAP[l] || 'Figure';
 }
 
 export function renumberFigures(mdx: string, lang: string = 'en'): string {
