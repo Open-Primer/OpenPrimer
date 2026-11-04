@@ -12,6 +12,7 @@ paths = [
   '''web/db_deploy\.js''',
   '''web/src/lib/db\.ts''',
   '''web/src/lib/db/seeds\.ts''',
+  '''web/src/lib/db/seeds_modules/.*''',
   '''web/tests/crypto_migration\.spec\.ts'''
 ]
 
