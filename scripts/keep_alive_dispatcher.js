@@ -1,6 +1,13 @@
 const http = require('https');
 
-const url = 'https://openprimer-worker-170696028139.europe-west9.run.app/api/tasks/dispatch?secret=OPSecretGate_280f1019';
+// SECURITY: the dispatch secret must never be hardcoded. Provide it via env (same value as server CRON_SECRET).
+const CRON_SECRET = process.env.CRON_SECRET;
+const WORKER_URL = process.env.WORKER_URL || 'https://openprimer-worker-170696028139.europe-west9.run.app';
+if (!CRON_SECRET) {
+  console.error('Missing CRON_SECRET environment variable. Aborting.');
+  process.exit(1);
+}
+const url = `${WORKER_URL}/api/tasks/dispatch?secret=${encodeURIComponent(CRON_SECRET)}`;
 
 function pulse() {
   console.log(`[${new Date().toISOString()}] Pulsing dispatch endpoint...`);
