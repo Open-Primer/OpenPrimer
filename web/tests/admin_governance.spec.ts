@@ -407,7 +407,7 @@ test.describe('OpenPrimer Curriculum Autonomy and Governance Suite', () => {
 
     await streakerExpertCard.locator('button[title*="Purg"]').first().click();
 
-    // Simple confirm � - no name typing required after refactor
+    // Simple confirm ✓ - no name typing required after refactor
 
      const confirmPurgeBtn = page.locator('div.p-10 button.bg-red-600').first();
      await expect(confirmPurgeBtn).toBeVisible({ timeout: 5000 });

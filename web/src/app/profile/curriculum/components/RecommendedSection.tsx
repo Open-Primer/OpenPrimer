@@ -52,7 +52,7 @@ export const RecommendedSection: React.FC<RecommendedSectionProps> = ({
   return (
     <>
           {/* RECOMMENDED NEXT STEPS (POURSUITES D'ÉTUDES) */}
-          {progress.activeModules && progress.activeModules.length > 0 && (() => {
+          {progress?.activeModules && progress?.activeModules.length > 0 && (() => {
             const recommendations = getRecommendations();
             if (recommendations.length === 0) return null;
             

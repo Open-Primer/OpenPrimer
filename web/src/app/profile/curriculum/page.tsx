@@ -104,6 +104,20 @@ export default function CurriculumPage() {
     getLocalizedCourseDescription
   } = profileData;
 
+  if (loading && !progress) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-500 theme-${readingMode} ${modeStyles[readingMode as keyof typeof modeStyles] || modeStyles.dark}`}>
+        <TopNav showReadingModeSelector={true} />
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+          <span className="text-xs font-black uppercase tracking-widest text-slate-400 animate-pulse">
+            {t.loading || 'Chargement...'}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   const hasCoursesInOtherLangs = progress?.activeModules ? progress.activeModules.some((course: any) => {
     const courseDetails = courses.find(cd => cd.slug === course.slug || cd.id === course.id);
     if (!courseDetails || !courseDetails.languages || courseDetails.languages.length === 0) return false;

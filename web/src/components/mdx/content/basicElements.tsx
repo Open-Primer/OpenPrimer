@@ -291,5 +291,5 @@ const withPedagogicalLegend = (WrappedComponent: React.ComponentType<any>, compo
 
 export {
   Callout, CalloutContainer, ImageAlias, Explanation, Solution, KeyConcept, Instruction, Shape,
-  FillInBlanksWrapper, SmartEquationManipulator
+  FillInBlanksWrapper, SmartEquationManipulator, withPedagogicalLegend
 };

@@ -123,11 +123,11 @@ import {
 
 import {
   Callout, CalloutContainer, ImageAlias, Explanation, Solution, KeyConcept, Instruction, Shape,
-  FillInBlanksWrapper, SmartEquationManipulator
+  FillInBlanksWrapper, SmartEquationManipulator, withPedagogicalLegend
 } from './basicElements';
 import { MdxImage } from './basicElements';
 
-const components = {
+const baseComponents: Record<string, any> = {
   Alert,
   Biography,
   CustomFigure,
@@ -396,4 +396,77 @@ const components = {
 };
 
 
-export { components };
+
+const UnregisteredComponentFallback = ({ componentName }: { componentName: string }) => {
+  const { markDegraded } = useMdxStatus();
+  
+  React.useEffect(() => {
+    console.warn(`[MDX Fallback] Unregistered component encountered: <${componentName} />. Triggering degradation.`);
+    markDegraded('widget');
+  }, [componentName, markDegraded]);
+
+  return (
+    <div className="my-6 p-6 rounded-3xl border border-red-500/20 bg-red-500/5 backdrop-blur-md text-left">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 border border-red-500/25">
+          ⚠️
+        </div>
+        <div>
+          <h4 className="text-red-400 text-xs font-black uppercase tracking-widest">
+            Composant indisponible / Component unavailable
+          </h4>
+          <p className="text-[10px] text-red-500/70 font-semibold tracking-wide">
+            {componentName}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const INTERACTIVE_PEDAGOGICAL_KEYS = new Set([
+  'table', 'mermaid', 'functionplotter', 'interactivediagram', 'comparisonslider', 'codesandbox', 
+  'gestaltinteractive', 'gestaltlab', 'datachart', 'structureviewer3d', 'quantumorbitalexplorer', 
+  'explorateurbonlesquantiques', 'explorateurorbitalesquantiques', 'dynamicsimulation', 'functionmanipulator', 
+  'manipulateurfonction', 'explorateurfonctions', 'equationmanipulator', 'manipulateurequation', 
+  'explorateurequations', 'chemicalstoichiometry', 'equilibragechimique', 'stoichiometriechimique', 
+  'basicmathexplorer', 'explorateurmathsbase', 'biophysicssimulator', 'simulateurbiophysique', 
+  'logicgatesimulator', 'simulateurportelogique', 'simulateurporteslogiques', 'geneticspedigreelab', 
+  'labgenetiquepedigree', 'carreepunnett', 'orbitalmechanicssim', 'simulateurorbitemecanique', 
+  'simulateurorbital', 'periodictable', 'tableauperiodique', 'solarsystemorrery', 'systemesolaire', 
+  'financialchart', 'graphiquefinancier', 'waveinterferencesim', 'simulateurondes', 'acousticpianosynth', 
+  'synthetiseurpiano', 'sankeydiagram', 'diagrammesankey', 'climateimpactmap', 'climate_impact_map', 
+  'carteimpactclimatique', 'geomapexplorer', 'geo_map_explorer', 'explorateurgeographique', 
+  'cardsort', 'associationpaires', 'timeline', 'frisechronologique',
+  'biography', 'matchingevaluation', 'associationcorrespondance', 'reorderevaluation', 'reordonneritems', 
+  'socraticinput', 'analysesocratique'
+]);
+
+for (const key of Object.keys(baseComponents)) {
+  if (INTERACTIVE_PEDAGOGICAL_KEYS.has(key.toLowerCase()) && baseComponents[key]) {
+    baseComponents[key] = withPedagogicalLegend(baseComponents[key], key);
+  }
+}
+
+const components = new Proxy(baseComponents, {
+  get(target, prop, receiver) {
+    if (typeof prop === 'string') {
+      if (prop[0] === prop[0].toLowerCase() || prop.startsWith('_') || prop.startsWith('$')) {
+        return Reflect.get(target, prop, receiver);
+      }
+      if (prop in target) {
+        return Reflect.get(target, prop, receiver);
+      }
+      const keys = Object.keys(target);
+      const matchedKey = keys.find(k => k.toLowerCase() === prop.toLowerCase());
+      if (matchedKey) {
+        return target[matchedKey as keyof typeof target];
+      }
+      return (props: any) => <UnregisteredComponentFallback componentName={prop} {...props} />;
+    }
+    return Reflect.get(target, prop, receiver);
+  }
+});
+
+export { components, UnregisteredComponentFallback, INTERACTIVE_PEDAGOGICAL_KEYS };
+

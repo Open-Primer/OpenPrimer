@@ -76,10 +76,10 @@ export const ActiveModulesSection: React.FC<ActiveModulesSectionProps> = ({
   return (
     <>
         {(() => {
-          const activeCoursesAll = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress < 100) : [];
-          const completedCoursesAll = progress.activeModules ? progress.activeModules.filter((c: any) => c.progress === 100) : [];
+          const activeCoursesAll = progress?.activeModules ? progress?.activeModules.filter((c: any) => c.progress < 100) : [];
+          const completedCoursesAll = progress?.activeModules ? progress?.activeModules.filter((c: any) => c.progress === 100) : [];
 
-          const enrolledCurricula = progress.activeModules ? progress.activeModules.filter((m: any) => {
+          const enrolledCurricula = progress?.activeModules ? progress?.activeModules.filter((m: any) => {
             const cd = courses.find((x: any) => x.id === m.id);
             return cd?.isCurriculum || m.isCurriculum;
           }) : [];

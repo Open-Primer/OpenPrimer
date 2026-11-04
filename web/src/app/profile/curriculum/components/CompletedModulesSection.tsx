@@ -101,7 +101,7 @@ export const CompletedModulesSection: React.FC<CompletedModulesSectionProps> = (
             ratingCount = sumRatingCount > 0 ? sumRatingCount : ratingCount;
           }
 
-          const enrolledCurricula = (progress.activeModules || []).filter((c: any) => {
+          const enrolledCurricula = (progress?.activeModules || []).filter((c: any) => {
             const cd = courses.find((x: any) => x.id === c.id);
             return cd?.isCurriculum || c.isCurriculum;
           }).map((c: any) => courses.find((x: any) => x.id === c.id)).filter(Boolean);
