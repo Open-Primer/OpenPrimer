@@ -1,3 +1,7 @@
+import { preprocessMdx } from '@/lib/content';
+import { isVertexConfigured, compressPromptText } from '@/lib/vertex-client';
+import { apiKey } from './revisionCriticStep';
+import { recordMetrics } from '@/lib/ai/engines/coreUtils';
 import { callVertexAI } from '@/lib/vertex-client';
 import { searchYouTubeVideo } from '../../media-resolver';
 
@@ -13,7 +17,7 @@ const QUERY_SUFFIX_MAP: Record<string, string> = {
   UR: 'سبق کی وضاحت'
 };
 
-async function findAlternativeVideo(title: string, lang: string): Promise<{ id?: string; url?: string; provider?: string } | null> {
+export async function findAlternativeVideo(title: string, lang: string): Promise<{ id?: string; url?: string; provider?: string } | null> {
   console.log(`[ALTERNATIVE SEARCH] Searching alternative video for title: "${title}" (${lang})...`);
   const suffix = QUERY_SUFFIX_MAP[lang.toUpperCase()] || QUERY_SUFFIX_MAP.EN;
   const query = `${title} ${suffix}`;
@@ -24,7 +28,7 @@ async function findAlternativeVideo(title: string, lang: string): Promise<{ id?:
   return null;
 }
 
-async function findAlternativeVideoWithFallback(title: string, targetLang: string): Promise<{ id?: string; url?: string; provider?: string } | null> {
+export async function findAlternativeVideoWithFallback(title: string, targetLang: string): Promise<{ id?: string; url?: string; provider?: string } | null> {
   const localVideo = await findAlternativeVideo(title, targetLang);
   if (localVideo) {
     return localVideo;
@@ -140,4 +144,3 @@ INSTRUCTIONS:
 // searchYouTubeVideo is imported from './media-resolver' to ensure single source of truth resolution.
 
 
-export { findAlternativeVideo, findAlternativeVideoWithFallback };

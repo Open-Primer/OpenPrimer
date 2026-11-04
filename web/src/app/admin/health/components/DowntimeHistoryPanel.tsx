@@ -1,12 +1,32 @@
 import React from 'react';
+import { motion } from 'framer-motion';
+import { Clock, WifiOff } from 'lucide-react';
 import { HEALTH_STRINGS } from './healthStrings';
 
+export interface DowntimeDay {
+  date: string;
+  hasIncident?: boolean;
+  incidentTitle?: string;
+  status?: string;
+  db?: number;
+  email?: number;
+  ai?: number;
+  images?: number;
+  smithsonian?: number;
+  unsplash?: number;
+  [key: string]: any;
+}
+
 interface DowntimeHistoryPanelProps {
-  t: typeof HEALTH_STRINGS.EN;
-  days365: { date: string; hasIncident: boolean; incidentTitle?: string }[];
-  hoveredDay: { date: string; hasIncident: boolean; incidentTitle?: string } | null;
-  setHoveredDay: (day: { date: string; hasIncident: boolean; incidentTitle?: string } | null) => void;
+  t: any;
+  days365?: DowntimeDay[];
+  hoveredDay: DowntimeDay | null;
+  setHoveredDay: (day: DowntimeDay | null) => void;
   lang: string;
+  getServiceStats: (id: any) => any;
+  overallAvg: number;
+  slaHistory: DowntimeDay[];
+  getDayStatus: (dayData: any) => string;
 }
 
 export const DowntimeHistoryPanel: React.FC<DowntimeHistoryPanelProps> = ({
@@ -14,10 +34,13 @@ export const DowntimeHistoryPanel: React.FC<DowntimeHistoryPanelProps> = ({
   days365,
   hoveredDay,
   setHoveredDay,
-  lang
+  lang,
+  getServiceStats,
+  overallAvg,
+  slaHistory,
+  getDayStatus
 }) => {
   return (
-      {/* SECTION: DOWNTIME OVER LAST 365 DAYS */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -67,7 +90,7 @@ export const DowntimeHistoryPanel: React.FC<DowntimeHistoryPanelProps> = ({
                 <div className="flex items-center justify-between w-full text-[10px] text-slate-200 animate-in fade-in duration-200">
                   <div className="flex items-center gap-3">
                     <span className="text-slate-400 font-extrabold font-mono">
-                      {new Date(hoveredDay.date).toLocaleDateString({ EN: 'en-US', FR: 'fr-FR', ES: 'es-ES', DE: 'de-DE', ZH: 'zh-CN', PT: 'pt-BR', AR: 'ar-SA', HI: 'hi-IN', UR: 'ur-PK' }[lang] || 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      {new Date(hoveredDay.date).toLocaleDateString(({ EN: 'en-US', FR: 'fr-FR', ES: 'es-ES', DE: 'de-DE', ZH: 'zh-CN', PT: 'pt-BR', AR: 'ar-SA', HI: 'hi-IN', UR: 'ur-PK' } as Record<string, string>)[lang] || 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                     </span>
                     <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
                       hoveredDay.status === 'nominal' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
@@ -84,25 +107,25 @@ export const DowntimeHistoryPanel: React.FC<DowntimeHistoryPanelProps> = ({
                   <div className="flex items-center gap-4 text-[9px] font-mono text-slate-300">
                     <span className="flex items-center gap-1">
                       <span className="text-slate-500 font-bold">{t.lbl_database || 'DB'}:</span> 
-                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : hoveredDay.db < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
+                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : (hoveredDay.db ?? 100) < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
                         {hoveredDay.status === 'no_data' ? '—' : `${hoveredDay.db}%`}
                       </span>
                     </span>
                     <span className="flex items-center gap-1">
                       <span className="text-slate-500 font-bold">{t.lbl_email || 'Email'}:</span> 
-                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : hoveredDay.email < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
+                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : (hoveredDay.email ?? 100) < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
                         {hoveredDay.status === 'no_data' ? '—' : `${hoveredDay.email}%`}
                       </span>
                     </span>
                     <span className="flex items-center gap-1">
                       <span className="text-slate-500 font-bold">{t.lbl_ai || 'AI'}:</span> 
-                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : hoveredDay.ai < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
+                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : (hoveredDay.ai ?? 100) < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
                         {hoveredDay.status === 'no_data' ? '—' : `${hoveredDay.ai}%`}
                       </span>
                     </span>
                     <span className="flex items-center gap-1">
                       <span className="text-slate-500 font-bold">{t.lbl_images || 'Images'}:</span> 
-                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : hoveredDay.images < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
+                      <span className={hoveredDay.status === 'no_data' ? 'text-slate-500' : (hoveredDay.images ?? 100) < 100 ? 'text-amber-400 font-black' : 'text-emerald-400'}>
                         {hoveredDay.status === 'no_data' ? '—' : `${hoveredDay.images}%`}
                       </span>
                     </span>

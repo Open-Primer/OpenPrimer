@@ -1,3 +1,5 @@
+import { getRevisionStyles, convertMdxToHtml } from './export-styles';
+import { REVISION_TRANSLATIONS } from '@/components/export/strings';
 /**
  * OpenPrimer - Lesson Packaging & Export Engine
  *
@@ -136,6 +138,8 @@ export const generateSimpleZip = (files: { name: string; content: string }[]) =>
 
   export const exportRevisionSheet = (opts: LessonExportOptions) => {
     const { content, title, courseSlug, lessonSlug, lang, level, subject, t, getPremiumStyles } = opts;
+    const upperLang = (lang || "en").toUpperCase();
+    const rt = REVISION_TRANSLATIONS[upperLang as keyof typeof REVISION_TRANSLATIONS] || REVISION_TRANSLATIONS.EN;
     const filename = getExportFilename(courseSlug, lessonSlug, 'revision', 'md');
     
     // Parse Glossary terms
@@ -279,13 +283,15 @@ export const generateSimpleZip = (files: { name: string; content: string }[]) =>
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url2);
-    setDropdownOpen(false);
+    // setDropdownOpen(false);
   };
 
 
 
   export const exportRevisionHtml = (opts: LessonExportOptions) => {
     const { content, title, courseSlug, lessonSlug, lang, level, subject, t, getPremiumStyles } = opts;
+    const upperLang = (lang || "en").toUpperCase();
+    const rt = REVISION_TRANSLATIONS[upperLang as keyof typeof REVISION_TRANSLATIONS] || REVISION_TRANSLATIONS.EN;
     const filename = getExportFilename(courseSlug, lessonSlug, 'revision', 'html');
 
     // Parse Glossary terms
@@ -444,7 +450,7 @@ export const generateSimpleZip = (files: { name: string; content: string }[]) =>
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url2);
-    setDropdownOpen(false);
+    // setDropdownOpen(false);
   };
 
 

@@ -1,3 +1,6 @@
+import { getDescriptiveLevelForPrompt, recordMetrics, safeJsonParse } from '@/lib/ai/engines/coreUtils';
+import { isVertexConfigured, compressPromptText } from '@/lib/vertex-client';
+import { apiKey } from './revisionCriticStep';
 import { callVertexAI } from '@/lib/vertex-client';
 import { dbService } from '../../db';
 import { curriculumSchema } from '../schemas';

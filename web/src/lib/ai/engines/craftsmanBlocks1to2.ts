@@ -1,4 +1,6 @@
-import { saveDraftRevision, safeJsonParse } from './coreUtils';
+import { getDescriptiveLevelForPrompt } from '@/lib/ai/engines/coreUtils';
+import { saveDraftRevision, safeJsonParse, getConstraintKeyForLevel } from './coreUtils';
+import { widgetBlock1Schema, widgetBlock2Schema } from '@/lib/ai/schemas/lessonWidgetsSchema';
 import { widgetBlockAuditSchema } from './aiSchemas';
 
 export async function runCraftsmanBlocks1to2(
@@ -10,6 +12,19 @@ export async function runCraftsmanBlocks1to2(
   log: (msg: string) => Promise<void>
 ): Promise<any> {
   const blockResults: any = {};
+  const levelInput = (item as any).level || 'university_undergrad';
+  const correctedCourseName = (item as any).courseName || (item as any).courseTitle || discipline;
+  const lessonStats: any = { widgetBlockAttempts: [] };
+  const isTerminalEvaluation = Boolean((item as any).isTerminalEvaluation);
+  const parsedWidgets: any = {};
+  const activeAnchors: any[] = [];
+  const dynamicCatalogList = '';
+  const constraintKey = getConstraintKeyForLevel(levelInput);
+  const courseContext: any = { discipline, level: levelInput, courseName: correctedCourseName };
+  async function generateAndParseWidgetBlock(prompt: string, schema: any, name: string): Promise<any> {
+    const raw = await callAIEngine(prompt, schema, 0.1, undefined, undefined, false, 'widget_placement');
+    return safeJsonParse(raw.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim(), name);
+  }
       // --- Block 1: Structure Widgets ---
       // [FIX G10] TODO: The 4 widget block critic prompts below share ~80% structure.
       // Future refactor: extract to buildWidgetCriticPrompt(blockNum, content, context) helper

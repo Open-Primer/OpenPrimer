@@ -2,6 +2,8 @@ import React from 'react';
 import { ChevronRight, Rocket } from 'lucide-react';
 
 export interface EnrollmentModalProps {
+  isOpen?: boolean;
+  onEnrollSuccess?: () => void;
   course: any;
   onClose: () => void;
   lang: string;

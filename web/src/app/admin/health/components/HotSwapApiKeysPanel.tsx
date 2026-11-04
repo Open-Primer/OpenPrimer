@@ -1,29 +1,69 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Key, Eye, EyeOff, Save, CheckCircle } from 'lucide-react';
 import { HEALTH_STRINGS } from './healthStrings';
 
 interface HotSwapApiKeysPanelProps {
   t: typeof HEALTH_STRINGS.EN;
-  keysForm: any;
-  setKeysForm: any;
-  showKeys: any;
-  toggleShowKey: any;
-  saveStatus: any;
-  handleSaveKeys: any;
+  currentCfg: any;
+  notif: string | null;
+  supabaseUrl: string;
+  setSupabaseUrl: (val: string) => void;
+  supabaseAnonKey: string;
+  setSupabaseAnonKey: (val: string) => void;
+  resendApiKey: string;
+  setResendApiKey: (val: string) => void;
+  geminiApiKey: string;
+  setGeminiApiKey: (val: string) => void;
+  smithsonianApiKey: string;
+  setSmithsonianApiKey: (val: string) => void;
+  unsplashApiKey: string;
+  setUnsplashApiKey: (val: string) => void;
+  showSbKey: boolean;
+  setShowSbKey: React.Dispatch<React.SetStateAction<boolean>>;
+  showResendKey: boolean;
+  setShowResendKey: React.Dispatch<React.SetStateAction<boolean>>;
+  showGeminiKey: boolean;
+  setShowGeminiKey: React.Dispatch<React.SetStateAction<boolean>>;
+  showSmithsonianKey: boolean;
+  setShowSmithsonianKey: React.Dispatch<React.SetStateAction<boolean>>;
+  showUnsplashKey: boolean;
+  setShowUnsplashKey: React.Dispatch<React.SetStateAction<boolean>>;
+  handleSaveKeys: (e: React.FormEvent) => Promise<void>;
+  handleResetKeys: () => void;
 }
 
 export const HotSwapApiKeysPanel: React.FC<HotSwapApiKeysPanelProps> = ({
   t,
-  keysForm,
-  setKeysForm,
-  showKeys,
-  toggleShowKey,
-  saveStatus,
-  handleSaveKeys
+  currentCfg,
+  notif,
+  supabaseUrl,
+  setSupabaseUrl,
+  supabaseAnonKey,
+  setSupabaseAnonKey,
+  resendApiKey,
+  setResendApiKey,
+  geminiApiKey,
+  setGeminiApiKey,
+  smithsonianApiKey,
+  setSmithsonianApiKey,
+  unsplashApiKey,
+  setUnsplashApiKey,
+  showSbKey,
+  setShowSbKey,
+  showResendKey,
+  setShowResendKey,
+  showGeminiKey,
+  setShowGeminiKey,
+  showSmithsonianKey,
+  setShowSmithsonianKey,
+  showUnsplashKey,
+  setShowUnsplashKey,
+  handleSaveKeys,
+  handleResetKeys
 }) => {
   return (
-        {/* Hot-Swap API Keys Configurator Form */}
-        <motion.div
+      <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           className="p-8 border border-slate-800 hover:border-blue-500/20 rounded-[32px] bg-slate-900/30 flex flex-col gap-6"

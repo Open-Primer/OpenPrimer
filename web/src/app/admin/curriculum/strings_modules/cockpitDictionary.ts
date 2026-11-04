@@ -1,3 +1,12 @@
+import { locale as en } from '../locales/en';
+import { locale as fr } from '../locales/fr';
+import { locale as es } from '../locales/es';
+import { locale as de } from '../locales/de';
+import { locale as zh } from '../locales/zh';
+import { locale as pt } from '../locales/pt';
+import { locale as ar } from '../locales/ar';
+import { locale as hi } from '../locales/hi';
+import { locale as ur } from '../locales/ur';
 export const COCKPIT_DICTIONARY = {
   EN: en,
   FR: fr,

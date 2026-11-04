@@ -291,16 +291,21 @@ export default function CurriculumPage() {
       />
 
       {/* COURSE ENROLLMENT DRAWER */}
-      <EnrollmentModal 
-        isOpen={!!selectedEnrollCourse}
-        onClose={() => setSelectedEnrollCourse(null)}
-        course={selectedEnrollCourse}
-        onEnrollSuccess={() => {
-          setSelectedEnrollCourse(null);
-          setEnrollmentSuccess(true);
-          setTimeout(() => setEnrollmentSuccess(false), 3000);
-        }}
-      />
+      {selectedEnrollCourse && (
+        <EnrollmentModal 
+          course={selectedEnrollCourse}
+          onClose={() => setSelectedEnrollCourse(null)}
+          lang={lang}
+          isLoggedIn={true}
+          enrolledIds={(progress?.activeModules || []).map((c: any) => c.id)}
+          courses={courses}
+          onEnroll={async () => {
+            setSelectedEnrollCourse(null);
+            setEnrollmentSuccess(true);
+            setTimeout(() => setEnrollmentSuccess(false), 3000);
+          }}
+        />
+      )}
 
       {/* COURSE REVIEW MODAL */}
       <CourseReviewModal

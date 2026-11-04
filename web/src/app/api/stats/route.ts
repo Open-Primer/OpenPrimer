@@ -21,7 +21,7 @@ function countUniqueMdxLessons(): number {
   
   function scan(dir: string) {
     try {
-      const items = fs.readdirSync(dir, { withFileTypes: true });
+      const items = fs.readdirSync(/*turbopackIgnore: true*/ dir, { withFileTypes: true });
       for (const item of items) {
         const fullPath = path.join(dir, item.name);
         if (item.isDirectory()) {

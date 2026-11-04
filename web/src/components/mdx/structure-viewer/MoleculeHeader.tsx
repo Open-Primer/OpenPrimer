@@ -1,14 +1,15 @@
 import React from 'react';
 import { Preset } from './presets';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Zap } from 'lucide-react';
 
 interface MoleculeHeaderProps {
+  handleSearch?: (e?: any) => void;
   activePreset: Preset;
   presetList: Preset[];
   onSelectPreset: (preset: Preset) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
-  handleSearchAndLoad: () => void;
+  handleSearchAndLoad?: (e?: any) => void | Promise<void>;
   isLoading: boolean;
   localStr: any;
   t: any;
@@ -39,14 +40,13 @@ export const MoleculeHeader: React.FC<MoleculeHeaderProps> = ({
 
         {/* Preset pill list & Search Bar container */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          {shouldShowPresetsMenu && (
+          {true && (
             <div className="flex flex-wrap gap-1.5">
-              {PRESETS.map((p) => (
+              {(presetList || []).map((p: any) => (
                 <button
                   key={p.id}
                   onClick={() => {
-                    setActivePreset(p);
-                    setSelectedAtomIndex(null);
+                    onSelectPreset(p);
                   }}
                   className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border ${
                     activePreset.id === p.id
@@ -61,7 +61,7 @@ export const MoleculeHeader: React.FC<MoleculeHeaderProps> = ({
           )}
 
           {/* Real-time search/load from PubChem */}
-          <form onSubmit={handleSearch} className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/80 rounded-xl p-1 shrink-0">
+          <form onSubmit={(e) => { e.preventDefault(); handleSearchAndLoad?.(e); }} className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/80 rounded-xl p-1 shrink-0">
             <input
               type="text"
               value={searchQuery}

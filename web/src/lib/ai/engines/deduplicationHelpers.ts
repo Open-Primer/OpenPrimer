@@ -1,3 +1,4 @@
+import { supabaseAdmin } from '@/lib/supabase';
 import { isFactualMedia } from '../../media-resolver';
 
 export function extractCustomFigures(mdx: string): Array<{ type: string; description: string; title?: string; caption?: string; searchQuery?: string }> {
@@ -41,7 +42,7 @@ export function areMediaSimilar(fig1: any, fig2: any): boolean {
   return similarity > 0.6;
 }
 
-function normType(t: string): string {
+export function normType(t: string): string {
   t = t.toLowerCase().trim();
   if (t === 'minibio' || t === 'biography') return 'biography';
   if (t === 'citation' || t === 'quoteblock' || t === 'interactivequote' || t === 'quote') return 'citation';

@@ -1,3 +1,4 @@
+import { optimizeQueryWithGemini } from './conciseQueryBuilder';
 import { fetchWithTimeout } from './storageHelpers';
 import { getLanguageSearchTerm } from './mediaTypes';
 
@@ -110,7 +111,7 @@ export async function searchYouTubeVideo(query: string): Promise<string | null> 
   }
 }
 
-async function validateYouTubeVideo(videoId: string): Promise<boolean> {
+export async function validateYouTubeVideo(videoId: string): Promise<boolean> {
   if (!videoId || videoId.length !== 11 || videoId.startsWith('placeholder') || videoId.includes('example')) {
     return false;
   }

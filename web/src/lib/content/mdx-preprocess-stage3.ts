@@ -14,7 +14,8 @@ import { removeOrphanedCloseTags } from './rehype-mdx-sanitizer';
 export function preprocessMdxStage3(
   initialProcessed: string,
   lang: string = 'en',
-  citationBlocks: CitationBlockItem[] = []
+  citationBlocks: CitationBlockItem[] = [],
+  isSummative: boolean = false
 ): string {
   let processed = initialProcessed;
   interface ReferenceItem {
@@ -253,7 +254,7 @@ export function preprocessMdxStage3(
 
     citationBlocks.forEach(cb => {
       const queryText = cb.author && cb.source ? `${cb.author} ${cb.source}` : cb.author || cb.source;
-      const finalUrl = cb.customScholarUrl || `https://scholar.google.com/scholar?q=${encodeURIComponent(queryText)}`;
+      const finalUrl = cb.customScholarUrl || `https://scholar.google.com/scholar?q=${encodeURIComponent(queryText || '')}`;
       const searchLabel = cb.customScholarText || 'Google Scholar';
       
       let refText = cb.customRefText;

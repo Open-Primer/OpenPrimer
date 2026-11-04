@@ -361,8 +361,5 @@ export const CreateWidgetModal: React.FC<CreateWidgetModalProps> = ({
           </div>
         )}
       </AnimatePresence>
-
-
-    </AnimatePresence>
   );
 };

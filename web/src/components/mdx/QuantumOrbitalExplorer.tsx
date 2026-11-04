@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { RotateCcw, Eye, Play, Pause, Atom, Sparkles } from 'lucide-react';
+import { RotateCcw, Eye, Play, Pause, Atom, Sparkles, CircleDot, RotateCw, ZoomOut, ZoomIn } from 'lucide-react';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
 import { ORBITALS, OrbitalPreset, Lobe, Point3D, Face, Mesh } from './quantum-orbital/orbitalPresets';
 import { generateMeshForPreset, generateCustomMesh } from './quantum-orbital/orbitalMath';
@@ -8,6 +8,12 @@ import { OrbitalSidebar } from './quantum-orbital/OrbitalSidebar';
 
 export { ORBITALS };
 export type { OrbitalPreset, Lobe, Point3D, Face, Mesh };
+
+export interface QuantumOrbitalExplorerProps {
+  initialPresetId?: string;
+  initialPreset?: string;
+  gradeLevel?: string;
+}
 
 export const QuantumOrbitalExplorer = ({
   initialPresetId = "1s",
@@ -42,6 +48,29 @@ export const QuantumOrbitalExplorer = ({
 
   // Quantum electron configuration state (interactive shell filler)
   const [electronCount, setElectronCount] = useState(1);
+  const sidebarTab = mode === 'preset' ? 'presets' : 'quantum';
+  const setSidebarTab = (tab: any) => setMode(tab === 'presets' ? 'preset' : 'schrodinger');
+  const activePresetId = activePreset.id;
+  const selectPreset = (id: string) => {
+    const found = ORBITALS.find(o => o.id === id);
+    if (found) setActivePreset(found);
+  };
+  const isHybridPreset = Boolean((activePreset as any).isHybrid || activePreset.id.startsWith('sp'));
+  const atomicNumber = electronCount;
+  const setAtomicNumber = setElectronCount;
+  const energyLevelEv = (-13.6 / (customN * customN)).toFixed(2);
+  const customOrbitalInfo = {
+    name: `${customN}${['s', 'p', 'd', 'f'][customL] || 'g'}_${customM}`,
+    desc: `Quantum state n=${customN}, l=${customL}, m=${customM}`,
+    geometry: 'Spherical Harmonic'
+  };
+  const renderElectronBox = (shell: string, maxElectrons: number) => (
+    <div className="flex gap-1">
+      {Array.from({ length: maxElectrons }).map((_, i) => (
+        <div key={i} className={`w-3 h-3 rounded-sm border ${i < electronCount ? 'bg-cyan-500 border-cyan-400' : 'bg-slate-800 border-slate-700'}`} />
+      ))}
+    </div>
+  );
 
   // Sync preset if prop updates
   useEffect(() => {
@@ -173,7 +202,7 @@ export const QuantumOrbitalExplorer = ({
 
           let colorBase = '#10b981'; // Phase off color
           if (showPhases) {
-            colorBase = face.phase === '+' ? '#3b82f6' : '#ef4444';
+            colorBase = face.phase === 1 ? '#3b82f6' : '#ef4444';
           }
 
           // Inner shells or outer shells transparent/solid blending (hybrid lobes should be uniform)

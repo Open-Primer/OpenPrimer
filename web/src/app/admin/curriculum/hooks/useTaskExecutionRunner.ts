@@ -247,7 +247,7 @@ export function useTaskExecutionRunner({
                 dbService.savePipelineQueue(updated).then(() => loadData());
                 return updated;
               });
-              showToast(tr("Course generated successfully!"), "success");
+              showToast("Course generated successfully!", "success");
             } catch (err: any) {
               console.error("Task failed:", err);
               setQueue(prevQueue => {

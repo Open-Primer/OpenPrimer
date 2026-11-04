@@ -1,3 +1,4 @@
+import { STATIC_UI_STRINGS } from './index';
 export const DISCIPLINE_I18N_KEYS: Record<string, string> = {
   'Mathematics': 'math',
   'Physics': 'physics',

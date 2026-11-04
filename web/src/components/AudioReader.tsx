@@ -6,6 +6,7 @@ import { UI_STRINGS } from '@/lib/translations';
 import { usePathname } from 'next/navigation';
 
 interface AudioReaderProps {
+  title?: string;
   content?: string;
   lang?: string;
 }
@@ -64,7 +65,7 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
   const { tooltip, setTooltip } = useAudioTooltip();
 
   const isSentenceHidden = (index: number): boolean => {
-    return isSentenceHidden(index, sentences, sentenceMetaRef.current);
+    return isSentenceIndexHidden(index, sentences, sentenceMetaRef.current);
   };
   const [isPaused, setIsPaused] = useState(false);
   const [sentences, setSentences] = useState<string[]>([]);
@@ -496,9 +497,9 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
     setIsReadingTutor(false);
     setTutorSentences([]);
     setCurrentTutorSentenceIndex(-1);
-    setShowSpeedPopup(false);
-    setShowVolumePopup(false);
-    setShowSettings(false);
+    // popups managed in AudioPlayerBar
+    // volume popup
+    // settings popup
     if (synthRef.current) {
       synthRef.current.cancel();
     }
@@ -584,6 +585,10 @@ export const AudioReader = ({ content = "", lang = "EN" }: AudioReaderProps) => 
       stop={stop}
       nextSentence={nextSentence}
       prevSentence={prevSentence}
+      isLoggedIn={isLoggedIn}
+      utteranceRef={utteranceRef}
+      speakTutorSentence={speakTutorSentence}
+      speakSentence={speakSentence}
       lang={lang}
       t={t}
     />

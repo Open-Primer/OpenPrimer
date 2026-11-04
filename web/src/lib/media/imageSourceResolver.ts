@@ -1,3 +1,8 @@
+import { optimizeQueryWithGemini, generateQueryRelaxationsWithGemini, searchCascade, describeImageWithGemini, generateGenericQueryWithGemini } from './conciseQueryBuilder';
+import { fetchUnsplashImage, getWikimediaPageUrl } from './factualMediaValidator';
+import { fetchWithTimeout } from './storageHelpers';
+import { safeResponseJson } from './figureFormatting';
+import { searchMediaImageCascade } from './geminiImageValidator';
 import { getCachedMedia, setCachedMedia } from './mediaTypes';
 import { searchWikimediaCommonsImage, searchWikidataImage } from './wikimediaResolver';
 import { validateImageWithGemini } from './geminiImageValidator';
@@ -109,7 +114,7 @@ export async function resolveImageFromSources(
 }
 
 // Media-specific search prioritising Wikimedia Commons search first, and Wikipedia Search API second with English fallback
-async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<{ url: string; fallbackUrl: string; pageTitle: string } | null> {
+export async function fetchWikipediaImage(title: string, lang: string = 'fr'): Promise<{ url: string; fallbackUrl: string; pageTitle: string } | null> {
   try {
     const cleanTitle = title.trim();
     

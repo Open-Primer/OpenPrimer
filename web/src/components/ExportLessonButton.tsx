@@ -27,7 +27,7 @@ interface ExportLessonButtonProps {
 // Translation dictionaries extracted to ./export/strings
 import { MODAL_TRANSLATIONS, REVISION_TRANSLATIONS } from './export/strings';
 
-export const ExportLessonButton = ({ title, subject, level, content, lang, courseSlug, version }: ExportLessonButtonProps) => {
+export const ExportLessonButton = ({ title, subject, level, content, lang, courseSlug = "course", version }: ExportLessonButtonProps) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -79,12 +79,12 @@ export const ExportLessonButton = ({ title, subject, level, content, lang, cours
     content,
     title,
     courseSlug,
-    lessonSlug,
+    lessonSlug: (courseSlug || "lesson"),
     lang,
     level,
     subject,
-    t,
-    getPremiumStyles: () => getPremiumStyles(title, lang)
+    t: mt as any,
+    getPremiumStyles: () => getPremiumStyles()
   };
 
   const handleExportRevisionSheet = () => exportRevisionSheet(exportOpts);

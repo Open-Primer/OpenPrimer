@@ -1,3 +1,4 @@
+import { formatCourseLevel } from '@/lib/translations';
 export const ACADEMIC_LEVELS = [
   { value: 'foundation_1', EN: 'Primary School 1 (Ages 6–9)', FR: 'Fondamental 1 (CP–CE2)', ES: 'Fundacional 1 (6–9 años)', DE: 'Grundstufe 1 (6–9 J.)', ZH: '\u57fa\u7840\u4e00\u9636\uff086\u20139\u5c81\uff09' },
   { value: 'foundation_2', EN: 'Primary School 2 (Ages 9–11)', FR: 'Fondamental 2 (CM1–CM2)', ES: 'Fundacional 2 (9–11 años)', DE: 'Grundstufe 2 (9–11 J.)', ZH: '\u57fa\u7840\u4e8c\u9636\uff089\u201311\u5c81\uff09' },

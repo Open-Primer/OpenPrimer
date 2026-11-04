@@ -1,3 +1,9 @@
+import { isolateJsxForTranslation, restoreJsxAfterTranslation } from '@/lib/content/jsx-translation-isolator';
+import { validateAndFixBibliography } from '@/lib/ai/validator/citationValidator';
+import { mapConcurrent, safeJsonParse, saveDraftRevision, recordMetrics } from './coreUtils';
+import { isVertexConfigured, compressPromptText } from '@/lib/vertex-client';
+import { verificationSchema } from './aiSchemas';
+import { apiKey } from './revisionCriticStep';
 import fs from 'fs';
 import path from 'path';
 import { dbService } from '../../db';

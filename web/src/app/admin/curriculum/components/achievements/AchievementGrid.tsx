@@ -1,8 +1,13 @@
+import { BADGE_LIBRARY, dbService } from '@/lib/db';
+import { ArchivingLevelButtons } from '../ArchivingLevelButtons';
+import { Edit3 } from 'lucide-react';
 import React from 'react';
 import { Award, Edit, Trash2, Calendar, Target, Clock, AlertTriangle } from 'lucide-react';
 import type { Achievement } from '@/lib/db';
 
 interface AchievementGridProps {
+  loadData?: () => Promise<void>;
+  lang?: string;
   achievements: Achievement[];
   getDynamicBadgeCount: (ach: any) => number;
   handleOpenEditAchievement: (ach: Achievement) => void;
@@ -17,10 +22,13 @@ export const AchievementGrid: React.FC<AchievementGridProps> = ({
   handleOpenEditAchievement,
   handleOpenPurge,
   t,
-  LUCIDE_ICONS
+  LUCIDE_ICONS,
+  loadData = async () => {},
+  lang = "EN"
 }) => {
+  const tr = t;
+  const sortedAchievements = achievements;
   return (
-      {/* GRID */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {sortedAchievements.map(ach => {
           const styledBadge = BADGE_LIBRARY.find(b => b.id === ach.icon);
@@ -78,7 +86,7 @@ export const AchievementGrid: React.FC<AchievementGridProps> = ({
                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{tr("Archival Level:")}</span>
                   <ArchivingLevelButtons 
                     currentLevel={ach.archivingLevel || 0}
-                    lang={lang}
+                    lang={lang as any}
                     onChange={async (nextLvl) => {
                       if (nextLvl === 3) {
                         handleOpenPurge(ach);

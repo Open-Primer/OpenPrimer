@@ -1,5 +1,7 @@
 "use client";
 
+import { Quiz } from '../Quiz';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Award, BookOpen, Calendar, ClipboardCheck, FileText, 
@@ -211,7 +213,7 @@ export const SummativeEssayPortal = ({ childrenArray, durationLimit = 900 }: { c
 
   const handleSubmit = async () => {
     if (wordCount < 10) {
-      setError(t.min_words);
+      setError(t.min_words || null);
       return;
     }
     setError(null);

@@ -1,3 +1,36 @@
+export async function callAIEngine(
+  promptText: string,
+  schema?: any,
+  temperature: number = 0.2,
+  frequencyPenalty?: number,
+  topP?: number
+): Promise<string> {
+  const generationConfig: any = { 
+    temperature,
+    maxOutputTokens: 8192
+  };
+  if (frequencyPenalty !== undefined) generationConfig.frequencyPenalty = frequencyPenalty;
+  if (topP !== undefined) generationConfig.topP = topP;
+  if (schema) {
+    generationConfig.responseMimeType = 'application/json';
+    generationConfig.responseSchema = schema;
+  }
+
+  const res = await callVertexAI({
+    task: 'course_generation',
+    contents: [{ role: 'user', parts: [{ text: promptText }] }],
+    generationConfig
+  });
+
+  if (!res || !res.ok) {
+    const errBody = res ? await res.text() : 'No response from Vertex AI';
+    throw new Error(`AI Engine call failed (${res?.status ?? 500}): ${errBody}`);
+  }
+
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
 import { supabaseAdmin } from '../../supabase';
 import { cleanPathSegment } from '../../translations';
 import { callVertexAI } from '@/lib/vertex-client';
@@ -35,38 +68,7 @@ export async function generateCourseContent(
     }
   };
 
-  const callAIEngine = async (
-    promptText: string,
-    schema?: any,
-    temperature: number = 0.2,
-    frequencyPenalty?: number,
-    topP?: number
-  ): Promise<string> => {
-    const generationConfig: any = { 
-      temperature,
-      maxOutputTokens: 8192
-    };
-    if (frequencyPenalty !== undefined) generationConfig.frequencyPenalty = frequencyPenalty;
-    if (topP !== undefined) generationConfig.topP = topP;
-    if (schema) {
-      generationConfig.responseMimeType = 'application/json';
-      generationConfig.responseSchema = schema;
-    }
 
-    const res = await callVertexAI({
-      task: 'course_generation',
-      contents: [{ role: 'user', parts: [{ text: promptText }] }],
-      generationConfig
-    });
-
-    if (!res.ok) {
-      const errBody = await res.text();
-      throw new Error(`AI Engine call failed (${res.status}): ${errBody}`);
-    }
-
-    const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  };
 
   // Step 1: Syllabus Architect
   const {

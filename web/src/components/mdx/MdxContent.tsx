@@ -10,6 +10,9 @@ import { stripJsxAndRender } from './content/stripJsxAndRender';
 export interface MdxContentProps {
   source?: MDXRemoteSerializeResult;
   rawContent?: string;
+  rawMdx?: string;
+  courseSlug?: string;
+  lessonSlug?: string;
   className?: string;
   degradedMode?: boolean;
   degradedReason?: 'network' | 'offline' | 'error';
@@ -17,11 +20,12 @@ export interface MdxContentProps {
 }
 
 export function MdxContent(props: MdxContentProps) {
-  const { source, rawContent, className, degradedMode, degradedReason, enableLatexFix } = props;
+  const { source, rawContent, rawMdx, className, degradedMode, degradedReason, enableLatexFix } = props;
+  const effectiveRaw = rawContent || rawMdx;
 
   // If degraded mode is requested, clean and flatten raw content
-  if (degradedMode && rawContent) {
-    const textContent = stripJsxAndRender(rawContent);
+  if (degradedMode && effectiveRaw) {
+    const textContent = stripJsxAndRender(effectiveRaw);
     return (
       <div className={`prose dark:prose-invert max-w-none text-slate-300 leading-relaxed font-sans ${className || ''}`}>
         <DegradedModeBanner reason={degradedReason} />

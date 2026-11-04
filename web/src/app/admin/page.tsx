@@ -241,8 +241,16 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadStats();
     const interval = setInterval(loadStats, 10_000);
-    return () => clearInterval(interval);
+    // stats declaration below
+
+
+
+  return () => clearInterval(interval);
   }, []);
+
+  const stats = dbStats;
+  const liveCostEstimates = {};
+  const financialMetrics = {};
 
   const handleManualRefresh = async () => {
     setIsRefreshing(true);
@@ -483,6 +491,22 @@ export default function AdminDashboard() {
         stats={stats}
         liveCostEstimates={liveCostEstimates}
         financialMetrics={financialMetrics}
+        metricsSortField={metricsSortField}
+        setMetricsSortField={setMetricsSortField}
+        metricsSortDir={metricsSortDir}
+        setMetricsSortDir={setMetricsSortDir}
+        renderSortIndicator={renderSortIndicator}
+        sortedMetrics={sortedMetrics}
+        tutorDistribution={tutorDistribution}
+        dynamicCachedRatio={dynamicCachedRatio}
+        dynamicTokensSavedText={dynamicTokensSavedText}
+        dynamicInputTokens={dynamicInputTokens}
+        dynamicOutputTokens={dynamicOutputTokens}
+        dynamicLoopSuccess={dynamicLoopSuccess}
+        dynamicCheckPasses={dynamicCheckPasses}
+        dynamicCreditsAverage={dynamicCreditsAverage}
+        formatTokenCount={formatTokenCount}
+        lang={lang}
       />
 
       {/* Main Grid for Analytics */}
@@ -493,6 +517,12 @@ export default function AdminDashboard() {
         financialMetrics={financialMetrics}
         heatmapDays={heatmapDays}
         topStudents={topStudents}
+        dynamicAccuracyRate={dynamicAccuracyRate}
+        dynamicGenerationRate={dynamicGenerationRate}
+        availableLanguages={availableLanguages}
+        allCourses={allCourses}
+        formatLanguageLabel={formatLanguageLabel}
+        getHeatmapColor={getHeatmapColor}
       />
 
       {/* SECTION: PENDING NOTIFICATIONS QUEUE */}

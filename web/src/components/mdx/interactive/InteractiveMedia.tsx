@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Volume2, Loader2, Maximize2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Volume2, Loader2, Maximize2, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { INTERACTIVE_STRINGS } from '../interactive-strings';
 

@@ -130,7 +130,7 @@ const DEGRADED_STRINGS = {
   }
 };
 
-function DegradedModeBanner() {
+function DegradedModeBanner({ reason }: { reason?: "error" | "offline" | "network" } = {}) {
   const { isDegraded, degradedReasons } = useMdxStatus();
   const { language } = useLanguage();
   

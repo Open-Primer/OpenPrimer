@@ -4,10 +4,18 @@ import { cleanGlossaryDefinition } from './linguistic-healers';
 export interface CitationBlockItem {
   refNum: number;
   author: string;
-  work: string;
+  work?: string;
   year: string;
-  sourceUrl: string;
-  wikipediaUrl: string;
+  sourceUrl?: string;
+  wikipediaUrl?: string;
+  source?: string;
+  original?: string;
+  quote?: string;
+  tagName?: string;
+  customRefText?: string;
+  customScholarUrl?: string;
+  customScholarText?: string;
+  [key: string]: any;
 }
 
 export function preprocessMdxStage2(

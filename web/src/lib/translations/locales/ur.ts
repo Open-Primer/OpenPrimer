@@ -228,11 +228,5 @@ export const UR_STRINGS: Record<string, string> = {
     "ex_incorrect": "غلط۔ فارمولے یا مراحل کا دوبارہ جائزہ لینے کی کوشش کریں۔",
     "ex_attempts": "باقی کوششیں:",
     "ex_unlocked_sol": "💡 حل انلاک ہو گیا!",
-    "ex_placeholder": "عددی قیمت درج کریں...",
-  }
-};
-
-// --- CENTRALIZED DISCIPLINE INTERNATIONALIZATION ---
-
-// Maps database master subject name (English) to its standard i18n key in STATIC_UI_STRINGS
+    "ex_placeholder": "عددی قیمت درج کریں..."
 };

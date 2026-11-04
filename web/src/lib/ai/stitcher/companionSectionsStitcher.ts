@@ -113,7 +113,7 @@ export function stitchCompanionSections(
   };
 
   if (finalEvalStr) {
-    const evalHeading = isTerminalEvaluation ? finalEvalHeadings[langKey] : selfEvalHeadings[langKey];
+    const evalHeading = isTerminal ? finalEvalHeadings[langKey] : selfEvalHeadings[langKey];
     const evalRegex = /^(#{2,3}\s*(?:Évaluation|Evaluation|Évaluation\s*Finale|Evaluation\s*Finale|Summative\s*Evaluation|Final\s*Evaluation|Quiz|Final\s*Quiz|Assessment|Abschlussbewertung|Evaluación|Evaluación\s*Final|最终评估|测试|测验)[^\n]*)/mi;
     const evalMatch = content.match(evalRegex);
 
@@ -327,9 +327,4 @@ export function stitchCompanionSections(
   content = ensureBlockWidgetsOnOwnLines(content);
 
   return content;
-}
-
-
-
-  return finalContent;
 }

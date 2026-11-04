@@ -5,13 +5,13 @@
  */
 
 export * from './media/mediaTypes';
-export * from './media/storageHelpers';
-export * from './media/youtubeResolver';
-export * from './media/factualMediaValidator';
-export * from './media/conciseQueryBuilder';
-export * from './media/figureFormatting';
-export * from './media/wikimediaResolver';
-export * from './media/geminiImageValidator';
-export * from './media/imageSourceResolver';
-export * from './media/mediaPipeline';
-export * from './media/mediaRestitution';
+export { fetchWithTimeout, safeResponseJson, mediaValidationCache } from './media/storageHelpers';
+export { searchYouTubeVideo } from './media/youtubeResolver';
+export { isFactualMedia } from './media/factualMediaValidator';
+export { optimizeQueryWithGemini, generateQueryRelaxationsWithGemini, searchCascade, describeImageWithGemini, generateGenericQueryWithGemini } from './media/conciseQueryBuilder';
+export { compileFinalLabel, getSafeExtension, parseAttributesRobustly } from './media/figureFormatting';
+export { fetchWikimediaAudio, synthesizeSpeech } from './media/wikimediaResolver';
+export { validateImageWithGemini, validateImageSoftWithGemini } from './media/geminiImageValidator';
+export { resolveMediaImage, resolveImageFromSources } from './media/imageSourceResolver';
+export { resolveAndPersistMedia } from './media/mediaPipeline';
+export { repairMediaOnRestitution } from './media/mediaRestitution';

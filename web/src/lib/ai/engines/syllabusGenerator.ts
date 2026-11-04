@@ -1,16 +1,26 @@
-import fs from 'fs';
-import path from 'path';
-import { supabaseAdmin } from '../../supabase';
-import { cleanPathSegment, normalizeLevel } from '../../translations';
-import { correctCourseTitle } from './titleCorrection';
+import { syllabusAuditSchema, syllabusSchema } from './aiSchemas';
+import { apiKey } from './revisionCriticStep';
+import { TASK_MODELS, isVertexConfigured, compressPromptText, callVertexAI } from '@/lib/vertex-client';
 import {
+  recordMetrics,
+  safeResponseJson,
+  getConstraintKeyForLevel,
+  loadedConstraints,
+  DEFAULT_LEVEL_CONSTRAINTS,
+  getDisciplinePedagogicalGuidelines,
   saveDraftRevision,
   safeJsonParse,
   validateSchema,
   getDescriptiveLevelForPrompt,
   initializeConstraints
 } from './coreUtils';
-import { syllabusSchema } from './aiSchemas';
+import fs from 'fs';
+import path from 'path';
+import { supabaseAdmin } from '../../supabase';
+import { cleanPathSegment } from '../../translations';
+import { correctCourseTitle } from './titleCorrection';
+
+let lessonOffset = 0;
 
 export async function runSyllabusGeneration(
   courseName: string,
@@ -198,8 +208,7 @@ Do NOT return markdown code block backticks (\`\`\`). Output only the raw JSON o
 * **Detached Evaluation Content:** Under no circumstances should the Terminal Evaluation contain instructional content. It must focus purely on testing.
 * **Mandatory Reference Registry:** You MUST generate a list of EXACTLY ${syllabusRefsMin} to ${syllabusRefsMax} authoritative academic references in the \`references\` array. These must represent the absolute canon of the course's discipline. Do NOT use placeholder references or list generic URLs. They must be formatted strictly according to the citation style of the discipline, but without markdown bold/italics symbols (no asterisks).`;
 
-  try {
-    let parsedSyllabus: any = null;
+  let parsedSyllabus: any = null;
     let lessonsList: { title: string; slug: string; cognitiveArtifact?: string; technicalDepth?: string }[] = [];
     let courseContext: any = {};
     let originalSyllabusLessonsLength = 0;
@@ -512,12 +521,12 @@ Your previous syllabus draft was REJECTED by the Critique Agent. You MUST correc
       await log(`[AI GENERATOR ERROR] Syllabus generation failed: ${err}`);
       throw err;
     }
-    return {
-      correctedCourseName,
-      discipline,
-      syllabus,
-      level
-    };
   }
-}
+
+  return {
+    correctedCourseName,
+    discipline,
+    syllabus: parsedSyllabus,
+    level
+  };
 }

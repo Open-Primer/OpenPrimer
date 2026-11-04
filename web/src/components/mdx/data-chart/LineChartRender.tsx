@@ -1,5 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LINE_COLORS, CHART_STRINGS } from './typesAndConstants';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface LineChartProps {
   normalized: any;
@@ -40,11 +42,35 @@ export const LineChartRender: React.FC<LineChartProps> = ({
   totalSum,
   t
 }) => {
+  const { language } = useLanguage();
+  const langKey = language.toUpperCase() as keyof typeof CHART_STRINGS;
+  const labels = CHART_STRINGS[langKey] || CHART_STRINGS.EN;
+
+  const [hoveredXIdx, setHoveredXIdx] = React.useState<number | null>(null);
+
+  const maxValue = normalized.isMultiSeries
+    ? Math.max(...normalized.seriesData.flatMap((s: any) => s.values.map((v: any) => v.y || 0)), 1)
+    : Math.max(...(normalized.simpleData || []).map((d: any) => d.value || 0), 1);
+
+  const getXCoord = (val: any, idx: number) => {
+    if (normalized.isMultiSeries) {
+      const allX = normalized.xValues as number[];
+      const minX = Math.min(...allX);
+      const maxX = Math.max(...allX);
+      const rangeX = maxX - minX || 1;
+      return paddingLeft + (((val as number) - minX) / rangeX) * chartWidth;
+    } else {
+      const totalPoints = (normalized.simpleData || []).length;
+      if (totalPoints <= 1) return paddingLeft + chartWidth / 2;
+      return paddingLeft + (idx / (totalPoints - 1)) * chartWidth;
+    }
+  };
+  const xAxisLabel = (normalized as any).xAxisLabel || labels.xAxis;
     return (
       <div className="relative w-full">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible select-none">
           <defs>
-            {LINE_COLORS.map((color, idx) => (
+            {LINE_COLORS.map((color: any, idx: number) => (
               <linearGradient key={`line-grad-${idx}`} id={`line-grad-${idx}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={color} stopOpacity={0.2} />
                 <stop offset="100%" stopColor={color} stopOpacity={0.0} />
@@ -53,7 +79,7 @@ export const LineChartRender: React.FC<LineChartProps> = ({
           </defs>
 
           {/* Grid lines (Y-axis) */}
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio: number, i: number) => {
             const y = paddingTop + chartHeight * (1 - ratio);
             const val = (maxValue * ratio).toFixed(0);
             return (
@@ -69,10 +95,10 @@ export const LineChartRender: React.FC<LineChartProps> = ({
           <line x1={paddingLeft} y1={height - paddingBottom} x2={width - paddingRight} y2={height - paddingBottom} stroke="#475569" strokeWidth="1" />
 
           {/* Dynamic filled area curves */}
-          {normalized.seriesData.map((series, idx) => {
+          {normalized.seriesData.map((series: any, idx: number) => {
             if (series.values.length === 0) return null;
 
-            const areaPathPoints = series.values.map((p, pIdx) => {
+            const areaPathPoints = series.values.map((p: any, pIdx: number) => {
               const sx = getXCoord(p.x, pIdx);
               const sy = getYCoord(p.y);
               return `${sx},${sy}`;
@@ -96,10 +122,10 @@ export const LineChartRender: React.FC<LineChartProps> = ({
           })}
 
           {/* Line Curves */}
-          {normalized.seriesData.map((series, idx) => {
+          {normalized.seriesData.map((series: any, idx: number) => {
             if (series.values.length === 0) return null;
 
-            const pathPoints = series.values.map((p, pIdx) => {
+            const pathPoints = series.values.map((p: any, pIdx: number) => {
               const sx = getXCoord(p.x, pIdx);
               const sy = getYCoord(p.y);
               return `${pIdx === 0 ? 'M' : 'L'} ${sx} ${sy}`;
@@ -137,11 +163,11 @@ export const LineChartRender: React.FC<LineChartProps> = ({
           )}
 
           {/* High-quality responsive interactive highlight circles */}
-          {hoveredXIdx !== null && normalized.seriesData.map((series, idx) => {
+          {hoveredXIdx !== null && normalized.seriesData.map((series: any, idx: number) => {
             const activeX = normalized.xValues[hoveredXIdx];
             let pt;
             if (normalized.isMultiSeries) {
-              pt = series.values.find(v => v.x === activeX);
+              pt = series.values.find((v: any) => v.x === activeX);
             } else {
               pt = series.values[hoveredXIdx];
             }
@@ -160,7 +186,7 @@ export const LineChartRender: React.FC<LineChartProps> = ({
           })}
 
           {/* Invisible mouse hover slice bars */}
-          {normalized.xValues.map((x, idx) => {
+          {normalized.xValues.map((x: any, idx: number) => {
             const sx = getXCoord(x, idx);
             const prevX = idx > 0 ? getXCoord(normalized.xValues[idx - 1], idx - 1) : sx;
             const nextX = idx < normalized.xValues.length - 1 ? getXCoord(normalized.xValues[idx + 1], idx + 1) : sx;
@@ -184,7 +210,7 @@ export const LineChartRender: React.FC<LineChartProps> = ({
           })}
 
           {/* Static category labels on Line Chart ticks */}
-          {!normalized.isMultiSeries && normalized.xValues.map((label, idx) => {
+          {!normalized.isMultiSeries && normalized.xValues.map((label: any, idx: number) => {
             const sx = getXCoord(label, idx);
             return (
               <text key={idx} x={sx} y={height - paddingBottom + 16} fill="#94a3b8" fontSize="8" fontWeight="bold" textAnchor="middle">
@@ -194,7 +220,7 @@ export const LineChartRender: React.FC<LineChartProps> = ({
           })}
 
           {/* Multi series year ticks */}
-          {normalized.isMultiSeries && normalized.xValues.map((x, idx) => {
+          {normalized.isMultiSeries && normalized.xValues.map((x: any, idx: number) => {
             const sx = getXCoord(x, idx);
             return (
               <text key={idx} x={sx} y={height - paddingBottom + 16} fill="#94a3b8" fontSize="9" fontWeight="bold" textAnchor="middle">
@@ -218,11 +244,11 @@ export const LineChartRender: React.FC<LineChartProps> = ({
                   {normalized.isMultiSeries ? `${xAxisLabel || 'X'}: ${normalized.xValues[hoveredXIdx]}` : normalized.simpleData[hoveredXIdx].label}
                 </span>
                 <div className="flex flex-col gap-1">
-                  {normalized.seriesData.map((series, idx) => {
+                  {normalized.seriesData.map((series: any, idx: number) => {
                     const activeX = normalized.xValues[hoveredXIdx];
                     let pt;
                     if (normalized.isMultiSeries) {
-                      pt = series.values.find(v => v.x === activeX);
+                      pt = series.values.find((v: any) => v.x === activeX);
                     } else {
                       pt = series.values[hoveredXIdx];
                     }
@@ -249,5 +275,3 @@ export const LineChartRender: React.FC<LineChartProps> = ({
       </div>
     );
   };
-
-};

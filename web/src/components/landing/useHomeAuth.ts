@@ -20,7 +20,7 @@ interface UseHomeAuthProps {
   setSuccessMsg: (v: string | null) => void;
   setJustVerified: (v: boolean) => void;
   setIsLoggedIn: (v: boolean) => void;
-  setAuthModal: (v: 'login' | 'signup' | 'forgot' | null) => void;
+  setAuthModal: (v: 'login' | 'signup' | 'forgot' | 'verify' | null) => void;
 }
 
 export function useHomeAuth({
@@ -42,6 +42,9 @@ export function useHomeAuth({
   setIsLoggedIn,
   setAuthModal
 }: UseHomeAuthProps) {
+  const s = (AUTH_STRINGS as any)[lang] || AUTH_STRINGS.EN;
+  const submitTimestamps = React.useRef<number[]>([]);
+  const isDatabaseConfigured = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password || !confirmPassword) {
@@ -107,7 +110,7 @@ export function useHomeAuth({
     }
 
     const now = Date.now();
-    submitTimestamps.current = submitTimestamps.current.filter(ts => now - ts < 120000);
+    submitTimestamps.current = submitTimestamps.current.filter((ts: number) => now - ts < 120000);
     if (submitTimestamps.current.length >= 3) {
       const waitSec = Math.ceil((120000 - (now - submitTimestamps.current[0])) / 1000);
       const at = AUTH_STRINGS[lang as keyof typeof AUTH_STRINGS] || AUTH_STRINGS.EN;
@@ -372,6 +375,20 @@ export function useHomeAuth({
       setErrorMsg('');
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailLower, lang })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setErrorMsg(data.error || getLocalString('generic_error', lang));
+        return;
+      }
+      setSuccessMsg(getLocalString('reset_email_info', lang));
+    } catch (err: any) {
+      console.error('[FORGOT PASSWORD]', err);
+      setErrorMsg(getLocalString('server_connection_error', lang));
+    }
+  };
 
   return {
     handleSignupSubmit,

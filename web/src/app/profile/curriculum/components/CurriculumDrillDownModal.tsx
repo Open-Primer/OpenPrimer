@@ -1,3 +1,17 @@
+import { Star } from 'lucide-react';
+import {
+  ELECTIVE_CHOICES_LABEL,
+  getElectiveDescription,
+  COMPLIANT_LABEL,
+  REQUIRED_LABEL,
+  ELECTIVE_LABEL,
+  MANDATORY_LABEL,
+  EXPECTED_LABEL,
+  NOT_ENROLLED_LABEL,
+  REMOVE_LABEL,
+  CHOOSE_LABEL,
+  THIS_COURSE_LABEL
+} from './curriculumAuditHelpers';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Icons from 'lucide-react';
@@ -5,6 +19,10 @@ import { GraduationCap, Sparkles, BookOpen, Clock, ChevronRight } from 'lucide-r
 import { formatCourseLevel } from '@/lib/translations';
 
 interface CurriculumDrillDownModalProps {
+  handleOptOut?: (c: any) => void;
+  enrollInRecommended?: (c: any) => Promise<void>;
+  getLocalizedSubject?: (s: string) => string;
+  navigateToCourseDirect?: (c: any) => Promise<void>;
   selectedCurriculum: any;
   setSelectedCurriculum: (c: any) => void;
   courses: any[];
@@ -18,6 +36,10 @@ interface CurriculumDrillDownModalProps {
 }
 
 export const CurriculumDrillDownModal: React.FC<CurriculumDrillDownModalProps> = ({
+  handleOptOut = () => {},
+  enrollInRecommended = async () => {},
+  getLocalizedSubject = (s: string) => s,
+  navigateToCourseDirect = async () => {},
   selectedCurriculum,
   setSelectedCurriculum,
   courses,
@@ -32,6 +54,7 @@ export const CurriculumDrillDownModal: React.FC<CurriculumDrillDownModalProps> =
   const selectedCurriculumForDrillDown = selectedCurriculum;
   const setSelectedCurriculumForDrillDown = setSelectedCurriculum;
 
+  const upperLang = (lang || "EN").toUpperCase() as any;
   return (
       <AnimatePresence>
         {selectedCurriculumForDrillDown && (() => {

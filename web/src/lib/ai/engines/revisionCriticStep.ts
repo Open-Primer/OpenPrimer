@@ -1,7 +1,14 @@
+import { isVertexConfigured, compressPromptText } from '@/lib/vertex-client';
+import { revisionAuditSchema } from './aiSchemas';
+import { safeJsonParse } from '@/lib/ai/engines/coreUtils';
+import { parseMarkdownSections, MarkdownSection, reconstructMarkdown, parseJointRepairOutput } from '@/lib/ai/engines/sectionBasedTranslation';
+import { callAIEngine } from '@/lib/ai/engines/courseGenerationEngine';
+import { healNarrativeCitations } from '@/lib/ai/engines/deduplicationHelpers';
+import { dbService } from '@/lib/db';
 import { callVertexAI } from '@/lib/vertex-client';
 import { extractAndInjectCitations } from '../stitcher';
 
-const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+export const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
 export async function runRevisionCritic(
   lesson: any,
@@ -17,11 +24,9 @@ export async function runRevisionCritic(
   let currentMdx = revisedMdx;
   let approved = false;
   let critique: any = null;
-
+  const slug = lesson.lesson_slug;
+  const courseSlug = lesson.course_slug || '';
     // === REVISION CRITIC PIPELINE (Agent 4) ===
-    let approved = false;
-    let critique = '';
-    let currentMdx = revisedMdx;
     let critiqueIteration = 0;
     const maxCritiqueIterations = 3;
 

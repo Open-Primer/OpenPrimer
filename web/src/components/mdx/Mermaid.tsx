@@ -1,5 +1,6 @@
 "use client";
 
+import { MermaidFallbackTimeline as CustomTimeline } from './mermaid/MermaidFallbackTimeline';
 import React, { useEffect, useRef, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, Maximize2, Minimize2 } from 'lucide-react';
@@ -39,6 +40,7 @@ export const Mermaid = ({ chart, children }: MermaidProps) => {
     return <CustomTimeline chartText={chartText} />;
   }
 
+  const ms = getMermaidStrings(language);
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);

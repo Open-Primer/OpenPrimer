@@ -16,18 +16,26 @@ export interface DataChartProps {
   allowToggleType?: boolean;
 }
 
-export const PRESET_GRADIENTS = [
-  { from: 'from-blue-600', to: 'to-indigo-500', hex: '#3b82f6' },
-  { from: 'from-emerald-500', to: 'to-teal-400', hex: '#10b981' },
-  { from: 'from-amber-500', to: 'to-orange-400', hex: '#f59e0b' },
-  { from: 'from-rose-500', to: 'to-pink-500', hex: '#f43f5e' },
-  { from: 'from-purple-500', to: 'to-violet-400', hex: '#a855f7' },
-  { from: 'from-cyan-500', to: 'to-sky-400', hex: '#06b6d4' }
+export interface GradientDef {
+  id: string;
+  start: string;
+  end: string;
+  from: string;
+  to: string;
+  hex: string;
+}
+
+export const PRESET_GRADIENTS: GradientDef[] = [
+  { id: 'grad-blue-purple', start: '#3b82f6', end: '#8b5cf6', from: 'from-blue-600', to: 'to-indigo-500', hex: '#3b82f6' },
+  { id: 'grad-emerald-teal', start: '#10b981', end: '#14b8a6', from: 'from-emerald-500', to: 'to-teal-400', hex: '#10b981' },
+  { id: 'grad-rose-orange', start: '#f43f5e', end: '#f97316', from: 'from-rose-500', to: 'to-pink-500', hex: '#f43f5e' },
+  { id: 'grad-amber-yellow', start: '#f59e0b', end: '#eab308', from: 'from-amber-500', to: 'to-orange-400', hex: '#f59e0b' },
+  { id: 'grad-cyan-indigo', start: '#06b6d4', end: '#6366f1', from: 'from-purple-500', to: 'to-violet-400', hex: '#06b6d4' }
 ];
 
 export const LINE_COLORS = ['#3b82f6', '#f43f5e', '#10b981', '#f59e0b', '#a855f7'];
 
-export const CHART_STRINGS =   const CHART_STRINGS = {
+export const CHART_STRINGS = {
     EN: {
       bar: "Bar",
       donut: "Donut",

@@ -1,8 +1,10 @@
+import { cleanPathSegment } from '@/lib/translations';
 import React, { useEffect } from 'react';
 import { dbService, MockCourse } from '@/lib/db';
 import { areTitlesTooSimilar, POTENTIAL_CURRICULA } from '../strings';
 
 export interface UseProposalsEngineProps {
+  loadData?: () => Promise<void>;
   historyList: any[];
   completions: any[];
   courses: MockCourse[];
@@ -21,6 +23,7 @@ export interface UseProposalsEngineProps {
 }
 
 export function useProposalsEngine({
+  loadData = async () => {},
   historyList,
   completions,
   courses,

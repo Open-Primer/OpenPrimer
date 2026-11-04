@@ -1,3 +1,5 @@
+import { BADGE_LIBRARY, type StyledBadgeImage } from '@/lib/db';
+import { resolveBadgeIconToBase64Sync, resizeAndStandardizeImage } from './badgeImageHelpers';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -75,6 +77,16 @@ export const EditAchievementModal: React.FC<EditAchievementModalProps> = ({
   t,
   LUCIDE_ICONS
 }) => {
+  const tr = t;
+  const handleImageFile = (file: File, isEdit: boolean) => {
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const resized = await resizeAndStandardizeImage(reader.result as string);
+      setEditCustomBadgeImage(resized);
+      setEditIcon(resized);
+    };
+    reader.readAsDataURL(file);
+  };
   return (
     <AnimatePresence>
         {selectedAchievement && (
@@ -222,7 +234,7 @@ export const EditAchievementModal: React.FC<EditAchievementModalProps> = ({
                             <button
                               type="button"
                               disabled={editionGalleryPage === 1}
-                              onClick={() => setEditionGalleryPage(p => Math.max(1, p - 1))}
+                              onClick={() => setEditionGalleryPage((p: any) => Math.max(1, p - 1))}
                               className="px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                               {tr("◀ Prev (gallery)")}
@@ -233,7 +245,7 @@ export const EditAchievementModal: React.FC<EditAchievementModalProps> = ({
                             <button
                               type="button"
                               disabled={editionGalleryPage === totalPages}
-                              onClick={() => setEditionGalleryPage(p => Math.min(totalPages, p + 1))}
+                              onClick={() => setEditionGalleryPage((p: any) => Math.min(totalPages, p + 1))}
                               className="px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                               {tr("Next (gallery) →")}
@@ -321,9 +333,5 @@ export const EditAchievementModal: React.FC<EditAchievementModalProps> = ({
         )}
       </AnimatePresence>
 
-      {/* DOUBLE-SAFEGUARD PURGE CONFIRM MODAL */}
-      <AnimatePresence>
-
-    </AnimatePresence>
   );
 };

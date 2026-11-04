@@ -1,3 +1,4 @@
+import { cleanPathSegment } from './disciplines';
 export const LEVEL_SLUG_MAP: Record<string, Record<string, string>> = {
   foundation_1: { EN: 'primary-1', FR: 'fondamental-1', ES: 'fundacional-1', DE: 'grundstufe-1', ZH: 'foundation-1', PT: 'fundamental-1', AR: 'primary-1', HI: 'primary-1', UR: 'primary-1' },
   foundation_2: { EN: 'primary-2', FR: 'fondamental-2', ES: 'fundacional-2', DE: 'grundstufe-2', ZH: 'foundation-2', PT: 'fundamental-2', AR: 'primary-2', HI: 'primary-2', UR: 'primary-2' },

@@ -1,3 +1,5 @@
+import { areTitlesTooSimilar, LOCALIZED_POPUPS } from '../strings';
+import { normalizeLevel } from '@/lib/translations';
 import React from 'react';
 import { dbService, MockCourse } from '@/lib/db';
 

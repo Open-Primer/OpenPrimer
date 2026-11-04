@@ -1,6 +1,6 @@
 import {
   UserProfile, MockCourse, SyllabusNode, ReportCluster, UV,
-  SearchHistoryItem, StyledBadgeImage, TranslationRequestEntry,
+  SearchHistoryItem, SearchHistoryEntry, StyledBadgeImage, TranslationRequestEntry,
   RefusedCourseEntry, ContactFeedback, CourseCompletionEntry,
   TranslationEmailNotification, LanguageInfo, RefusedTranslationEntry,
   RefusedRevisionEntry, CourseFeedback, TutorPersonality, AgentMetric

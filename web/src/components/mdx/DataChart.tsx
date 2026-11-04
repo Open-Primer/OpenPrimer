@@ -31,7 +31,7 @@ export const DataChart: React.FC<DataChartProps> = ({
   const [selectedSeriesIdx, setSelectedSeriesIdx] = useState<number>(0);
   const [hoveredScatterIdx, setHoveredScatterIdx] = useState<number | null>(null);
 
-  const normalized = normalizeChartData(data, defaultType);
+  const normalized = normalizeChartData(data, (undefined as any), title, t?.values || "Values");
   const totalSum = normalized.isMultiSeries
     ? normalized.seriesData.reduce((acc, s) => acc + s.values.reduce((sum, v) => sum + v.y, 0), 0)
     : normalized.simpleData.reduce((acc, item) => acc + item.value, 0);
@@ -211,6 +211,7 @@ export const DataChart: React.FC<DataChartProps> = ({
             setHoveredScatterIdx={setHoveredScatterIdx}
             tooltipPos={tooltipPos}
             setTooltipPos={setTooltipPos}
+            unit={unit}
             t={t}
           />
         )}

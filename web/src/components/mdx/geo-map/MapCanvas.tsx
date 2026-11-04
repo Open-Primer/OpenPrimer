@@ -1,6 +1,9 @@
+import { QUIZ_QUESTIONS } from './geoData';
 import React from 'react';
 
 interface MapCanvasProps {
+  quizStarted?: boolean;
+  inspectedData?: any;
   pan: { x: number; y: number };
   zoom: number;
   handleBackgroundClick: (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => void;
@@ -14,6 +17,8 @@ interface MapCanvasProps {
 }
 
 export const MapCanvas: React.FC<MapCanvasProps> = ({
+  inspectedData = null,
+  quizStarted = false,
   pan,
   zoom,
   handleBackgroundClick,
@@ -47,7 +52,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                   
                   {/* WORLD MAP BACKGROUND OUTLINES */}
                   <g className="map-base">
-                    {mapElements.regions.map((reg) => {
+                    {mapElements.regions.map((reg: any) => {
                       const isHovered = hoveredElement === reg.id;
                       const isActive = inspectedData?.id === reg.id;
 
@@ -97,7 +102,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                     <g className="physical-layer">
                       
                       {/* Mountain Chains */}
-                      {mapElements.physical.filter(p => p.points).map((mnt) => (
+                      {mapElements.physical.filter((p: any) => p.points).map((mnt: any) => (
                         <polyline
                           key={mnt.id}
                           points={mnt.points}
@@ -114,7 +119,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                       ))}
 
                       {/* Rivers */}
-                      {mapElements.physical.filter(p => p.path).map((river) => (
+                      {mapElements.physical.filter((p: any) => p.path).map((river: any) => (
                         <path
                           key={river.id}
                           d={river.path}
@@ -130,7 +135,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                       ))}
 
                       {/* Deserts */}
-                      {mapElements.physical.filter(p => p.r).map((desert) => (
+                      {mapElements.physical.filter((p: any) => p.r).map((desert: any) => (
                         <circle
                           key={desert.id}
                           cx={desert.x}
@@ -153,7 +158,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                   {/* LAYER: DEMOGRAPHICS (CHOROPLETH CLUSTERS) */}
                   {selectedLayer === 'demographic' && mode === 'explore' && (
                     <g className="demographics-layer">
-                      {mapElements.demographics.map((cluster) => {
+                      {mapElements.demographics.map((cluster: any) => {
                         const isHovered = hoveredElement === cluster.id;
                         return (
                           <g key={cluster.id}>
@@ -196,7 +201,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                         strokeDasharray="4,4"
                       />
 
-                      {mapElements.economic.map((node) => {
+                      {mapElements.economic.map((node: any) => {
                         const isHovered = hoveredElement === node.id;
                         return (
                           <g 
@@ -235,7 +240,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                   {/* WEATHER STATION INTERACTIVE PIN DROPS */}
                   {mode === 'explore' && (
                     <g className="weather-pins">
-                      {mapElements.stations.map((pin) => (
+                      {mapElements.stations.map((pin: any) => (
                         <g 
                           key={pin.id}
                           className="cursor-pointer"
@@ -283,25 +288,25 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                         let targetY = 220;
 
                         if (q.targetId.startsWith('phys_')) {
-                          const asset = mapElements.physical.find(p => p.id === q.targetId);
+                          const asset = mapElements.physical.find((p: any) => p.id === q.targetId);
                           if (asset) {
                             targetX = asset.x || (asset.points ? parseInt(asset.points.split(' ')[0].split(',')[0]) : 240);
                             targetY = asset.y || (asset.points ? parseInt(asset.points.split(' ')[0].split(',')[1]) : 240);
                           }
                         } else if (q.targetId.startsWith('demo_')) {
-                          const asset = mapElements.demographics.find(p => p.id === q.targetId);
+                          const asset = mapElements.demographics.find((p: any) => p.id === q.targetId);
                           if (asset) {
                             targetX = asset.x;
                             targetY = asset.y;
                           }
                         } else if (q.targetId.startsWith('econ_')) {
-                          const asset = mapElements.economic.find(p => p.id === q.targetId);
+                          const asset = mapElements.economic.find((p: any) => p.id === q.targetId);
                           if (asset) {
                             targetX = asset.x;
                             targetY = asset.y;
                           }
                         } else if (q.targetId.startsWith('poly_')) {
-                          const asset = mapElements.regions.find(r => r.id === q.targetId);
+                          const asset = mapElements.regions.find((r: any) => r.id === q.targetId);
                           if (asset) {
                             if (q.targetId === 'poly_france') {
                               targetX = 372;

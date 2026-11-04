@@ -1,3 +1,4 @@
+import { getDescriptiveLevelForPrompt } from '@/lib/ai/engines/coreUtils';
 import { saveDraftRevision, safeJsonParse } from './coreUtils';
 import { lessonOutlineSchema, outlineAuditSchema } from './aiSchemas';
 
@@ -11,6 +12,8 @@ export async function generateLessonOutlineStep(
   callAIEngine: any,
   log: (msg: string) => Promise<void>
 ): Promise<any> {
+  const levelInput = level;
+  const courseContext = { discipline, courseName, correctedCourseName, level };
         // --- 1. JIT Lesson Outline Generation & Critique ---
         await log(`[AI GENERATOR - INVERTED] [STAGE 1-A] Generating JIT outline plan for lesson "${item.title}"...`);
         const outlinePrompt = `You are the Lesson Planner Agent. Your job is to design the chapter outline/plan for the lesson:

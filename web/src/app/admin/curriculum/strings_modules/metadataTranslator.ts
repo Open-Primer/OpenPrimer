@@ -1,3 +1,15 @@
+async function batchTranslateTexts(texts: string[], targetLang: string): Promise<string[]> {
+  try {
+    return Promise.all(texts.map(t => translateText(t, 'en', targetLang)));
+  } catch {
+    return texts;
+  }
+}
+import { formatCourseLevel, cleanPathSegment } from '@/lib/translations';
+import { ACADEMIC_LEVELS } from './levelsAndDisciplines';
+import { translateText } from '../components/widgets/widgetFormatters';
+import { COCKPIT_DICTIONARY, LOCALIZED_POPUPS, EXTRA_TOOLTIP_STRINGS } from './cockpitDictionary';
+import { CURRICULUM_STRINGS } from './curriculumStringsDict';
 import { DISCIPLINES } from './levelsAndDisciplines';
 export const translateMetadataForLanguage = async (targetLang: string) => {
   const targetUpper = targetLang.toUpperCase();

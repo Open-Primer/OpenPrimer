@@ -1,5 +1,9 @@
 "use client";
 
+import { Quiz } from '../Quiz';
+import EssayEvaluation from '../EssayEvaluation';
+import OralEvaluation from '../OralEvaluation';
+import { extractPrompts } from './SummativeEssayPortal';
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Award, BookOpen, Calendar, ClipboardCheck, FileText, 
@@ -18,7 +22,7 @@ import { isChildrenEmpty } from './Alert';
 import { SUMMATIVE_STRINGS, type SummativeTranslation } from './summative-strings';
 import { SummativeEssayPortal } from './SummativeEssayPortal';
 
-export { SUMMATIVE_STRINGS, type SummativeTranslation, SummativeEssayPortal };
+
 
 const isStructuredEvalChild = (child: React.ReactNode): boolean => {
   if (!React.isValidElement(child)) return false;

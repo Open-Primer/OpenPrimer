@@ -1,5 +1,6 @@
 "use client";
 
+import { getQuizLocale } from './quiz-strings';
 import React from 'react';
 import { CheckCircle2, ShieldAlert, Play } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
@@ -10,6 +11,10 @@ function cn(...inputs: ClassValue[]) {
 }
 
 export interface QuizStartCoverProps {
+  calculatorAllowed?: boolean;
+  externalDocumentsAllowed?: boolean;
+  webBrowsingAllowed?: boolean;
+  aiTutorAssistanceAllowed?: boolean;
   totalQuestions: number;
   isFinal?: boolean;
   actualDurationLimit: number | null;
@@ -22,6 +27,10 @@ export interface QuizStartCoverProps {
 }
 
 export const QuizStartCover = ({
+  calculatorAllowed = false,
+  externalDocumentsAllowed = false,
+  webBrowsingAllowed = false,
+  aiTutorAssistanceAllowed = false,
   totalQuestions,
   isFinal,
   actualDurationLimit,

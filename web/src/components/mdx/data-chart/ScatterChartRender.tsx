@@ -1,7 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LINE_COLORS, CHART_STRINGS } from './typesAndConstants';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ScatterChartProps {
+  unit?: string;
   normalized: any;
   selectedSeriesIdx: number;
   width: number;
@@ -30,8 +33,15 @@ export const ScatterChartRender: React.FC<ScatterChartProps> = ({
   setHoveredScatterIdx,
   tooltipPos,
   setTooltipPos,
-  t
+  t,
+  unit = ''
 }) => {
+  const { language } = useLanguage();
+  const langKey = language.toUpperCase() as keyof typeof CHART_STRINGS;
+  const labels = CHART_STRINGS[langKey] || CHART_STRINGS.EN;
+  const chartWidth = width - paddingLeft - paddingRight;
+  const chartHeight = height - paddingTop - paddingBottom;
+  const [hoveredIdx, setHoveredIdx] = React.useState<number | null>(null);
     interface ScatterPoint {
       x: number;
       y: number;
@@ -42,15 +52,15 @@ export const ScatterChartRender: React.FC<ScatterChartProps> = ({
     const points: ScatterPoint[] = [];
 
     if (normalized.isMultiSeries) {
-      normalized.seriesData.forEach((series, sIdx) => {
-        series.values.forEach((v) => {
+      normalized.seriesData.forEach((series: any, sIdx: number) => {
+        series.values.forEach((v: any) => {
           if (typeof v.x === 'number' && typeof v.y === 'number') {
             points.push({ x: v.x, y: v.y, label: `${series.label} (x: ${v.x})`, seriesIdx: sIdx });
           }
         });
       });
     } else {
-      normalized.simpleData.forEach((d, idx) => {
+      normalized.simpleData.forEach((d: any, idx: number) => {
         const xVal = parseFloat(d.label);
         const yVal = d.value;
         const xResolved = isNaN(xVal) ? idx : xVal;
@@ -136,7 +146,7 @@ export const ScatterChartRender: React.FC<ScatterChartProps> = ({
           </defs>
 
           {/* Grid lines */}
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio: number, i: number) => {
             const yVal = minY + (maxY - minY) * ratio;
             const y = getY(yVal);
             return (
@@ -147,7 +157,7 @@ export const ScatterChartRender: React.FC<ScatterChartProps> = ({
             );
           })}
 
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio: number, i: number) => {
             const xVal = minX + (maxX - minX) * ratio;
             const x = getX(xVal);
             return (
@@ -256,5 +266,3 @@ export const ScatterChartRender: React.FC<ScatterChartProps> = ({
       </div>
     );
   };
-
-};

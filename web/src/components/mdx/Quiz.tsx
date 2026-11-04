@@ -1,5 +1,11 @@
 "use client";
 
+import { STATIC_UI_STRINGS } from '@/lib/translations';
+import { getQuizStrings, getQuizLocale } from './quiz/quiz-strings';
+import { getProgressionStorage, shuffleArray, formatTime, formatDurationText } from './quiz/quiz-utils';
+import { fetchQuizTutorFeedback } from './quiz/tutor-feedback';
+import { QuizStartCover } from './quiz/QuizStartCover';
+import { QuizSummaryView } from './quiz/QuizSummaryView';
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle2, XCircle, ChevronRight, Play, Timer, RefreshCw, Lock, Sparkles, ShieldAlert } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
@@ -39,6 +45,9 @@ export const Quiz = ({
   const { language } = useLanguage();
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const t = getQuizStrings(dict);
+  const ql = getQuizLocale(language);
+  const allowedAids = "";
+  const forbiddenAids = "";
 
     const [extendTime, setExtendTime] = useState(false);
   const [level, setLevel] = useState('L1');
@@ -418,7 +427,7 @@ export const Quiz = ({
       <QuizStartCover
         totalQuestions={totalQuestions}
         isFinal={isFinal}
-        actualDurationLimit={actualDurationLimit}
+        actualDurationLimit={actualDurationLimit ?? null}
         t={t}
         language={language}
         formatDurationText={formatDuration}

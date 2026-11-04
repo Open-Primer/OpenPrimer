@@ -124,7 +124,8 @@ import {
 import {
   Callout, CalloutContainer, ImageAlias, Explanation, Solution, KeyConcept, Instruction, Shape,
   FillInBlanksWrapper, SmartEquationManipulator
-} from '../basicElements';
+} from './basicElements';
+import { MdxImage } from './basicElements';
 
 const components = {
   Alert,

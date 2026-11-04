@@ -9,6 +9,8 @@ import {
 } from './presets';
 
 export interface PresetsCatalogProps {
+  yMinVal?: number;
+  yMaxVal?: number;
   textTitleColor: string;
   getUiString: (key: string) => string;
   searchQuery: string;

@@ -1,3 +1,5 @@
+import { isVertexConfigured, compressPromptText } from '@/lib/vertex-client';
+import { safeResponseJson } from '@/lib/ai/engines/coreUtils';
 import { callVertexAI } from '@/lib/vertex-client';
 
 export async function correctCourseTitle(title: string, targetLang: string = 'en', translateToTargetLang = true): Promise<string> {

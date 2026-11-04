@@ -45,11 +45,10 @@ const generateOrbitalMesh = (
 
       faces.push({
         indices: [i00, i10, i11, i01],
-        phase,
-        avgZ: 0,
+        phase: (phase === '+' || (phase as any) === 1) ? 1 : -1,
         normal: { x: 0, y: 0, z: 1 },
-        color: ''
-      });
+        center: { x: 0, y: 0, z: 0 }
+      } as Face);
     }
   }
 

@@ -1,3 +1,6 @@
+import { resolveGoingFurtherResource } from '@/lib/wikidata-resolver';
+import { fetchWithTimeout } from '../validator/urlReachability';
+const UNKNOWN_AUTHOR_MAP: Record<string, string> = { fr: 'Auteur inconnu', en: 'Unknown Author', es: 'Autor desconocido', de: 'Unbekannter Autor', zh: '未知作者', pt: 'Autor desconhecido', ar: 'مؤلف مجهول', hi: 'अज्ञात लेखक', ur: 'نامعلوم مصنف' };
 import { detectLanguageLeakage, translateText } from './languageLeakageDetector';
 
 export async function healCompanionWidgets(widgets: any, lang: string): Promise<any> {
@@ -308,13 +311,4 @@ export async function healCompanionWidgets(widgets: any, lang: string): Promise<
   }
 
   return widgets;
-}
-
-
-  return healed;
-}
-
-
-
-  return healed;
 }

@@ -1,3 +1,8 @@
+import { callVertexAI, compressPromptText } from '../vertex-client';
+import { fetchWithTimeout } from './storageHelpers';
+import { validateImageWithGemini, validateImageSoftWithGemini } from './geminiImageValidator';
+import { fetchWikidataImage, getWikimediaPageUrl, fetchGallicaImage, fetchMedicalBookImage, fetchWellcomeCollectionImage, fetchNLMDigitalCollectionImage, fetchNASAImage, fetchMetMuseumImage, fetchArchiveOrgMedia, fetchSmithsonianImage, fetchUnsplashImage } from './factualMediaValidator';
+import { fetchWikipediaImage } from './imageSourceResolver';
 import { isFactualMedia } from './factualMediaValidator';
 
 export function getConciseQuery(description: string, alt: string, caption: string): string {
@@ -38,7 +43,7 @@ export function getConciseQuery(description: string, alt: string, caption: strin
   return (cleanAlt || cleanCaption || desc || '').trim();
 }
 
-async function optimizeQueryWithGemini(rawQuery: string, lang: string = 'en', forceEnglish: boolean = false): Promise<string> {
+export async function optimizeQueryWithGemini(rawQuery: string, lang: string = 'en', forceEnglish: boolean = false): Promise<string> {
   const trimmed = rawQuery.trim();
   const words = trimmed.split(/\s+/);
   // If it's already short (e.g. 3 words or less), just return it
@@ -106,7 +111,7 @@ Règles critiques d'optimisation :
   return trimmed;
 }
 
-async function generateGenericQueryWithGemini(specificQuery: string, lang: string = 'en'): Promise<string> {
+export async function generateGenericQueryWithGemini(specificQuery: string, lang: string = 'en'): Promise<string> {
   try {
     const promptText = `Tu es un assistant de recherche documentaire d'élite.
 Considère la description de média spécifique suivante : "${specificQuery}".
@@ -140,7 +145,7 @@ Réponds UNIQUEMENT avec ce terme générique simplifié (1 à 3 mots), en fran�
   return specificQuery;
 }
 
-async function describeImageWithGemini(imageUrl: string, lang: string = 'fr'): Promise<string | null> {
+export async function describeImageWithGemini(imageUrl: string, lang: string = 'fr'): Promise<string | null> {
   try {
     const resImg = await fetchWithTimeout(imageUrl, {}, 10000);
     if (!resImg.ok) {
@@ -198,7 +203,7 @@ Réponds UNIQUEMENT avec la description générée, sans introduire de texte exp
   return null;
 }
 
-async function searchCascade(
+export async function searchCascade(
   query: string,
   queryEnglish: string,
   lang: string,
@@ -417,3 +422,7 @@ async function searchCascade(
 }
 
 
+
+export async function generateQueryRelaxationsWithGemini(query: string, lang: string): Promise<string[]> {
+  return [query];
+}

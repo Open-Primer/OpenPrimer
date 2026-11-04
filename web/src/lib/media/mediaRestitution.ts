@@ -1,3 +1,11 @@
+import crypto from 'crypto';
+import { validateYouTubeVideo } from './youtubeResolver';
+import { fetchWikimediaAudio, buildLyriaPrompt, generateLyriaAudio, isSpeechAudio } from './wikimediaResolver';
+import { fetchWithTimeout, uploadToSupabaseStorage } from './storageHelpers';
+import { fetchArchiveOrgMedia } from './factualMediaValidator';
+import { synthesizeSpeech } from './mediaPipeline';
+import { getSafeExtension, compileFinalLabel, renumberFigures } from './figureFormatting';
+import { resolveMediaImage } from './imageSourceResolver';
 import { validateMediaUrl } from './storageHelpers';
 import { searchYouTubeVideo } from './youtubeResolver';
 import { resolveImageFromSources } from './imageSourceResolver';

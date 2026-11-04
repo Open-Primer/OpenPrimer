@@ -35,7 +35,7 @@ export function getCitedReferenceNumbers(narrativeText: string): Set<number> {
   return cited;
 }
 
-function replaceWidget(content: string, widgetName: string, widgetStr: string): { content: string, replaced: boolean } {
+export function replaceWidget(content: string, widgetName: string, widgetStr: string): { content: string, replaced: boolean } {
   const escapedName = widgetName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
   // Match [[WIDGET:widgetName]], [[WIDGET:Type:widgetName]], or [[WIDGET:Type:widgetName:Topic]]
   const regex = new RegExp(`\\[\\[\\s*WIDGET\\s*:\\s*(?:[^:\\s\\]]+\\s*:\\s*)?${escapedName}\\s*(?::\\s*([^\\]]+))?\\s*\\]\\]`, 'gi');

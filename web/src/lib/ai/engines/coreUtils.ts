@@ -172,6 +172,7 @@ export function getDescriptiveLevelForPrompt(level: string): string {
 export {
   type LevelConstraints,
   DEFAULT_LEVEL_CONSTRAINTS,
+  loadedConstraints,
   loadLevelConstraintsFromDb,
   initializeConstraints,
   getConstraintKeyForLevel,
@@ -179,6 +180,8 @@ export {
   getWordCountLimitForLevel
 } from '../pedagogy-guidelines';
 
+
+export { recordMetrics } from '@/lib/vertex-client';
 
 export async function mapConcurrent<T, R>(
   items: T[],

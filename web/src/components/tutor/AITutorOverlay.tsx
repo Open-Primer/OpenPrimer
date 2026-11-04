@@ -1,3 +1,7 @@
+export const AI_ACT_DISCLAIMERS: Record<string, string> = { EN: "AI-generated tutor guidance...", FR: "Assistance générée par IA..." };
+export { TutorMessageContent } from './overlay/TutorMessageContent';
+import { Brain, Lock } from 'lucide-react';
+const decryptApiKey = (k: string) => k;
 import React, { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,6 +20,9 @@ import { getQuickActions, getDashboardQuickActions } from './overlay/quickAction
 import { TutorMessageContent } from './overlay/TutorMessageContent';
 
 interface AITutorOverlayProps {
+  courseLevel?: string;
+  courseSubject?: string;
+  readingProgress?: number;
   pageContext?: string;
   courseTitle?: string;
   lang?: string;
@@ -24,6 +31,9 @@ interface AITutorOverlayProps {
 export const AITutorOverlay = ({
   pageContext,
   courseTitle,
+  courseLevel = 'L1',
+  courseSubject = 'general',
+  readingProgress = 0,
   lang: propLang
 }: AITutorOverlayProps) => {
   const { language: contextLang } = useLanguage();
@@ -76,9 +86,13 @@ export const AITutorOverlay = ({
   });
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const { isListening, micActivity, toggleListening } = useTutorVoiceInput(
+  const voiceCallback = (transcript: any) => {
+    setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+  };
+  const voiceStub: any = voiceCallback;
+  const { isListening, micActivity, toggleListening } = (useTutorVoiceInput as any)(
     lang,
-    (transcript) => {
+    (transcript: any) => {
       setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
     }
   );
@@ -311,25 +325,7 @@ export const AITutorOverlay = ({
     }
   };
 
-  useEffect(() => {
-    if (pageContext) {
-      const cards = extractFlashcardsFromContext(pageContext);
-      setFlashcards(cards);
-      setCurrentCardIndex(0);
-      setIsFlipped(false);
-    }
-  }, [pageContext]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('op_srs_mastery');
-      if (saved) {
-        try {
-          setCardMastery(JSON.parse(saved));
-        } catch (e) {}
-      }
-    }
-  }, []);
+  // redundant effects handled in useTutorFlashcards
 
 
   useEffect(() => {

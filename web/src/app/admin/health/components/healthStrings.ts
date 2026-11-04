@@ -1,4 +1,4 @@
-export const HEALTH_STRINGS = const HEALTH_STRINGS = {
+export const HEALTH_STRINGS = {
   EN: {
     title: 'Server Health',
     subtitle: 'Real-time monitoring of all external service dependencies',

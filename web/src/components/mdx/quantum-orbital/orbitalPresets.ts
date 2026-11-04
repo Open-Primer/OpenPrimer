@@ -11,10 +11,14 @@ export interface Lobe {
 
 export interface OrbitalPreset {
   id: string;
-  n: number;
-  l: number;
-  m: number;
-  labelKey: string;
+  name?: string;
+  description?: string;
+  geometry?: string;
+  isHybrid?: boolean;
+  n?: number;
+  l?: number;
+  m?: number;
+  labelKey?: string;
   lobes: Lobe[];
 }
 
@@ -36,7 +40,7 @@ export interface Mesh {
   faces: Face[];
 }
 
-export const ORBITALS: OrbitalPreset[] = const ORBITALS: OrbitalPreset[] = [
+export const ORBITALS: OrbitalPreset[] = [
   {
     id: "1s",
     name: "1s Orbital",

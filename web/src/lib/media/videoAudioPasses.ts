@@ -1,10 +1,15 @@
+import { validateYouTubeVideo } from './youtubeResolver';
+import { getLanguageSearchTerm } from './mediaTypes';
+import { validateMediaUrl } from './storageHelpers';
+import { fetchArchiveOrgMedia } from './factualMediaValidator';
+import { buildLyriaPrompt, generateLyriaAudio, isSpeechAudio } from './wikimediaResolver';
 import crypto from 'crypto';
 import { fetchWithTimeout, uploadToSupabaseStorage } from './storageHelpers';
 import { searchYouTubeVideo } from './youtubeResolver';
 import { fetchWikimediaAudio } from './wikimediaResolver';
 import { parseAttributesRobustly } from './figureFormatting';
 
-function getSafeExtension(mimeType: string, defaultExt: string = 'jpg'): string {
+export function getSafeExtension(mimeType: string, defaultExt: string = 'jpg'): string {
   if (mimeType.includes('png')) return 'png';
   if (mimeType.includes('webp')) return 'webp';
   if (mimeType.includes('svg')) return 'svg';
@@ -14,7 +19,7 @@ function getSafeExtension(mimeType: string, defaultExt: string = 'jpg'): string 
   return defaultExt;
 }
 
-async function synthesizeSpeech(text: string, lang: string): Promise<Buffer | null> {
+export async function synthesizeSpeech(text: string, lang: string): Promise<Buffer | null> {
   return null;
 }
 
@@ -192,15 +197,6 @@ export async function resolveVideosAndAudio(mdxContent: string, targetLang: stri
       }
     }
   }
-
-  // 3. Process Images: Markdown images ![Alt](url) and CustomFigure / Image components
-  // Matches markdown images: !\[(.*?)\]\((.*?)\)
-  const mdImgRegex = /!\[(.*?)\]\((.*?)\)/g;
-  let mdMatch;
-  while ((mdMatch = mdImgRegex.exec(mdxContent)) !== null) {
-    const fullMatch = mdMatch[0];
-    const altText = mdMatch[1];
-
 
   return updatedContent;
 }

@@ -12,6 +12,10 @@ export interface TooltipState {
 }
 
 export interface AudioPlayerBarProps {
+  utteranceRef?: React.RefObject<any>;
+  speakTutorSentence?: (idx: number, sentences: string[], voice?: any) => void;
+  speakSentence?: (idx: number, voice?: any) => void;
+  isLoggedIn?: boolean;
   containerRef: React.RefObject<HTMLDivElement | null>;
   tooltip: TooltipState;
   isPlaying: boolean;
@@ -73,6 +77,10 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   prevSentence,
   lang = "EN",
   t,
+  isLoggedIn = true,
+  utteranceRef,
+  speakTutorSentence = () => {},
+  speakSentence = () => {},
 }) => {
   const [showVolumePopup, setShowVolumePopup] = React.useState(false);
   const [showSpeedPopup, setShowSpeedPopup] = React.useState(false);
@@ -284,8 +292,8 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                     onChange={(e) => {
                       const v = parseFloat(e.target.value);
                       setVolume(v);
-                      if (isPlaying && !isPaused && utteranceRef.current) {
-                        utteranceRef.current.volume = v;
+                      if (isPlaying && !isPaused && utteranceRef?.current) {
+                        (utteranceRef.current as any).volume = v;
                       }
                       saveSettingsToCloud({ volume: v });
                     }}

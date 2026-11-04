@@ -3,7 +3,9 @@ import { formatCourseLevel } from '@/lib/translations';
 
 export function getConflictDescription(conflict: any, lang: string): string {
   const langKey = lang.toUpperCase();
-  const isDe = lang.toUpperCase() === 'DE';
+  const isFr = langKey === 'FR';
+  const isEs = langKey === 'ES';
+  const isDe = langKey === 'DE';
   const isZh = lang.toUpperCase() === 'ZH';
   const isPt = lang.toUpperCase() === 'PT';
   const isAr = lang.toUpperCase() === 'AR';
@@ -37,7 +39,7 @@ export function getConflictDescription(conflict: any, lang: string): string {
   return `You are enrolled in both the standalone course "${conflict.standalone.title}" and the curriculum "${conflict.curriculum.title}", which already includes the module "${conflict.curriculumChild.title}". This may lead to duplicate or conflicting progress.`;
 }
 
-const COURSE_LABEL: Record<string, string> = {
+export const COURSE_LABEL: Record<string, string> = {
   EN: "Course",
   FR: "Cours",
   ES: "Curso",
@@ -49,7 +51,7 @@ const COURSE_LABEL: Record<string, string> = {
   UR: "کورس"
 };
 
-const MANDATORY_LABEL: Record<string, string> = {
+export const MANDATORY_LABEL: Record<string, string> = {
   EN: "Mandatory",
   FR: "Obligatoire",
   ES: "Obligatorio",
@@ -61,7 +63,7 @@ const MANDATORY_LABEL: Record<string, string> = {
   UR: "لازمی"
 };
 
-const OPTIONAL_LABEL: Record<string, string> = {
+export const OPTIONAL_LABEL: Record<string, string> = {
   EN: "Optional",
   FR: "Optionnel",
   ES: "Opcional",
@@ -73,7 +75,7 @@ const OPTIONAL_LABEL: Record<string, string> = {
   UR: "اختیاری"
 };
 
-const NOT_AVAILABLE_IN_LANG: Record<string, string> = {
+export const NOT_AVAILABLE_IN_LANG: Record<string, string> = {
   EN: "Not available in your active language",
   FR: "Non disponible dans votre langue active",
   ES: "No disponible en tu idioma activo",
@@ -85,7 +87,7 @@ const NOT_AVAILABLE_IN_LANG: Record<string, string> = {
   UR: "آپ کی فعال زبان में उपलब्ध नहीं है"
 };
 
-const REMOVE_BOOKMARK_LABEL: Record<string, string> = {
+export const REMOVE_BOOKMARK_LABEL: Record<string, string> = {
   EN: "Remove bookmark",
   FR: "Supprimer des favoris",
   ES: "Eliminar marcador",
@@ -97,7 +99,7 @@ const REMOVE_BOOKMARK_LABEL: Record<string, string> = {
   UR: "بک مارک ہٹائیں"
 };
 
-const SAVE_COURSE_LABEL: Record<string, string> = {
+export const SAVE_COURSE_LABEL: Record<string, string> = {
   EN: "Save this course",
   FR: "Sauvegarder ce cours",
   ES: "Guardar este curso",
@@ -109,7 +111,7 @@ const SAVE_COURSE_LABEL: Record<string, string> = {
   UR: "اس کورس کو محفوظ کریں"
 };
 
-const MANDATORY_CURRICULUM_COURSE_LABEL: Record<string, string> = {
+export const MANDATORY_CURRICULUM_COURSE_LABEL: Record<string, string> = {
   EN: "Mandatory curriculum course (cannot disenroll)",
   FR: "Cours obligatoire du curriculum (abandon impossible)",
   ES: "Curso curricular obligatorio (no se puede dar de baja)",
@@ -121,7 +123,7 @@ const MANDATORY_CURRICULUM_COURSE_LABEL: Record<string, string> = {
   UR: "لازمی نصابی کورس (رجسٹریشن منسوخ نہیں کی جا سکتی)"
 };
 
-const COMPLETED_LABEL: Record<string, string> = {
+export const COMPLETED_LABEL: Record<string, string> = {
   EN: "Completed",
   FR: "Complété",
   ES: "Completado",
@@ -133,7 +135,7 @@ const COMPLETED_LABEL: Record<string, string> = {
   UR: "مکمل"
 };
 
-const STATUS_LABEL: Record<string, string> = {
+export const STATUS_LABEL: Record<string, string> = {
   EN: "Status",
   FR: "Statut",
   ES: "Estado",
@@ -145,7 +147,7 @@ const STATUS_LABEL: Record<string, string> = {
   UR: "حالت"
 };
 
-const EARNED_BADGES_LABEL: Record<string, string> = {
+export const EARNED_BADGES_LABEL: Record<string, string> = {
   EN: "Earned badges",
   FR: "Badges gagnés",
   ES: "Insignias ganadas",
@@ -157,7 +159,7 @@ const EARNED_BADGES_LABEL: Record<string, string> = {
   UR: "حاصل کردہ بیجز"
 };
 
-const VIEW_REVIEW_LABEL: Record<string, string> = {
+export const VIEW_REVIEW_LABEL: Record<string, string> = {
   EN: "View Review",
   FR: "Voir l'évaluation",
   ES: "Ver evaluación",
@@ -169,7 +171,7 @@ const VIEW_REVIEW_LABEL: Record<string, string> = {
   UR: "جائزہ دیکھیں"
 };
 
-const REVIEW_COURSE_LABEL: Record<string, string> = {
+export const REVIEW_COURSE_LABEL: Record<string, string> = {
   EN: "Review Course",
   FR: "Revoir le cours",
   ES: "Revisar curso",
@@ -181,7 +183,7 @@ const REVIEW_COURSE_LABEL: Record<string, string> = {
   UR: "کورس کا جائزہ لیں"
 };
 
-const DISMISS_RECOMMENDATION_LABEL: Record<string, string> = {
+export const DISMISS_RECOMMENDATION_LABEL: Record<string, string> = {
   EN: "Dismiss recommendation",
   FR: "Masquer cette recommandation",
   ES: "Descartar recomendación",
@@ -193,7 +195,7 @@ const DISMISS_RECOMMENDATION_LABEL: Record<string, string> = {
   UR: "سفارش کو مسترد کریں"
 };
 
-const ELECTIVE_CHOICES_LABEL: Record<string, string> = {
+export const ELECTIVE_CHOICES_LABEL: Record<string, string> = {
   EN: "Elective Course Choices",
   FR: "Choix des options",
   ES: "Elección de asignaturas optativas",
@@ -205,7 +207,7 @@ const ELECTIVE_CHOICES_LABEL: Record<string, string> = {
   UR: "اختیاری کورس کے انتخاب"
 };
 
-const COMPLIANT_LABEL: Record<string, string> = {
+export const COMPLIANT_LABEL: Record<string, string> = {
   EN: "Compliant",
   FR: "Conforme",
   ES: "Conforme",
@@ -217,7 +219,7 @@ const COMPLIANT_LABEL: Record<string, string> = {
   UR: "مطابق"
 };
 
-const REQUIRED_LABEL: Record<string, string> = {
+export const REQUIRED_LABEL: Record<string, string> = {
   EN: "Required",
   FR: "Requis",
   ES: "Requerido",
@@ -229,7 +231,7 @@ const REQUIRED_LABEL: Record<string, string> = {
   UR: "مطلوبہ"
 };
 
-const ELECTIVE_LABEL: Record<string, string> = {
+export const ELECTIVE_LABEL: Record<string, string> = {
   EN: "Elective",
   FR: "Optionnel",
   ES: "Optativa",
@@ -241,7 +243,7 @@ const ELECTIVE_LABEL: Record<string, string> = {
   UR: "اختیاری"
 };
 
-const EXPECTED_LABEL: Record<string, string> = {
+export const EXPECTED_LABEL: Record<string, string> = {
   EN: "expected",
   FR: "prévues",
   ES: "previstas",
@@ -253,7 +255,7 @@ const EXPECTED_LABEL: Record<string, string> = {
   UR: "متوقع"
 };
 
-const NOT_ENROLLED_LABEL: Record<string, string> = {
+export const NOT_ENROLLED_LABEL: Record<string, string> = {
   EN: "Not enrolled",
   FR: "Non inscrit",
   ES: "No inscrito",
@@ -265,7 +267,7 @@ const NOT_ENROLLED_LABEL: Record<string, string> = {
   UR: "رجسٹرڈ نہیں"
 };
 
-const REMOVE_LABEL: Record<string, string> = {
+export const REMOVE_LABEL: Record<string, string> = {
   EN: "Remove",
   FR: "Retirer",
   ES: "Quitar",
@@ -277,7 +279,7 @@ const REMOVE_LABEL: Record<string, string> = {
   UR: "ہٹائیں"
 };
 
-const CHOOSE_LABEL: Record<string, string> = {
+export const CHOOSE_LABEL: Record<string, string> = {
   EN: "Choose",
   FR: "Choisir",
   ES: "Elegir",
@@ -289,7 +291,7 @@ const CHOOSE_LABEL: Record<string, string> = {
   UR: "منتخب کریں"
 };
 
-const THIS_COURSE_LABEL: Record<string, string> = {
+export const THIS_COURSE_LABEL: Record<string, string> = {
   EN: "this course",
   FR: "ce cours",
   ES: "este curso",
@@ -301,7 +303,7 @@ const THIS_COURSE_LABEL: Record<string, string> = {
   UR: "یہ کورس"
 };
 
-const KEEP_ENROLLMENTS_LABEL: Record<string, string> = {
+export const KEEP_ENROLLMENTS_LABEL: Record<string, string> = {
   EN: "Keep course enrollments",
   FR: "Conserver l'inscription aux modules",
   ES: "Mantener inscripciones de cursos",
@@ -313,7 +315,7 @@ const KEEP_ENROLLMENTS_LABEL: Record<string, string> = {
   UR: "کورس की رجسٹریشن برقرار رکھیں"
 };
 
-const KEEP_ENROLLMENTS_DESC_LABEL: Record<string, string> = {
+export const KEEP_ENROLLMENTS_DESC_LABEL: Record<string, string> = {
   EN: "Keep your individual progress and enrollment for the child courses. Uncheck to abandon all.",
   FR: "Conservez vos progrès et inscriptions individuelles pour les cours de ce cursus. Décochez pour tout abandonner.",
   ES: "Mantenga su progreso e inscripción individual para los cursos secundarios. Desmarque para abandonar todo.",
@@ -325,7 +327,7 @@ const KEEP_ENROLLMENTS_DESC_LABEL: Record<string, string> = {
   UR: "ذیلی کورسز के लिए अपनी انفرادی پیشرفت اور رجسٹریشن برقرار رکھیں۔ سب کو چھوڑنے کے لیے ان چیک کریں۔"
 };
 
-const REVIEWED_READ_ONLY_LABEL: Record<string, string> = {
+export const REVIEWED_READ_ONLY_LABEL: Record<string, string> = {
   EN: "REVIEWED • READ ONLY",
   FR: "ÉVALUÉ • LECTURE SEULE",
   ES: "EVALUADO • SOLO LECTURA",
@@ -337,7 +339,7 @@ const REVIEWED_READ_ONLY_LABEL: Record<string, string> = {
   UR: "جائزہ لیا گیا • صرف پڑھنے کے لیے"
 };
 
-const CLOSE_LABEL: Record<string, string> = {
+export const CLOSE_LABEL: Record<string, string> = {
   EN: "Close",
   FR: "Fermer",
   ES: "Cerrar",
@@ -349,7 +351,7 @@ const CLOSE_LABEL: Record<string, string> = {
   UR: "بند کریں"
 };
 
-const YOUR_SAVED_REVIEW_LABEL: Record<string, string> = {
+export const YOUR_SAVED_REVIEW_LABEL: Record<string, string> = {
   EN: "YOUR SAVED REVIEW",
   FR: "VOTRE ÉVALUATION ENREGISTRÉE",
   ES: "TU EVALUACIÓN GUARDADA",
@@ -361,7 +363,7 @@ const YOUR_SAVED_REVIEW_LABEL: Record<string, string> = {
   UR: "آپ کا محفوظ کردہ جائزہ"
 };
 
-const SHARE_YOUR_EXPERIENCE_LABEL: Record<string, string> = {
+export const SHARE_YOUR_EXPERIENCE_LABEL: Record<string, string> = {
   EN: "SHARE YOUR EXPERIENCE",
   FR: "PARTAGEZ VOTRE EXPÉRIENCE",
   ES: "COMPARTE TU EXPERIENCIA",
@@ -373,7 +375,7 @@ const SHARE_YOUR_EXPERIENCE_LABEL: Record<string, string> = {
   UR: "اپنا تجربہ شیئر کریں"
 };
 
-const RATE_THIS_COURSE_LABEL: Record<string, string> = {
+export const RATE_THIS_COURSE_LABEL: Record<string, string> = {
   EN: "Rate this course",
   FR: "Évaluez ce cours",
   ES: "Califica este curso",
@@ -385,7 +387,7 @@ const RATE_THIS_COURSE_LABEL: Record<string, string> = {
   UR: "اس کورس کی درجہ بندی کریں"
 };
 
-const COMMENTS_SUGGESTIONS_LABEL: Record<string, string> = {
+export const COMMENTS_SUGGESTIONS_LABEL: Record<string, string> = {
   EN: "Comments or Suggestions",
   FR: "Commentaires ou Suggestions",
   ES: "Comentarios o sugerencias",
@@ -397,7 +399,7 @@ const COMMENTS_SUGGESTIONS_LABEL: Record<string, string> = {
   UR: "تبصرے یا تجاویز"
 };
 
-const SUBMIT_REVIEW_LABEL: Record<string, string> = {
+export const SUBMIT_REVIEW_LABEL: Record<string, string> = {
   EN: "Submit Review",
   FR: "Soumettre l'évaluation",
   ES: "Enviar evaluación",
@@ -409,7 +411,7 @@ const SUBMIT_REVIEW_LABEL: Record<string, string> = {
   UR: "جائزہ جمع کروائیں"
 };
 
-const REVIEW_SAVED_LABEL: Record<string, string> = {
+export const REVIEW_SAVED_LABEL: Record<string, string> = {
   EN: "Your rating has been successfully saved. Thank you for sharing your feedback!",
   FR: "Votre évaluation a été enregistrée avec succès. Merci d'avoir partagé votre avis !",
   ES: "Tu calificación ha sido guardada con éxito. ¡Gracias por compartir tus comentarios!",
@@ -421,7 +423,7 @@ const REVIEW_SAVED_LABEL: Record<string, string> = {
   UR: "آپ کی درجہ بندی کامیابی کے ساتھ محفوظ کر لی گئی ہے۔ اپنی رائے دینے کا شکریہ!"
 };
 
-const TEXTAREA_PLACEHOLDER_LABEL: Record<string, string> = {
+export const TEXTAREA_PLACEHOLDER_LABEL: Record<string, string> = {
   EN: "What did you think of the pacing, clarity, or explanations? Suggest revisions...",
   FR: "Que pensez-vous du rythme, de la clarté ou des explications ? Suggérez des révisions...",
   ES: "¿Qué te pareció el ritmo, la claridad o las explicaciones? Sugiere revisiones...",
@@ -433,7 +435,7 @@ const TEXTAREA_PLACEHOLDER_LABEL: Record<string, string> = {
   UR: "رفتار، وضاحت، یا وضاحتوں کے بارے में آپ کا کیا خیال ہے؟ نظرثانی تجویز کریں..."
 };
 
-const ENROLLMENT_SUCCESSFUL_LABEL: Record<string, string> = {
+export const ENROLLMENT_SUCCESSFUL_LABEL: Record<string, string> = {
   EN: "Enrollment Successful!",
   FR: "Inscription Réussie !",
   ES: "¡Inscripción exitosa!",
@@ -478,3 +480,9 @@ export function getAchievementTranslation(ach: any, field: 'name' | 'description
 }
 
 
+
+export function getLocalizedLabel(dict: Record<string, string>, lang: string): string {
+  if (!dict) return '';
+  const k = (lang || 'en').toUpperCase();
+  return dict[k] || dict.EN || Object.values(dict)[0] || '';
+}

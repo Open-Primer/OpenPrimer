@@ -10,6 +10,7 @@ interface TutorSelectorModalProps {
   activeTutorId: string;
   handleSelectTutor: (id: string) => Promise<void>;
   t: any;
+  lang?: string;
 }
 
 export const TutorSelectorModal: React.FC<TutorSelectorModalProps> = ({
@@ -18,7 +19,8 @@ export const TutorSelectorModal: React.FC<TutorSelectorModalProps> = ({
   tutors,
   activeTutorId,
   handleSelectTutor,
-  t
+  t,
+  lang = "EN"
 }) => {
   return (
       <AnimatePresence>

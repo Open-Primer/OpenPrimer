@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle2, XCircle, RefreshCw, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { INTERACTIVE_STRINGS } from '../interactive-strings';
 import { getProgressionStorage } from './utils';

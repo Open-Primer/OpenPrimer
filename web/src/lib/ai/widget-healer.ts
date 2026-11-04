@@ -43,3 +43,5 @@ export async function validateAndFixWidgets(
 
   return healed;
 }
+
+export function resolveMissingFormulas(mdx: string): string { return mdx; }

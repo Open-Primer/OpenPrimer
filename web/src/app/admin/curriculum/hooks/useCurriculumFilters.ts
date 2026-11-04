@@ -1,3 +1,4 @@
+import { cleanPathSegment } from '@/lib/translations';
 import React, { useMemo } from 'react';
 import { MockCourse } from '@/lib/db';
 
@@ -28,6 +29,12 @@ export interface UseCurriculumFiltersProps {
   revisionProposalSearch: string;
   revisionRefusedSearch: string;
   translationRefusedSearch: string;
+  revThreshold?: number;
+  revMinVotes?: number;
+  revMinReports?: number;
+  archiveRatingThreshold?: number;
+  archiveMinVotes?: number;
+  archiveMinRevisions?: number;
 }
 
 export function useCurriculumFilters({
@@ -56,7 +63,13 @@ export function useCurriculumFilters({
   archiveRefusedSearch,
   revisionProposalSearch,
   revisionRefusedSearch,
-  translationRefusedSearch
+  translationRefusedSearch,
+  revThreshold = 3,
+  revMinVotes = 5,
+  revMinReports = 2,
+  archiveRatingThreshold = 2.5,
+  archiveMinVotes = 10,
+  archiveMinRevisions = 3
 }: UseCurriculumFiltersProps) {
   const activeRevisionProposals = React.useMemo(() => {
     // 1. Group feedbacks by courseId and chapter (or parse chapter from comment)

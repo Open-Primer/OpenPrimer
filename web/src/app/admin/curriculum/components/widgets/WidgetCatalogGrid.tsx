@@ -1,7 +1,8 @@
 import React from 'react';
-import { Search, Plus, Sparkles, Layers, Lock, Unlock, Code, ChevronRight } from 'lucide-react';
+import { Search, Plus, Sparkles, Layers, Lock, Unlock, Code, ChevronRight, Loader2, Ban } from 'lucide-react';
 
 interface WidgetCatalogGridProps {
+  loading?: boolean;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   sortBy: 'alphabetical' | 'level' | 'discipline';
@@ -25,6 +26,7 @@ interface WidgetCatalogGridProps {
 }
 
 export const WidgetCatalogGrid: React.FC<WidgetCatalogGridProps> = ({
+  loading = false,
   searchQuery,
   setSearchQuery,
   sortBy,
@@ -47,8 +49,6 @@ export const WidgetCatalogGrid: React.FC<WidgetCatalogGridProps> = ({
   tr
 }) => {
   return (
-
-      {/* TOP SECTION: FULL WIDTH SEARCH AND CATALOG GRID */}
       <div className="bg-slate-900/40 border border-slate-800 rounded-[35px] p-6 space-y-6 shadow-xl backdrop-blur-xl">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3 w-full sm:max-w-2xl flex-grow">
@@ -136,7 +136,7 @@ export const WidgetCatalogGrid: React.FC<WidgetCatalogGridProps> = ({
 
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-900/60">
                     <div className="flex flex-wrap gap-1">
-                      {widget.disciplines.slice(0, 2).map(disc => (
+                      {widget.disciplines.slice(0, 2).map((disc: string) => (
                         <span
                           key={disc}
                           className={`px-1.5 py-0.5 border text-[6px] font-black uppercase tracking-wider rounded-full ${getDisciplineColor(disc)}`}

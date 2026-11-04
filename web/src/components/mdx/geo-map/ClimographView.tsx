@@ -48,7 +48,7 @@ export const ClimographView: React.FC<ClimographProps> = ({ stationData, t }) =>
             {t.inspector.climograph} : {stationData.name}
           </span>
           <span className="text-[10px] text-slate-400">
-            {langKey === 'FR' ? t.climates[stationData.climateKey] : stationData.climateKey.toUpperCase()}
+            {t.climates?.[stationData.climateKey] || stationData.climateKey.toUpperCase()}
           </span>
         </div>
 

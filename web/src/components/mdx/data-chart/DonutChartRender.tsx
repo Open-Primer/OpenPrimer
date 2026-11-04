@@ -1,5 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
+import { PRESET_GRADIENTS, CHART_STRINGS } from './typesAndConstants';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface DonutChartProps {
   normalized: any;
@@ -18,6 +21,17 @@ export const DonutChartRender: React.FC<DonutChartProps> = ({
   unit,
   t
 }) => {
+  const { language } = useLanguage();
+  const langKey = language.toUpperCase() as keyof typeof CHART_STRINGS;
+  const labels = CHART_STRINGS[langKey] || CHART_STRINGS.EN;
+
+  const [selectedSeriesIdx, setSelectedSeriesIdx] = React.useState<number>(0);
+  const [showSeriesDropdown, setShowSeriesDropdown] = React.useState<boolean>(false);
+  const [hoveredIdx, setHoveredIdx] = React.useState<number | null>(null);
+
+  const totalValue = totalSum || (normalized.isMultiSeries
+    ? normalized.seriesData[selectedSeriesIdx]?.values.reduce((acc: number, v: any) => acc + (v.y || 0), 0) || 1
+    : (normalized.simpleData || []).reduce((acc: number, curr: any) => acc + (curr.value || 0), 0) || 1);
     let accumulatedAngle = 0;
 
     const size = 260;
@@ -27,7 +41,7 @@ export const DonutChartRender: React.FC<DonutChartProps> = ({
 
     // Use selected series values if multi-series is active
     const donutData = normalized.isMultiSeries
-      ? normalized.seriesData[selectedSeriesIdx].values.map(v => ({ label: String(v.x), value: v.y }))
+      ? normalized.seriesData[selectedSeriesIdx].values.map((v: any) => ({ label: String(v.x), value: v.y }))
       : normalized.simpleData;
 
     return (
@@ -50,7 +64,7 @@ export const DonutChartRender: React.FC<DonutChartProps> = ({
                   exit={{ opacity: 0, y: -5 }}
                   className="absolute left-0 mt-1 w-[160px] max-h-[150px] overflow-y-auto rounded-xl bg-slate-900 border border-slate-800 shadow-2xl flex flex-col p-1.5"
                 >
-                  {normalized.seriesData.map((s, idx) => (
+                  {normalized.seriesData.map((s: any, idx: number) => (
                     <button
                       key={idx}
                       onClick={() => {
@@ -86,7 +100,7 @@ export const DonutChartRender: React.FC<DonutChartProps> = ({
 
             {/* Arcs */}
             <g transform={`rotate(-90 ${center} ${center})`}>
-              {donutData.map((item, idx) => {
+              {donutData.map((item: any, idx: number) => {
                 const percentage = item.value / totalValue;
                 const angle = percentage * 360;
                 const circumference = 2 * Math.PI * radius;
@@ -172,7 +186,7 @@ export const DonutChartRender: React.FC<DonutChartProps> = ({
 
         {/* Legend sidebar */}
         <div className="flex flex-col gap-2.5 min-w-[160px] max-w-[220px]">
-          {donutData.map((item, idx) => {
+          {donutData.map((item: any, idx: number) => {
             const grad = PRESET_GRADIENTS[idx % PRESET_GRADIENTS.length];
             const isHovered = hoveredIdx === idx;
             const percent = ((item.value / totalValue) * 100).toFixed(1);
@@ -208,5 +222,3 @@ export const DonutChartRender: React.FC<DonutChartProps> = ({
       </div>
     );
   };
-
-};

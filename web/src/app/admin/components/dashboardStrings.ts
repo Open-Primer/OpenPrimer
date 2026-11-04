@@ -19,3 +19,5 @@ export const DASHBOARD_STRINGS = {
   AR: AR_DASHBOARD_STRINGS,
   UR: UR_DASHBOARD_STRINGS
 };
+
+export type DashboardTranslation = typeof EN_DASHBOARD_STRINGS;

@@ -341,3 +341,15 @@ export const ELEMENT_DETAILS: Record<string, {
   'BR': { nameEN: 'Bromine', nameFR: 'Brome', num: 35, weight: 79.904, config: '[Ar] 3d¹⁰ 4s² 4p⁵', electronegativity: 2.96, categoryFR: 'Halogène', categoryEN: 'Halogen', color: '#9a3412' },
   'I': { nameEN: 'Iodine', nameFR: 'Iode', num: 53, weight: 126.90, config: '[Kr] 4d¹⁰ 5s² 5p⁵', electronegativity: 2.66, categoryFR: 'Halogène', categoryEN: 'Halogen', color: '#6b21a8' }
 };
+
+export function getPresetName(preset: Preset, lang: string): string {
+  if (!preset) return '';
+  const k = (lang || 'en').toUpperCase();
+  return (preset as any)[`name${k}`] || (preset as any).nameEN || preset.name || preset.id || '';
+}
+
+export function getPresetDesc(preset: Preset, lang: string): string {
+  if (!preset) return '';
+  const k = (lang || 'en').toUpperCase();
+  return (preset as any)[`desc${k}`] || (preset as any).descEN || (preset as any).description || '';
+}

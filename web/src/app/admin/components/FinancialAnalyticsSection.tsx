@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, Cpu, Zap, Activity } from 'lucide-react';
+import { DollarSign, Cpu, Zap, Activity, Sparkles } from 'lucide-react';
 import type { DashboardTranslation } from './dashboardStrings';
 
 interface FinancialAnalyticsProps {
@@ -7,16 +7,47 @@ interface FinancialAnalyticsProps {
   stats: any;
   liveCostEstimates: any;
   financialMetrics: any;
+  metricsSortField: string;
+  setMetricsSortField: (f: string) => void;
+  metricsSortDir: 'asc' | 'desc';
+  setMetricsSortDir: (d: 'asc' | 'desc') => void;
+  renderSortIndicator: (f: string, cf: string, cd: 'asc' | 'desc') => React.ReactNode;
+  sortedMetrics: any[];
+  tutorDistribution: any[];
+  dynamicCachedRatio: number;
+  dynamicTokensSavedText: string;
+  dynamicInputTokens: number;
+  dynamicOutputTokens: number;
+  dynamicLoopSuccess: number;
+  dynamicCheckPasses: number;
+  dynamicCreditsAverage: number;
+  formatTokenCount: (t: number) => string;
+  lang: string;
 }
 
 export const FinancialAnalyticsSection: React.FC<FinancialAnalyticsProps> = ({
   t,
   stats,
   liveCostEstimates,
-  financialMetrics
+  financialMetrics,
+  metricsSortField,
+  setMetricsSortField,
+  metricsSortDir,
+  setMetricsSortDir,
+  renderSortIndicator,
+  sortedMetrics,
+  tutorDistribution,
+  dynamicCachedRatio,
+  dynamicTokensSavedText,
+  dynamicInputTokens,
+  dynamicOutputTokens,
+  dynamicLoopSuccess,
+  dynamicCheckPasses,
+  dynamicCreditsAverage,
+  formatTokenCount,
+  lang
 }) => {
   return (
-      {/* SECTION: AI AGENT FINANCIAL & OPERATIONAL ANALYTICS */}
       <section className="space-y-6">
         <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-3">
           <Activity className="w-4 h-4 text-violet-500" /> {t.agent_analytics}

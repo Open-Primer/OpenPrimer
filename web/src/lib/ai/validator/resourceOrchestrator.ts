@@ -1,4 +1,5 @@
-import { isUrlReachable, isVideoReachable, isAudioReachable } from './urlReachability';
+import { isUrlReachable, isVideoReachable, isAudioReachable, fetchWithTimeout, isLinkReachable } from './urlReachability';
+import { findAlternativeVideoWithFallback } from '@/lib/ai/engines/mdxHealer';
 import { validateAndFixImages } from './imageResourceValidator';
 import { validateAndFixBibliography } from './citationValidator';
 import { findAlternativeAudioWithFallback } from './audioValidator';

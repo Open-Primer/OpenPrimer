@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import Mermaid from '../Mermaid';
+import { Mermaid } from '../Mermaid';
 
 /**
  * @file PreCodeInterceptor.tsx

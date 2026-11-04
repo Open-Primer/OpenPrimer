@@ -88,5 +88,3 @@ export const DrawEnzyme: React.FC<DrawerProps> = ({ progress, t }) => {
     );
   };
 
-
-};

@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { Bot, CheckCircle, Key, Cpu, Sparkles, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { ACC_TRANSLATIONS, PERSONAL_TUTOR_TRANSLATIONS } from '../settings-strings';
 
 export interface TutorTabProps {
   t: any;
@@ -16,6 +18,7 @@ export interface TutorTabProps {
   personalTutorModel: string;
   setPersonalTutorModel: (val: string) => void;
   testStatus: 'idle' | 'loading' | 'success' | 'error';
+  setTestStatus: (val: 'idle' | 'loading' | 'success' | 'error') => void;
   testTutorConnection: () => Promise<void>;
   saveTutorSettings: () => void;
   syncAccessibilityToCloud: (updates: any) => Promise<void>;
@@ -34,10 +37,12 @@ export const TutorTab: React.FC<TutorTabProps> = ({
   personalTutorModel,
   setPersonalTutorModel,
   testStatus,
+  setTestStatus,
   testTutorConnection,
   saveTutorSettings,
   syncAccessibilityToCloud,
 }) => {
+  const { language: lang } = useLanguage();
   return (
     <div className="space-y-6">
                   {/* Enable AI Tutor global toggle */}

@@ -359,7 +359,5 @@ export const EditWidgetModal: React.FC<EditWidgetModalProps> = ({
           </div>
         )}
       </AnimatePresence>
-
-    </AnimatePresence>
   );
 };

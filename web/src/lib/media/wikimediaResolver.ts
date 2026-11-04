@@ -1,4 +1,6 @@
-import { fetchWithTimeout } from './storageHelpers';
+import { optimizeQueryWithGemini } from './conciseQueryBuilder';
+import { safeResponseJson } from './figureFormatting';
+import { fetchWithTimeout, getGoogleAccessToken } from './storageHelpers';
 import { getCachedMedia, setCachedMedia } from './mediaTypes';
 import { compileFinalLabel } from './figureFormatting';
 
@@ -43,7 +45,7 @@ export async function fetchWikimediaAudio(title: string): Promise<string | null>
 // Google Lyria Music Generation (via Gemini API)
 // Generates a short musical/audio clip from a text prompt — the audio equivalent of Imagen.
 // Tier 2 fallback: used when Wikimedia Commons has no CC file for the requested sound.
-async function generateLyriaAudio(prompt: string, durationHint: string = '30s'): Promise<Buffer | null> {
+export async function generateLyriaAudio(prompt: string, durationHint: string = '30s'): Promise<Buffer | null> {
   try {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     if (!apiKey) {
@@ -105,7 +107,7 @@ async function generateLyriaAudio(prompt: string, durationHint: string = '30s'):
 }
 
 // Build a Lyria prompt from an audio title — adapts style based on content type
-function buildLyriaPrompt(title: string): string {
+export function buildLyriaPrompt(title: string): string {
   const t = title.toLowerCase();
 
   // Music notation / instruments
@@ -128,7 +130,7 @@ function buildLyriaPrompt(title: string): string {
 }
 
 // Check if the audio title or customText is intended to be spoken speech
-function isSpeechAudio(title: string, customText: string): boolean {
+export function isSpeechAudio(title: string, customText: string): boolean {
   const t = title.toLowerCase().trim();
   const c = (customText || '').toLowerCase().trim();
 
@@ -183,7 +185,7 @@ function isSpeechAudio(title: string, customText: string): boolean {
 }
 
 // Google Cloud Text-to-Speech API caller
-async function synthesizeSpeech(text: string, lang: string = 'fr'): Promise<Buffer | null> {
+export async function synthesizeSpeech(text: string, lang: string = 'fr'): Promise<Buffer | null> {
   try {
     const token = await getGoogleAccessToken();
     if (!token) return null;
@@ -335,4 +337,6 @@ export async function searchWikimediaCommonsImage(query: string): Promise<string
  * Validates and repairs all media links (videos, audios, images) on the fly during course page rendering.
  * Performs checking with HEAD requests up to MAX_CHECKS and repairs up to MAX_REPAIRS.
  */
+
+
 

@@ -7,6 +7,11 @@ export interface UseCurriculumDataProps {
 }
 
 export function useCurriculumData({ lang }: UseCurriculumDataProps) {
+  const [validationsThreshold, setValidationsThreshold] = useState(3);
+  const [availableLanguages, setAvailableLanguages] = useState<any[]>(['en', 'fr', 'es', 'de', 'zh', 'pt', 'ar', 'hi', 'ur']);
+  const isFirstLoad = useRef(true);
+  const triggeredTaskIds = useRef<Set<string>>(new Set());
+
   const [view, setView] = useState<'generation' | 'translation' | 'revision' | 'archiving' | 'queue' | 'widgets' | 'achievements' | 'personalities'>('generation');
   
 // Database States

@@ -1,5 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PRESET_GRADIENTS, CHART_STRINGS } from './typesAndConstants';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface BarChartProps {
   normalized: any;
@@ -40,6 +42,20 @@ export const BarChartRender: React.FC<BarChartProps> = ({
   totalSum,
   t
 }) => {
+  const { language } = useLanguage();
+  const langKey = language.toUpperCase() as keyof typeof CHART_STRINGS;
+  const labels = CHART_STRINGS[langKey] || CHART_STRINGS.EN;
+
+  const [hoveredIdx, setHoveredIdx] = React.useState<number | null>(null);
+  const [hoveredXIdx, setHoveredXIdx] = React.useState<number | null>(null);
+
+  const maxValue = normalized.isMultiSeries
+    ? Math.max(...normalized.seriesData.flatMap((s: any) => s.values.map((v: any) => v.y || 0)), 1)
+    : Math.max(...(normalized.simpleData || []).map((d: any) => d.value || 0), 1);
+
+  const totalValue = totalSum || (normalized.isMultiSeries
+    ? normalized.seriesData[0]?.values.reduce((acc: number, v: any) => acc + (v.y || 0), 0) || 1
+    : (normalized.simpleData || []).reduce((acc: number, curr: any) => acc + (curr.value || 0), 0) || 1);
     if (normalized.isMultiSeries) {
       // Clustered Grouped Bars
       const groupCount = normalized.xValues.length;
@@ -57,13 +73,13 @@ export const BarChartRender: React.FC<BarChartProps> = ({
               <clipPath id="chart-clip">
                 <rect x={paddingLeft - 2} y={paddingTop} width={chartWidth + 4} height={chartHeight} />
               </clipPath>
-              {PRESET_GRADIENTS.map((g) => (
+              {PRESET_GRADIENTS.map((g: any) => (
                 <linearGradient key={g.id} id={g.id} x1="0" y1="1" x2="0" y2="0">
                   <stop offset="0%" stopColor={g.start} stopOpacity={0.2} />
                   <stop offset="100%" stopColor={g.end} stopOpacity={0.9} />
                 </linearGradient>
               ))}
-              {PRESET_GRADIENTS.map((g) => (
+              {PRESET_GRADIENTS.map((g: any) => (
                 <linearGradient key={`glow-${g.id}`} id={`glow-${g.id}`} x1="0" y1="1" x2="0" y2="0">
                   <stop offset="0%" stopColor={g.start} stopOpacity={0.4} />
                   <stop offset="100%" stopColor={g.end} stopOpacity={1} />
@@ -75,7 +91,7 @@ export const BarChartRender: React.FC<BarChartProps> = ({
             </defs>
 
             {/* Grid lines */}
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio: number, i: number) => {
               const y = paddingTop + chartHeight * (1 - ratio);
               const val = (maxValue * ratio).toFixed(0);
               return (
@@ -91,7 +107,7 @@ export const BarChartRender: React.FC<BarChartProps> = ({
             <line x1={paddingLeft} y1={height - paddingBottom} x2={width - paddingRight} y2={height - paddingBottom} stroke="#475569" strokeWidth="1" />
 
             {/* X-Axis labels */}
-            {normalized.xValues.map((xVal, gIdx) => {
+            {normalized.xValues.map((xVal: any, gIdx: number) => {
               const xCenter = paddingLeft + gIdx * groupWidth + groupWidth / 2;
               return (
                 <text 
@@ -110,11 +126,11 @@ export const BarChartRender: React.FC<BarChartProps> = ({
             })}
 
             {/* Grouped Bars */}
-            {normalized.xValues.map((xVal, gIdx) => {
+            {normalized.xValues.map((xVal: any, gIdx: number) => {
               const xStart = paddingLeft + gIdx * groupWidth + (groupWidth - groupBarsWidth) / 2;
               
-              return normalized.seriesData.map((series, sIdx) => {
-                const pt = series.values.find(v => v.x === xVal);
+              return normalized.seriesData.map((series: any, sIdx: number) => {
+                const pt = series.values.find((v: any) => v.x === xVal);
                 if (!pt) return null;
 
                 const val = pt.y;
@@ -175,7 +191,7 @@ export const BarChartRender: React.FC<BarChartProps> = ({
                     {normalized.seriesData[hoveredXIdx].label}
                   </span>
                   <span className="text-white font-extrabold text-sm flex items-baseline gap-1">
-                    {normalized.seriesData[hoveredXIdx].values.find(v => v.x === normalized.xValues[hoveredIdx])?.y}
+                    {normalized.seriesData[hoveredXIdx].values.find((v: any) => v.x === normalized.xValues[hoveredIdx])?.y}
                     <span className="text-xs text-slate-400 font-medium">{unit}</span>
                   </span>
                   <span className="text-slate-400">
@@ -199,13 +215,13 @@ export const BarChartRender: React.FC<BarChartProps> = ({
               <clipPath id="chart-clip-single">
                 <rect x={paddingLeft - 2} y={paddingTop} width={chartWidth + 4} height={chartHeight} />
               </clipPath>
-              {PRESET_GRADIENTS.map((g) => (
+              {PRESET_GRADIENTS.map((g: any) => (
                 <linearGradient key={g.id} id={g.id} x1="0" y1="1" x2="0" y2="0">
                   <stop offset="0%" stopColor={g.start} stopOpacity={0.2} />
                   <stop offset="100%" stopColor={g.end} stopOpacity={0.9} />
                 </linearGradient>
               ))}
-              {PRESET_GRADIENTS.map((g) => (
+              {PRESET_GRADIENTS.map((g: any) => (
                 <linearGradient key={`glow-${g.id}`} id={`glow-${g.id}`} x1="0" y1="1" x2="0" y2="0">
                   <stop offset="0%" stopColor={g.start} stopOpacity={0.4} />
                   <stop offset="100%" stopColor={g.end} stopOpacity={1} />
@@ -217,7 +233,7 @@ export const BarChartRender: React.FC<BarChartProps> = ({
             </defs>
 
             {/* Grid */}
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio: number, i: number) => {
               const y = paddingTop + chartHeight * (1 - ratio);
               const val = (maxValue * ratio).toFixed(0);
               return (
@@ -233,7 +249,7 @@ export const BarChartRender: React.FC<BarChartProps> = ({
             <line x1={paddingLeft} y1={height - paddingBottom} x2={width - paddingRight} y2={height - paddingBottom} stroke="#475569" strokeWidth="1" />
 
             {/* Bars */}
-            {normalized.simpleData.map((item, idx) => {
+            {normalized.simpleData.map((item: any, idx: number) => {
               const x = paddingLeft + gap + idx * (barWidth + gap);
               const barHeight = (item.value / maxValue) * chartHeight;
               const y = height - paddingBottom - barHeight;
@@ -314,5 +330,3 @@ export const BarChartRender: React.FC<BarChartProps> = ({
       );
     }
   };
-
-};

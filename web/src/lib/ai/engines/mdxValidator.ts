@@ -1,6 +1,6 @@
 import { rehypeMdxSanitizer, preprocessMdx, resolvePrecompiledAnchors } from '@/lib/content';
 
-function stripJsxComments(mdx: string): string {
+export function stripJsxComments(mdx: string): string {
   const tagRegex = /<([A-Z][a-zA-Z0-9]*)([\s\S]*?)(\/?>)/g;
   return mdx.replace(tagRegex, (match, tagName, tagBody, closing) => {
     let cleanedBody = tagBody.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -79,7 +79,7 @@ export async function validateMdxContent(
 }
 
 
-function sanitizeMdxFallback(mdx: string): string {
+export function sanitizeMdxFallback(mdx: string): string {
   const allowedTags = [
     // Core & Structural
     'Prerequisites', 'DiagnosticQuiz', 'Quiz', 'Question', 'Option',

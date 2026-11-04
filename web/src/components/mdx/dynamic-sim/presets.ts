@@ -2,18 +2,22 @@ import React from 'react';
 
 export interface SimulationPreset {
   id: string;
-  category: 'biology' | 'physics' | 'chemistry';
-  titleKey: string;
-  descKey: string;
-  unit: string;
+  name?: string;
+  description?: string;
+  category?: 'biology' | 'physics' | 'chemistry';
+  titleKey?: string;
+  descKey?: string;
+  unit?: string;
   stages: {
     at: number;
-    titleKey: string;
-    descKey: string;
+    titleKey?: string;
+    descKey?: string;
+    label?: string;
+    details?: string;
   }[];
 }
 
-export const PRESETS: SimulationPreset[] = const PRESETS: SimulationPreset[] = [
+export const PRESETS: SimulationPreset[] = [
   {
     id: "mitosis",
     name: "Cell Mitosis Division",

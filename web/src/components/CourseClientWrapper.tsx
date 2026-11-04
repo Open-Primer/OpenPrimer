@@ -8,6 +8,9 @@ import { usePathname } from 'next/navigation';
 import { dbService, progressService, isDatabaseConfigured, isSandboxFallbackAllowed } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SelectionTutorPopover } from '@/components/course/SelectionTutorPopover';
+import { type TutorAction, type TutorLevel, generateTutorPrompt } from '@/components/course/tutor-prompts';
+import { useLessonProgress } from '@/components/course/useLessonProgress';
 
 interface CourseClientWrapperProps {
   children: React.ReactNode;

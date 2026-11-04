@@ -28,3 +28,13 @@ export function stitchLessonContent(
 
   return finalContent;
 }
+
+export function replaceWidgetInMdx(mdx: string, widgetName: string, newWidgetTag: string): string {
+  const regex = new RegExp('<' + widgetName + '[^>]*\\/?>([\\s\\S]*?</' + widgetName + '>)?', 'g');
+  return mdx.replace(regex, newWidgetTag);
+}
+
+export function removeWidgetFromMdx(mdx: string, widgetName: string): string {
+  const regex = new RegExp('<' + widgetName + '[^>]*\\/?>([\\s\\S]*?</' + widgetName + '>)?', 'g');
+  return mdx.replace(regex, '');
+}

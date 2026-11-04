@@ -1,9 +1,12 @@
 "use client";
 
+import { getQuizLocale } from './quiz-strings';
 import React from 'react';
 import { RefreshCw, Sparkles } from 'lucide-react';
 
 export interface QuizSummaryViewProps {
+  isFinished?: boolean;
+  ql?: any;
   totalCorrect: number;
   totalQuestions: number;
   t: any;
@@ -17,6 +20,8 @@ export interface QuizSummaryViewProps {
 }
 
 export const QuizSummaryView = ({
+  isFinished = true,
+  ql: propsQl,
   totalCorrect,
   totalQuestions,
   t,
@@ -28,8 +33,10 @@ export const QuizSummaryView = ({
   isTutorLoading,
   tutorComment
 }: QuizSummaryViewProps) => {
+  const ql = propsQl || getQuizLocale(language);
+  if (!isFinished) return null;
+
   return (
-    {isFinished && (
   <div className="mt-8 border-t border-slate-800/80 pt-6 space-y-6">
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
       <div className="flex items-center gap-4">
@@ -89,7 +96,5 @@ export const QuizSummaryView = ({
       </div>
     )}
   </div>
-)}
-
   );
 };

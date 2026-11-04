@@ -362,7 +362,7 @@ export const mockUsersProgressMethods = {
   },
 
   enrollInCourse: async (userId: string, courseId: number) => {
-    if (typeof window === 'undefined') return { data: null, error: 'Window not defined' };
+    if (typeof window === 'undefined') return { data: null, error: new Error('Window not defined') };
     const enrolled = JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[]');
     if (!enrolled.includes(courseId)) {
       enrolled.push(courseId);
@@ -385,7 +385,7 @@ export const mockUsersProgressMethods = {
   },
 
   abandonCourse: async (userId: string, courseId: number) => {
-    if (typeof window === 'undefined') return { data: null, error: 'Window not defined' };
+    if (typeof window === 'undefined') return { data: null, error: new Error('Window not defined') };
     let enrolled = JSON.parse(window.localStorage.getItem('op_enrolled_courses') || '[]');
     enrolled = enrolled.filter((id: number) => id !== courseId);
     window.localStorage.setItem('op_enrolled_courses', JSON.stringify(enrolled));

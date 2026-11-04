@@ -460,7 +460,7 @@ export const mockCatalogTelemetryMethods = {
   },
 
   saveCourseNotification: async (query: string, email: string) => {
-    if (typeof window === 'undefined') return { data: null, error: 'Window not defined' };
+    if (typeof window === 'undefined') return { data: null, error: new Error('Window not defined') };
     const key = 'op_course_notifications';
     const existing = JSON.parse(window.localStorage.getItem(key) || '[]');
     const newRequest = { query, email, timestamp: new Date().toISOString() };
@@ -470,7 +470,7 @@ export const mockCatalogTelemetryMethods = {
   },
 
   getCourseNotifications: async () => {
-    if (typeof window === 'undefined') return { data: [], error: 'Window not defined' };
+    if (typeof window === 'undefined') return { data: [], error: new Error('Window not defined') };
     const key = 'op_course_notifications';
     const existing = JSON.parse(window.localStorage.getItem(key) || '[]');
     return { data: existing, error: null };

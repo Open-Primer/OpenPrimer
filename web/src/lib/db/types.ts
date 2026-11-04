@@ -30,6 +30,7 @@ export interface LanguageInfo {
   archivingLevel?: number;
 }
 
+export type SearchHistoryItem = SearchHistoryEntry;
 export interface SearchHistoryEntry {
   id: string;
   query: string;

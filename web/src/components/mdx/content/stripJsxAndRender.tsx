@@ -1,3 +1,4 @@
+type MDXRemoteSerializeResult = any;
 import React from 'react';
 
 export function stripJsxAndRender(rawMdx: string) {

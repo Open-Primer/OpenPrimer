@@ -1,3 +1,6 @@
+import { compressPromptText } from '@/lib/vertex-client';
+import { recordMetrics, mapConcurrent } from '@/lib/ai/engines/coreUtils';
+import { cleanImproperQuotes } from './deduplicationHelpers';
 import { isVertexConfigured, callVertexAI } from '@/lib/vertex-client';
 import { isolateJsxForTranslation, restoreJsxAfterTranslation } from '@/lib/content';
 import { cleanPathSegment } from '../../translations';
@@ -35,12 +38,12 @@ export async function cascadeCurriculumTranslation(
   }
 }
 
-interface MarkdownSection {
+export interface MarkdownSection {
   heading: string;
   content: string;
 }
 
-function parseMarkdownSections(mdx: string): MarkdownSection[] {
+export function parseMarkdownSections(mdx: string): MarkdownSection[] {
   const lines = mdx.split('\n');
   const sections: MarkdownSection[] = [];
   let currentHeading = '';
@@ -67,7 +70,7 @@ function parseMarkdownSections(mdx: string): MarkdownSection[] {
   return sections;
 }
 
-function reconstructMarkdown(sections: MarkdownSection[]): string {
+export function reconstructMarkdown(sections: MarkdownSection[]): string {
   return sections.map(sec => {
     if (sec.heading) {
       return `${sec.heading}\n${sec.content}`;
@@ -77,7 +80,7 @@ function reconstructMarkdown(sections: MarkdownSection[]): string {
   }).join('\n');
 }
 
-function pruneNarrativeForWidgets(narrativeText: string): string {
+export function pruneNarrativeForWidgets(narrativeText: string): string {
   const paragraphs = narrativeText.split(/\n\s*\n/);
   const prunedParagraphs: string[] = [];
 
@@ -142,7 +145,7 @@ function pruneNarrativeForWidgets(narrativeText: string): string {
 // [FIX R5] ORDERING INVARIANT: revised_section tags are extracted from scribeRepairOutput
 // BEFORE preprocessMdx is called. This order must be preserved — do not run preprocessMdx
 // on scribeRepairOutput directly, as it would corrupt the <revised_section> structural tags.
-function parseJointRepairOutput(output: string): Map<string, string> {
+export function parseJointRepairOutput(output: string): Map<string, string> {
   const result = new Map<string, string>();
   const regex = /<revised_section\s+heading="([^"]+)">([\s\S]*?)<\/revised_section>/gi;
   let match;

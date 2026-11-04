@@ -10,6 +10,10 @@ import { dbService } from '@/lib/db';
  */
 
 interface MdxErrorBoundaryProps {
+  rawContent?: string;
+  className?: string;
+  enableLatexFix?: boolean;
+  reason?: string;
   children: React.ReactNode;
   fallback?: React.ReactNode;
   courseSlug?: string;

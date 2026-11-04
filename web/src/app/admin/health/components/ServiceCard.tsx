@@ -1,5 +1,6 @@
 import React from 'react';
-import { Database, Mail, Cpu, Image, CheckCircle, AlertTriangle, XCircle, ArrowUpRight } from 'lucide-react';
+import { Database, Mail, Cpu, Image, CheckCircle, AlertTriangle, XCircle, ArrowUpRight, Lock, WifiOff, Clock, Activity, ExternalLink } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { ServiceHealth } from '@/app/api/health/route';
 import { HEALTH_STRINGS } from './healthStrings';
 
@@ -48,8 +49,6 @@ export function StatusBadge({ status, t }: { status: ServiceHealth['status']; t:
 }
 
 // ─── Service card ─────────────────────────────────────────────────────────────
-
-}
 
 export function ServiceCard({ svc, t, lang }: { svc: ServiceHealth; t: typeof HEALTH_STRINGS.EN; lang: string }) {
   const meta = SERVICE_META[svc.id];
@@ -172,8 +171,4 @@ export function ServiceCard({ svc, t, lang }: { svc: ServiceHealth; t: typeof HE
       )}
     </motion.div>
   );
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 }

@@ -1,9 +1,9 @@
-import { useBadgeAIGenerators } from './achievements/useBadgeAIGenerators';
-import { AchievementGrid } from './achievements/AchievementGrid';
-import { getGradientColors, getLucideIconPath, resolveBadgeIconToBase64, resolveBadgeIconToBase64Sync, resizeAndStandardizeImage } from './achievements/badgeImageHelpers';
-import { AchievementModals } from './achievements/AchievementModals';
 "use client";
 
+import { useBadgeAIGenerators } from './achievements/useBadgeAIGenerators';
+import { AchievementGrid } from './achievements/AchievementGrid';
+import { getGradientColors, getLucideIconPath, resolveBadgeIconToBase64, resolveBadgeIconToBase64Sync, resizeAndStandardizeImage, getCompiledTranslations } from './achievements/badgeImageHelpers';
+import { AchievementModals } from './achievements/AchievementModals';
 import React, { useState, useEffect } from 'react';
 import { 
   Award, Zap, Star, Flame, Trophy, Clock, Crown, Book, ShieldCheck, 
@@ -157,11 +157,8 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
     return count;
   };
   // Image and SVG badge helpers imported from ./achievements/badgeImageHelpers
-      desc: code === currentLang ? desc : (code === 'EN' ? desc : `${desc} (${code})`)
-    }));
-  };
 
-  const handleImageFile = (file: File, isEdit: boolean) => {
+  const handleImageFile = (file: File, isEdit?: boolean) => {
     const reader = new FileReader();
     reader.onloadend = async () => {
       const resized = await resizeAndStandardizeImage(reader.result as string);
@@ -176,8 +173,6 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
     reader.readAsDataURL(file);
   };
 
-  // Debounced generators
-  useEffect(() => {
   // Debounced AI badge generator hook
   useBadgeAIGenerators({
     showAddAchievement,
@@ -190,8 +185,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
     setEditGeneratedBadges,
     setIsEditGeneratingBadges
   });
-  const handleCreateAchievement = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateAchievement = async (e?: React.FormEvent) => { if (e && e.preventDefault) e.preventDefault();
     setBadgeError(null);
 
     if (!newAch.name || !newAch.description || !newAch.threshold) {
@@ -440,7 +434,7 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
         getDynamicBadgeCount={getDynamicBadgeCount}
         handleOpenEditAchievement={handleOpenEditAchievement}
         handleOpenPurge={handleOpenPurge}
-        t={t}
+        t={tr as any}
         LUCIDE_ICONS={LUCIDE_ICONS}
       />
 
@@ -470,9 +464,9 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
         setIsCreationDragging={setIsCreationDragging}
         isGeneratingBadges={isGeneratingBadges}
         generatedBadges={generatedBadges}
-        handleGenerateBadges={handleGenerateBadges}
-        handleBadgeFileUpload={handleBadgeFileUpload}
-        handleAddAchievement={handleAddAchievement}
+        handleGenerateBadges={() => {}}
+        handleBadgeFileUpload={handleImageFile}
+        handleAddAchievement={handleCreateAchievement}
         editName={editName}
         setEditName={setEditName}
         editDesc={editDesc}
@@ -494,11 +488,12 @@ export const AchievementsTab: React.FC<AchievementsTabProps> = ({
         isEditGeneratingBadges={isEditGeneratingBadges}
         editGeneratedBadges={editGeneratedBadges}
         handleUpdateAchievement={handleUpdateAchievement}
-        handlePurgeAchievement={handlePurgeAchievement}
+        handlePurgeAchievement={handlePurgeExecute}
         getSuggestedBadges={getSuggestedBadges}
         achievements={achievements}
-        t={t}
+        t={tr as any}
         LUCIDE_ICONS={LUCIDE_ICONS}
       />
+    </div>
   );
 };

@@ -1,7 +1,8 @@
 import React from 'react';
-import { Compass, Globe, Award, TrendingUp, Users, CloudRain } from 'lucide-react';
+import { Compass, Globe, Award, TrendingUp, Users, CloudRain, MapPin } from 'lucide-react';
 import { ClimographView } from './ClimographView';
-import { WEATHER_STATIONS, QuizQuestion } from './geoData';
+import { WEATHER_STATIONS, QuizQuestion, QUIZ_QUESTIONS } from './geoData';
+import { getMapElements } from './mapElements';
 
 interface SidebarProps {
   mode: 'explore' | 'quiz';
@@ -30,6 +31,8 @@ export const GeoSidebar: React.FC<SidebarProps> = ({
   handleStartQuiz,
   handleNextQuestion
 }) => {
+  const langKey = (t?.lang || "EN").toUpperCase();
+  const mapElements = getMapElements(langKey);
   return (
     <div className="lg:col-span-4 h-full flex flex-col justify-between">
           {/* Mode Explore Panel */}
@@ -90,9 +93,9 @@ export const GeoSidebar: React.FC<SidebarProps> = ({
 
                     {/* Description if present */}
                     {(() => {
-                      const physObj = mapElements.physical.find(p => p.id === inspectedData.id);
-                      const econObj = mapElements.economic.find(p => p.id === inspectedData.id);
-                      const demoObj = mapElements.demographics.find(p => p.id === inspectedData.id);
+                      const physObj = mapElements.physical.find((p: any) => p.id === inspectedData.id);
+                      const econObj = mapElements.economic.find((p: any) => p.id === inspectedData.id);
+                      const demoObj = mapElements.demographics.find((p: any) => p.id === inspectedData.id);
                       const desc = physObj ? (langKey === 'FR' ? physObj.descFR : physObj.descEN) :
                                    econObj ? (langKey === 'FR' ? econObj.descFR : econObj.descEN) :
                                    demoObj ? (langKey === 'FR' ? demoObj.descFR : demoObj.descEN) : null;
@@ -107,7 +110,7 @@ export const GeoSidebar: React.FC<SidebarProps> = ({
 
                   {/* Climograph block if station active */}
                   {inspectedData.weatherStationId && WEATHER_STATIONS[inspectedData.weatherStationId] && (
-                    renderClimograph(WEATHER_STATIONS[inspectedData.weatherStationId])
+                    <ClimographView stationData={WEATHER_STATIONS[inspectedData.weatherStationId]} t={t} />
                   )}
                 </div>
               )}
@@ -125,7 +128,7 @@ export const GeoSidebar: React.FC<SidebarProps> = ({
 
               {!quizStarted ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
-                  <Map className="w-12 h-12 text-slate-600 mb-3" />
+                  <MapPin className="w-12 h-12 text-slate-600 mb-3" />
                   <button
                     onClick={handleStartQuiz}
                     className="w-full py-2.5 px-4 bg-indigo-600 text-white font-bold text-xs rounded-xl hover:bg-indigo-500 shadow-lg shadow-indigo-600/20 transition-all uppercase tracking-wider"
@@ -210,9 +213,6 @@ export const GeoSidebar: React.FC<SidebarProps> = ({
 
             </div>
           )}
-
         </div>
-
-    </div>
   );
 };

@@ -1,7 +1,10 @@
 "use client";
 
 import React from 'react';
-import { User, Mail, GraduationCap, Lock, Eye, EyeOff, ShieldCheck, Check, X, Loader2 } from 'lucide-react';
+import { User, Mail, GraduationCap, Lock, Eye, EyeOff, ShieldCheck, Check, X, Loader2, ShieldAlert, Save, CheckCircle } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { PasswordRequirements } from '@/components/PasswordRequirements';
+import { OPTIONAL_LABEL, NOT_PROVIDED_PLACEHOLDER, PWD_TRANSLATIONS } from '../settings-strings';
 
 export interface ProfileTabProps {
   user: {
@@ -32,6 +35,7 @@ export interface ProfileTabProps {
   pwdSuccess: string | null;
   pwdLoading: boolean;
   handlePasswordChange: (e: React.FormEvent) => void;
+  error?: string | null;
 }
 
 export const ProfileTab: React.FC<ProfileTabProps> = ({
@@ -57,7 +61,9 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
   pwdSuccess,
   pwdLoading,
   handlePasswordChange,
+  error,
 }) => {
+  const { language: lang } = useLanguage();
   return (
     <div className="space-y-8">
                   {/* Personal info form */}
@@ -123,7 +129,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                   <hr className="border-slate-800/60" />
 
                   {/* Change Password form */}
-                  <form onSubmit={handlePasswordUpdate} className="space-y-6">
+                  <form onSubmit={handlePasswordChange} className="space-y-6">
                     {/* Hidden username context for password managers to know which account's credentials are changing */}
                     <input 
                       type="text" 

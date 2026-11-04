@@ -1,3 +1,6 @@
+import { TransientNetworkError, StructuralJsonError } from '@/lib/errors';
+import { fetchWithTimeout } from './storageHelpers';
+import { callVertexAI, compressPromptText } from '@/lib/vertex-client';
 import { isFactualMedia } from './factualMediaValidator';
 
 export function compileFinalLabel(sourceLabel: string, sourceUrl?: string | null): string {
@@ -9,7 +12,7 @@ export function compileFinalLabel(sourceLabel: string, sourceUrl?: string | null
   return sourceLabel;
 }
 
-async function validateImageSoftWithGemini(imageUrl: string, entityName: string): Promise<boolean> {
+export async function validateImageSoftWithGemini(imageUrl: string, entityName: string): Promise<boolean> {
   try {
     const resImg = await fetchWithTimeout(imageUrl, {}, 8000);
     if (!resImg.ok) return false;
@@ -54,7 +57,7 @@ Réponds uniquement par OUI ou NON.`;
   return false;
 }
 
-async function generateQueryRelaxationsWithGemini(specificQuery: string, lang: string = 'en'): Promise<string[]> {
+export async function generateQueryRelaxationsWithGemini(specificQuery: string, lang: string = 'en'): Promise<string[]> {
   try {
     const promptText = `Tu es un assistant de recherche documentaire d'élite.
 Considère la description de média spécifique suivante : "${specificQuery}".
@@ -95,7 +98,7 @@ Règles :
 
 // TransientNetworkError & StructuralJsonError imported from ./errors
 
-async function safeResponseJson(res: Response, contextName: string = 'unknown'): Promise<any> {
+export async function safeResponseJson(res: Response, contextName: string = 'unknown'): Promise<any> {
   const contentType = res.headers.get('Content-Type') || '';
   if (!contentType.includes('application/json')) {
     const text = await res.text();
@@ -109,7 +112,7 @@ async function safeResponseJson(res: Response, contextName: string = 'unknown'):
   }
 }
 
-function getSafeExtension(contentType: string, defaultExt: string = 'jpg'): string {
+export function getSafeExtension(contentType: string, defaultExt: string = 'jpg'): string {
   if (!contentType) return defaultExt;
   const mainType = contentType.split(';')[0].trim();
   const parts = mainType.split('/');
@@ -152,9 +155,9 @@ export function isExistingArtwork(src: string, label: string): boolean {
 
 
 
-const wikipediaValidationCache = new Map<string, boolean>();
+export const wikipediaValidationCache = new Map<string, boolean>();
 
-async function validateWikipediaPage(term: string, lang: string): Promise<boolean> {
+export async function validateWikipediaPage(term: string, lang: string): Promise<boolean> {
   const cleanTerm = term.trim();
   if (!cleanTerm) return false;
   
@@ -232,7 +235,7 @@ const FIGURE_PREFIX_MAP: Record<string, string> = {
   ZH: '图', AR: 'الشكل', HI: 'चित्र', UR: 'خاکہ', EN: 'Figure'
 };
 
-function getFigurePrefix(lang: string): string {
+export function getFigurePrefix(lang: string): string {
   const l = (lang || 'en').toUpperCase().split('-')[0];
   return FIGURE_PREFIX_MAP[l] || 'Figure';
 }
@@ -399,4 +402,5 @@ export function rebuildCustomFigure(attrs: Record<string, string>, tagName: stri
  * - Resolves missing/dummy YouTube video links with actual search results.
  * - Generates actual audio voiceovers using Google Cloud TTS and uploads them.
  */
+
 

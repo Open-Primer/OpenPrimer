@@ -1,3 +1,10 @@
+import { isVertexConfigured, compressPromptText } from '@/lib/vertex-client';
+import { apiKey } from './revisionCriticStep';
+import { supabaseAdmin, supabase } from '@/lib/supabase';
+import { slugsArraySchema } from '@/lib/ai/schemas/systemicSchemas';
+import { revisionQualificationSchema } from './aiSchemas';
+import { parseMarkdownSections, MarkdownSection, reconstructMarkdown } from '@/lib/ai/engines/sectionBasedTranslation';
+import { healNarrativeCitations } from '@/lib/ai/engines/deduplicationHelpers';
 import fs from 'fs';
 import path from 'path';
 import { dbService } from '../../db';
@@ -12,6 +19,7 @@ export async function reviseCourseContent(courseSlug: string, revisionDetails: s
   console.log(`[REVISION AGENT] Starting revision for course: "${courseSlug}" (Lang: ${targetLang})`);
   console.log(`[REVISION AGENT] Original Details: "${revisionDetails}"`);
 
+  try {
   // [FIX A7] Revision engine — mirrors generation engine but logs metrics for dashboard analytics.
   let revisionPromptTokens = 0;
   let revisionOutputTokens = 0;
@@ -283,9 +291,14 @@ Return ONLY the raw JSON array. Do not wrap it in markdown blockticks (\`\`\`).`
   console.log(`[REVISION AGENT] Lessons identified for revision: ${affectedSlugs.join(', ')}`);
 
   // 4. For each affected lesson, revise it
-  for (const slug of affectedSlugs) {
+  const lessonsList = lessons;
+  for (let lessonIdx = 0; lessonIdx < affectedSlugs.length; lessonIdx++) {
+    const slug = affectedSlugs[lessonIdx];
     const lesson = lessons.find(l => l.lesson_slug === slug);
     if (!lesson) continue;
+    const discipline = (lesson as any).discipline || '';
+    const level = (lesson as any).level || '';
+    const cleanTitle = (lesson as any).title || '';
 
     console.log(`[REVISION AGENT] Initiating revision sequence for lesson: "${lesson.title}" (${slug})...`);
 
@@ -543,3 +556,4 @@ INSTRUCTIONS:
     console.error("AI Revision failed:", err);
     throw err;
   }
+}

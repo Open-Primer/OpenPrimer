@@ -30,6 +30,14 @@ export const FractionsTab: React.FC<FractionsTabProps> = ({
   fracDenominatorB,
   setFracDenominatorB
 }) => {
+  const fracNum = fracNumerator;
+  const setFracNum = setFracNumerator;
+  const fracDen = fracDenominator;
+  const setFracDen = setFracDenominator;
+  const fracNumB = fracNumeratorB;
+  const setFracNumB = setFracNumeratorB;
+  const fracDenB = fracDenominatorB;
+  const setFracDenB = setFracDenominatorB;
   return (
   <div className="space-y-6">
     {/* Compare mode toggle button */}

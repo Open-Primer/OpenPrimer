@@ -3,6 +3,7 @@
 import React from 'react';
 import { Target, BookOpen, Compass, Key } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
 import { isChildrenEmpty } from './Alert';
 
 /**

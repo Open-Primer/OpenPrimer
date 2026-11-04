@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ZoomIn, ZoomOut, Maximize2, RotateCcw } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { ZoomIn, ZoomOut, Maximize2, RotateCcw, X } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useMdxStatus } from '../MdxStatusContext';
 
 /**
  * @file CustomFigure.tsx
@@ -534,5 +536,5 @@ const CustomFigure = ({ src, alt: rawAlt, caption: rawCaption, fallbackText, fal
 
 
 
-export { CustomFigure, ZoomableImage, isExistingArtwork, FIGURE_STRINGS };
+export { CustomFigure, ZoomableImage, isExistingArtwork, FIGURE_STRINGS, renderCaptionWithLinks };
 export default CustomFigure;

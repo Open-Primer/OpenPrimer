@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Minimize2, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { X, Minimize2, CheckCircle2, AlertTriangle, Loader2, ShieldAlert } from 'lucide-react';
 
 interface ShowCaseModalsProps {
   isFullscreenOpen: boolean;
@@ -102,14 +102,17 @@ export const ShowCaseModals: React.FC<ShowCaseModalsProps> = ({
                   onClick={async () => {
                     const id = widgetToValidate;
                     setWidgetToValidate(null);
-                    await handleValidateWidget(id);
+                    if (id) await handleValidateWidget(id);
                   }}
                   className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 hover:scale-[1.01] rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-teal-500/10"
                 >
                   {tr("Confirm Validation")}
                 </button>
               </div>
-
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

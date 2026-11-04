@@ -1,3 +1,6 @@
+"use client";
+
+import { toPascalCase, translateText, getWidgetName as formatWidgetName, getWidgetDesc as formatWidgetDesc, getWidgetLevel as formatWidgetLevel, getAcademicLevelText as formatAcademicLevelText } from './widgets/widgetFormatters';
 import { toggleAcademicLevelHelper } from './widgets/academicLevelHelper';
 import { getDisciplineColor, getDisciplinesSummary } from './widgets/disciplineHelpers';
 import { useLoadWidgets } from './widgets/useLoadWidgets';
@@ -6,8 +9,6 @@ import { useWidgetAIActions } from './widgets/useWidgetAIActions';
 import { WorkspaceHeaderPanel } from './widgets/WorkspaceHeaderPanel';
 import { renderLiveWidgetComponent } from './widgets/renderLiveWidgetComponent';
 import { generateRandomProps } from './widgets/generateRandomProps';
-"use client";
-
 import React, { useState, useEffect } from 'react';
 import { 
   Wrench, Sparkles, Terminal, FileText, Play, CheckCircle2, AlertTriangle, 
@@ -35,9 +36,13 @@ export type { Widget, WidgetsTabProps };
 export const WidgetsTab: React.FC<WidgetsTabProps> = ({
   lang,
   t,
-  tr,
-  showToast
+  tr: propTr,
+  showToast: propShowToast
 }) => {
+  const tr = propTr || ((k: string) => k);
+  const showToast = propShowToast || (() => {});
+  const isEditFormInvalid = false;
+  const isCreateFormInvalid = false;
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,65 +70,15 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
     return combined;
   }, []);
 
-  const toPascalCase = (str: string): string => {
-    const clean = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const matches = clean.match(/[a-zA-Z0-9]+/g);
-    const words: string[] = matches ? Array.from(matches) : [];
-    
-    if (words.length > 1 && words[0]) {
-      const firstLower = words[0].toLowerCase();
-      if (firstLower === '2d' || firstLower === '3d' || /^\d+$/.test(firstLower)) {
-        const shifted = words.shift();
-        if (shifted) words.push(shifted);
-      }
-    }
-    
-    return words
-      .map(word => {
-        const lower = word.toLowerCase();
-        if (lower === '2d' || lower === '3d') {
-          return word.toUpperCase();
-        }
-        return word.charAt(0).toUpperCase() + word.slice(1);
-      })
-      .join('');
-  };
+  // toPascalCase imported from widgetFormatters
 
-  const translateText = async (text: string, fromLang: string, toLang: string): Promise<string> => {
-    const trimmed = text.trim();
-    if (!trimmed) return '';
-    try {
-      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang.toLowerCase()}&tl=${toLang.toLowerCase()}&dt=t&q=${encodeURIComponent(trimmed)}`);
-      if (res.ok) {
-        const data = await res.json();
-        return data[0].map((x: any) => x[0]).join('').trim();
-      }
-    } catch (e) {
-      console.error("Translation failed:", e);
-    }
-    return trimmed;
-  };
+  // translateText imported from widgetFormatters
 
-  const getWidgetName = (w: Widget) => {
-    const translated = tr(w.nameEN);
-    if (translated !== w.nameEN) return translated;
-    const prop = `name${lang.toUpperCase()}`;
-    return (w as any)[prop] || w.nameEN;
-  };
-  const getWidgetDesc = (w: Widget) => {
-    const translated = tr(w.descEN);
-    if (translated !== w.descEN) return translated;
-    const prop = `desc${lang.toUpperCase()}`;
-    return (w as any)[prop] || w.descEN;
-  };
-  const getWidgetLevel = (w: Widget) => {
-    const translated = tr(w.levelEN);
-    if (translated !== w.levelEN) return translated;
-    const prop = `level${lang.toUpperCase()}`;
-    return (w as any)[prop] || w.levelEN;
-  };
+  const getWidgetName = (w: Widget) => formatWidgetName(w, lang, tr);
+  const getWidgetDesc = (w: Widget) => formatWidgetDesc(w, lang, tr);
+  const getWidgetLevel = (w: Widget) => formatWidgetLevel(w, lang, tr);
   const isFrancophoneLocale = String(lang).toUpperCase().startsWith('FR');
-  const getAcademicLevelText = (lvl: any): string => (lvl as any)[lang.toUpperCase()] || lvl.EN;
+  const getAcademicLevelText = (lvl: any): string => formatAcademicLevelText(lvl, lang);
 
   // AI Generation workshop States
   const [prompt, setPrompt] = useState('');
@@ -469,7 +424,6 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
                   {tr("Fullscreen Preview")}
                 </button>
               )}
-            </div>
 
             {/* WORKSPACE BODY VIEW */}
             <div className="py-2">
@@ -501,9 +455,27 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
             errorDetails={errorDetails}
             t={t}
             tr={tr}
+            showToast={showToast}
+            adminId={adminId}
           />
         </div>
+      </div>
+    ) : (
+        <div className="flex flex-col items-center justify-center p-16 text-center h-96 bg-slate-900/10 border border-slate-800 border-dashed rounded-[35px] space-y-4">
+          <div className="w-16 h-16 bg-slate-950/40 rounded-full flex items-center justify-center text-slate-500">
+            <Wrench className="w-8 h-8" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">
+              {tr("No Widget Selected")}
+            </h4>
+            <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
+              {tr("Select an interactive widget component from the catalog list to activate the preview sandbox workshop.")}
+            </p>
+          </div>
+        </div>
       )}
+    </div>
 
       {/* EDIT PARAMETERS METADATA MODAL */}
       <EditWidgetModal

@@ -11,7 +11,7 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-interface ServiceResult {
+export interface ServiceResult {
   id: string;
   nameKey: string;
   url: string;
@@ -19,7 +19,10 @@ interface ServiceResult {
   latencyMs: number | null;
   checkedAt: string;
   errorMessage?: string;
+  details?: any[];
 }
+export type ServiceHealth = ServiceResult;
+export type HealthResponse = ServiceHealth[];
 
 async function probeUrl(url: string, timeoutMs = 5000): Promise<{ ok: boolean; latencyMs: number; error?: string }> {
   const start = Date.now();

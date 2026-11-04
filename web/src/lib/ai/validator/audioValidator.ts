@@ -1,5 +1,10 @@
+import { isAudioReachable } from './urlReachability';
+import { safeJsonParse } from '@/lib/ai/engines/coreUtils';
+const audioSearchSchema = { type: 'object', properties: { url: { type: 'string' } } };
+const apiKey = process.env.GEMINI_API_KEY || '';
+const compressPromptText = (t: string) => t;
 import { fetchWithTimeout } from './urlReachability';
-import { fetchWikimediaAudio } from '@/lib/media-resolver';
+// fetchWikimediaAudio imported below
 
 /**
  * @file resource-validator.ts

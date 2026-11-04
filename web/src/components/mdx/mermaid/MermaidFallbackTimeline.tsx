@@ -1,5 +1,27 @@
 "use client";
 
+const STATUS_STRINGS: Record<string, { initial: string; transition: string; target: string }> = {
+  EN: { initial: "Initial State", transition: "Step", target: "Final Result" },
+  FR: { initial: "État Initial", transition: "Étape", target: "Résultat Final" },
+  ES: { initial: "Estado Inicial", transition: "Paso", target: "Resultado Final" },
+  DE: { initial: "Ausgangszustand", transition: "Schritt", target: "Endergebnis" },
+  ZH: { initial: "初始状态", transition: "步骤", target: "最终结果" },
+  PT: { initial: "Estado Inicial", transition: "Etapa", target: "Resultado Final" },
+  AR: { initial: "الحالة الأولية", transition: "خطوة", target: "النتيجة النهائية" },
+  HI: { initial: "प्रारंभिक स्थिति", transition: "चरण", target: "अंतिम परिणाम" },
+  UR: { initial: "ابتدائی حالت", transition: "مرحلہ", target: "حتمی نتیجہ" }
+};
+export function parseMermaidFallbackNodes(chartText: string): { id: string; label: string }[] {
+  const nodes: { id: string; label: string }[] = [];
+  const lines = chartText.split('\n');
+  lines.forEach((l, idx) => {
+    const trimmed = l.trim();
+    if (trimmed && !trimmed.startsWith('timeline') && !trimmed.startsWith('title')) {
+      nodes.push({ id: `node_${idx}`, label: trimmed.replace(/["\[\]]/g, '') });
+    }
+  });
+  return nodes;
+}
 import React from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
@@ -35,7 +57,7 @@ export const MermaidFallbackTimeline = ({ chartText }: { chartText: string }) =>
         {/* Connector Line */}
         <div className="absolute left-[15px] top-3 bottom-3 w-0.5 border-l-2 border-dashed border-slate-800" />
 
-        {nodes.map((node, index) => {
+        {nodes.map((node: any, index: number) => {
           // Parse title and parenthetical formula/subtitle if available
           const match = node.label.match(/^([^(]+)\s*\(([^)]+)\)$/);
           let title = node.label;

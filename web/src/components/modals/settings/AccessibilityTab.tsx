@@ -1,7 +1,9 @@
 "use client";
 
 import React from 'react';
-import { Eye, Sliders, Volume2, Clock, Palette, CheckCircle } from 'lucide-react';
+import { Eye, Sliders, Volume2, Clock, Palette, CheckCircle, Globe, Keyboard, Brain as BrainIcon } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { ACC_TRANSLATIONS } from '../settings-strings';
 
 export interface AccessibilityTabProps {
   t: any;
@@ -38,6 +40,7 @@ export const AccessibilityTab: React.FC<AccessibilityTabProps> = ({
   setExtendAssessmentTime,
   syncAccessibilityToCloud,
 }) => {
+  const { language: lang } = useLanguage();
   return (
     <div className="space-y-8">
                   <div className="space-y-4">

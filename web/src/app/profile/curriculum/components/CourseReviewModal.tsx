@@ -1,8 +1,21 @@
+import * as Icons from 'lucide-react';
+import {
+  REVIEWED_READ_ONLY_LABEL,
+  CLOSE_LABEL,
+  YOUR_SAVED_REVIEW_LABEL,
+  SHARE_YOUR_EXPERIENCE_LABEL,
+  REVIEW_SAVED_LABEL,
+  RATE_THIS_COURSE_LABEL,
+  COMMENTS_SUGGESTIONS_LABEL,
+  TEXTAREA_PLACEHOLDER_LABEL,
+  SUBMIT_REVIEW_LABEL
+} from './curriculumAuditHelpers';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star } from 'lucide-react';
 
 interface CourseReviewModalProps {
+  setIsReviewReadOnly?: (v: boolean) => void;
   showReviewModal: boolean;
   setShowReviewModal: (show: boolean) => void;
   selectedReviewCourse: any;
@@ -19,6 +32,7 @@ interface CourseReviewModalProps {
 }
 
 export const CourseReviewModal: React.FC<CourseReviewModalProps> = ({
+  setIsReviewReadOnly = () => {},
   showReviewModal,
   setShowReviewModal,
   selectedReviewCourse,
@@ -33,6 +47,7 @@ export const CourseReviewModal: React.FC<CourseReviewModalProps> = ({
   lang,
   getLocalizedTitle
 }) => {
+  const upperLang = (lang || "EN").toUpperCase() as any;
   return (
       <AnimatePresence>
         {showReviewModal && selectedReviewCourse && (() => {

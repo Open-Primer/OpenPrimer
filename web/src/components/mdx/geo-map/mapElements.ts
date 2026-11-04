@@ -1,5 +1,5 @@
-export const getMapElements = () => {
-return return {
+export const getMapElements = (langKey: string = "EN") => {
+  return {
       regions: [
         {
           id: "poly_north_america",
@@ -260,8 +260,5 @@ return return {
         { id: "station_rome", name: "Rome", x: 395, y: 125, dataKey: "rome" },
         { id: "station_iakoutsk", name: "Iakoutsk", x: 640, y: 80, dataKey: "iakoutsk" }
       ]
-    };
-  }, [langKey]);
-
-  // Click handler on map elements;
+  };
 };

@@ -1,3 +1,4 @@
+import { REVISION_TRANSLATIONS } from '@/components/export/strings';
 /**
  * @file export-styles.ts
  * @description Standalone CSS styles generator for exported HTML lessons and SCORM packages.
@@ -216,7 +217,7 @@ export const getPremiumStyles = () => {
     `;
   };
 
-  const getRevisionStyles = () => {
+  export const getRevisionStyles = () => {
     return `
       @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
       
@@ -472,7 +473,9 @@ export const getPremiumStyles = () => {
   };
 
   // Convert raw Markdown/MDX into high-fidelity formatted HTML
-  const convertMdxToHtml = (mdx: string) => {
+  export const convertMdxToHtml = (mdx: string, lang: string = "en") => {
+    const upperLang = (lang || "en").toUpperCase();
+    const rt = REVISION_TRANSLATIONS[upperLang as keyof typeof REVISION_TRANSLATIONS] || REVISION_TRANSLATIONS.EN;
     // 1. Strip YAML frontmatter if it exists
     let body = mdx.replace(/^---[\s\S]*?---/, '');
 

@@ -340,3 +340,4 @@ export const getQuizLocale = (lang?: string): QuizCoverLabels => {
   const key = lang.toUpperCase();
   return QUIZ_LOCALES[key] || QUIZ_LOCALES.EN;
 };
+

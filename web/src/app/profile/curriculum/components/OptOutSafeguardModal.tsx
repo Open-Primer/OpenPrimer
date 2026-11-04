@@ -1,3 +1,9 @@
+import * as Icons from 'lucide-react';
+import {
+  THIS_COURSE_LABEL,
+  KEEP_ENROLLMENTS_LABEL,
+  KEEP_ENROLLMENTS_DESC_LABEL
+} from './curriculumAuditHelpers';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck } from 'lucide-react';
@@ -15,7 +21,7 @@ interface OptOutSafeguardModalProps {
 }
 
 export const OptOutSafeguardModal: React.FC<OptOutSafeguardModalProps> = ({
-  abandonTarget,
+    abandonTarget,
   setAbandonTarget,
   keepChildCourses,
   setKeepChildCourses,
@@ -25,6 +31,7 @@ export const OptOutSafeguardModal: React.FC<OptOutSafeguardModalProps> = ({
   lang,
   getLocalizedTitle
 }) => {
+  const upperLang = (lang || "EN").toUpperCase() as "EN" | "FR" | "ES" | "DE" | "ZH" | "PT" | "AR" | "HI" | "UR";
   return (
       <AnimatePresence>
         {abandonTarget && (

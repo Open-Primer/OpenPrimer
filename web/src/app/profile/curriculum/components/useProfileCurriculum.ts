@@ -130,12 +130,7 @@ export function useProfileCurriculum({ lang }: UseProfileCurriculumProps) {
     const profile = JSON.parse(savedProfile);
     const userId = profile.id;
 
-    await dbService.enrollCourse(userId, {
-      id: course.id,
-      title: course.title,
-      slug: course.slug,
-      subject: course.subject
-    });
+    await dbService.enrollInCourse(userId, Number(course.id));
 
     const { data: progressData } = await dbService.getUserProgress(userId, lang);
     if (progressData) {

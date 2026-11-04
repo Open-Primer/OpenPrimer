@@ -1,3 +1,7 @@
+import { LOCALIZED_POPUPS } from '../strings';
+import { cleanPathSegment } from '@/lib/translations';
+import { isDatabaseConfigured } from '@/lib/db';
+import { useState } from 'react';
 import React from 'react';
 import { dbService, MockCourse } from '@/lib/db';
 

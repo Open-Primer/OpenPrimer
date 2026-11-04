@@ -16,7 +16,10 @@ import { UserNavSection } from './UserNavSection';
 
 import { useLanguage } from '@/context/LanguageContext';
 import { dbService } from '@/lib/db';
-import { STATIC_UI_STRINGS, UI_STRINGS } from '@/lib/translations';
+import { STATIC_UI_STRINGS, UI_STRINGS, getCanonicalLevelFromSlug, getCanonicalSubjectFromSlug, getLocalizedLevelSlug, getLocalizedSubjectSlug, cleanPathSegment } from '@/lib/translations';
+
+const isDatabaseConfigured = true;
+const isSandboxFallbackAllowed = () => false;
 
 /**
  * @file TopNav.tsx
@@ -126,7 +129,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
     };
   }, []);
   const [showToast, setShowToast] = useState<string | null>(null);
-  const [activeDropdown, setActiveDropdown] = useState<'lang' | 'user' | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ email: string; firstName: string; lastName: string; role?: string; } | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportComment, setReportComment] = useState('');
@@ -467,7 +470,7 @@ export const TopNav = ({ toggleSidebar, isCoursePage = false, showReadingModeSel
         
         <UserNavSection
           isLoggedIn={isLoggedIn}
-          userProfile={userProfile}
+          userProfile={userProfile as any}
           activeDropdown={activeDropdown}
           setActiveDropdown={setActiveDropdown}
           lang={lang}

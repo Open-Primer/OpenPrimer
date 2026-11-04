@@ -32,6 +32,14 @@ export const MulDivTab: React.FC<MulDivTabProps> = ({
   setTab2Feedback,
   verifyTab2
 }) => {
+  const factorA = tab2NumA;
+  const factorB = tab2NumB;
+  const divTotal = tab2NumA;
+  const divDivisor = tab2NumB;
+  const setFactorA = setTab2NumA;
+  const setFactorB = setTab2NumB;
+  const setDivTotal = setTab2NumA;
+  const setDivDivisor = setTab2NumB;
   return (
   <div className="space-y-6">
     {/* Top Config */}

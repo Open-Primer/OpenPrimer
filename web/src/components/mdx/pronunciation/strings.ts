@@ -34,8 +34,7 @@ export interface PronunciationTranslation {
   [key: string]: string;
 }
 
-export   // UI Localizations — 9-locale registry
-  export const PRONUNCIATION_STRINGS: Record<string, {
+export const PRONUNCIATION_STRINGS: Record<string, {
     title: string; subtitle: string; ipaLabel: string; playRef: string;
 
     record: string; stop: string; listening: string; resultTitle: string;
@@ -259,6 +258,6 @@ export   // UI Localizations — 9-locale registry
     }
   };
 
-  const t = PRONUNCIATION_STRINGS[language.toUpperCase() as keyof typeof PRONUNCIATION_STRINGS] || PRONUNCIATION_STRINGS.EN;
+  export const getPronunciationStrings = (l: string) => PRONUNCIATION_STRINGS[l.toUpperCase()] || PRONUNCIATION_STRINGS.EN;
 
 

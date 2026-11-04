@@ -1,4 +1,4 @@
-import { isUrlReachable } from './urlReachability';
+import { isUrlReachable, fetchWithTimeout } from './urlReachability';
 import { callVertexAI } from '@/lib/vertex-client';
 
 export function simplifyCitationQuery(citationText: string): string {

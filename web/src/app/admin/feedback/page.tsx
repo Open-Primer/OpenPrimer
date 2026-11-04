@@ -1,6 +1,6 @@
-import { getBcp47Locale } from '@/lib/translations';
 "use client";
 
+import { getBcp47Locale } from '@/lib/translations';
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Calendar, Mail, ArrowRight, Clock, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';

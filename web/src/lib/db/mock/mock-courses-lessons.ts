@@ -237,7 +237,7 @@ summative: true
           
           if (fs.existsSync(contentDir)) {
             const findCourseFolder = (dir: string): string | null => {
-              const items = fs.readdirSync(dir, { withFileTypes: true });
+              const items = fs.readdirSync(/*turbopackIgnore: true*/ dir, { withFileTypes: true });
               for (const item of items) {
                 const fullPath = path.join(dir, item.name);
                 if (item.isDirectory()) {
@@ -256,7 +256,7 @@ summative: true
               const fileName = `${lessonSlug}.${lang.toLowerCase()}.mdx`;
               const filePath = path.join(courseDir, fileName);
               if (fs.existsSync(filePath)) {
-                const fileContent = fs.readFileSync(filePath, 'utf-8');
+                const fileContent = fs.readFileSync(/*turbopackIgnore: true*/ filePath, 'utf-8');
                 let title = lessonSlug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
                 const fmMatch = fileContent.match(/title:\s*["']?(.*?)["']?\r?\n/);
                 if (fmMatch && fmMatch[1]) {
@@ -328,7 +328,7 @@ summative: true
         
         if (fs.existsSync(contentDir)) {
           const findCourseFolder = (dir: string): string | null => {
-            const items = fs.readdirSync(dir, { withFileTypes: true });
+            const items = fs.readdirSync(/*turbopackIgnore: true*/ dir, { withFileTypes: true });
             for (const item of items) {
               const fullPath = path.join(dir, item.name);
               if (item.isDirectory()) {
@@ -344,13 +344,13 @@ summative: true
           
           const courseDir = findCourseFolder(contentDir);
           if (courseDir) {
-            const files = fs.readdirSync(courseDir);
+            const files = fs.readdirSync(/*turbopackIgnore: true*/ courseDir);
             const matchingFiles = files.filter((f: string) => f.endsWith(`.${lang.toLowerCase()}.mdx`));
             
             if (matchingFiles.length > 0) {
               const lessons = matchingFiles.map((file: string) => {
                 const fullPath = path.join(courseDir, file);
-                const content = fs.readFileSync(fullPath, 'utf-8');
+                const content = fs.readFileSync(/*turbopackIgnore: true*/ fullPath, 'utf-8');
                 const slug = file.replace(/\.[a-z]{2}\.mdx$/i, '');
                 let order = 999;
                 const orderMatch = content.match(/order:\s*(\d+)/);

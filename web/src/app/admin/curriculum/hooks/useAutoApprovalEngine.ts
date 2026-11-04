@@ -1,3 +1,4 @@
+import { normalizeLevel } from '@/lib/translations';
 import React, { useEffect } from 'react';
 import { dbService, MockCourse } from '@/lib/db';
 
@@ -135,7 +136,7 @@ export function useAutoApprovalEngine({
             progress: 0,
             priority: p.count >= 15 ? 'High' : 'Medium',
             timestamp: new Date().toISOString(),
-            targetLang: lang,
+            targetLang: (p.targetLang || 'fr'),
             level: normalizeLevel(p.level || 'L1'),
             subject: p.subject || 'General'
           });

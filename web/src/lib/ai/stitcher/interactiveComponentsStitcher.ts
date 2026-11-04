@@ -1,18 +1,13 @@
 import { ensureBlockWidgetsOnOwnLines } from './widgetLineFormatter';
+import { replaceWidget, extractAndInjectCitations } from './citationManager';
 
 export function stitchInteractiveComponents(
   narrativeMdx: string,
   widgets: any,
   isTerminal: boolean = false
 ): { content: string; references: string[] } {
-  let content = narrativeMdx;
-  if (!widgets) return { content, references: [] };
-
-export function stitchLessonContent(narrativeMdx: string, widgets: any, isTerminalEvaluation: boolean = false): string {
-  // [FIX G9] Remove duplicate [[WIDGET:conclusionSummary]] etc. that the Scribe may have
-  // inlined in prose. The stitcher is the authoritative injector of these conclusion anchors.
-
   let content = narrativeMdx.trim();
+  if (!widgets) return { content, references: [] };
 
   // Compile Category A (direct markdown/prose enclosers) inline *before* suffix normalization
   const categoryAMap: { [key: string]: string } = {
@@ -97,53 +92,6 @@ export function stitchLessonContent(narrativeMdx: string, widgets: any, isTermin
         it.refNum = refNum;
       }
     });
-  }
-  if (isTerminalEvaluation) {
-    let finalEvalStr = '';
-    if (widgets && widgets.finalEvaluation) {
-      const finalEvalType = (widgets.finalEvaluation.type || '').toLowerCase();
-      if (finalEvalType === "quiz" || finalEvalType === "qcm") {
-        const fProps = widgets.finalEvaluation.props || {};
-        finalEvalStr = `<Quiz durationLimit={${fProps.durationLimit || 1800}}${fProps.limit ? ` limit={${fProps.limit}}` : ''}>\n  ${(fProps.questions || []).map((q: any) => `  <Question q="${(q.q || '').replace(/"/g, '&quot;')}" explanation="${(q.explanation || '').replace(/"/g, '&quot;')}">\n    ${(q.options || []).map((o: any) => `<Option text="${(o.text || '').replace(/"/g, '&quot;')}" correct={${o.correct}} />`).join('\n    ')}\n  </Question>`).join('\n  ')}\n</Quiz>`;
-      } else {
-        const promptVal = (widgets.finalEvaluation.props?.prompt || "Rédigez un essai de synthèse structuré sur les concepts clés de cette leçon.").replace(/"/g, '&quot;');
-        const subjectVal = (widgets.finalEvaluation.props?.subject || "Essai de synthèse").replace(/"/g, '&quot;');
-        finalEvalStr = `<EssayEvaluation prompt="${promptVal}" subject="${subjectVal}" durationLimit={3600} />`;
-      }
-    }
-
-    let goingFurtherItemsStr = '';
-    if (widgets && widgets.goingFurther && Array.isArray(widgets.goingFurther.items) && widgets.goingFurther.items.length > 0) {
-      goingFurtherItemsStr = `<GoingFurther>\n  ${widgets.goingFurther.items.map((it: any) => {
-        const authorAttr = it.author ? ` author="${it.author.replace(/"/g, '&quot;')}"` : '';
-        const yearAttr = it.year ? ` year="${it.year.replace(/"/g, '&quot;')}"` : '';
-        const refNumAttr = it.refNum ? ` refNum={${it.refNum}}` : '';
-        const urlAttr = it.url ? ` url="${it.url.replace(/"/g, '&quot;')}"` : '';
-        return `<GoingFurtherItem title="${it.title.replace(/"/g, '&quot;')}" type="${it.type}"${authorAttr}${yearAttr}${refNumAttr}${urlAttr} description="${it.description.replace(/"/g, '&quot;')}" />`;
-      }).join('\n  ')}\n</GoingFurther>`;
-    }
-
-    let whatsNextStr = '';
-    if (widgets && widgets.whatsNext) {
-      const parsedSteps = (widgets.whatsNext.steps || []).map((s: any) => ({
-        title: s.title || '',
-        description: s.description || '',
-        slug: s.slug || '',
-        subject: s.subject || '',
-        level: s.level || ''
-      }));
-      const stepsEncoded = Buffer.from(JSON.stringify(parsedSteps)).toString('base64');
-      whatsNextStr = `<WhatsNext itemsBase64="${stepsEncoded}" />`;
-    }
-
-    let combined = finalEvalStr;
-    if (goingFurtherItemsStr) {
-      combined += `\n\n${goingFurtherItemsStr}`;
-    }
-    if (whatsNextStr) {
-      combined += `\n\n${whatsNextStr}`;
-    }
-    return combined;
   }
   if (widgets) {
     widgets.references = widgets.references || [];

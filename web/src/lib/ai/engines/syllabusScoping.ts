@@ -1,3 +1,4 @@
+import { supabaseAdmin } from '@/lib/supabase';
 import { cleanPathSegment } from '../../translations';
 
 const PRONUNCIATION_WIDGET_MAP: Record<string, string> = {
@@ -83,7 +84,7 @@ export async function runSyllabusScoping(
   const log = appendTaskLog || (async (m) => console.log(m));
   const lessonDbWidgetIds = new Set<string>();
 
-  const lessonsList = Array.isArray(syllabus?.lessons) ? [...syllabus.lessons] : [];
+  let lessonsList = Array.isArray(syllabus?.lessons) ? [...syllabus.lessons] : [];
   if (!lessonsList || lessonsList.length === 0) {
     throw new Error(`[AI GENERATOR CRITICAL ERROR] Syllabus lessons list is empty or invalid for course "${correctedCourseName}".`);
   }
@@ -95,7 +96,7 @@ export async function runSyllabusScoping(
     les.originalIndex = idx;
   });
 
-  originalSyllabusLessonsLength = lessonsList.length;
+  const originalSyllabusLessonsLength = lessonsList.length;
 
   if (process.env.ONLY_FIRST_LESSON === 'true') {
     lessonsList = lessonsList.slice(0, 1);
@@ -111,13 +112,14 @@ export async function runSyllabusScoping(
     }
   }
 
-  await appendTaskLog(`[AI GENERATOR] Syllabus loaded. Total lessons to generate: ${lessonsList.length}. Offset: ${lessonOffset}.`);
+  const lessonOffset = 0;
+  await log(`[AI GENERATOR] Syllabus loaded. Total lessons to generate: ${lessonsList.length}. Offset: ${lessonOffset}.`);
 
   let completedLessons = lessonOffset;
   const updateTaskProgress = async (lessonTitle: string) => {
     completedLessons++;
     const currentProgress = 20 + Math.floor((completedLessons / lessonsList.length) * 70);
-    await appendTaskLog(`[AI GENERATOR] Finished lesson "${lessonTitle}" (${completedLessons}/${lessonsList.length}). Progress: ${currentProgress}%.`);
+    await log(`[AI GENERATOR] Finished lesson "${lessonTitle}" (${completedLessons}/${lessonsList.length}). Progress: ${currentProgress}%.`);
     if (!taskId) return;
     try {
       await supabaseAdmin

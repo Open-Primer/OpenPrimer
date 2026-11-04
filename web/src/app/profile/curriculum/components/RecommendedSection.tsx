@@ -1,9 +1,15 @@
+import * as Icons from 'lucide-react';
+import { Book } from 'lucide-react';
+import { DISMISS_RECOMMENDATION_LABEL } from './curriculumAuditHelpers';
 import React from 'react';
 import Link from 'next/link';
 import { Sparkles, Star, Clock, GraduationCap, ChevronRight, Bookmark, X, BookOpen } from 'lucide-react';
 import { formatCourseLevel } from '@/lib/translations';
 
 interface RecommendedSectionProps {
+  progress?: any;
+  getRecommendations?: () => any[];
+  navigateToCourseDirect?: (c: any) => Promise<void>;
   recommendations: any[];
   lang: string;
   upperLang: string;
@@ -22,6 +28,9 @@ interface RecommendedSectionProps {
 }
 
 export const RecommendedSection: React.FC<RecommendedSectionProps> = ({
+  progress = {},
+  getRecommendations = () => [],
+  navigateToCourseDirect = async (c: any) => handleCourseClick(c),
   recommendations,
   lang,
   upperLang,
@@ -195,10 +204,10 @@ export const RecommendedSection: React.FC<RecommendedSectionProps> = ({
                             })()}
                             
                             <h3 className="text-xl font-black mb-3 group-hover:text-blue-400 transition-colors">
-                              {getLocalizedTitle(recCourse)}
+                              {getLocalizedTitle(recCourse, lang)}
                             </h3>
                             <p className="text-sm text-slate-500 mb-4 flex-1 leading-relaxed line-clamp-3 overflow-hidden text-ellipsis">
-                              {getLocalizedCourseDescription(recCourse)}
+                              {getLocalizedCourseDescription(recCourse, lang)}
                             </p>
 
                             <div className="flex items-center gap-2 pt-6 border-t border-slate-800/50 mt-auto w-full">

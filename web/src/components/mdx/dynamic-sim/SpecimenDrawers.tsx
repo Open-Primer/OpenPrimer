@@ -206,7 +206,6 @@ export const DrawMitosis: React.FC<DrawerProps> = ({ progress, t }) => {
 
   // Render SVG for Carnot cycle indicator and piston moving
 
-};
 
 export const DrawCarnot: React.FC<DrawerProps> = ({ progress, t }) => {
     const p = progress / 100;
@@ -331,9 +330,11 @@ export const DrawCarnot: React.FC<DrawerProps> = ({ progress, t }) => {
 
   // Render SVG for continuous customizable waves
 
-};
 
 export const DrawWaves: React.FC<DrawerProps> = ({ progress, t }) => {
+    const [freq, setFreq] = React.useState(1.5);
+    const [amp, setAmp] = React.useState(35);
+    const wavelength = (40 / freq).toFixed(1);
     const points: string[] = [];
     const width = 400;
     const height = 150;
@@ -408,9 +409,9 @@ export const DrawWaves: React.FC<DrawerProps> = ({ progress, t }) => {
 
   // Render SVG for wave optics Double-Slit Diffraction
 
-};
 
 export const DrawDoubleSlit: React.FC<DrawerProps> = ({ progress, t }) => {
+    const [wavelength, setWavelength] = React.useState(532);
     const getWavelengthColor = (nm: number) => {
       if (nm < 450) return "#8b5cf6"; // Violet
       if (nm < 490) return "#06b6d4"; // Cyan
@@ -512,6 +513,5 @@ export const DrawDoubleSlit: React.FC<DrawerProps> = ({ progress, t }) => {
 
   // Render SVG for Enzyme active-site mechanism
 
-};
 
 export { DrawEnzyme } from './DrawEnzyme';

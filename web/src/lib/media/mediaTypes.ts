@@ -27,7 +27,7 @@ export function getLanguageSearchTerm(lang: string = 'en'): string {
   return LANGUAGE_NAMES_MAP[upper] || 'english';
 }
 
-const CACHE_FILE_PATH = path.join(process.cwd(), '.media-cache.json');
+export const CACHE_FILE_PATH = path.join(process.cwd(), '.media-cache.json');
 let persistentMediaCache: Record<string, CacheEntry> = {};
 
 export function loadPersistentCache(): void {

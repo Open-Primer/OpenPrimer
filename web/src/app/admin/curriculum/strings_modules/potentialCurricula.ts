@@ -1,3 +1,5 @@
+import { COCKPIT_DICTIONARY, LOCALIZED_POPUPS, EXTRA_TOOLTIP_STRINGS } from './cockpitDictionary';
+import { CURRICULUM_STRINGS } from './curriculumStringsDict';
 export const POTENTIAL_CURRICULA = [
   {
     title: "Tronc Commun L1 Sciences",

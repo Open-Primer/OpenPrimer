@@ -1,3 +1,4 @@
+import { supabaseAdmin } from '../supabase';
 /**
  * @file pedagogy-guidelines.ts
  * @description Pedagogical level constraints, discipline profiles, and word count targets.
@@ -87,7 +88,7 @@ export const DEFAULT_LEVEL_CONSTRAINTS: Record<string, LevelConstraints> = {
   }
 };
 
-let loadedConstraints: Record<string, LevelConstraints> = DEFAULT_LEVEL_CONSTRAINTS;
+export let loadedConstraints: Record<string, LevelConstraints> = DEFAULT_LEVEL_CONSTRAINTS;
 
 export async function loadLevelConstraintsFromDb(): Promise<Record<string, LevelConstraints>> {
   try {

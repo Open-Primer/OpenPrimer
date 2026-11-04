@@ -1,4 +1,4 @@
-const syllabusSchema = {
+export const syllabusSchema = {
   type: "object",
   properties: {
     courseContext: {
@@ -33,7 +33,7 @@ const syllabusSchema = {
   required: ["courseContext", "lessons", "references"]
 };
 
-const verificationSchema = {
+export const verificationSchema = {
   type: "object",
   properties: {
     approved: { type: "boolean" },
@@ -42,7 +42,7 @@ const verificationSchema = {
   required: ["approved", "critique"]
 };
 
-const syllabusAuditSchema = {
+export const syllabusAuditSchema = {
   type: "object",
   properties: {
     approved: { type: "boolean" },
@@ -51,7 +51,7 @@ const syllabusAuditSchema = {
   required: ["approved", "critique"]
 };
 
-const lessonOutlineSchema = {
+export const lessonOutlineSchema = {
   type: "object",
   properties: {
     sections: {
@@ -69,7 +69,7 @@ const lessonOutlineSchema = {
   required: ["sections"]
 };
 
-const outlineAuditSchema = {
+export const outlineAuditSchema = {
   type: "object",
   properties: {
     approved: { type: "boolean" },
@@ -78,7 +78,7 @@ const outlineAuditSchema = {
   required: ["approved", "critique"]
 };
 
-const blockNarrativeAuditSchema = {
+export const blockNarrativeAuditSchema = {
   type: "object",
   properties: {
     approved: { type: "boolean" },
@@ -101,7 +101,7 @@ const blockNarrativeAuditSchema = {
   required: ["approved", "isGlobalRevision", "globalCritique"]
 };
 
-const widgetBlockAuditSchema = {
+export const widgetBlockAuditSchema = {
   type: "object",
   properties: {
     approved: { type: "boolean" },
@@ -123,7 +123,7 @@ const widgetBlockAuditSchema = {
   required: ["approved", "critique"]
 };
 
-const widgetsAuditSchema = {
+export const widgetsAuditSchema = {
   type: "object",
   properties: {
     approved: { type: "boolean" },
@@ -145,7 +145,7 @@ const widgetsAuditSchema = {
   required: ["approved", "isGlobalRevision", "globalCritique"]
 };
 
-const revisionAuditSchema = {
+export const revisionAuditSchema = {
   type: "object",
   properties: {
     approved: { type: "boolean" },
@@ -168,7 +168,7 @@ const revisionAuditSchema = {
   required: ["approved", "isGlobalRevision", "globalCritique"]
 };
 
-const revisionQualificationSchema = {
+export const revisionQualificationSchema = {
   type: "object",
   properties: {
     scope: { type: "string", description: "Must be 'global' if the overall lesson needs a full structural or narrative rewrite, or 'local' if edits are localized to specific sections, quizzes, or widgets." },
@@ -189,19 +189,4 @@ const revisionQualificationSchema = {
     }
   },
   required: ["scope", "preCritique", "affectedItems"]
-};
-
-
-
-export {
-  syllabusSchema,
-  verificationSchema,
-  syllabusAuditSchema,
-  lessonOutlineSchema,
-  outlineAuditSchema,
-  blockNarrativeAuditSchema,
-  widgetBlockAuditSchema,
-  widgetsAuditSchema,
-  revisionAuditSchema,
-  revisionQualificationSchema
 };

@@ -1,3 +1,5 @@
+"use client";
+
 const NO_SOLUTION_LABELS: Record<string, string> = {
   EN: 'Detailed solution not available.',
   FR: 'Solution détaillée non disponible.',
@@ -9,12 +11,12 @@ const NO_SOLUTION_LABELS: Record<string, string> = {
   HI: 'विस्तृत समाधान उपलब्ध नहीं है.',
   UR: 'تفصیلی حل دستیاب نہیں ہے۔'
 };
-"use client";
-
 import React, { useState } from 'react';
 import { Lightbulb, ChevronDown, ChevronUp, CheckCircle2, XCircle, HelpCircle, ArrowRight, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import { STATIC_UI_STRINGS } from '@/lib/translations';
+const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 import { renderNodeWithMath, renderTextWithMathAndMarkdown, renderTextSegmentWithMath } from './MathRenderer';
 
 

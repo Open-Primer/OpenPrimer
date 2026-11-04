@@ -1,3 +1,6 @@
+import { BADGE_LIBRARY } from '@/lib/db';
+import * as LucideIcons from 'lucide-react';
+const LUCIDE_ICONS: Record<string, any> = LucideIcons;
 import React from 'react';
 
 
@@ -91,7 +94,7 @@ import React from 'react';
       return await resizeAndStandardizeImage(iconKey);
     }
     
-    const styled = BADGE_LIBRARY.find(b => b.id === iconKey);
+    const styled = BADGE_LIBRARY.find((b: any) => b.id === iconKey);
     if (styled) {
       try {
         const svgContent = getLucideIconPath(styled.iconName);
@@ -133,7 +136,7 @@ import React from 'react';
       return iconKey;
     }
     
-    const styled = BADGE_LIBRARY.find(b => b.id === iconKey);
+    const styled = BADGE_LIBRARY.find((b: any) => b.id === iconKey);
     if (styled) {
       try {
         const svgContent = getLucideIconPath(styled.iconName);
@@ -204,9 +207,13 @@ import React from 'react';
     });
   };
 
-  const getCompiledTranslations = (name: string, desc: string, threshold?: string) => {
-    const currentLang = (lang || 'EN').toUpperCase();
-    const supportedCodes = ['EN', 'FR', 'ES', 'DE', 'ZH', 'PT', 'AR', 'HI', 'UR'];
-    return supportedCodes.map(code => ({
-      code,
-      name: code === currentLang ? name : (code === 'EN' ? name : `${name} (${code})`),
+export const getCompiledTranslations = (name: string, desc: string, threshold?: string, lang: string = 'EN') => {
+  const currentLang = (lang || 'EN').toUpperCase();
+  const supportedCodes = ['EN', 'FR', 'ES', 'DE', 'ZH', 'PT', 'AR', 'HI', 'UR'];
+  return supportedCodes.map(code => ({
+    code,
+    name: code === currentLang ? name : (code === 'EN' ? name : `${name} (${code})`),
+    desc: code === currentLang ? desc : (code === 'EN' ? desc : `${desc} (${code})`),
+    threshold: threshold ? (code === currentLang ? threshold : (code === 'EN' ? threshold : `${threshold} (${code})`)) : undefined
+  }));
+};

@@ -3,11 +3,13 @@
 import React, { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import {
-  Activity, ArrowLeft, RefreshCw, Database, Mail, Cpu, Image,
+  WifiOff, Activity, ArrowLeft, RefreshCw, Database, Mail, Cpu, Image,
   CheckCircle, AlertTriangle, XCircle, Clock, Zap, ArrowUpRight,
   ShieldCheck, ShieldAlert, Key, Eye, EyeOff, Save, Check, ExternalLink
 } from 'lucide-react';
 import type { HealthResponse, ServiceHealth } from '@/app/api/health/route';
+import { useServiceStatus } from '@/lib/serviceStatus';
+import { dbService } from '@/lib/db';
 import { useLanguage } from '@/context/LanguageContext';
 import { HEALTH_STRINGS } from './components/healthStrings';
 import { ServiceCard, StatusBadge } from './components/ServiceCard';
@@ -22,7 +24,7 @@ export default function ServerHealthPage() {
 
   const [slaHistory, setSlaHistory] = useState<any[]>(() => []);
   const [slaSource, setSlaSource] = useState<'prng' | 'database'>('database');
-  const [hoveredDay, setHoveredDay] = useState<{ date: string; db: number; email: number; ai: number; images: number; smithsonian: number; unsplash: number; status: string } | null>(null);
+  const [hoveredDay, setHoveredDay] = useState<any | null>(null);
 
 
   const getServiceStats = (id: 'db' | 'email' | 'ai' | 'images' | 'smithsonian' | 'unsplash') => {
@@ -214,8 +216,8 @@ export default function ServerHealthPage() {
   };
 
   const services = Object.values(health);
-  const allOk = services.every(s => s.status === 'ok');
-  const anyOffline = services.some(s => s.status === 'offline');
+  const allOk = services.every((s: any) => s.status === 'ok');
+  const anyOffline = services.some((s: any) => s.status === 'offline');
 
   const strings = {
     EN: {
@@ -384,25 +386,49 @@ export default function ServerHealthPage() {
         {/* SECTION: DOWNTIME OVER LAST 365 DAYS */}
         <DowntimeHistoryPanel
           t={t}
-          days365={days365}
+          days365={slaHistory}
           hoveredDay={hoveredDay}
           setHoveredDay={setHoveredDay}
           lang={lang}
+          getServiceStats={getServiceStats}
+          overallAvg={overallAvg}
+          slaHistory={slaHistory}
+          getDayStatus={getDayStatus}
         />
 
         {/* Hot-Swap API Keys Configurator Form */}
         <HotSwapApiKeysPanel
           t={t}
-          keysForm={keysForm}
-          setKeysForm={setKeysForm}
-          showKeys={showKeys}
-          toggleShowKey={toggleShowKey}
-          saveStatus={saveStatus}
+          currentCfg={currentCfg}
+          notif={notif}
+          supabaseUrl={supabaseUrl}
+          setSupabaseUrl={setSupabaseUrl}
+          supabaseAnonKey={supabaseAnonKey}
+          setSupabaseAnonKey={setSupabaseAnonKey}
+          resendApiKey={resendApiKey}
+          setResendApiKey={setResendApiKey}
+          geminiApiKey={geminiApiKey}
+          setGeminiApiKey={setGeminiApiKey}
+          smithsonianApiKey={smithsonianApiKey}
+          setSmithsonianApiKey={setSmithsonianApiKey}
+          unsplashApiKey={unsplashApiKey}
+          setUnsplashApiKey={setUnsplashApiKey}
+          showSbKey={showSbKey}
+          setShowSbKey={setShowSbKey}
+          showResendKey={showResendKey}
+          setShowResendKey={setShowResendKey}
+          showGeminiKey={showGeminiKey}
+          setShowGeminiKey={setShowGeminiKey}
+          showSmithsonianKey={showSmithsonianKey}
+          setShowSmithsonianKey={setShowSmithsonianKey}
+          showUnsplashKey={showUnsplashKey}
+          setShowUnsplashKey={setShowUnsplashKey}
           handleSaveKeys={handleSaveKeys}
+          handleResetKeys={handleResetKeys}
         />
         {/* Service Cards Grid */}
         <div className="grid md:grid-cols-2 gap-6">
-          {services.map(svc => (
+          {services.map((svc: any) => (
             <ServiceCard key={svc.id} svc={svc} t={t} lang={lang} />
           ))}
         </div>

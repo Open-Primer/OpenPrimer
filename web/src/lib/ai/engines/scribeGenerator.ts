@@ -1,10 +1,19 @@
+import {
+  getConstraintKeyForLevel,
+  loadedConstraints,
+  DEFAULT_LEVEL_CONSTRAINTS
+} from './coreUtils';
+import { preprocessMdx } from '@/lib/content';
+import { getWordCountLimitForLevel, validateSchema } from '@/lib/ai/engines/coreUtils';
+import { healNarrativeCitations } from '@/lib/ai/engines/deduplicationHelpers';
+import { parseMarkdownSections, parseJointRepairOutput, reconstructMarkdown } from '@/lib/ai/engines/sectionBasedTranslation';
 import fs from 'fs';
 import path from 'path';
 import { saveDraftRevision, safeJsonParse, getDescriptiveLevelForPrompt } from './coreUtils';
 import { blockNarrativeAuditSchema } from './aiSchemas';
 import { generateLessonOutlineStep } from './scribeOutlineGenerator';
 
-function extractWidgetAnchors(mdx: string): string[] {
+export function extractWidgetAnchors(mdx: string): string[] {
   const anchors: string[] = [];
   const regex = /\[\[WIDGET:([A-Za-z0-9_-]+):([A-Za-z0-9_-]+)(?::([^\]]+))?\]\]/g;
   let match;
@@ -40,6 +49,26 @@ export async function runScribeStep(
   );
   let approvedNarrativeText = '';
   const lessonStats: any = { narrativeBlockAttempts: [] };
+  const levelInput = level;
+  const courseContext: any = { discipline, courseName, level };
+  const constraintKey = getConstraintKeyForLevel(levelInput);
+  const constraint = loadedConstraints[constraintKey] || DEFAULT_LEVEL_CONSTRAINTS[constraintKey] || DEFAULT_LEVEL_CONSTRAINTS.university_undergrad;
+  const isLawCourse = (discipline || '').toLowerCase().includes('law') ||
+                      (discipline || '').toLowerCase().includes('droit') ||
+                      correctedCourseName.toLowerCase().includes('droit') ||
+                      correctedCourseName.toLowerCase().includes('juridique') ||
+                      correctedCourseName.toLowerCase().includes('obligations') ||
+                      correctedCourseName.toLowerCase().includes('responsabilité');
+
+  const isAbstractDiscipline = isLawCourse ||
+                      (discipline || '').toLowerCase().includes('philosophy') ||
+                      (discipline || '').toLowerCase().includes('philology') ||
+                      (discipline || '').toLowerCase().includes('literature') ||
+                      correctedCourseName.toLowerCase().includes('philosophie') ||
+                      correctedCourseName.toLowerCase().includes('littérature');
+  const referencesMetadata: any = {};
+  const formattedCatalogList = '';
+  const prunedCatalog: any = {};
         // Group outline sections into blocks of at most 2 sections each
         const outlineSections = lessonOutlineObj.sections;
         const blocks: any[] = [];
@@ -385,187 +414,6 @@ INSTRUCTIONS:
         let finalCleanedNarrative = preprocessMdx(fullNarrativeText, targetLang.toLowerCase(), false, item.slug);
         saveDraftRevision(`final_reconstructed_narrative_${item.slug}.md`, finalCleanedNarrative);
         approvedNarrativeText = finalCleanedNarrative;
-      }
-
-      // ───────────────────────────────────────────────────────────────
-      // [STAGE 2] WIDGETS ARCHITECT (AGENT 3B)
-      // ───────────────────────────────────────────────────────────────
-      await log(`[AI GENERATOR - INVERTED] [STAGE 2] Designing interactive widgets JSON for lesson "${item.title}"...`);
-
-      const activeAnchors = extractWidgetAnchors(approvedNarrativeText);
-      const activeAnchorIds = new Set(activeAnchors.map(a => a.id.toLowerCase()));
-      const activeAnchorTypes = new Set(activeAnchors.map(a => a.type.toLowerCase()));
-
-      const dynamicCatalog = Object.fromEntries(
-        Object.entries(prunedCatalog).filter(([id, meta]: [string, any]) => {
-          const lowerId = id.toLowerCase();
-          const lowerType = (meta.componentType || '').toLowerCase();
-          return activeAnchorIds.has(lowerId) || activeAnchorTypes.has(lowerId) || (lowerType && activeAnchorIds.has(lowerType));
-        })
-      );
-
-      const dynamicCatalogList = Object.entries(dynamicCatalog).map(([id, meta]: [string, any]) => {
-        return `- ID: "${id}"
-  Name: "${meta.nameEN || id}" (${meta.nameFR || id})
-  Description: "${meta.descEN || meta.descFR || ''}"
-  Disciplines: [${(meta.disciplines || []).join(', ')}]
-  Educational Level: "${meta.levelEN || meta.levelFR || 'All levels'}"`;
-      }).join('\n\n') || 'None anchored.';
-
-      async function generateAndParseWidgetBlock(
-        blockPrompt: string,
-        blockSchema: any,
-        blockName: string
-      ): Promise<any> {
-        let blockJsonStr = await callAIEngine(blockPrompt, blockSchema, 0.1, undefined, undefined, false, 'widget_placement');
-        let cleanJson = blockJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
-
-        let parsed: any = null;
-        let parseSuccess = false;
-        let preflightAttempts = 0;
-        const maxPreflightAttempts = 2;
-        let currentJsonStr = cleanJson;
-
-        while (!parseSuccess && preflightAttempts <= maxPreflightAttempts) {
-          try {
-            parsed = safeJsonParse(currentJsonStr, `Widget Block ${blockName} Parsing`);
-            
-            // Validate schema compliance
-            const schemaErrors = validateSchema(parsed, blockSchema);
-            if (schemaErrors.length > 0) {
-              throw new Error(`JSON does not match the required schema. Errors:\n` + schemaErrors.map(e => `- ${e}`).join('\n'));
-            }
-            
-            // Check for forbidden placeholder strings
-            const placeholderErrors = checkForForbiddenPlaceholders(parsed);
-            if (placeholderErrors.length > 0) {
-              throw new Error(`JSON contains forbidden placeholders or draft markers:\n` + placeholderErrors.map(e => `- ${e}`).join('\n'));
-            }
-            
-            parseSuccess = true;
-          } catch (err: any) {
-            preflightAttempts++;
-            if (preflightAttempts > maxPreflightAttempts) {
-              await log(`[AI GENERATOR] Pre-flight JSON parsing/validation failed for ${blockName} after ${maxPreflightAttempts} repair attempts. Propagating error.`);
-              throw err;
-            }
-            await log(`[AI GENERATOR] Pre-flight JSON parsing/validation failed for ${blockName}: ${err.message}. Retrying local syntax/schema repair (Attempt ${preflightAttempts}/${maxPreflightAttempts})...`);
-
-            const preflightRepairPrompt = `You are a precise JSON syntax/schema repair assistant.
-The JSON output below has syntax/schema errors and cannot be parsed or validated.
-Your task is to fix these errors and return ONLY the completely valid, parseable JSON object matching the required schema.
-
-### SCHEMA/PARSE ERROR:
-${err.message}
-
-### MALFORMED JSON TO REPAIR:
-\`\`\`json
-${currentJsonStr}
-\`\`\`
-
-Return ONLY the corrected and valid JSON response. Do NOT wrap your response in markdown code blocks.`;
-
-            const repairedJsonStr = await callAIEngine(preflightRepairPrompt, blockSchema, 0.1, undefined, undefined, false, 'widget_placement');
-            currentJsonStr = repairedJsonStr.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim();
-          }
-        }
-        // Clean empty string, null, and dummy placeholder properties from interactiveComponents props to prevent validation failures
-        if (parsed && Array.isArray(parsed.interactiveComponents)) {
-          // Fields that are NEVER valid in the raw generated media components — the media-resolver/validator handles them downstream.
-          const IMAGE_FORBIDDEN_KEYS = ['url', 'wikipediaUrl', 'wikipediaLink', 'imageUrl'];
-          const AUDIO_VIDEO_FORBIDDEN_KEYS = ['url', 'id', 'provider', 'unresolved', 'wikipediaUrl', 'wikipediaLink', 'imageUrl'];
-          for (const comp of parsed.interactiveComponents) {
-            if (comp && comp.props && typeof comp.props === 'object') {
-              const compTypeLower = typeof comp.componentType === 'string' ? comp.componentType.toLowerCase() : '';
-              // [FIX] Unconditionally strip URL/link/platform fields from Image, Audio, and Video components:
-              // they are resolved downstream via searchQuery/description search.
-              if (compTypeLower === 'image') {
-                for (const forbiddenKey of IMAGE_FORBIDDEN_KEYS) {
-                  delete comp.props[forbiddenKey];
-                }
-              } else if (compTypeLower === 'audio' || compTypeLower === 'video') {
-                for (const forbiddenKey of AUDIO_VIDEO_FORBIDDEN_KEYS) {
-                  delete comp.props[forbiddenKey];
-                }
-              }
-              const ENTITY_WIDGET_TYPES = [
-                'realperson', 'historicalperson', 'conceptlink', 'location', 
-                'eventlink', 'historicaleventlink', 'evenementhistorique', 'événementhistorique', 
-                'glossary', 'lexique', 'biography'
-              ];
-              if (ENTITY_WIDGET_TYPES.includes(compTypeLower)) {
-                delete comp.props.wikipediaUrl;
-                delete comp.props.wikipediaLink;
-                delete comp.props.url;
-                delete comp.props.imageUrl;
-                delete comp.props.searchQuery;
-                
-                if (compTypeLower !== 'biography') {
-                  delete comp.props.dates;
-                  delete comp.props.year;
-                  delete comp.props.birthYear;
-                  delete comp.props.deathYear;
-                }
-              }
-              for (const key of Object.keys(comp.props)) {
-                const val = comp.props[key];
-                if (
-                  val === '' ||
-                  val === null ||
-                  val === 'null' ||
-                  (typeof val === 'string' &&
-                    (key.toLowerCase().includes('url') || key.toLowerCase().includes('link')) &&
-                    (val.toLowerCase().includes('example.com') ||
-                      val.toLowerCase().includes('placeholder') ||
-                      val.toLowerCase().includes('tbd') ||
-                      val.toLowerCase().includes('your_') ||
-                      val.toLowerCase().includes('dummy')))
-                ) {
-                  delete comp.props[key];
-                }
-              }
-            }
-          }
-        }
-        // Clean empty string, null, and dummy placeholder properties from goingFurther items
-        if (parsed && parsed.goingFurther && Array.isArray(parsed.goingFurther.items)) {
-          for (const item of parsed.goingFurther.items) {
-            if (item && typeof item === 'object') {
-              for (const key of Object.keys(item)) {
-                const val = item[key];
-                if (
-                  val === '' ||
-                  val === null ||
-                  val === 'null' ||
-                  (typeof val === 'string' &&
-                    (key.toLowerCase().includes('url') || key.toLowerCase().includes('link')) &&
-                    (val.toLowerCase().includes('example.com') ||
-                      val.toLowerCase().includes('placeholder') ||
-                      val.toLowerCase().includes('tbd') ||
-                      val.toLowerCase().includes('your_') ||
-                      val.toLowerCase().includes('dummy')))
-                ) {
-                  delete item[key];
-                }
-              }
-            }
-          }
-        }
-        return parsed;
-      }
-
-      let parsedWidgets: any = {
-        prerequisites: { items: [] },
-        diagnosticQuiz: { question: '', options: [], correctIndex: 0, targetSectionId: '', sectionTitle: '' },
-        learningObjectives: { knowledge: [], skills: [], attitudes: [] },
-        interactiveComponents: [],
-        conclusionSummary: '',
-        whatsNext: '',
-        goingFurther: '',
-        finalEvaluation: null,
-        glossary: [],
-        references: []
-      };
-
-
+  const activeAnchors = extractWidgetAnchors(approvedNarrativeText);
   return { approvedNarrativeText, activeAnchors, lessonOutlineObj };
+}

@@ -3,6 +3,10 @@ import { Preset } from './presets';
 import { Zap, Eye } from 'lucide-react';
 
 interface CompoundDetailsProps {
+  selectedAtom?: any;
+  selectedElement?: any;
+  setSelectedAtomIndex?: (idx: number | null) => void;
+  gradeLevel?: string;
   activePreset: Preset;
   selectedAtomIndex: number | null;
   localStr: any;
@@ -13,11 +17,14 @@ export const CompoundDetailsPanel: React.FC<CompoundDetailsProps> = ({
   activePreset,
   selectedAtomIndex,
   localStr,
-  t
+  t,
+  selectedAtom,
+  selectedElement,
+  setSelectedAtomIndex = () => {},
+  gradeLevel = "high_school"
 }) => {
   return (
-        {/* Compound details & Info card (1 col) */}
-        <div className="lg:col-span-1 flex flex-col justify-between bg-slate-900/30 border border-slate-800 rounded-2xl p-5 space-y-4">
+      <div className="lg:col-span-1 flex flex-col justify-between bg-slate-900/30 border border-slate-800 rounded-2xl p-5 space-y-4">
           
           {selectedAtom && selectedElement ? (
             <div className="space-y-3.5 animate-fadeIn">
@@ -100,8 +107,5 @@ export const CompoundDetailsPanel: React.FC<CompoundDetailsProps> = ({
           </div>
 
         </div>
-
-      </div>
-
   );
 };

@@ -1,3 +1,11 @@
+import {
+  isPlaceholderDates,
+  resolvePersonDates,
+  resolveEventDates,
+  resolveChemicalData,
+  resolveScientificFormula
+} from '@/lib/wikidata-resolver';
+import { fetchWithTimeout } from '@/lib/media/storageHelpers';
 
 const FORMULA_SUFFIX_MAP: Record<string, string> = {
   FR: ' (formule)',
@@ -12,6 +20,7 @@ const FORMULA_SUFFIX_MAP: Record<string, string> = {
 };
 
 export async function healWikidataEntities(comp: any, targetLang: string): Promise<any> {
+  const lang = targetLang;
   const healed = { ...comp };
   const props = healed.props ? { ...healed.props } : {};
   const compType = healed.component || healed.type || '';
@@ -193,7 +202,27 @@ export async function healWikidataEntities(comp: any, targetLang: string): Promi
                         if (extract && extract.length > 30) {
                           let sentence = extract.split(/[.!?]\s/)[0].trim();
                           const parts = extract.split(/[.!?]\s/);
+                          if (parts[1]) sentence += '. ' + parts[1].trim();
+                          if (parts[2]) sentence += '. ' + parts[2].trim();
+                          if (!sentence.endsWith('.')) sentence += '.';
+                          sentence = sentence.replace(/\s*\([^)]*\)/g, '').trim();
+                          sentence = sentence.replace(/\s+/g, ' ');
 
+                          props.description = sentence;
+                          props.name = canonicalTitle;
+                          console.log(`[BIOGRAPHY VALIDATOR] Healed "${name}" description via Wikipedia.`);
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            console.error(`[BIOGRAPHY VALIDATOR] Error healing biography:`, err);
+          }
+        }
+      }
 
   healed.props = props;
   return healed;

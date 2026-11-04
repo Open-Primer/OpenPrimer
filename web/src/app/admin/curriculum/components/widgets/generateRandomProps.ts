@@ -1,3 +1,4 @@
+const tr = (k: string) => k;
 import React from 'react';
 
 export const generateRandomProps = (widgetId: string): Record<string, any> => {
@@ -122,7 +123,3 @@ export const generateRandomProps = (widgetId: string): Record<string, any> => {
     }
   };
 
-  const DISCIPLINES_LIST = React.useMemo(() => {
-    const staticEn = DISCIPLINES.map(d => d.EN);
-
-};

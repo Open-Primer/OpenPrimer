@@ -41,6 +41,15 @@ export const resetEvaluationState = (assessmentId: string) => {
 
 
 export const progressService = {
+  syncProgressToCloud: async (slug: string, percentage: number) => {
+    return progressService.syncCourseProgressToDb(slug);
+  },
+  recordEssaySubmission: (assessmentId: string, ...args: any[]) => {
+    if (typeof window === 'undefined') return;
+    const subs = JSON.parse(window.localStorage.getItem('op_essay_submissions') || '{}');
+    subs[assessmentId] = { args, submittedAt: new Date().toISOString() };
+    window.localStorage.setItem('op_essay_submissions', JSON.stringify(subs));
+  },
   recordCompletionIfFirstTime: async (userId: string, courseId: string) => {
     try {
       const localCompletionsStr = window.localStorage.getItem('openprimer_course_completions') || '[]';

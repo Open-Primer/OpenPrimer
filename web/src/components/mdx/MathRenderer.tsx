@@ -158,7 +158,10 @@ export const renderNodeWithMath = (node: React.ReactNode, inParagraph = false): 
 };
 
 export interface MathRendererProps {
-  text: string;
+  inline?: boolean;
+  text?: string;
+  content?: string;
+  children?: React.ReactNode;
   inParagraph?: boolean;
   className?: string;
 }
@@ -166,10 +169,11 @@ export interface MathRendererProps {
 /**
  * Standalone MathRenderer component for JSX.
  */
-export const MathRenderer: React.FC<MathRendererProps> = ({ text, inParagraph = false, className = '' }) => {
+export const MathRenderer: React.FC<MathRendererProps> = ({ text, content, children, inParagraph = false, className = '' }) => {
+  const targetText = text || content || (typeof children === 'string' ? children : '') || '';
   return (
     <div className={`op-math-rendered ${className}`}>
-      {renderTextWithMathAndMarkdown(text, inParagraph)}
+      {renderTextWithMathAndMarkdown(targetText, inParagraph)}
     </div>
   );
 };

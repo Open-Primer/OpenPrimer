@@ -1,5 +1,7 @@
 "use client";
 
+import { getQuizLocale } from './quiz-strings';
+import { Play, ChevronRight } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, Sparkles, ShieldAlert } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
@@ -13,6 +15,9 @@ function cn(...inputs: ClassValue[]) {
 
 export const GuestFootnote = () => {
   const { language } = useLanguage();
+  const ql = getQuizLocale(language);
+
+
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   return (
     <div className="mt-3 text-xs text-muted-foreground flex items-center gap-1.5 opacity-80">
@@ -55,6 +60,7 @@ export const Question = ({
   multiple = false,
 }: QuestionProps) => {
   const { language } = useLanguage();
+  const ql = getQuizLocale(language);
   const dict = STATIC_UI_STRINGS[language.toUpperCase() as keyof typeof STATIC_UI_STRINGS] || STATIC_UI_STRINGS.EN;
   const t = {
     tutor_explanation: dict.quiz_tutor_explanation

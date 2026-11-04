@@ -1,3 +1,4 @@
+import { fetchWithTimeout, safeResponseJson, supabaseAdmin } from './storageHelpers';
 export function isFactualMedia(alt: string, caption: string = ''): boolean {
   const text = `${alt} ${caption}`.toLowerCase();
   
@@ -34,7 +35,7 @@ export function isFactualMedia(alt: string, caption: string = ''): boolean {
 // ─── Wikidata P18 — canonical image for a named entity ─────────────────────
 // Queries Wikidata for the P18 (image) property of an entity matching the title.
 // Returns a direct Wikimedia Commons file URL (Special:FilePath redirect).
-async function fetchWikidataImage(title: string, lang: string = 'en'): Promise<string | null> {
+export async function fetchWikidataImage(title: string, lang: string = 'en'): Promise<string | null> {
   try {
     const clean = title.trim().replace(/_/g, ' ');
     // Search Wikidata in parallel using target language, English, and Latin (key for historical sciences)
@@ -91,7 +92,7 @@ async function fetchWikidataImage(title: string, lang: string = 'en'): Promise<s
 
 // ─── NASA Images and Video Library ─────────────────────────────────────────
 // Free, no API key required. Great for space, astronomy, physics, engineering.
-async function fetchNASAImage(query: string): Promise<string | null> {
+export async function fetchNASAImage(query: string): Promise<string | null> {
   try {
     const url = `https://images-api.nasa.gov/search?q=${encodeURIComponent(query)}&media_type=image&page_size=5`;
     const res = await fetchWithTimeout(url, {}, 5000);
@@ -115,7 +116,7 @@ async function fetchNASAImage(query: string): Promise<string | null> {
 
 // ─── The Metropolitan Museum of Art Open Access API ────────────────────────
 // Free, no API key. Excellent for art history, archaeology, classical cultures.
-async function fetchMetMuseumImage(query: string): Promise<string | null> {
+export async function fetchMetMuseumImage(query: string): Promise<string | null> {
   try {
     const searchUrl = `https://collectionapi.metmuseum.org/public/collection/v1/search?q=${encodeURIComponent(query)}&hasImages=true&isPublicDomain=true`;
     const searchRes = await fetchWithTimeout(searchUrl, {}, 5000);
@@ -143,7 +144,7 @@ async function fetchMetMuseumImage(query: string): Promise<string | null> {
 // ─── Smithsonian Open Access ────────────────────────────────────────────────
 // Free API key (env var SMITHSONIAN_API_KEY). Covers natural history, science, culture.
 
-async function getSystemParameter(key: string): Promise<string | null> {
+export async function getSystemParameter(key: string): Promise<string | null> {
   try {
     const { data } = await supabaseAdmin
       .from('system_parameters')
@@ -159,7 +160,7 @@ async function getSystemParameter(key: string): Promise<string | null> {
   return process.env[envKey] || null;
 }
 
-async function fetchUnsplashImage(query: string): Promise<{ url: string; sourceLabel: string } | null> {
+export async function fetchUnsplashImage(query: string): Promise<{ url: string; sourceLabel: string } | null> {
   const apiKey = await getSystemParameter('unsplashApiKey');
   if (!apiKey) return null;
   try {
@@ -211,7 +212,7 @@ async function fetchUnsplashImage(query: string): Promise<{ url: string; sourceL
   }
 }
 
-async function fetchSmithsonianImage(query: string): Promise<string | null> {
+export async function fetchSmithsonianImage(query: string): Promise<string | null> {
   const apiKey = await getSystemParameter('smithsonianApiKey');
   if (!apiKey) return null; // Skip silently if key not configured
   try {
@@ -237,7 +238,7 @@ async function fetchSmithsonianImage(query: string): Promise<string | null> {
 
 // ─── Bibliothèque nationale de France (Gallica SRU API) ───────────────────
 // Queries Gallica for public domain manuscripts and old books.
-async function fetchGallicaImage(query: string): Promise<string | null> {
+export async function fetchGallicaImage(query: string): Promise<string | null> {
   try {
     const cleanQuery = query.trim();
     // Query Gallica SRU, filtering for public domain
@@ -267,7 +268,7 @@ async function fetchGallicaImage(query: string): Promise<string | null> {
 // ─── Wellcome Collection (Catalogue API + IIIF) ────────────────────────────
 // Free, no API key. Exceptional for anatomy, surgery, pathology, history of medicine.
 // License: mostly Public Domain Mark (PDM) or CC-BY (verified via accessConditions).
-async function fetchWellcomeCollectionImage(query: string): Promise<{ url: string; sourceLabel: string; sourceUrl: string } | null> {
+export async function fetchWellcomeCollectionImage(query: string): Promise<{ url: string; sourceLabel: string; sourceUrl: string } | null> {
   try {
     const cleanQuery = query.trim();
     const apiUrl = `https://api.wellcomecollection.org/catalogue/v2/images?query=${encodeURIComponent(cleanQuery)}&pageSize=5`;
@@ -303,7 +304,7 @@ async function fetchWellcomeCollectionImage(query: string): Promise<{ url: strin
 // ─── NLM Digital Collections (National Library of Medicine / NIH) ────────────
 // Free, no API key. ~70,000 historical images from the History of Medicine.
 // Best for: anatomical illustrations, portraits of physicians, surgical instruments.
-async function fetchNLMDigitalCollectionImage(query: string): Promise<{ url: string; sourceLabel: string; sourceUrl: string } | null> {
+export async function fetchNLMDigitalCollectionImage(query: string): Promise<{ url: string; sourceLabel: string; sourceUrl: string } | null> {
   try {
     const cleanQuery = query.trim();
     const apiUrl = `https://collections.nlm.nih.gov/api/search?query=${encodeURIComponent(cleanQuery)}&schema=imageSearch&from=0&size=5`;
@@ -333,7 +334,7 @@ async function fetchNLMDigitalCollectionImage(query: string): Promise<{ url: str
 // ─── OpenStax / Gray's Anatomy Wikimedia Commons Booster ─────────────────────
 // Searches Wikimedia Commons with source-specific suffixes to surface
 // OpenStax (CC-BY 4.0) and Gray's Anatomy 1918 (Public Domain) illustrations.
-async function fetchMedicalBookImage(
+export async function fetchMedicalBookImage(
   query: string,
   source: 'grays' | 'openstax'
 ): Promise<{ url: string; sourceLabel: string; sourceUrl?: string } | null> {
@@ -378,7 +379,7 @@ async function fetchMedicalBookImage(
 
 // ─── Internet Archive (Archive.org API) ───────────────────────────────────
 // Resolves royalty-free media (images, audio, or videos) from Archive.org.
-async function fetchArchiveOrgMedia(
+export async function fetchArchiveOrgMedia(
   query: string,
   mediaType: 'image' | 'audio' | 'video'
 ): Promise<{ url: string; sourceLabel: string } | null> {

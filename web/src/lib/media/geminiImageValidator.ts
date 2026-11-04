@@ -1,3 +1,8 @@
+import { compressPromptText } from '@/lib/vertex-client';
+import { searchWikidataImage, searchWikimediaCommonsImage } from './wikimediaResolver';
+import { fetchWikipediaImage } from './imageSourceResolver';
+import { fetchGallicaImage, fetchArchiveOrgMedia } from './factualMediaValidator';
+import { optimizeQueryWithGemini } from './conciseQueryBuilder';
 import { callVertexAI } from '../vertex-client';
 import { fetchWithTimeout } from './storageHelpers';
 
@@ -73,7 +78,7 @@ Does the image directly represent or academically illustrate the subject? Respon
   return true;
 }
 
-async function searchMediaImageCascade(
+export async function searchMediaImageCascade(
   queryName: string,
   lang: string
 ): Promise<{ url: string | null; fallbackUrl: string | null; sourceLabel?: string }> {
@@ -134,3 +139,87 @@ async function searchMediaImageCascade(
 }
 
 
+
+export async function validateImageSoftWithGemini(imageUrl: string, entityName: string): Promise<boolean> {
+  try {
+    const resImg = await fetchWithTimeout(imageUrl, {}, 8000);
+    if (!resImg.ok) return false;
+    const contentType = resImg.headers.get('content-type') || 'image/jpeg';
+    const arrayBuffer = await resImg.arrayBuffer();
+    const base64Data = Buffer.from(arrayBuffer).toString('base64');
+
+    const promptText = `L'image fournie en pièce jointe représente-t-elle de manière authentique, digne et de haute qualité l'entité historique ou scientifique suivante : "${entityName}" (par exemple : un portrait de ce personnage, un monument historique le concernant, une œuvre d'art originale le représentant, un manuscrit historique de sa main, ou une photo de l'objet) ?
+Réponds uniquement par OUI ou NON.`;
+
+    const res = await callVertexAI({
+      task: 'course_generation',
+      contents: [{
+        role: 'user',
+        parts: [
+          {
+            inlineData: {
+              mimeType: contentType.split(';')[0],
+              data: base64Data
+            }
+          },
+          {
+            text: compressPromptText(promptText)
+          }
+        ]
+      }],
+      generationConfig: {
+        maxOutputTokens: 2048,
+        temperature: 0.1
+      }
+    });
+
+    if (res && res.ok) {
+      const json = await res.json();
+      const answer = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()?.toUpperCase() || '';
+      console.log(`[MEDIA-RESOLVER] Soft validation answer for "${entityName}": "${answer}"`);
+      return answer.includes('OUI');
+    }
+  } catch (err) {
+    console.warn('[MEDIA-RESOLVER] Error in soft validation with Gemini:', err);
+  }
+  return false;
+}
+
+export async function generateQueryRelaxationsWithGemini(specificQuery: string, lang: string = 'en'): Promise<string[]> {
+  try {
+    const promptText = `Tu es un assistant de recherche documentaire d'élite.
+Considère la description de média spécifique suivante : "${specificQuery}".
+Génère une liste ordonnée de 3 requêtes de recherche de spécificité décroissante (du plus précis au plus général) pour trouver cette entité ou son contexte sur Wikipédia, Wikidata ou des banques d'images.
+Règles :
+1. La première requête doit être l'entité canonique ultra-spécifique (ex: "Philosophiae Naturalis Principia Mathematica").
+2. La deuxième requête doit être une version légèrement simplifiée ou l'œuvre liée (ex: "Principia Mathematica").
+3. La troisième requête doit être le personnage historique ou le concept majeur associé (ex: "Isaac Newton").
+4. Réponds UNIQUEMENT avec ces 3 requêtes sous forme de lignes distinctes, sans numérotation, sans guillemets, sans puces et sans autre texte explicatif.`;
+
+    const res = await callVertexAI({
+      task: 'course_generation',
+      contents: [{ role: 'user', parts: [{ text: compressPromptText(promptText) }] }],
+      generationConfig: {
+        maxOutputTokens: 2048,
+        temperature: 0.1
+      }
+    });
+
+    if (res && res.ok) {
+      const resJson = await res.json();
+      const text = resJson?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) {
+        const lines = text.split('\n')
+          .map((l: string) => l.trim().replace(/["']/g, ''))
+          .filter((l: string) => l.length > 0);
+        if (lines.length > 0) {
+          console.log(`[MEDIA-RESOLVER] Generated query relaxations for "${specificQuery}":`, lines);
+          return lines;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`[MEDIA-RESOLVER] generateQueryRelaxationsWithGemini failed for "${specificQuery}":`, err);
+  }
+  return [specificQuery];
+}

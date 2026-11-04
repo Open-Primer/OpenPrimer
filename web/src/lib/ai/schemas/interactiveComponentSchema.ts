@@ -1,4 +1,4 @@
-export const interactiveComponentItemsSchema =       items: {
+export const interactiveComponentItemsSchema = {
         anyOf: [
           {
             type: "object",
@@ -387,5 +387,6 @@ export const interactiveComponentItemsSchema =       items: {
             required: ["id", "componentType", "sectionAnchor", "props"]
           }
         ]
-      }
-;
+};
+
+export const interactiveComponentSchema = interactiveComponentItemsSchema;

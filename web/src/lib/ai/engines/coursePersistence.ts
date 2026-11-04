@@ -1,3 +1,7 @@
+import { validateAndFixBibliography } from '@/lib/ai/validator/citationValidator';
+import { preprocessMdx } from '@/lib/content';
+import { extractCustomFigures } from '@/lib/ai/engines/deduplicationHelpers';
+import { areMediaSimilar } from './deduplicationHelpers';
 import fs from 'fs';
 import path from 'path';
 import { dbService } from '../../db';
@@ -35,6 +39,24 @@ export async function persistLesson(
   const log = appendTaskLog || (async (m) => console.log(m));
   let globalDbWidgetCount = 0;
   const courseContext: any = { discipline };
+  const realIndex = item.originalIndex !== undefined ? item.originalIndex : lessonIdx;
+  const originalSyllabusLessonsLength = lessonsList.length;
+  const sharedCourseInteractiveComponents: any[] = [];
+  const usedMediaRegistry: Array<{ type: string; description: string; title?: string; caption?: string }> = [];
+
+  const updateTaskProgress = async (lessonTitle: string) => {
+    const currentProgress = 20 + Math.floor(((lessonIdx + 1) / (lessonsList.length || 1)) * 70);
+    await log(`[AI GENERATOR] Finished lesson "${lessonTitle}" (${lessonIdx + 1}/${lessonsList.length}). Progress: ${currentProgress}%.`);
+    if (!taskId) return;
+    try {
+      await supabaseAdmin
+        .from('task_queue')
+        .update({ progress: Math.min(99, currentProgress) })
+        .eq('id', taskId);
+    } catch (err) {
+      console.warn(`[PROGRESS UPDATE ERROR] Failed to update task ${taskId} progress:`, err);
+    }
+  };
   const lessonStats: any = {
     lessonIndex: lessonIdx + 1,
     title: item.title,

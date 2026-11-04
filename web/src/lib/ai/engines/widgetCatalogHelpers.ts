@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-interface CitationStyleSpec {
+export interface CitationStyleSpec {
   name: string;       // Short label, e.g. "APA 7"
   fullName: string;   // Full name, e.g. "American Psychological Association (APA), 7th edition"
   bookExample: string;
@@ -11,7 +11,7 @@ interface CitationStyleSpec {
   notes: string;
 }
 
-function getCitationStyle(discipline: string): CitationStyleSpec {
+export function getCitationStyle(discipline: string): CitationStyleSpec {
   const d = (discipline || '').toLowerCase().trim();
 
   // ── Psychology, Behavioural Sciences, Social Sciences, Education, Linguistics

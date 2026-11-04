@@ -1,4 +1,6 @@
 import { ModelId, TASK_MODELS, MODEL_PRICING, TASK_TOKEN_ESTIMATES } from './ai-config';
+export { TASK_MODELS };
+export type { ModelId };
 import {
   userCountryStorage,
   customCredentialsStorage,

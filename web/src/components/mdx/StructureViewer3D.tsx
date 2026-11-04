@@ -12,7 +12,8 @@ import {
   getPresetName,
   getPresetDesc
 } from './structure-viewer/presets';
-import { parseXYZ, parseSDF } from './structure-viewer/parsers';
+import { parseXYZ, parseSDF, decodeBase64, centerCoordinates, darkenColor } from './structure-viewer/parsers';
+import { ELEMENT_DETAILS } from './structure-viewer/presets';
 import { MoleculeHeader } from './structure-viewer/MoleculeHeader';
 import { CompoundDetailsPanel } from './structure-viewer/CompoundDetailsPanel';
 
@@ -468,6 +469,12 @@ export const StructureViewer3D = ({
   const cleanedLabel = selectedAtom ? selectedAtom.label.replace(/[⁺⁻\d]/g, '') : '';
   const selectedElement = selectedAtom ? ELEMENT_DETAILS[cleanedLabel] : null;
 
+  const presetList = PRESETS;
+  const selectPreset = (p: Preset) => {
+    setActivePreset(p);
+    setSelectedAtomIndex(null);
+  };
+  const handleSearchAndLoad = handleSearch;
   return (
     <div className="my-8 rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/40 backdrop-blur-xl shadow-2xl p-6 sm:p-8">
       {/* Molecule Details Header Row */}
@@ -579,6 +586,10 @@ export const StructureViewer3D = ({
         <CompoundDetailsPanel
           activePreset={activePreset}
           selectedAtomIndex={selectedAtomIndex}
+          selectedAtom={selectedAtom}
+          selectedElement={selectedElement}
+          setSelectedAtomIndex={setSelectedAtomIndex}
+          gradeLevel={gradeLevel}
           localStr={localStr}
           t={t}
         />

@@ -223,7 +223,7 @@ export const lessonWidgetsSchema = {
   ]
 };
 
-const widgetBlock1Schema = {
+export const widgetBlock1Schema = {
   type: "object",
   properties: {
     prerequisites: lessonWidgetsSchema.properties.prerequisites,
@@ -305,7 +305,7 @@ export const widgetBlock2Schema = {
   required: ["interactiveComponents"]
 };
 
-const widgetBlock3Schema = {
+export const widgetBlock3Schema = {
   type: "object",
   properties: {
     conclusionSummary: lessonWidgetsSchema.properties.conclusionSummary,
@@ -316,7 +316,7 @@ const widgetBlock3Schema = {
   required: ["conclusionSummary", "whatsNext", "goingFurther", "glossary"]
 };
 
-const widgetBlock5Schema = {
+export const widgetBlock5Schema = {
   type: "object",
   properties: {
     finalEvaluation: lessonWidgetsSchema.properties.finalEvaluation,
@@ -325,7 +325,7 @@ const widgetBlock5Schema = {
   required: ["finalEvaluation", "references"]
 };
 
-const widgetBlock5QuizSchema = {
+export const widgetBlock5QuizSchema = {
   type: "object",
   properties: {
     finalEvaluation: lessonWidgetsSchema.properties.finalEvaluation
@@ -333,7 +333,7 @@ const widgetBlock5QuizSchema = {
   required: ["finalEvaluation"]
 };
 
-const widgetBlock5ReferencesSchema = {
+export const widgetBlock5ReferencesSchema = {
   type: "object",
   properties: {
     references: lessonWidgetsSchema.properties.references
@@ -341,7 +341,7 @@ const widgetBlock5ReferencesSchema = {
   required: ["references"]
 };
 
-function checkForForbiddenPlaceholders(obj: any, path = ''): string[] {
+export function checkForForbiddenPlaceholders(obj: any, path = ''): string[] {
   const errors: string[] = [];
   if (obj === null || obj === undefined) return errors;
 

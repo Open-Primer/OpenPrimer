@@ -1,4 +1,6 @@
-import { saveDraftRevision, safeJsonParse } from './coreUtils';
+import { getDescriptiveLevelForPrompt } from '@/lib/ai/engines/coreUtils';
+import { saveDraftRevision, safeJsonParse, getConstraintKeyForLevel } from './coreUtils';
+import { widgetBlock2Schema, widgetBlock3Schema } from '@/lib/ai/schemas/lessonWidgetsSchema';
 import { widgetBlockAuditSchema } from './aiSchemas';
 
 export async function runCraftsmanBlocks3to4(
@@ -10,6 +12,21 @@ export async function runCraftsmanBlocks3to4(
   log: (msg: string) => Promise<void>
 ): Promise<any> {
   const blockResults: any = {};
+  const levelInput = (item as any).level || 'university_undergrad';
+  const correctedCourseName = (item as any).courseName || (item as any).courseTitle || discipline;
+  const lessonStats: any = { widgetBlockAttempts: [] };
+  const isTerminalEvaluation = Boolean((item as any).isTerminalEvaluation);
+  const parsedWidgets: any = {};
+  const activeAnchors: any[] = [];
+  const dynamicCatalogList = '';
+  const constraintKey = getConstraintKeyForLevel(levelInput);
+  const courseContext: any = { discipline, level: levelInput, courseName: correctedCourseName };
+  async function generateAndParseWidgetBlock(prompt: string, schema: any, name: string): Promise<any> {
+    const raw = await callAIEngine(prompt, schema, 0.1, undefined, undefined, false, 'widget_placement');
+    return safeJsonParse(raw.replace(/\`\`\`json/gi, '').replace(/\`\`\`/gi, '').trim(), name);
+  }
+  let block3CustomAnchors: any[] = [];
+  let block3Parsed: any = null;
       // --- Block 3: Practice & Media ---
       if (block3CustomAnchors.length > 0 && !isTerminalEvaluation) {
         let block3Approved = false;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Sliders, Shield, BookOpen, AlertCircle } from 'lucide-react';
+import { Layers, Sliders, Shield, BookOpen, AlertCircle, CircleDot } from 'lucide-react';
 import { ORBITALS } from './orbitalPresets';
 
 interface SidebarProps {
@@ -41,9 +41,15 @@ export const OrbitalSidebar: React.FC<SidebarProps> = ({
   setAtomicNumber,
   renderElectronBox
 }) => {
+  const mode = sidebarTab === 'presets' ? 'preset' : 'schrodinger';
+  const setMode = (m: string) => setSidebarTab(m === 'preset' ? 'presets' : 'quantum');
+  const electronCount = atomicNumber;
+  const setElectronCount = (val: any) => setAtomicNumber(typeof val === 'function' ? val(atomicNumber) : Number(val?.target?.value ?? val));
+  const renderShellElectrons = renderElectronBox;
+  const customInfo = customOrbitalInfo || { name: '', desc: '', geometry: '' };
+  const activePreset = ORBITALS.find(o => o.id === activePresetId) || ORBITALS[0] || { name: '', description: '', geometry: '' };
   return (
-        {/* Quantum Sidebar: Interactive Tabbed Panel (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col justify-between bg-slate-900/30 border border-slate-800 rounded-2xl p-5 space-y-4">
+      <div className="lg:col-span-5 flex flex-col justify-between bg-slate-900/30 border border-slate-800 rounded-2xl p-5 space-y-4">
           <div className="space-y-4">
             {/* Tab switch buttons */}
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-950/60 border border-slate-900 rounded-xl">
@@ -80,7 +86,7 @@ export const OrbitalSidebar: React.FC<SidebarProps> = ({
                   {/* Interactive electron counter */}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setElectronCount(e => Math.max(1, e - 1))}
+                      onClick={() => setElectronCount((e: any) => Math.max(1, e - 1))}
                       className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 hover:text-white text-slate-400 flex items-center justify-center font-bold cursor-pointer text-xs active:scale-95"
                       title={t["Remove Electron"]}
                     >
@@ -90,7 +96,7 @@ export const OrbitalSidebar: React.FC<SidebarProps> = ({
                       {electronCount} e⁻
                     </span>
                     <button
-                      onClick={() => setElectronCount(e => Math.min(10, e + 1))}
+                      onClick={() => setElectronCount((e: any) => Math.min(10, e + 1))}
                       className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 hover:text-white text-slate-400 flex items-center justify-center font-bold cursor-pointer text-xs active:scale-95"
                       title={t["Add Electron"]}
                     >
@@ -109,15 +115,15 @@ export const OrbitalSidebar: React.FC<SidebarProps> = ({
                     <div className="flex gap-2">
                       <div className="flex items-center gap-1">
                         <span className="text-[10px] font-mono font-black text-slate-400">2p_x</span>
-                        {renderShellElectrons('2px')}
+                        {renderShellElectrons('2px', 2)}
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-[10px] font-mono font-black text-slate-400">2p_y</span>
-                        {renderShellElectrons('2py')}
+                        {renderShellElectrons('2py', 2)}
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-[10px] font-mono font-black text-slate-400">2p_z</span>
-                        {renderShellElectrons('2pz')}
+                        {renderShellElectrons('2pz', 2)}
                       </div>
                     </div>
                   </div>
@@ -127,7 +133,7 @@ export const OrbitalSidebar: React.FC<SidebarProps> = ({
                     <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">{t["Subshell 2s"]}</span>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] font-mono font-black text-slate-400">2s</span>
-                      {renderShellElectrons('2s')}
+                      {renderShellElectrons('2s', 2)}
                     </div>
                   </div>
 
@@ -136,7 +142,7 @@ export const OrbitalSidebar: React.FC<SidebarProps> = ({
                     <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block">{t["Subshell 1s"]}</span>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] font-mono font-black text-slate-400">1s</span>
-                      {renderShellElectrons('1s')}
+                      {renderShellElectrons('1s', 2)}
                     </div>
                   </div>
                 </div>
@@ -221,13 +227,13 @@ export const OrbitalSidebar: React.FC<SidebarProps> = ({
               <span>
                 {mode === 'schrodinger'
                   ? `${t["Orbital"] || "Orbital"} ${customInfo.name}`
-                  : (t[activePreset.name] || activePreset.name)}
+                  : (activePreset.name && t[activePreset.name]) || activePreset.name || ''}
               </span>
             </h5>
             <p className="text-[11px] text-slate-400 leading-relaxed font-semibold">
               {mode === 'schrodinger'
                 ? customInfo.desc
-                : (t[activePreset.description] || activePreset.description)}
+                : (activePreset.description && t[activePreset.description]) || activePreset.description || ''}
             </p>
 
             <div className="bg-slate-950/40 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center text-[10px] font-bold">
@@ -235,10 +241,10 @@ export const OrbitalSidebar: React.FC<SidebarProps> = ({
               <span className="text-cyan-400 font-black">
                 {mode === 'schrodinger'
                   ? customInfo.geometry
-                  : (t[activePreset.geometry] || activePreset.geometry)}
+                  : (activePreset.geometry && t[activePreset.geometry]) || activePreset.geometry || ''}
               </span>
             </div>
           </div>
-
+        </div>
   );
 };

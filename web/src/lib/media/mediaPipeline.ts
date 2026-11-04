@@ -1,3 +1,7 @@
+import { compileFinalLabel, validateWikipediaPage } from './figureFormatting';
+import { fetchArchiveOrgMedia } from './factualMediaValidator';
+import { buildLyriaPrompt, generateLyriaAudio } from './wikimediaResolver';
+import { getConciseQuery } from './conciseQueryBuilder';
 import { resolveVideosAndAudio } from './videoAudioPasses';
 import fs from 'fs';
 import path from 'path';
@@ -7,10 +11,10 @@ import { searchYouTubeVideo } from './youtubeResolver';
 import { fetchWikimediaAudio, searchWikidataImage } from './wikimediaResolver';
 import { resolveImageFromSources } from './imageSourceResolver';
 import { isFactualMedia, getWikimediaPageUrl } from './factualMediaValidator';
-import { isExistingArtwork, parseAttributesRobustly, rebuildCustomFigure } from './figureFormatting';
+import { isExistingArtwork, parseAttributesRobustly, rebuildCustomFigure, renumberFigures } from './figureFormatting';
 import { getLanguageSearchTerm } from './mediaTypes';
 
-function getSafeExtension(mimeType: string, defaultExt: string = 'jpg'): string {
+export function getSafeExtension(mimeType: string, defaultExt: string = 'jpg'): string {
   if (mimeType.includes('png')) return 'png';
   if (mimeType.includes('webp')) return 'webp';
   if (mimeType.includes('svg')) return 'svg';
@@ -20,7 +24,7 @@ function getSafeExtension(mimeType: string, defaultExt: string = 'jpg'): string 
   return defaultExt;
 }
 
-async function synthesizeSpeech(text: string, lang: string): Promise<Buffer | null> {
+export async function synthesizeSpeech(text: string, lang: string): Promise<Buffer | null> {
   return null;
 }
 
@@ -37,6 +41,12 @@ export async function resolveAndPersistMedia(
   // 1 & 2. Process Video & Audio players
   updatedContent = await resolveVideosAndAudio(updatedContent, targetLang);
 
+  // 3. Process Images: Markdown images ![Alt](url) and CustomFigure / Image components
+  const mdImgRegex = /!\[(.*?)\]\((.*?)\)/g;
+  let mdMatch;
+  while ((mdMatch = mdImgRegex.exec(mdxContent)) !== null) {
+    const fullMatch = mdMatch[0];
+    const altText = mdMatch[1];
     const originalUrl = mdMatch[2];
 
     if (originalUrl !== undefined && (originalUrl || altText)) {
@@ -502,7 +512,7 @@ export async function resolveAndPersistMedia(
   return updatedContent;
 }
 
-const mediaValidationCache = new Map<string, boolean>();
+export const mediaValidationCache = new Map<string, boolean>();
 
 
 

@@ -1,3 +1,7 @@
+import { validateAndFixBibliography } from '@/lib/ai/validator/citationValidator';
+import { preprocessMdx } from '@/lib/content';
+import { isVertexConfigured, callVertexAI, compressPromptText } from '@/lib/vertex-client';
+import { apiKey } from './revisionCriticStep';
 import fs from 'fs';
 import path from 'path';
 import { dbService } from '../../db';
@@ -19,8 +23,9 @@ export async function persistRevisedLesson(
   approved: boolean,
   critique: any
 ): Promise<string> {
+    const slug = lesson.lesson_slug;
     // Run verification/validation and self-healing loop
-    let validatedMdx = await validateAndFixBibliography(revisedMdx, targetLang.toLowerCase());
+    let validatedMdx = await validateAndFixBibliography(currentMdx, targetLang.toLowerCase());
     validatedMdx = await validateAndFixExternalResources(validatedMdx, targetLang.toLowerCase());
 
     // Pre-validate MDX compilation
@@ -74,9 +79,19 @@ export async function persistRevisedLesson(
     return validatedMdx;
   }
 
+const systemicAnalysisSchema = {
+  type: 'object',
+  properties: {
+    isSystemic: { type: 'boolean' },
+    reason: { type: 'string' }
+  },
+  required: ['isSystemic', 'reason']
+};
+
 export async function runSystemicRevisionAudit(
   feedbackText: string,
-  affectedSlugs: string[]
+  affectedSlugs: string[],
+  targetLang: string = 'en'
 ): Promise<{
   revisedSlugs: string[];
   isSystemic: boolean;

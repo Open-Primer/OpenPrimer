@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, Globe, Flame, Award, Clock } from 'lucide-react';
+import { Zap, Globe, Flame, Award, Clock, Sparkles, RefreshCw, Activity, Trophy } from 'lucide-react';
 import type { DashboardTranslation } from './dashboardStrings';
 
 interface MainAnalyticsGridProps {
@@ -9,6 +9,12 @@ interface MainAnalyticsGridProps {
   financialMetrics: any;
   heatmapDays: any[];
   topStudents: any[];
+  dynamicAccuracyRate: string;
+  dynamicGenerationRate: string;
+  availableLanguages: any[];
+  allCourses: any[];
+  formatLanguageLabel: (code: string) => string;
+  getHeatmapColor: (val: number) => string;
 }
 
 export const MainAnalyticsGrid: React.FC<MainAnalyticsGridProps> = ({
@@ -17,10 +23,15 @@ export const MainAnalyticsGrid: React.FC<MainAnalyticsGridProps> = ({
   liveCostEstimates,
   financialMetrics,
   heatmapDays,
-  topStudents
+  topStudents,
+  dynamicAccuracyRate,
+  dynamicGenerationRate,
+  availableLanguages,
+  allCourses,
+  formatLanguageLabel,
+  getHeatmapColor
 }) => {
   return (
-      {/* Main Grid for Analytics */}
       <div className="grid lg:grid-cols-2 gap-12">
         {/* Row 1, Col 1: AI Content Engine */}
         <section className="space-y-6">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { Play, Pause, RotateCcw, Activity, Info, FastForward } from 'lucide-react';
 import { STATIC_UI_STRINGS } from '@/lib/translations';
@@ -17,12 +17,12 @@ export const DynamicSimulation = ({ presetId = "mitosis", gradeLevel }: { preset
   const activePreset = React.useMemo(() => {
     return {
       ...activePresetRaw,
-      name: t[activePresetRaw.name] || activePresetRaw.name,
-      description: t[activePresetRaw.description] || activePresetRaw.description,
+      name: (activePresetRaw?.name && t[activePresetRaw.name]) || activePresetRaw?.name || '',
+      description: (activePresetRaw?.description && t[activePresetRaw.description]) || activePresetRaw?.description || '',
       stages: activePresetRaw.stages.map(s => ({
         ...s,
-        label: t[s.label] || s.label,
-        details: t[s.details] || s.details
+        label: (s?.label && t[s.label]) || s?.label || '',
+        details: (s?.details && t[s.details]) || s?.details || ''
       }))
     };
   }, [activePresetRaw, t]);

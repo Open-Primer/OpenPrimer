@@ -1,3 +1,7 @@
+import { ShieldAlert } from 'lucide-react';
+import { LOCALIZED_POPUPS } from '../../strings';
+import { BADGE_LIBRARY, type StyledBadgeImage } from '@/lib/db';
+import { resolveBadgeIconToBase64Sync, resizeAndStandardizeImage } from './badgeImageHelpers';
 import { EditAchievementModal } from './EditAchievementModal';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -118,6 +122,23 @@ export const AchievementModals: React.FC<AchievementModalsProps> = ({
   t,
   LUCIDE_ICONS
 }) => {
+  const pStrings = (LOCALIZED_POPUPS as any)['EN'] || LOCALIZED_POPUPS.EN;
+  const tr = t;
+  const handleCreateAchievement = handleAddAchievement;
+  const handleImageFile = (file: File, isEdit: boolean) => {
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const resized = await resizeAndStandardizeImage(reader.result as string);
+      if (isEdit) {
+        setEditCustomBadgeImage(resized);
+        setEditIcon(resized);
+      } else {
+        setCustomBadgeImage(resized);
+        setBadgeIcon(resized);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
   return (
     <>
       <AnimatePresence>
@@ -272,7 +293,7 @@ export const AchievementModals: React.FC<AchievementModalsProps> = ({
                             <button
                               type="button"
                               disabled={creationGalleryPage === 1}
-                              onClick={() => setCreationGalleryPage(p => Math.max(1, p - 1))}
+                              onClick={() => setCreationGalleryPage((p: any) => Math.max(1, p - 1))}
                               className="px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                               {tr("◀ Prev (gallery)")}
@@ -283,7 +304,7 @@ export const AchievementModals: React.FC<AchievementModalsProps> = ({
                             <button
                               type="button"
                               disabled={creationGalleryPage === totalPages}
-                              onClick={() => setCreationGalleryPage(p => Math.min(totalPages, p + 1))}
+                              onClick={() => setCreationGalleryPage((p: any) => Math.min(totalPages, p + 1))}
                               className="px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-800 text-[10px] font-mono text-slate-400 rounded-lg hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                               {tr("Next (gallery) →")}
@@ -404,6 +425,7 @@ export const AchievementModals: React.FC<AchievementModalsProps> = ({
         t={t}
         LUCIDE_ICONS={LUCIDE_ICONS}
       />
+      <AnimatePresence>
         {purgeTarget && (
           <div className="fixed inset-0 z-[250] flex items-center justify-center p-8">
             <motion.div 
@@ -435,7 +457,7 @@ export const AchievementModals: React.FC<AchievementModalsProps> = ({
                   </button>
                   <button 
                     type="button"
-                    onClick={handlePurgeExecute}
+                    onClick={() => purgeTarget && handlePurgeAchievement(purgeTarget)}
                     className="flex-1 py-4 text-white font-black uppercase text-[10px] rounded-xl transition-all bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/10"
                   >
                     {pStrings.purge_badge_confirm_btn}
@@ -446,8 +468,6 @@ export const AchievementModals: React.FC<AchievementModalsProps> = ({
           </div>
         )}
       </AnimatePresence>
-    </div>
-
     </>
   );
 };

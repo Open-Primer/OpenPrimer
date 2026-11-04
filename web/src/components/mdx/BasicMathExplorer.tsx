@@ -60,6 +60,18 @@ export const BasicMathExplorer = ({
   // --- TAB 4: PARENTHESES STATE ---
   const [parenthesisStep, setParenthesisStep] = useState(0);
   const [tab4Guess, setTab4Guess] = useState('');
+  const tab2NumA = factorA;
+  const setTab2NumA = setFactorA;
+  const tab2NumB = factorB;
+  const setTab2NumB = setFactorB;
+  const fracNumerator = fracNum;
+  const setFracNumerator = setFracNum;
+  const fracDenominator = fracDen;
+  const setFracDenominator = setFracDen;
+  const fracNumeratorB = fracNumB;
+  const setFracNumeratorB = setFracNumB;
+  const fracDenominatorB = fracDenB;
+  const setFracDenominatorB = setFracDenB;
   const [tab4Feedback, setTab4Feedback] = useState<{ isCorrect: boolean; text: string } | null>(null);
 
   // Reset tab states

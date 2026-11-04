@@ -1,3 +1,6 @@
+import { resolveMediaImage } from '@/lib/media/imageSourceResolver';
+import { searchYouTubeVideo } from '@/lib/media/youtubeResolver';
+import { fetchWikimediaAudio } from '@/lib/media/wikimediaResolver';
 import { healWikidataEntities } from './wikidataEntityHealer';
 import { detectLanguageLeakage, translateText } from './languageLeakageDetector';
 import { resolveImageFromSources, compileFinalLabel } from '@/lib/media-resolver';
@@ -47,13 +50,14 @@ export async function healInteractiveComponents(
   if (!Array.isArray(interactiveComponents)) return interactiveComponents;
 
   let healedComponents = [...interactiveComponents];
+  const lang = targetLang;
 
     // [FIX IC-1] Deduplicate IDs within interactiveComponents.
     // The critic rejects blocks containing duplicate IDs, so we suffix duplicates
     // deterministically (id, id_2, id_3, ...) rather than dropping valid components.
     {
       const seenIds = new Map<string, number>(); // id -> count of occurrences so far
-      widgets.interactiveComponents = widgets.interactiveComponents.map((comp: any) => {
+      healedComponents = healedComponents.map((comp: any) => {
         const rawId: string = String(comp.id || '').trim();
         if (!rawId) return comp;
         const count = seenIds.get(rawId) || 0;
@@ -80,7 +84,7 @@ export async function healInteractiveComponents(
     const isSocialPsych = disc.includes("psych") || disc.includes("sociol") || disc.includes("social");
     const isHistoryGeogHumanities = disc.includes("histor") || disc.includes("geogr") || disc.includes("philosoph") || disc.includes("liter") || disc.includes("lettr") || disc.includes("art");
 
-    widgets.interactiveComponents = widgets.interactiveComponents.filter((comp: any) => {
+    healedComponents = healedComponents.filter((comp: any) => {
       if (!comp || !comp.componentType) return false;
       
       const alwaysAllowed = [
@@ -137,9 +141,9 @@ export async function healInteractiveComponents(
     });
 
     // Heal, translate and clean up fields
-    for (const comp of widgets.interactiveComponents) {
+    for (let comp of healedComponents) {
       if (!comp.props || typeof comp.props !== 'object') comp.props = {};
-      const props = comp.props;
+      let props = comp.props;
 
       const compTypeLower = typeof comp.componentType === 'string' ? comp.componentType.toLowerCase() : '';
       const ENTITY_WIDGET_TYPES = [
@@ -168,28 +172,6 @@ export async function healInteractiveComponents(
       const entityHealed = await healWikidataEntities(comp, targetLang);
       comp = entityHealed;
       props = comp.props || {};
-
-                          if (parts[1]) sentence += '. ' + parts[1].trim();
-                          if (parts[2]) sentence += '. ' + parts[2].trim();
-                          if (!sentence.endsWith('.')) sentence += '.';
-                          sentence = sentence.replace(/\s*\([^)]*\)/g, '').trim();
-                          sentence = sentence.replace(/\s+/g, ' ');
-                          
-                          props.description = sentence;
-                          props.name = canonicalTitle;
-                          console.log(`[BIOGRAPHY VALIDATOR] Healed "${name}" description via Wikipedia.`);
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          } catch (err) {
-            console.error(`[BIOGRAPHY VALIDATOR] Error healing biography:`, err);
-          }
-        }
-      }
 
       // Check language leakage and translate
       if (comp.componentType === "Quiz") {
@@ -347,7 +329,6 @@ export async function healInteractiveComponents(
         }
       }
     }
-  }
 
 
   return healedComponents;

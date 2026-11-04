@@ -1,3 +1,9 @@
+import { BasicMathExplorer } from '../BasicMathExplorer';
+import { useMdxStatus } from '../MdxStatusContext';
+import { ZoomableImage, renderCaptionWithLinks } from '../elements/CustomFigure';
+import { useLanguage } from '@/context/LanguageContext';
+const isExistingArtwork = (src: string, alt: string) => false;
+// renderCaptionWithLinks imported from CustomFigure
 import React from 'react';
 import { isChildrenEmpty } from '../elements/Alert';
 import { Alert } from '../elements/Alert';
@@ -135,7 +141,7 @@ const SmartEquationManipulator = (props: any) => {
   return <EquationManipulator {...props} />;
 };
 
-const MdxImage = (props: any) => {
+export const MdxImage = (props: any) => {
   const src = props.src || '';
   const alt = props.alt || '';
   const [failed, setFailed] = React.useState(false);

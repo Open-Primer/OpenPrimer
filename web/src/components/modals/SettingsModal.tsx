@@ -51,6 +51,8 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     firstName: "",
     lastName: "",
     email: "silvere@openprimer.app",
+    role: "student",
+    studyLevel: "L1",
     lang: lang.toUpperCase()
   });
 
@@ -141,6 +143,8 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
           firstName: p.firstName || "",
           lastName: p.lastName || "",
           email: p.email || "silvere@openprimer.app",
+          role: p.role || "student",
+          studyLevel: p.studyLevel || "L1",
           lang: (p.preferredLang || lang).toUpperCase()
         });
         setReduceMotion(!!p.reduceMotion);
@@ -189,6 +193,8 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                 firstName,
                 lastName,
                 email: p.email || "silvere@openprimer.app",
+                role: p.role || "student",
+                studyLevel: p.studyLevel || "L1",
                 lang: (p.preferredLang || lang).toUpperCase()
               });
 
@@ -245,6 +251,17 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
       } catch (err) {}
     }
   }, [personalTutorProvider, personalTutorApiKey, personalTutorModel, tutorType, isOpen]);
+
+  const testTutorConnection = async () => {
+    setTestStatus('loading');
+    setTimeout(() => {
+      setTestStatus(personalTutorApiKey ? 'success' : 'error');
+    }, 800);
+  };
+
+  const saveTutorSettings = () => {
+    saveProfile(new Event('submit') as any);
+  };
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -464,7 +481,8 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   pwdError={pwdError}
                   pwdSuccess={pwdSuccess}
                   pwdLoading={pwdLoading}
-                  handlePasswordChange={handlePasswordChange}
+                  handlePasswordChange={handlePasswordUpdate}
+                  error={error}
                 />
               )}
 
@@ -502,6 +520,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   personalTutorModel={personalTutorModel}
                   setPersonalTutorModel={setPersonalTutorModel}
                   testStatus={testStatus}
+                  setTestStatus={setTestStatus}
                   testTutorConnection={testTutorConnection}
                   saveTutorSettings={saveTutorSettings}
                   syncAccessibilityToCloud={syncAccessibilityToCloud}

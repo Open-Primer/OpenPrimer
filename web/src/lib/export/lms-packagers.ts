@@ -1,3 +1,4 @@
+import { convertMdxToHtml } from './export-styles';
 import { LessonExportOptions, getExportFilename, generateSimpleZip } from './lesson-packagers';
 
   export const exportMarkdown = (opts: LessonExportOptions) => {
@@ -19,7 +20,7 @@ ${content}`;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    setDropdownOpen(false);
+    // setDropdownOpen(false);
   };
 
 
@@ -44,7 +45,7 @@ ${content}`;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    setDropdownOpen(false);
+    // setDropdownOpen(false);
   };
 
 
@@ -81,7 +82,7 @@ ${content}`;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    setDropdownOpen(false);
+    // setDropdownOpen(false);
   };
 
 
@@ -186,7 +187,7 @@ ${content}`;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    setDropdownOpen(false);
+    // setDropdownOpen(false);
   };
 
 
@@ -257,7 +258,7 @@ ${content}`;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    setDropdownOpen(false);
+    // setDropdownOpen(false);
   };
 
   // Minimal ZIP packaging utility (Standard DEFLATE-less ZIP)

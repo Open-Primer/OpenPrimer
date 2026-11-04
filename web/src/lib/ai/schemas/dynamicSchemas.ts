@@ -1,10 +1,21 @@
+export function extractWidgetAnchors(text: string): { type: string; id: string }[] {
+  const anchors: { type: string; id: string }[] = [];
+  const regex = /\[\[\s*WIDGET\s*:\s*(?:([^:\s\]]+)\s*:\s*)?([^:\s\]]+)(?::[^\]]+)?\s*\]\]/gi;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    const type = match[1] || match[2] || '';
+    const id = match[2] || match[1] || '';
+    anchors.push({ type, id });
+  }
+  return anchors;
+}
 import { lessonWidgetsSchema, widgetBlock2Schema } from './lessonWidgetsSchema';
 
 export function getDynamicWidgetsSchema(narrativeText: string): any {
   const schema = JSON.parse(JSON.stringify(lessonWidgetsSchema));
   const anchors = extractWidgetAnchors(narrativeText);
-  const foundTypes = new Set(anchors.map(a => a.type.toLowerCase()));
-  const foundIds = new Set(anchors.map(a => a.id.toLowerCase()));
+  const foundTypes = new Set(anchors.map((a: any) => a.type.toLowerCase()));
+  const foundIds = new Set(anchors.map((a: any) => a.id.toLowerCase()));
 
   const conditionalProps = ["previousLessonSummary", "careerProfile", "researchFocus", "recentNewsBridge"];
   for (const prop of conditionalProps) {

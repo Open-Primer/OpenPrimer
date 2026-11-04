@@ -1,6 +1,6 @@
-import { useHomeAuth } from '@/components/landing/useHomeAuth';
 "use client";
 
+import { useHomeAuth } from '@/components/landing/useHomeAuth';
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, ArrowRight, ChevronRight } from 'lucide-react';
@@ -85,8 +85,8 @@ export default function Home() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [justVerified, setJustVerified] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const submitTimestamps = useRef<number[]>([]);
 
   useEffect(() => {
@@ -242,20 +242,6 @@ export default function Home() {
     setIsLoggedIn,
     setAuthModal
   });
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailLower, lang })
-      });
-      const data = await res.json();
-      if (!data.success) {
-        setErrorMsg(data.error || getLocalString('generic_error', lang));
-        return;
-      }
-      setSuccessMsg(getLocalString('reset_email_info', lang));
-    } catch (err: any) {
-      console.error('[FORGOT PASSWORD]', err);
-      setErrorMsg(getLocalString('server_connection_error', lang));
-    }
-  };
 
   if (!mounted) {
     return <div className="min-h-screen bg-background" />;
@@ -399,9 +385,9 @@ export default function Home() {
         isPasswordFocused={isPasswordFocused}
         setIsPasswordFocused={setIsPasswordFocused}
         justVerified={justVerified}
-        errorMsg={errorMsg}
+        errorMsg={errorMsg || ''}
         setErrorMsg={setErrorMsg}
-        successMsg={successMsg}
+        successMsg={successMsg || ''}
         setSuccessMsg={setSuccessMsg}
         handleSignupSubmit={handleSignupSubmit}
         handleLoginSubmit={handleLoginSubmit}
