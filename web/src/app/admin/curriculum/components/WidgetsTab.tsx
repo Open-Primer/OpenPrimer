@@ -201,6 +201,10 @@ export const WidgetsTab: React.FC<WidgetsTabProps> = ({
     tr
   });
 
+  useEffect(() => {
+    loadWidgets();
+  }, []);
+
   const {
     handleSaveParameters,
     handleValidateWidget,

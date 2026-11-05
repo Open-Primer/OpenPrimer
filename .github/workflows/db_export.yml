@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout Code
@@ -38,14 +39,13 @@ jobs:
           cd web
           npm run db:export
 
-      - name: Commit and Push Seed File
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add web/src/lib/supabase_seed.sql
-          if git diff --staged --quiet; then
-            echo "No database content updates detected."
-          else
-            git commit -m "chore(db): auto-export public database core content to public seed [skip ci]"
-            git push
-          fi
+      - name: Create Pull Request with Seed File
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(db): auto-export public database core content to public seed [skip ci]"
+          title: "chore(db): auto-export public database seed"
+          body: "Automated nightly export of public database core content to `web/src/lib/supabase_seed.sql`."
+          branch: "automated/db-seed-export"
+          delete-branch: true
+          base: master

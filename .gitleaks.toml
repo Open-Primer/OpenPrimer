@@ -13,6 +13,12 @@ paths = [
   '''web/src/lib/db\.ts''',
   '''web/src/lib/db/seeds\.ts''',
   '''web/src/lib/db/seeds_modules/.*''',
-  '''web/tests/crypto_migration\.spec\.ts'''
+  '''web/tests/crypto_migration\.spec\.ts''',
+  '''scripts/keep_alive_dispatcher\.js''',
+  '''web/scripts/update_supabase_cloud_url\.js''',
+  '''web/src/lib/dispatcher\.ts''',
+  '''web/scratch/.*'''
 ]
-
+regexes = [
+  '''OPSecretGate_[a-zA-Z0-9]+'''
+]

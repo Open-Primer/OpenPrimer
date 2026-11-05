@@ -109,7 +109,9 @@ export function pruneExpiredLocks() {
   }
 }
 
-export const CATALOG_FILE_PATH = path.join(process.cwd(), 'src', 'components', 'mdx', 'widgets_catalog.json');
+export const CATALOG_FILE_PATH = fs.existsSync(path.join(process.cwd(), 'src', 'components', 'mdx', 'widgets_catalog.json'))
+  ? path.join(process.cwd(), 'src', 'components', 'mdx', 'widgets_catalog.json')
+  : path.join(process.cwd(), 'web', 'src', 'components', 'mdx', 'widgets_catalog.json');
 
 export function getWidgetsCatalog(): Record<string, WidgetMetadata> {
   try {
